@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -39,6 +40,9 @@ const Navbar: React.FC = () => {
                     <Link to="/saved-jobs" className="hover:text-primary-200">
                       Saved
                     </Link>
+                    <Link to="/interviews" className="hover:text-primary-200">
+                      Interviews
+                    </Link>
                   </>
                 ) : (
                   <>
@@ -54,8 +58,15 @@ const Navbar: React.FC = () => {
                     <Link to="/candidates" className="hover:text-primary-200">
                       Candidates
                     </Link>
+                    <Link to="/interview-calendar" className="hover:text-primary-200">
+                      Interviews
+                    </Link>
                   </>
                 )}
+                <Link to="/messages" className="hover:text-primary-200">
+                  Messages
+                </Link>
+                <NotificationDropdown />
                 <Link to="/profile" className="hover:text-primary-200">
                   Profile
                 </Link>

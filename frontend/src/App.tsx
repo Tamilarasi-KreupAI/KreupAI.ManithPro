@@ -21,6 +21,10 @@ import JobForm from './pages/JobForm';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import RecruiterApplications from './pages/RecruiterApplications';
 import CandidateSearch from './pages/CandidateSearch';
+import InterviewCalendar from './pages/InterviewCalendar';
+import Interviews from './pages/Interviews';
+import InterviewDetail from './pages/InterviewDetail';
+import Messages from './pages/Messages';
 
 function App() {
   return (
@@ -157,6 +161,38 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CandidateSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interviews"
+              element={
+                <ProtectedRoute>
+                  <Interviews />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interviews/:id"
+              element={
+                <ProtectedRoute>
+                  <InterviewDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-calendar"
+              element={
+                <ProtectedRoute>
+                  <InterviewCalendar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
                 </ProtectedRoute>
               }
             />
