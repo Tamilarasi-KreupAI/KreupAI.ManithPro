@@ -17,6 +17,10 @@ import Applications from './pages/Applications';
 import ResumeManager from './pages/ResumeManager';
 import AdvancedJobSearch from './pages/AdvancedJobSearch';
 import JobRecommendations from './pages/JobRecommendations';
+import JobForm from './pages/JobForm';
+import RecruiterDashboard from './pages/RecruiterDashboard';
+import RecruiterApplications from './pages/RecruiterApplications';
+import CandidateSearch from './pages/CandidateSearch';
 
 function App() {
   return (
@@ -113,6 +117,46 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JobRecommendations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobs/new"
+              element={
+                <ProtectedRoute>
+                  <JobForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobs/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <JobForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter/dashboard"
+              element={
+                <ProtectedRoute>
+                  <RecruiterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter/applications"
+              element={
+                <ProtectedRoute>
+                  <RecruiterApplications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidates"
+              element={
+                <ProtectedRoute>
+                  <CandidateSearch />
                 </ProtectedRoute>
               }
             />
