@@ -5,6 +5,8 @@ import type {
   Application,
   AuthResponse,
   DashboardStats,
+  SavedJob,
+  Company,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -97,6 +99,34 @@ export const userAPI = {
       .then((res) => res.data),
   getDashboardStats: () =>
     api.get<DashboardStats>('/users/dashboard-stats').then((res) => res.data),
+};
+
+// Saved Jobs APIs
+export const savedJobAPI = {
+  getAll: (params?: any) =>
+    api
+      .get<{ savedJobs: SavedJob[]; pagination: any }>('/saved-jobs', { params })
+      .then((res) => res.data),
+  save: (jobId: string) =>
+    api
+      .post<{ message: string; savedJob: SavedJob }>('/saved-jobs', { jobId })
+      .then((res) => res.data),
+  unsave: (jobId: string) =>
+    api.delete<{ message: string }>(`/saved-jobs/${jobId}`).then((res) => res.data),
+  checkIfSaved: (jobId: string) =>
+    api.get<{ isSaved: boolean }>(`/saved-jobs/check/${jobId}`).then((res) => res.data),
+};
+
+// Company APIs
+export const companyAPI = {
+  getAll: (params?: any) =>
+    api
+      .get<{ companies: any[]; pagination: any }>('/companies', { params })
+      .then((res) => res.data),
+  getByName: (name: string) =>
+    api
+      .get<{ company: Company; jobs: Job[] }>(`/companies/${name}`)
+      .then((res) => res.data),
 };
 
 export default api;

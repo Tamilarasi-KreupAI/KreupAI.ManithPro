@@ -60,6 +60,7 @@ model User {
   // Relations
   postedJobs    Job[]         @relation("PostedJobs")
   applications  Application[]
+  savedJobs     SavedJob[]
 
   @@map("users")
 }
@@ -82,6 +83,15 @@ model Job {
   status          JobStatus     @default(OPEN)
   positions       Int           @default(1)
   deadline        DateTime?
+
+  // Company Information
+  companyName     String
+  companyDescription String?
+  companyWebsite  String?
+  companyLogo     String?
+  companySize     String?       // e.g., "1-50", "51-200", "201-500", "500+"
+  companyIndustry String?
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -89,9 +99,11 @@ model Job {
   postedById      String
   postedBy        User          @relation("PostedJobs", fields: [postedById], references: [id], onDelete: Cascade)
   applications    Application[]
+  savedBy         SavedJob[]
 
   @@index([status, createdAt])
   @@index([type])
+  @@index([companyName])
   @@map("jobs")
 }
 
@@ -114,4 +126,19 @@ model Application {
   @@index([status])
   @@index([candidateId])
   @@map("applications")
+}
+
+model SavedJob {
+  id          String   @id @default(uuid())
+  userId      String
+  jobId       String
+  savedAt     DateTime @default(now())
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId]) // One save per job per user
+  @@index([userId])
+  @@map("saved_jobs")
 }

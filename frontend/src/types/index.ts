@@ -49,6 +49,12 @@ export interface Job {
   status: JobStatus;
   positions: number;
   deadline?: string;
+  companyName: string;
+  companyDescription?: string;
+  companyWebsite?: string;
+  companyLogo?: string;
+  companySize?: string;
+  companyIndustry?: string;
   postedById: string;
   postedBy?: {
     id: string;
@@ -94,4 +100,23 @@ export interface DashboardStats {
   pendingApplications: number;
   acceptedApplications?: number;
   recentApplications: Application[];
+}
+
+export interface SavedJob {
+  id: string;
+  userId: string;
+  jobId: string;
+  savedAt: string;
+  job: Job;
+}
+
+export interface Company {
+  name: string;
+  description?: string;
+  website?: string;
+  logo?: string;
+  size?: string;
+  industry?: string;
+  totalJobs?: number;
+  openJobs?: number;
 }

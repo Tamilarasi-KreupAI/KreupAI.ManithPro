@@ -28,9 +28,15 @@ export const createJob = async (req: AuthRequest, res: Response): Promise<void> 
       positions,
       deadline,
       status,
+      companyName,
+      companyDescription,
+      companyWebsite,
+      companyLogo,
+      companySize,
+      companyIndustry,
     } = req.body;
 
-    if (!title || !description || !location || !type) {
+    if (!title || !description || !location || !type || !companyName) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
@@ -53,6 +59,12 @@ export const createJob = async (req: AuthRequest, res: Response): Promise<void> 
         positions: positions || 1,
         deadline: deadline ? new Date(deadline) : null,
         status: status || 'OPEN',
+        companyName,
+        companyDescription,
+        companyWebsite,
+        companyLogo,
+        companySize,
+        companyIndustry,
         postedById: req.user.userId,
       },
       include: {

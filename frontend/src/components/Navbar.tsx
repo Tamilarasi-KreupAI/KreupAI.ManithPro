@@ -28,6 +28,11 @@ const Navbar: React.FC = () => {
                 <Link to="/jobs" className="hover:text-primary-200">
                   Jobs
                 </Link>
+                {user.role === 'CANDIDATE' && (
+                  <Link to="/saved-jobs" className="hover:text-primary-200">
+                    Saved Jobs
+                  </Link>
+                )}
                 {user.role !== 'CANDIDATE' && (
                   <Link to="/applications" className="hover:text-primary-200">
                     Applications

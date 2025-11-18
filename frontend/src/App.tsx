@@ -8,6 +8,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
+import JobDetail from './pages/JobDetail';
+import ApplicationDetail from './pages/ApplicationDetail';
+import Profile from './pages/Profile';
+import SavedJobs from './pages/SavedJobs';
+import CompanyProfile from './pages/CompanyProfile';
 
 function App() {
   return (
@@ -32,6 +37,46 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Jobs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobs/:id"
+              element={
+                <ProtectedRoute>
+                  <JobDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/applications/:id"
+              element={
+                <ProtectedRoute>
+                  <ApplicationDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved-jobs"
+              element={
+                <ProtectedRoute>
+                  <SavedJobs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/companies/:name"
+              element={
+                <ProtectedRoute>
+                  <CompanyProfile />
                 </ProtectedRoute>
               }
             />
