@@ -13,6 +13,10 @@ import ApplicationDetail from './pages/ApplicationDetail';
 import Profile from './pages/Profile';
 import SavedJobs from './pages/SavedJobs';
 import CompanyProfile from './pages/CompanyProfile';
+import Applications from './pages/Applications';
+import ResumeManager from './pages/ResumeManager';
+import AdvancedJobSearch from './pages/AdvancedJobSearch';
+import JobRecommendations from './pages/JobRecommendations';
 
 function App() {
   return (
@@ -77,6 +81,38 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CompanyProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/applications"
+              element={
+                <ProtectedRoute>
+                  <Applications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resumes"
+              element={
+                <ProtectedRoute>
+                  <ResumeManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <AdvancedJobSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recommendations"
+              element={
+                <ProtectedRoute>
+                  <JobRecommendations />
                 </ProtectedRoute>
               }
             />

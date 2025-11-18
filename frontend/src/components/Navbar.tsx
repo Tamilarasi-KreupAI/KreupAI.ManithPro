@@ -25,18 +25,30 @@ const Navbar: React.FC = () => {
                 <Link to="/dashboard" className="hover:text-primary-200">
                   Dashboard
                 </Link>
-                <Link to="/jobs" className="hover:text-primary-200">
-                  Jobs
-                </Link>
-                {user.role === 'CANDIDATE' && (
-                  <Link to="/saved-jobs" className="hover:text-primary-200">
-                    Saved Jobs
-                  </Link>
-                )}
-                {user.role !== 'CANDIDATE' && (
-                  <Link to="/applications" className="hover:text-primary-200">
-                    Applications
-                  </Link>
+                {user.role === 'CANDIDATE' ? (
+                  <>
+                    <Link to="/recommendations" className="hover:text-primary-200">
+                      For You
+                    </Link>
+                    <Link to="/search" className="hover:text-primary-200">
+                      Search Jobs
+                    </Link>
+                    <Link to="/applications" className="hover:text-primary-200">
+                      My Applications
+                    </Link>
+                    <Link to="/saved-jobs" className="hover:text-primary-200">
+                      Saved
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/jobs" className="hover:text-primary-200">
+                      Jobs
+                    </Link>
+                    <Link to="/applications" className="hover:text-primary-200">
+                      Applications
+                    </Link>
+                  </>
                 )}
                 <Link to="/profile" className="hover:text-primary-200">
                   Profile
