@@ -155,3 +155,165 @@ export const getJobApplications = async (id: string, params?: {
   const response = await api.get(`/admin/jobs/${id}/applications`, { params });
   return response.data;
 };
+
+// Application Management Services
+export const getAllApplications = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  jobId?: string;
+  candidateId?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/applications', { params });
+  return response.data;
+};
+
+export const getApplicationById = async (id: string) => {
+  const response = await api.get(`/admin/applications/${id}`);
+  return response.data;
+};
+
+export const updateApplicationStatus = async (id: string, status: string, notes?: string) => {
+  const response = await api.patch(`/admin/applications/${id}/status`, { status, notes });
+  return response.data;
+};
+
+export const updateApplicationNotes = async (id: string, notes: string) => {
+  const response = await api.patch(`/admin/applications/${id}/notes`, { notes });
+  return response.data;
+};
+
+export const deleteApplication = async (id: string) => {
+  const response = await api.delete(`/admin/applications/${id}`);
+  return response.data;
+};
+
+export const bulkUpdateApplicationStatus = async (applicationIds: string[], status: string) => {
+  const response = await api.post('/admin/applications/bulk-update-status', { applicationIds, status });
+  return response.data;
+};
+
+export const bulkDeleteApplications = async (applicationIds: string[]) => {
+  const response = await api.post('/admin/applications/bulk-delete', { applicationIds });
+  return response.data;
+};
+
+export const getApplicationStats = async () => {
+  const response = await api.get('/admin/applications/stats');
+  return response.data;
+};
+
+export const exportApplications = async (params?: {
+  status?: string;
+  jobId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/applications/export', { params });
+  return response.data;
+};
+
+// Configuration Services
+export const getSystemConfig = async () => {
+  const response = await api.get('/admin/config');
+  return response.data;
+};
+
+export const updateSiteConfig = async (config: any) => {
+  const response = await api.put('/admin/config/site', config);
+  return response.data;
+};
+
+export const updateJobsConfig = async (config: any) => {
+  const response = await api.put('/admin/config/jobs', config);
+  return response.data;
+};
+
+export const updateApplicationsConfig = async (config: any) => {
+  const response = await api.put('/admin/config/applications', config);
+  return response.data;
+};
+
+export const updateEmailConfig = async (config: any) => {
+  const response = await api.put('/admin/config/email', config);
+  return response.data;
+};
+
+export const updateUploadsConfig = async (config: any) => {
+  const response = await api.put('/admin/config/uploads', config);
+  return response.data;
+};
+
+export const updateSecurityConfig = async (config: any) => {
+  const response = await api.put('/admin/config/security', config);
+  return response.data;
+};
+
+export const resetConfig = async () => {
+  const response = await api.post('/admin/config/reset');
+  return response.data;
+};
+
+export const getSystemStats = async () => {
+  const response = await api.get('/admin/config/system-stats');
+  return response.data;
+};
+
+// Communication Services
+export const sendBroadcastEmail = async (data: {
+  recipients?: string[];
+  subject: string;
+  message: string;
+  recipientType: 'all' | 'role' | 'specific';
+  role?: string;
+}) => {
+  const response = await api.post('/admin/communication/email/broadcast', data);
+  return response.data;
+};
+
+export const sendBroadcastNotification = async (data: {
+  recipients?: string[];
+  title: string;
+  message: string;
+  type: string;
+  link?: string;
+  recipientType: 'all' | 'role' | 'specific';
+  role?: string;
+}) => {
+  const response = await api.post('/admin/communication/notification/broadcast', data);
+  return response.data;
+};
+
+export const sendTestEmail = async (email: string, subject: string, message: string) => {
+  const response = await api.post('/admin/communication/email/test', { email, subject, message });
+  return response.data;
+};
+
+export const getCommunicationHistory = async (params?: {
+  page?: number;
+  limit?: number;
+  type?: string;
+}) => {
+  const response = await api.get('/admin/communication/history', { params });
+  return response.data;
+};
+
+export const getNotificationTemplates = async () => {
+  const response = await api.get('/admin/communication/templates');
+  return response.data;
+};
+
+export const getEmailStats = async () => {
+  const response = await api.get('/admin/communication/email/stats');
+  return response.data;
+};
+
+export const getNotificationStats = async () => {
+  const response = await api.get('/admin/communication/notification/stats');
+  return response.data;
+};
