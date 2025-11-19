@@ -31,6 +31,8 @@ import AchievementsPage from './pages/AchievementsPage';
 import SalaryInsights from './pages/SalaryInsights';
 import SmartRecommendations from './pages/SmartRecommendations';
 import RecruiterRecommendations from './pages/RecruiterRecommendations';
+import EnhancedProfile from './pages/EnhancedProfile';
+import EnhancedCompanyProfile from './pages/EnhancedCompanyProfile';
 
 function App() {
   return (
@@ -83,6 +85,14 @@ function App() {
               }
             />
             <Route
+              path="/profile/enhanced"
+              element={
+                <ProtectedRoute>
+                  <EnhancedProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/saved-jobs"
               element={
                 <ProtectedRoute>
@@ -95,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CompanyProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/companies/:name/enhanced"
+              element={
+                <ProtectedRoute>
+                  <EnhancedCompanyProfile />
                 </ProtectedRoute>
               }
             />
