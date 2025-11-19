@@ -255,3 +255,307 @@ model Notification {
   @@index([createdAt])
   @@map("notifications")
 }
+
+// ============================================
+// ADMIN MODULE MODELS
+// ============================================
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+  RESTORE
+  EXPORT
+  IMPORT
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  SUSPENDED
+  TRIAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+  OTHER
+}
+
+enum ErrorLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+// Audit Log Model - Track all system changes
+model AuditLog {
+  id            String      @id @default(uuid())
+  action        AuditAction
+  entity        String      // e.g., "User", "Job", "Application"
+  entityId      String?     // ID of the affected entity
+  changes       Json?       // JSON object with before/after values
+  ipAddress     String?
+  userAgent     String?
+  metadata      Json?       // Additional context
+  createdAt     DateTime    @default(now())
+
+  // Relations
+  userId        String?
+  performedBy   String?     // User name or email
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// FAQ Model - Frequently Asked Questions
+model FAQ {
+  id            String      @id @default(uuid())
+  question      String
+  answer        String
+  category      String?
+  order         Int         @default(0)
+  isPublished   Boolean     @default(true)
+  views         Int         @default(0)
+  helpful       Int         @default(0)
+  notHelpful    Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+  @@map("faqs")
+}
+
+// Email Template Model - Reusable email templates
+model EmailTemplate {
+  id            String      @id @default(uuid())
+  name          String      @unique
+  subject       String
+  body          String
+  variables     String[]    @default([]) // Available variables like {firstName}, {jobTitle}
+  category      String?     // e.g., "Application", "Interview", "Offer"
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+// Notification Template Model - Reusable notification templates
+model NotificationTemplate {
+  id            String      @id @default(uuid())
+  name          String      @unique
+  title         String
+  body          String
+  type          NotificationType
+  variables     String[]    @default([])
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@map("notification_templates")
+}
+
+// Static Page Model - CMS for static pages
+model StaticPage {
+  id            String      @id @default(uuid())
+  slug          String      @unique
+  title         String
+  content       String
+  metaTitle     String?
+  metaDescription String?
+  isPublished   Boolean     @default(true)
+  publishedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@map("static_pages")
+}
+
+// Help Article Model - Knowledge base articles
+model HelpArticle {
+  id            String      @id @default(uuid())
+  title         String
+  slug          String      @unique
+  content       String
+  category      String
+  tags          String[]    @default([])
+  views         Int         @default(0)
+  helpful       Int         @default(0)
+  notHelpful    Int         @default(0)
+  isPublished   Boolean     @default(true)
+  publishedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([category])
+  @@index([slug])
+  @@index([isPublished])
+  @@map("help_articles")
+}
+
+// Subscription Model - User/Company subscriptions
+model Subscription {
+  id            String              @id @default(uuid())
+  plan          SubscriptionPlan
+  status        SubscriptionStatus  @default(TRIAL)
+  startDate     DateTime            @default(now())
+  endDate       DateTime?
+  trialEndDate  DateTime?
+  maxJobs       Int?                // Limit based on plan
+  maxUsers      Int?                // Limit based on plan
+  features      Json?               // JSON object with enabled features
+  price         Float
+  billingCycle  String              // e.g., "monthly", "yearly"
+  autoRenew     Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  userId        String?             @unique
+  companyId     String?             // For company-wide subscriptions
+  payments      Payment[]
+  invoices      Invoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+  @@map("subscriptions")
+}
+
+// Payment Model - Payment records
+model Payment {
+  id                String        @id @default(uuid())
+  amount            Float
+  currency          String        @default("USD")
+  status            PaymentStatus @default(PENDING)
+  method            PaymentMethod
+  transactionId     String?       @unique // External payment gateway transaction ID
+  stripePaymentId   String?       // Stripe-specific ID
+  paypalOrderId     String?       // PayPal-specific ID
+  cardLast4         String?
+  cardBrand         String?       // e.g., "Visa", "Mastercard"
+  metadata          Json?
+  failureReason     String?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  subscriptionId    String
+  subscription      Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  invoiceId         String?       @unique
+  invoice           Invoice?      @relation(fields: [invoiceId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+// Invoice Model - Billing invoices
+model Invoice {
+  id                String        @id @default(uuid())
+  invoiceNumber     String        @unique
+  amount            Float
+  tax               Float         @default(0)
+  discount          Float         @default(0)
+  total             Float
+  currency          String        @default("USD")
+  status            PaymentStatus @default(PENDING)
+  dueDate           DateTime?
+  paidAt            DateTime?
+  items             Json          // Line items with descriptions and amounts
+  billingAddress    Json?
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  subscriptionId    String
+  subscription      Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  payment           Payment?
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([invoiceNumber])
+  @@index([createdAt])
+  @@map("invoices")
+}
+
+// Error Log Model - System error tracking
+model ErrorLog {
+  id            String      @id @default(uuid())
+  level         ErrorLevel  @default(ERROR)
+  message       String
+  stack         String?
+  context       Json?       // Additional context
+  endpoint      String?     // API endpoint where error occurred
+  method        String?     // HTTP method
+  statusCode    Int?
+  userId        String?
+  ipAddress     String?
+  userAgent     String?
+  resolved      Boolean     @default(false)
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+
+  @@index([level])
+  @@index([resolved])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("error_logs")
+}
+
+// System Config Model - Application configuration
+model SystemConfig {
+  id            String      @id @default(uuid())
+  key           String      @unique
+  value         String
+  type          String      @default("string") // string, number, boolean, json
+  category      String?     // e.g., "email", "security", "features"
+  description   String?
+  isPublic      Boolean     @default(false) // Can be accessed by frontend
+  updatedAt     DateTime    @updatedAt
+  updatedBy     String?     // User ID who updated
+
+  @@index([category])
+  @@index([isPublic])
+  @@map("system_configs")
+}

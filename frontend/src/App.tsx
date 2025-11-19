@@ -44,6 +44,10 @@ import AdminCommunication from './pages/AdminCommunication';
 import AdminInterviewManagement from './pages/AdminInterviewManagement';
 import AdminAdvancedAnalytics from './pages/AdminAdvancedAnalytics';
 import AdminContentManagement from './pages/AdminContentManagement';
+import AdminAuditLogs from './pages/AdminAuditLogs';
+import AdminBilling from './pages/AdminBilling';
+import AdminReports from './pages/AdminReports';
+import AdminMonitoring from './pages/AdminMonitoring';
 
 function App() {
   return (
@@ -353,6 +357,38 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminContentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/audit-logs"
+              element={
+                <ProtectedRoute>
+                  <AdminAuditLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/billing"
+              element={
+                <ProtectedRoute>
+                  <AdminBilling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <ProtectedRoute>
+                  <AdminReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/monitoring"
+              element={
+                <ProtectedRoute>
+                  <AdminMonitoring />
                 </ProtectedRoute>
               }
             />
