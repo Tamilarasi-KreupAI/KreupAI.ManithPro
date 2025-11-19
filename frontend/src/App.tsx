@@ -41,6 +41,9 @@ import AdminJobManagement from './pages/AdminJobManagement';
 import AdminApplicationManagement from './pages/AdminApplicationManagement';
 import AdminConfiguration from './pages/AdminConfiguration';
 import AdminCommunication from './pages/AdminCommunication';
+import AdminInterviewManagement from './pages/AdminInterviewManagement';
+import AdminAdvancedAnalytics from './pages/AdminAdvancedAnalytics';
+import AdminContentManagement from './pages/AdminContentManagement';
 
 function App() {
   return (
@@ -326,6 +329,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminCommunication />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/interviews"
+              element={
+                <ProtectedRoute>
+                  <AdminInterviewManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute>
+                  <AdminAdvancedAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/content"
+              element={
+                <ProtectedRoute>
+                  <AdminContentManagement />
                 </ProtectedRoute>
               }
             />

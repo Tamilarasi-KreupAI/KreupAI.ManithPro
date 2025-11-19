@@ -317,3 +317,313 @@ export const getNotificationStats = async () => {
   const response = await api.get('/admin/communication/notification/stats');
   return response.data;
 };
+
+// ==================== Interview Management Services ====================
+export const getAllInterviews = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  type?: string;
+  candidateId?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/interviews', { params });
+  return response.data;
+};
+
+export const getInterviewById = async (id: string) => {
+  const response = await api.get(`/admin/interviews/${id}`);
+  return response.data;
+};
+
+export const updateInterview = async (id: string, interviewData: any) => {
+  const response = await api.put(`/admin/interviews/${id}`, interviewData);
+  return response.data;
+};
+
+export const updateInterviewStatus = async (id: string, status: string, feedback?: string, rating?: number) => {
+  const response = await api.patch(`/admin/interviews/${id}/status`, { status, feedback, rating });
+  return response.data;
+};
+
+export const deleteInterview = async (id: string) => {
+  const response = await api.delete(`/admin/interviews/${id}`);
+  return response.data;
+};
+
+export const bulkUpdateInterviewStatus = async (interviewIds: string[], status: string) => {
+  const response = await api.post('/admin/interviews/bulk-update-status', { interviewIds, status });
+  return response.data;
+};
+
+export const bulkDeleteInterviews = async (interviewIds: string[]) => {
+  const response = await api.post('/admin/interviews/bulk-delete', { interviewIds });
+  return response.data;
+};
+
+export const getInterviewStats = async () => {
+  const response = await api.get('/admin/interviews/stats');
+  return response.data;
+};
+
+export const getInterviewCalendar = async (year: number, month: number) => {
+  const response = await api.get('/admin/interviews/calendar', { params: { year, month } });
+  return response.data;
+};
+
+export const getUpcomingInterviews = async (limit = 10) => {
+  const response = await api.get('/admin/interviews/upcoming', { params: { limit } });
+  return response.data;
+};
+
+export const exportInterviews = async (params?: {
+  status?: string;
+  type?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/interviews/export', { params });
+  return response.data;
+};
+
+// ==================== Advanced Analytics Services ====================
+export const getComprehensiveAnalytics = async (period?: string) => {
+  const response = await api.get('/admin/analytics/comprehensive', { params: { period } });
+  return response.data;
+};
+
+export const getRecruiterPerformance = async () => {
+  const response = await api.get('/admin/analytics/recruiters');
+  return response.data;
+};
+
+export const getTimeToHireAnalytics = async () => {
+  const response = await api.get('/admin/analytics/time-to-hire');
+  return response.data;
+};
+
+export const getSourceAnalytics = async () => {
+  const response = await api.get('/admin/analytics/sources');
+  return response.data;
+};
+
+export const getSkillsDemandAnalytics = async () => {
+  const response = await api.get('/admin/analytics/skills-demand');
+  return response.data;
+};
+
+export const getIndustryAnalytics = async () => {
+  const response = await api.get('/admin/analytics/industry');
+  return response.data;
+};
+
+export const getEngagementMetrics = async () => {
+  const response = await api.get('/admin/analytics/engagement');
+  return response.data;
+};
+
+export const getRevenueAnalytics = async () => {
+  const response = await api.get('/admin/analytics/revenue');
+  return response.data;
+};
+
+// ==================== Content Management Services ====================
+// FAQ Management
+export const getAllFAQs = async (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  published?: boolean;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/content/faqs', { params });
+  return response.data;
+};
+
+export const getFAQById = async (id: string) => {
+  const response = await api.get(`/admin/content/faqs/${id}`);
+  return response.data;
+};
+
+export const createFAQ = async (faqData: {
+  question: string;
+  answer: string;
+  category?: string;
+  order?: number;
+  published?: boolean;
+}) => {
+  const response = await api.post('/admin/content/faqs', faqData);
+  return response.data;
+};
+
+export const updateFAQ = async (id: string, faqData: any) => {
+  const response = await api.put(`/admin/content/faqs/${id}`, faqData);
+  return response.data;
+};
+
+export const deleteFAQ = async (id: string) => {
+  const response = await api.delete(`/admin/content/faqs/${id}`);
+  return response.data;
+};
+
+export const reorderFAQs = async (faqOrders: { id: string; order: number }[]) => {
+  const response = await api.post('/admin/content/faqs/reorder', { faqOrders });
+  return response.data;
+};
+
+// Email Template Management
+export const getAllEmailTemplates = async (params?: {
+  type?: string;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/content/email-templates', { params });
+  return response.data;
+};
+
+export const getEmailTemplateById = async (id: string) => {
+  const response = await api.get(`/admin/content/email-templates/${id}`);
+  return response.data;
+};
+
+export const createEmailTemplate = async (templateData: {
+  name: string;
+  type: string;
+  subject: string;
+  body: string;
+  variables?: string[];
+}) => {
+  const response = await api.post('/admin/content/email-templates', templateData);
+  return response.data;
+};
+
+export const updateEmailTemplate = async (id: string, templateData: any) => {
+  const response = await api.put(`/admin/content/email-templates/${id}`, templateData);
+  return response.data;
+};
+
+export const deleteEmailTemplate = async (id: string) => {
+  const response = await api.delete(`/admin/content/email-templates/${id}`);
+  return response.data;
+};
+
+// Notification Template Management
+export const getAllNotificationTemplatesContent = async (params?: {
+  type?: string;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/content/notification-templates', { params });
+  return response.data;
+};
+
+export const getNotificationTemplateById = async (id: string) => {
+  const response = await api.get(`/admin/content/notification-templates/${id}`);
+  return response.data;
+};
+
+export const createNotificationTemplate = async (templateData: {
+  name: string;
+  type: string;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  variables?: string[];
+}) => {
+  const response = await api.post('/admin/content/notification-templates', templateData);
+  return response.data;
+};
+
+export const updateNotificationTemplate = async (id: string, templateData: any) => {
+  const response = await api.put(`/admin/content/notification-templates/${id}`, templateData);
+  return response.data;
+};
+
+export const deleteNotificationTemplate = async (id: string) => {
+  const response = await api.delete(`/admin/content/notification-templates/${id}`);
+  return response.data;
+};
+
+// Static Page Management
+export const getAllStaticPages = async (params?: {
+  published?: boolean;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/content/static-pages', { params });
+  return response.data;
+};
+
+export const getStaticPageById = async (id: string) => {
+  const response = await api.get(`/admin/content/static-pages/${id}`);
+  return response.data;
+};
+
+export const createStaticPage = async (pageData: {
+  title: string;
+  slug: string;
+  content: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  published?: boolean;
+}) => {
+  const response = await api.post('/admin/content/static-pages', pageData);
+  return response.data;
+};
+
+export const updateStaticPage = async (id: string, pageData: any) => {
+  const response = await api.put(`/admin/content/static-pages/${id}`, pageData);
+  return response.data;
+};
+
+export const deleteStaticPage = async (id: string) => {
+  const response = await api.delete(`/admin/content/static-pages/${id}`);
+  return response.data;
+};
+
+// Help Article Management
+export const getAllHelpArticles = async (params?: {
+  category?: string;
+  published?: boolean;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/content/help-articles', { params });
+  return response.data;
+};
+
+export const getHelpArticleById = async (id: string) => {
+  const response = await api.get(`/admin/content/help-articles/${id}`);
+  return response.data;
+};
+
+export const createHelpArticle = async (articleData: {
+  title: string;
+  slug: string;
+  content: string;
+  category?: string;
+  order?: number;
+  published?: boolean;
+}) => {
+  const response = await api.post('/admin/content/help-articles', articleData);
+  return response.data;
+};
+
+export const updateHelpArticle = async (id: string, articleData: any) => {
+  const response = await api.put(`/admin/content/help-articles/${id}`, articleData);
+  return response.data;
+};
+
+export const deleteHelpArticle = async (id: string) => {
+  const response = await api.delete(`/admin/content/help-articles/${id}`);
+  return response.data;
+};
+
+export const reorderHelpArticles = async (articleOrders: { id: string; order: number }[]) => {
+  const response = await api.post('/admin/content/help-articles/reorder', { articleOrders });
+  return response.data;
+};
+
+// Content Statistics
+export const getContentStats = async () => {
+  const response = await api.get('/admin/content/stats');
+  return response.data;
+};

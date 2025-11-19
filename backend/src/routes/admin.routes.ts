@@ -75,6 +75,71 @@ import {
   getNotificationStats,
 } from '../controllers/admin.communication.controller';
 
+// Interview Management Controllers
+import {
+  getAllInterviews,
+  getInterviewById,
+  updateInterview,
+  updateInterviewStatus,
+  deleteInterview,
+  bulkUpdateInterviewStatus,
+  bulkDeleteInterviews,
+  getInterviewStats,
+  getInterviewCalendar,
+  getUpcomingInterviews,
+  exportInterviews,
+} from '../controllers/admin.interview.controller';
+
+// Advanced Analytics Controllers
+import {
+  getComprehensiveAnalytics,
+  getRecruiterPerformance,
+  getTimeToHireAnalytics,
+  getSourceAnalytics,
+  getSkillsDemandAnalytics,
+  getIndustryAnalytics,
+  getEngagementMetrics,
+  getRevenueAnalytics,
+} from '../controllers/admin.advancedAnalytics.controller';
+
+// Content Management Controllers
+import {
+  // FAQ Management
+  getAllFAQs,
+  getFAQById,
+  createFAQ,
+  updateFAQ,
+  deleteFAQ,
+  reorderFAQs,
+  // Email Template Management
+  getAllEmailTemplates,
+  getEmailTemplateById,
+  createEmailTemplate,
+  updateEmailTemplate,
+  deleteEmailTemplate,
+  // Notification Template Management
+  getAllNotificationTemplates,
+  getNotificationTemplateById,
+  createNotificationTemplate,
+  updateNotificationTemplate,
+  deleteNotificationTemplate,
+  // Static Page Management
+  getAllStaticPages,
+  getStaticPageById,
+  createStaticPage,
+  updateStaticPage,
+  deleteStaticPage,
+  // Help Article Management
+  getAllHelpArticles,
+  getHelpArticleById,
+  createHelpArticle,
+  updateHelpArticle,
+  deleteHelpArticle,
+  reorderHelpArticles,
+  // Content Statistics
+  getContentStats,
+} from '../controllers/admin.content.controller';
+
 const router = Router();
 
 // All admin routes require authentication and ADMIN role
@@ -141,5 +206,69 @@ router.get('/communication/history', getCommunicationHistory);
 router.get('/communication/templates', getNotificationTemplates);
 router.get('/communication/email/stats', getEmailStats);
 router.get('/communication/notification/stats', getNotificationStats);
+
+// ==================== Interview Management Routes ====================
+router.get('/interviews', getAllInterviews);
+router.get('/interviews/stats', getInterviewStats);
+router.get('/interviews/calendar', getInterviewCalendar);
+router.get('/interviews/upcoming', getUpcomingInterviews);
+router.get('/interviews/export', exportInterviews);
+router.get('/interviews/:id', getInterviewById);
+router.put('/interviews/:id', updateInterview);
+router.patch('/interviews/:id/status', updateInterviewStatus);
+router.delete('/interviews/:id', deleteInterview);
+router.post('/interviews/bulk-update-status', bulkUpdateInterviewStatus);
+router.post('/interviews/bulk-delete', bulkDeleteInterviews);
+
+// ==================== Advanced Analytics Routes ====================
+router.get('/analytics/comprehensive', getComprehensiveAnalytics);
+router.get('/analytics/recruiters', getRecruiterPerformance);
+router.get('/analytics/time-to-hire', getTimeToHireAnalytics);
+router.get('/analytics/sources', getSourceAnalytics);
+router.get('/analytics/skills-demand', getSkillsDemandAnalytics);
+router.get('/analytics/industry', getIndustryAnalytics);
+router.get('/analytics/engagement', getEngagementMetrics);
+router.get('/analytics/revenue', getRevenueAnalytics);
+
+// ==================== Content Management Routes ====================
+// FAQ Routes
+router.get('/content/faqs', getAllFAQs);
+router.get('/content/faqs/:id', getFAQById);
+router.post('/content/faqs', createFAQ);
+router.put('/content/faqs/:id', updateFAQ);
+router.delete('/content/faqs/:id', deleteFAQ);
+router.post('/content/faqs/reorder', reorderFAQs);
+
+// Email Template Routes
+router.get('/content/email-templates', getAllEmailTemplates);
+router.get('/content/email-templates/:id', getEmailTemplateById);
+router.post('/content/email-templates', createEmailTemplate);
+router.put('/content/email-templates/:id', updateEmailTemplate);
+router.delete('/content/email-templates/:id', deleteEmailTemplate);
+
+// Notification Template Routes
+router.get('/content/notification-templates', getAllNotificationTemplates);
+router.get('/content/notification-templates/:id', getNotificationTemplateById);
+router.post('/content/notification-templates', createNotificationTemplate);
+router.put('/content/notification-templates/:id', updateNotificationTemplate);
+router.delete('/content/notification-templates/:id', deleteNotificationTemplate);
+
+// Static Page Routes
+router.get('/content/static-pages', getAllStaticPages);
+router.get('/content/static-pages/:id', getStaticPageById);
+router.post('/content/static-pages', createStaticPage);
+router.put('/content/static-pages/:id', updateStaticPage);
+router.delete('/content/static-pages/:id', deleteStaticPage);
+
+// Help Article Routes
+router.get('/content/help-articles', getAllHelpArticles);
+router.get('/content/help-articles/:id', getHelpArticleById);
+router.post('/content/help-articles', createHelpArticle);
+router.put('/content/help-articles/:id', updateHelpArticle);
+router.delete('/content/help-articles/:id', deleteHelpArticle);
+router.post('/content/help-articles/reorder', reorderHelpArticles);
+
+// Content Statistics
+router.get('/content/stats', getContentStats);
 
 export default router;
