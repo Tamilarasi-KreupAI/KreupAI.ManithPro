@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -13,7 +14,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-primary-600 text-white shadow-lg">
+    <nav className="bg-primary-600 dark:bg-gray-800 text-white shadow-lg transition-colors">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="text-2xl font-bold">
@@ -69,11 +70,12 @@ const Navbar: React.FC = () => {
                     </Link>
                   </>
                 )}
-                <Link to="/messages" className="hover:text-primary-200">
+                <Link to="/messages" className="hover:text-primary-200 dark:hover:text-gray-300">
                   Messages
                 </Link>
                 <NotificationDropdown />
-                <Link to="/profile" className="hover:text-primary-200">
+                <ThemeToggle />
+                <Link to="/profile" className="hover:text-primary-200 dark:hover:text-gray-300">
                   Profile
                 </Link>
                 <span className="text-sm">

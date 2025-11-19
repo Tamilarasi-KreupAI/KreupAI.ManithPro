@@ -100,7 +100,7 @@ const CompanyCulture: React.FC<CompanyCultureProps> = ({
             >
               <div className="aspect-video bg-gray-900 relative">
                 {video.thumbnail ? (
-                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <svg className="h-16 w-16 text-white opacity-75" fill="currentColor" viewBox="0 0 20 20">
@@ -138,6 +138,7 @@ const CompanyCulture: React.FC<CompanyCultureProps> = ({
                       src={testimonial.photo}
                       alt={testimonial.name}
                       className="w-16 h-16 rounded-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xl font-bold">
@@ -214,7 +215,7 @@ const CompanyCulture: React.FC<CompanyCultureProps> = ({
               </button>
             </div>
             <div className="aspect-video bg-gray-900">
-              <video src={selectedVideo.url} controls className="w-full h-full" autoPlay />
+              <video src={selectedVideo.url} controls className="w-full h-full" autoPlay preload="metadata" />
             </div>
             <div className="bg-white rounded-b-xl p-4">
               <p className="text-gray-700">{selectedVideo.description}</p>

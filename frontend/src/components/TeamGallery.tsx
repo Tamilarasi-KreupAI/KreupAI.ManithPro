@@ -64,6 +64,7 @@ const TeamGallery: React.FC<TeamGalleryProps> = ({ members = [] }) => {
                   src={member.photo}
                   alt={member.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-white bg-gradient-to-br from-primary-500 to-primary-600">
@@ -110,6 +111,7 @@ const TeamGallery: React.FC<TeamGalleryProps> = ({ members = [] }) => {
                     src={selectedMember.photo}
                     alt={selectedMember.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-8xl font-bold text-white bg-gradient-to-br from-primary-500 to-primary-600">

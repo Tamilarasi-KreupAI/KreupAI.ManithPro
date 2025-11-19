@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { applicationAPI } from '../services/api';
 import type { Application, User } from '../types';
+import { CandidateCardSkeleton } from '../components/SkeletonLoader';
 
 interface CandidateProfile {
   user: User;
@@ -149,7 +150,15 @@ const CandidateSearch: React.FC = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading candidates...</div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Candidate Search</h1>
+          <p className="text-gray-600 mt-1">Loading candidates...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CandidateCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }

@@ -251,6 +251,7 @@ const EnhancedCompanyProfile: React.FC = () => {
           src={company.coverImage}
           alt={company.name}
           className="w-full h-full object-cover opacity-50"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -258,7 +259,7 @@ const EnhancedCompanyProfile: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end gap-6">
               <div className="w-32 h-32 bg-white rounded-lg shadow-xl p-4 flex items-center justify-center">
-                <img src={company.logo} alt={company.name} className="w-full h-full object-contain" />
+                <img src={company.logo} alt={company.name} className="w-full h-full object-contain" loading="lazy" />
               </div>
               <div className="flex-1 text-white pb-2">
                 <h1 className="text-5xl font-bold mb-2">{company.name}</h1>

@@ -53,6 +53,7 @@ const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
             src={item.url}
             alt={item.title}
             className="w-full h-48 object-cover"
+            loading="lazy"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image';
             }}
@@ -180,10 +181,10 @@ const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
 
               <div className="mb-4">
                 {selectedItem.type === 'image' && (
-                  <img src={selectedItem.url} alt={selectedItem.title} className="w-full rounded-lg" />
+                  <img src={selectedItem.url} alt={selectedItem.title} className="w-full rounded-lg" loading="lazy" />
                 )}
                 {selectedItem.type === 'video' && (
-                  <video src={selectedItem.url} controls className="w-full rounded-lg" />
+                  <video src={selectedItem.url} controls className="w-full rounded-lg" preload="metadata" />
                 )}
                 {selectedItem.type === 'document' && (
                   <iframe src={selectedItem.url} className="w-full h-96 rounded-lg border" />
