@@ -21,6 +21,18 @@ import JobForm from './pages/JobForm';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import RecruiterApplications from './pages/RecruiterApplications';
 import CandidateSearch from './pages/CandidateSearch';
+import InterviewCalendar from './pages/InterviewCalendar';
+import Interviews from './pages/Interviews';
+import InterviewDetail from './pages/InterviewDetail';
+import Messages from './pages/Messages';
+import ApplicationKanban from './pages/ApplicationKanban';
+import SuperAdvancedJobSearch from './pages/SuperAdvancedJobSearch';
+import AchievementsPage from './pages/AchievementsPage';
+import SalaryInsights from './pages/SalaryInsights';
+import SmartRecommendations from './pages/SmartRecommendations';
+import RecruiterRecommendations from './pages/RecruiterRecommendations';
+import EnhancedProfile from './pages/EnhancedProfile';
+import EnhancedCompanyProfile from './pages/EnhancedCompanyProfile';
 
 function App() {
   return (
@@ -73,6 +85,14 @@ function App() {
               }
             />
             <Route
+              path="/profile/enhanced"
+              element={
+                <ProtectedRoute>
+                  <EnhancedProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/saved-jobs"
               element={
                 <ProtectedRoute>
@@ -85,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CompanyProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/companies/:name/enhanced"
+              element={
+                <ProtectedRoute>
+                  <EnhancedCompanyProfile />
                 </ProtectedRoute>
               }
             />
@@ -153,10 +181,90 @@ function App() {
               }
             />
             <Route
+              path="/recruiter/kanban"
+              element={
+                <ProtectedRoute>
+                  <ApplicationKanban />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/candidates"
               element={
                 <ProtectedRoute>
                   <CandidateSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interviews"
+              element={
+                <ProtectedRoute>
+                  <Interviews />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interviews/:id"
+              element={
+                <ProtectedRoute>
+                  <InterviewDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-calendar"
+              element={
+                <ProtectedRoute>
+                  <InterviewCalendar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/advanced-search"
+              element={
+                <ProtectedRoute>
+                  <SuperAdvancedJobSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/achievements"
+              element={
+                <ProtectedRoute>
+                  <AchievementsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/salary-insights"
+              element={
+                <ProtectedRoute>
+                  <SalaryInsights />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smart-recommendations"
+              element={
+                <ProtectedRoute>
+                  <SmartRecommendations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter/recommendations"
+              element={
+                <ProtectedRoute>
+                  <RecruiterRecommendations />
                 </ProtectedRoute>
               }
             />

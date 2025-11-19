@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -27,17 +28,23 @@ const Navbar: React.FC = () => {
                 </Link>
                 {user.role === 'CANDIDATE' ? (
                   <>
-                    <Link to="/recommendations" className="hover:text-primary-200">
-                      For You
+                    <Link to="/advanced-search" className="hover:text-primary-200">
+                      Search
                     </Link>
-                    <Link to="/search" className="hover:text-primary-200">
-                      Search Jobs
+                    <Link to="/smart-recommendations" className="hover:text-primary-200">
+                      AI Match
                     </Link>
                     <Link to="/applications" className="hover:text-primary-200">
-                      My Applications
+                      Applications
                     </Link>
-                    <Link to="/saved-jobs" className="hover:text-primary-200">
-                      Saved
+                    <Link to="/interviews" className="hover:text-primary-200">
+                      Interviews
+                    </Link>
+                    <Link to="/achievements" className="hover:text-primary-200">
+                      Achievements
+                    </Link>
+                    <Link to="/salary-insights" className="hover:text-primary-200">
+                      Salary
                     </Link>
                   </>
                 ) : (
@@ -45,17 +52,27 @@ const Navbar: React.FC = () => {
                     <Link to="/recruiter/dashboard" className="hover:text-primary-200">
                       Dashboard
                     </Link>
-                    <Link to="/jobs" className="hover:text-primary-200">
-                      Jobs
+                    <Link to="/recruiter/kanban" className="hover:text-primary-200">
+                      Kanban
                     </Link>
-                    <Link to="/recruiter/applications" className="hover:text-primary-200">
-                      Applications
+                    <Link to="/recruiter/recommendations" className="hover:text-primary-200">
+                      AI Match
                     </Link>
                     <Link to="/candidates" className="hover:text-primary-200">
                       Candidates
                     </Link>
+                    <Link to="/interview-calendar" className="hover:text-primary-200">
+                      Interviews
+                    </Link>
+                    <Link to="/salary-insights" className="hover:text-primary-200">
+                      Salary
+                    </Link>
                   </>
                 )}
+                <Link to="/messages" className="hover:text-primary-200">
+                  Messages
+                </Link>
+                <NotificationDropdown />
                 <Link to="/profile" className="hover:text-primary-200">
                   Profile
                 </Link>

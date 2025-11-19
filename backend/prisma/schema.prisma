@@ -39,6 +39,42 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+enum InterviewType {
+  PHONE_SCREEN
+  TECHNICAL
+  HR
+  FINAL
+  PEER
+  CULTURAL_FIT
+  OTHER
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum NotificationType {
+  APPLICATION_STATUS
+  INTERVIEW_SCHEDULED
+  INTERVIEW_REMINDER
+  MESSAGE_RECEIVED
+  JOB_POSTED
+  APPLICATION_RECEIVED
+  OFFER_MADE
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+}
+
 model User {
   id            String        @id @default(uuid())
   email         String        @unique
@@ -58,9 +94,14 @@ model User {
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  postedJobs    Job[]         @relation("PostedJobs")
-  applications  Application[]
-  savedJobs     SavedJob[]
+  postedJobs           Job[]           @relation("PostedJobs")
+  applications         Application[]
+  savedJobs            SavedJob[]
+  scheduledInterviews  Interview[]     @relation("ScheduledInterviews")
+  candidateInterviews  Interview[]     @relation("CandidateInterviews")
+  sentMessages         Message[]       @relation("SentMessages")
+  receivedMessages     Message[]       @relation("ReceivedMessages")
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -121,6 +162,8 @@ model Application {
   job           Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   candidateId   String
   candidate     User              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  interviews    Interview[]
+  messages      Message[]
 
   @@unique([jobId, candidateId]) // One application per job per candidate
   @@index([status])
@@ -141,4 +184,74 @@ model SavedJob {
   @@unique([userId, jobId]) // One save per job per user
   @@index([userId])
   @@map("saved_jobs")
+}
+
+model Interview {
+  id              String          @id @default(uuid())
+  type            InterviewType
+  status          InterviewStatus @default(SCHEDULED)
+  scheduledAt     DateTime
+  endTime         DateTime
+  timeZone        String?         // e.g., "America/New_York"
+  meetingLink     String?         // Video call link (Zoom, Google Meet, etc.)
+  location        String?         // Physical location if in-person
+  instructions    String?         // Instructions for the candidate
+  notes           String?         // Internal notes from recruiter
+  feedback        String?         // Post-interview feedback
+  rating          Int?            // 1-5 rating
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  applicationId   String
+  application     Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  scheduledById   String
+  scheduledBy     User            @relation("ScheduledInterviews", fields: [scheduledById], references: [id])
+  candidateId     String
+  candidate       User            @relation("CandidateInterviews", fields: [candidateId], references: [id])
+
+  @@index([status, scheduledAt])
+  @@index([candidateId])
+  @@index([scheduledById])
+  @@map("interviews")
+}
+
+model Message {
+  id              String        @id @default(uuid())
+  content         String
+  status          MessageStatus @default(SENT)
+  attachments     String[]      @default([])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  senderId        String
+  sender          User          @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User          @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  applicationId   String?
+  application     Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId])
+  @@index([applicationId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id          String            @id @default(uuid())
+  type        NotificationType
+  title       String
+  message     String
+  link        String?           // Link to relevant page
+  isRead      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+
+  // Relations
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

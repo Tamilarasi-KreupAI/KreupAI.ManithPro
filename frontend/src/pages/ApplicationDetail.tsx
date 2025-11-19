@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { applicationAPI } from '../services/api';
+import ApplicationTimeline from '../components/ApplicationTimeline';
 import type { Application } from '../types';
 
 const ApplicationDetail: React.FC = () => {
@@ -147,6 +148,17 @@ const ApplicationDetail: React.FC = () => {
                   <span>{application.job.type.replace('_', ' ')}</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Application Timeline (for candidates) */}
+          {isCandidate && (
+            <div className="mb-6">
+              <ApplicationTimeline
+                currentStatus={application.status}
+                appliedAt={application.appliedAt}
+                updatedAt={application.updatedAt}
+              />
             </div>
           )}
 

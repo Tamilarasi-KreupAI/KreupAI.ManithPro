@@ -8,6 +8,9 @@ import applicationRoutes from './routes/application.routes';
 import userRoutes from './routes/user.routes';
 import savedJobRoutes from './routes/savedJob.routes';
 import companyRoutes from './routes/company.routes';
+import interviewRoutes from './routes/interview.routes';
+import messageRoutes from './routes/message.routes';
+import notificationRoutes from './routes/notification.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -40,6 +43,9 @@ app.get('/', (req, res) => {
       users: '/api/users',
       savedJobs: '/api/saved-jobs',
       companies: '/api/companies',
+      interviews: '/api/interviews',
+      messages: '/api/messages',
+      notifications: '/api/notifications',
     },
   });
 });
@@ -50,6 +56,9 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/saved-jobs', savedJobRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/interviews', interviewRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
