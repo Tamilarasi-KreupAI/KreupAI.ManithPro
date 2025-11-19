@@ -29,6 +29,8 @@ import ApplicationKanban from './pages/ApplicationKanban';
 import SuperAdvancedJobSearch from './pages/SuperAdvancedJobSearch';
 import AchievementsPage from './pages/AchievementsPage';
 import SalaryInsights from './pages/SalaryInsights';
+import SmartRecommendations from './pages/SmartRecommendations';
+import RecruiterRecommendations from './pages/RecruiterRecommendations';
 
 function App() {
   return (
@@ -229,6 +231,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SalaryInsights />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smart-recommendations"
+              element={
+                <ProtectedRoute>
+                  <SmartRecommendations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter/recommendations"
+              element={
+                <ProtectedRoute>
+                  <RecruiterRecommendations />
                 </ProtectedRoute>
               }
             />

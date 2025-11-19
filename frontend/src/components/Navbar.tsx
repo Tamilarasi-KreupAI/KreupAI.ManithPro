@@ -31,6 +31,9 @@ const Navbar: React.FC = () => {
                     <Link to="/advanced-search" className="hover:text-primary-200">
                       Search
                     </Link>
+                    <Link to="/smart-recommendations" className="hover:text-primary-200">
+                      AI Match
+                    </Link>
                     <Link to="/applications" className="hover:text-primary-200">
                       Applications
                     </Link>
@@ -51,6 +54,9 @@ const Navbar: React.FC = () => {
                     </Link>
                     <Link to="/recruiter/kanban" className="hover:text-primary-200">
                       Kanban
+                    </Link>
+                    <Link to="/recruiter/recommendations" className="hover:text-primary-200">
+                      AI Match
                     </Link>
                     <Link to="/candidates" className="hover:text-primary-200">
                       Candidates
