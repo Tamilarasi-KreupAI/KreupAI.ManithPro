@@ -26,6 +26,9 @@ import Interviews from './pages/Interviews';
 import InterviewDetail from './pages/InterviewDetail';
 import Messages from './pages/Messages';
 import ApplicationKanban from './pages/ApplicationKanban';
+import SuperAdvancedJobSearch from './pages/SuperAdvancedJobSearch';
+import AchievementsPage from './pages/AchievementsPage';
+import SalaryInsights from './pages/SalaryInsights';
 
 function App() {
   return (
@@ -202,6 +205,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/advanced-search"
+              element={
+                <ProtectedRoute>
+                  <SuperAdvancedJobSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/achievements"
+              element={
+                <ProtectedRoute>
+                  <AchievementsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/salary-insights"
+              element={
+                <ProtectedRoute>
+                  <SalaryInsights />
                 </ProtectedRoute>
               }
             />

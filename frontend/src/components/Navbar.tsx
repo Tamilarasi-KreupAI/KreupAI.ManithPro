@@ -28,32 +28,26 @@ const Navbar: React.FC = () => {
                 </Link>
                 {user.role === 'CANDIDATE' ? (
                   <>
-                    <Link to="/recommendations" className="hover:text-primary-200">
-                      For You
-                    </Link>
-                    <Link to="/search" className="hover:text-primary-200">
-                      Search Jobs
+                    <Link to="/advanced-search" className="hover:text-primary-200">
+                      Search
                     </Link>
                     <Link to="/applications" className="hover:text-primary-200">
-                      My Applications
-                    </Link>
-                    <Link to="/saved-jobs" className="hover:text-primary-200">
-                      Saved
+                      Applications
                     </Link>
                     <Link to="/interviews" className="hover:text-primary-200">
                       Interviews
+                    </Link>
+                    <Link to="/achievements" className="hover:text-primary-200">
+                      Achievements
+                    </Link>
+                    <Link to="/salary-insights" className="hover:text-primary-200">
+                      Salary
                     </Link>
                   </>
                 ) : (
                   <>
                     <Link to="/recruiter/dashboard" className="hover:text-primary-200">
                       Dashboard
-                    </Link>
-                    <Link to="/jobs" className="hover:text-primary-200">
-                      Jobs
-                    </Link>
-                    <Link to="/recruiter/applications" className="hover:text-primary-200">
-                      Applications
                     </Link>
                     <Link to="/recruiter/kanban" className="hover:text-primary-200">
                       Kanban
@@ -63,6 +57,9 @@ const Navbar: React.FC = () => {
                     </Link>
                     <Link to="/interview-calendar" className="hover:text-primary-200">
                       Interviews
+                    </Link>
+                    <Link to="/salary-insights" className="hover:text-primary-200">
+                      Salary
                     </Link>
                   </>
                 )}
