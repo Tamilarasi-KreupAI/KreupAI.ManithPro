@@ -627,3 +627,277 @@ export const getContentStats = async () => {
   const response = await api.get('/admin/content/stats');
   return response.data;
 };
+
+// ==================== Audit Log Services ====================
+export const getAllAuditLogs = async (params?: {
+  page?: number;
+  limit?: number;
+  action?: string;
+  entity?: string;
+  userId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/audit-logs', { params });
+  return response.data;
+};
+
+export const getAuditLogById = async (id: string) => {
+  const response = await api.get(`/admin/audit-logs/${id}`);
+  return response.data;
+};
+
+export const createAuditLog = async (logData: {
+  action: string;
+  entity: string;
+  entityId?: string;
+  description?: string;
+  metadata?: any;
+  ipAddress?: string;
+}) => {
+  const response = await api.post('/admin/audit-logs', logData);
+  return response.data;
+};
+
+export const getAuditLogStats = async (period?: string) => {
+  const response = await api.get('/admin/audit-logs/stats', { params: { period } });
+  return response.data;
+};
+
+export const getUserActivity = async (userId: string, limit?: number) => {
+  const response = await api.get(`/admin/audit-logs/user/${userId}`, { params: { limit } });
+  return response.data;
+};
+
+export const exportAuditLogs = async (params?: {
+  action?: string;
+  entity?: string;
+  userId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/audit-logs/export', { params });
+  return response.data;
+};
+
+export const deleteOldAuditLogs = async (days: number) => {
+  const response = await api.delete('/admin/audit-logs/cleanup', { data: { days } });
+  return response.data;
+};
+
+// ==================== Reports Services ====================
+export const getReportTypes = async () => {
+  const response = await api.get('/admin/reports/types');
+  return response.data;
+};
+
+export const generateUserReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+  role?: string;
+  format?: string;
+}) => {
+  const response = await api.get('/admin/reports/users', { params });
+  return response.data;
+};
+
+export const generateJobReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+  type?: string;
+  format?: string;
+}) => {
+  const response = await api.get('/admin/reports/jobs', { params });
+  return response.data;
+};
+
+export const generateApplicationReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+  format?: string;
+}) => {
+  const response = await api.get('/admin/reports/applications', { params });
+  return response.data;
+};
+
+export const generateInterviewReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+  type?: string;
+  format?: string;
+}) => {
+  const response = await api.get('/admin/reports/interviews', { params });
+  return response.data;
+};
+
+export const generateRecruiterReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+  format?: string;
+}) => {
+  const response = await api.get('/admin/reports/recruiters', { params });
+  return response.data;
+};
+
+export const generateConversionReport = async (params?: {
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/reports/conversion', { params });
+  return response.data;
+};
+
+export const getScheduledReports = async () => {
+  const response = await api.get('/admin/reports/scheduled');
+  return response.data;
+};
+
+export const getReportHistory = async (limit?: number) => {
+  const response = await api.get('/admin/reports/history', { params: { limit } });
+  return response.data;
+};
+
+// ==================== Billing Services ====================
+export const getAllSubscriptions = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  plan?: string;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/billing/subscriptions', { params });
+  return response.data;
+};
+
+export const getSubscriptionById = async (id: string) => {
+  const response = await api.get(`/admin/billing/subscriptions/${id}`);
+  return response.data;
+};
+
+export const updateSubscription = async (id: string, data: any) => {
+  const response = await api.put(`/admin/billing/subscriptions/${id}`, data);
+  return response.data;
+};
+
+export const cancelSubscription = async (id: string, reason?: string) => {
+  const response = await api.post(`/admin/billing/subscriptions/${id}/cancel`, { reason });
+  return response.data;
+};
+
+export const getSubscriptionStats = async () => {
+  const response = await api.get('/admin/billing/subscriptions/stats');
+  return response.data;
+};
+
+export const getAllPayments = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/billing/payments', { params });
+  return response.data;
+};
+
+export const getPaymentStats = async (period?: string) => {
+  const response = await api.get('/admin/billing/payments/stats', { params: { period } });
+  return response.data;
+};
+
+export const getAllInvoices = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/billing/invoices', { params });
+  return response.data;
+};
+
+export const generateInvoice = async (invoiceData: {
+  subscriptionId: string;
+  amount: number;
+  dueDate: string;
+  items?: any[];
+}) => {
+  const response = await api.post('/admin/billing/invoices', invoiceData);
+  return response.data;
+};
+
+export const markInvoiceAsPaid = async (id: string, paymentId: string, paidAmount: number) => {
+  const response = await api.post(`/admin/billing/invoices/${id}/mark-paid`, { paymentId, paidAmount });
+  return response.data;
+};
+
+export const getBillingRevenueAnalytics = async (period?: string) => {
+  const response = await api.get('/admin/billing/revenue', { params: { period } });
+  return response.data;
+};
+
+export const exportBillingData = async (params?: {
+  type?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  const response = await api.get('/admin/billing/export', { params });
+  return response.data;
+};
+
+// ==================== Monitoring Services ====================
+export const getSystemHealth = async () => {
+  const response = await api.get('/admin/monitoring/health');
+  return response.data;
+};
+
+export const getAPIUsage = async (period?: string) => {
+  const response = await api.get('/admin/monitoring/api-usage', { params: { period } });
+  return response.data;
+};
+
+export const getErrorLogs = async (params?: {
+  page?: number;
+  limit?: number;
+  level?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}) => {
+  const response = await api.get('/admin/monitoring/errors', { params });
+  return response.data;
+};
+
+export const getErrorStats = async (period?: string) => {
+  const response = await api.get('/admin/monitoring/errors/stats', { params: { period } });
+  return response.data;
+};
+
+export const getDatabaseMetrics = async () => {
+  const response = await api.get('/admin/monitoring/database');
+  return response.data;
+};
+
+export const getPerformanceMetrics = async (period?: string) => {
+  const response = await api.get('/admin/monitoring/performance', { params: { period } });
+  return response.data;
+};
+
+export const getBackgroundJobs = async () => {
+  const response = await api.get('/admin/monitoring/jobs');
+  return response.data;
+};
+
+export const getCacheMetrics = async () => {
+  const response = await api.get('/admin/monitoring/cache');
+  return response.data;
+};
+
+export const getActiveSessions = async () => {
+  const response = await api.get('/admin/monitoring/sessions');
+  return response.data;
+};

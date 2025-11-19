@@ -567,3 +567,31 @@ export const getEngagementMetrics = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ error: 'Failed to fetch engagement metrics' });
   }
 };
+
+// Get revenue analytics (placeholder for future billing implementation)
+export const getRevenueAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // This is a placeholder implementation
+    // When billing/subscription system is implemented, this will track:
+    // - Monthly recurring revenue (MRR)
+    // - Annual recurring revenue (ARR)
+    // - Revenue by subscription tier
+    // - Revenue growth rate
+    // - Customer lifetime value (LTV)
+    // - Churn rate
+
+    // For now, return mock data structure
+    res.json({
+      totalRevenue: 0,
+      monthlyRecurringRevenue: 0,
+      annualRecurringRevenue: 0,
+      revenueGrowth: 0,
+      byTier: [],
+      revenueOverTime: [],
+      message: 'Revenue tracking requires billing system implementation',
+    });
+  } catch (error) {
+    console.error('Error fetching revenue analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch revenue analytics' });
+  }
+};

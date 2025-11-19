@@ -140,6 +140,59 @@ import {
   getContentStats,
 } from '../controllers/admin.content.controller';
 
+// Audit Log Controllers
+import {
+  getAllAuditLogs,
+  getAuditLogById,
+  createAuditLog,
+  getAuditLogStats,
+  getUserActivity,
+  exportAuditLogs,
+  deleteOldAuditLogs,
+} from '../controllers/admin.auditLog.controller';
+
+// Reports Controllers
+import {
+  getReportTypes,
+  generateUserReport,
+  generateJobReport,
+  generateApplicationReport,
+  generateInterviewReport,
+  generateRecruiterReport,
+  generateConversionReport,
+  getScheduledReports,
+  getReportHistory,
+} from '../controllers/admin.reports.controller';
+
+// Billing Controllers
+import {
+  getAllSubscriptions,
+  getSubscriptionById,
+  updateSubscription,
+  cancelSubscription,
+  getSubscriptionStats,
+  getAllPayments,
+  getPaymentStats,
+  getAllInvoices,
+  generateInvoice,
+  markInvoiceAsPaid,
+  getRevenueAnalytics as getBillingRevenueAnalytics,
+  exportBillingData,
+} from '../controllers/admin.billing.controller';
+
+// Monitoring Controllers
+import {
+  getSystemHealth,
+  getAPIUsage,
+  getErrorLogs,
+  getErrorStats,
+  getDatabaseMetrics,
+  getPerformanceMetrics,
+  getBackgroundJobs,
+  getCacheMetrics,
+  getActiveSessions,
+} from '../controllers/admin.monitoring.controller';
+
 const router = Router();
 
 // All admin routes require authentication and ADMIN role
@@ -270,5 +323,53 @@ router.post('/content/help-articles/reorder', reorderHelpArticles);
 
 // Content Statistics
 router.get('/content/stats', getContentStats);
+
+// ==================== Audit Log Routes ====================
+router.get('/audit-logs', getAllAuditLogs);
+router.get('/audit-logs/stats', getAuditLogStats);
+router.get('/audit-logs/export', exportAuditLogs);
+router.get('/audit-logs/user/:userId', getUserActivity);
+router.get('/audit-logs/:id', getAuditLogById);
+router.post('/audit-logs', createAuditLog);
+router.delete('/audit-logs/cleanup', deleteOldAuditLogs);
+
+// ==================== Reports Routes ====================
+router.get('/reports/types', getReportTypes);
+router.get('/reports/users', generateUserReport);
+router.get('/reports/jobs', generateJobReport);
+router.get('/reports/applications', generateApplicationReport);
+router.get('/reports/interviews', generateInterviewReport);
+router.get('/reports/recruiters', generateRecruiterReport);
+router.get('/reports/conversion', generateConversionReport);
+router.get('/reports/scheduled', getScheduledReports);
+router.get('/reports/history', getReportHistory);
+
+// ==================== Billing Routes ====================
+router.get('/billing/subscriptions', getAllSubscriptions);
+router.get('/billing/subscriptions/stats', getSubscriptionStats);
+router.get('/billing/subscriptions/:id', getSubscriptionById);
+router.put('/billing/subscriptions/:id', updateSubscription);
+router.post('/billing/subscriptions/:id/cancel', cancelSubscription);
+
+router.get('/billing/payments', getAllPayments);
+router.get('/billing/payments/stats', getPaymentStats);
+
+router.get('/billing/invoices', getAllInvoices);
+router.post('/billing/invoices', generateInvoice);
+router.post('/billing/invoices/:id/mark-paid', markInvoiceAsPaid);
+
+router.get('/billing/revenue', getBillingRevenueAnalytics);
+router.get('/billing/export', exportBillingData);
+
+// ==================== Monitoring Routes ====================
+router.get('/monitoring/health', getSystemHealth);
+router.get('/monitoring/api-usage', getAPIUsage);
+router.get('/monitoring/errors', getErrorLogs);
+router.get('/monitoring/errors/stats', getErrorStats);
+router.get('/monitoring/database', getDatabaseMetrics);
+router.get('/monitoring/performance', getPerformanceMetrics);
+router.get('/monitoring/jobs', getBackgroundJobs);
+router.get('/monitoring/cache', getCacheMetrics);
+router.get('/monitoring/sessions', getActiveSessions);
 
 export default router;
