@@ -35,6 +35,15 @@ import SmartRecommendations from './pages/SmartRecommendations';
 import RecruiterRecommendations from './pages/RecruiterRecommendations';
 import EnhancedProfile from './pages/EnhancedProfile';
 import EnhancedCompanyProfile from './pages/EnhancedCompanyProfile';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUserManagement from './pages/AdminUserManagement';
+import AdminJobManagement from './pages/AdminJobManagement';
+import AdminApplicationManagement from './pages/AdminApplicationManagement';
+import AdminConfiguration from './pages/AdminConfiguration';
+import AdminCommunication from './pages/AdminCommunication';
+import AdminInterviewManagement from './pages/AdminInterviewManagement';
+import AdminAdvancedAnalytics from './pages/AdminAdvancedAnalytics';
+import AdminContentManagement from './pages/AdminContentManagement';
 
 function App() {
   return (
@@ -272,6 +281,78 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RecruiterRecommendations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute>
+                  <AdminUserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/jobs"
+              element={
+                <ProtectedRoute>
+                  <AdminJobManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/applications"
+              element={
+                <ProtectedRoute>
+                  <AdminApplicationManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/configuration"
+              element={
+                <ProtectedRoute>
+                  <AdminConfiguration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/communication"
+              element={
+                <ProtectedRoute>
+                  <AdminCommunication />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/interviews"
+              element={
+                <ProtectedRoute>
+                  <AdminInterviewManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute>
+                  <AdminAdvancedAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/content"
+              element={
+                <ProtectedRoute>
+                  <AdminContentManagement />
                 </ProtectedRoute>
               }
             />
