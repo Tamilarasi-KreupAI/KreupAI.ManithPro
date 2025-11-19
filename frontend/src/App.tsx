@@ -38,6 +38,9 @@ import EnhancedCompanyProfile from './pages/EnhancedCompanyProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUserManagement from './pages/AdminUserManagement';
 import AdminJobManagement from './pages/AdminJobManagement';
+import AdminApplicationManagement from './pages/AdminApplicationManagement';
+import AdminConfiguration from './pages/AdminConfiguration';
+import AdminCommunication from './pages/AdminCommunication';
 
 function App() {
   return (
@@ -299,6 +302,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminJobManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/applications"
+              element={
+                <ProtectedRoute>
+                  <AdminApplicationManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/configuration"
+              element={
+                <ProtectedRoute>
+                  <AdminConfiguration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/communication"
+              element={
+                <ProtectedRoute>
+                  <AdminCommunication />
                 </ProtectedRoute>
               }
             />
