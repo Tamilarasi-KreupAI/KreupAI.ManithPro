@@ -55,6 +55,9 @@ const Navbar: React.FC = () => {
                     <Link to="/recruiter/applications" className="hover:text-primary-200">
                       Applications
                     </Link>
+                    <Link to="/recruiter/kanban" className="hover:text-primary-200">
+                      Kanban
+                    </Link>
                     <Link to="/candidates" className="hover:text-primary-200">
                       Candidates
                     </Link>

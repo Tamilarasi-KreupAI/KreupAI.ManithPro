@@ -25,6 +25,7 @@ import InterviewCalendar from './pages/InterviewCalendar';
 import Interviews from './pages/Interviews';
 import InterviewDetail from './pages/InterviewDetail';
 import Messages from './pages/Messages';
+import ApplicationKanban from './pages/ApplicationKanban';
 
 function App() {
   return (
@@ -153,6 +154,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RecruiterApplications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter/kanban"
+              element={
+                <ProtectedRoute>
+                  <ApplicationKanban />
                 </ProtectedRoute>
               }
             />
