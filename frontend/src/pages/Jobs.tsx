@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { jobAPI } from '../services/api';
 import type { Job } from '../types';
+import { JobCardSkeleton } from '../components/SkeletonLoader';
 
 const Jobs: React.FC = () => {
   const { user } = useAuth();
@@ -93,7 +94,11 @@ const Jobs: React.FC = () => {
 
       {/* Job Listings */}
       {loading ? (
-        <div className="text-center py-8">Loading jobs...</div>
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <JobCardSkeleton key={i} />
+          ))}
+        </div>
       ) : (
         <div className="space-y-4">
           {jobs.length > 0 ? (

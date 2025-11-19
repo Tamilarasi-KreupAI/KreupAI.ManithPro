@@ -1,0 +1,234 @@
+╔════════════════════════════════════════════════════════════════════════════════════════╗
+║          REAL-TIME COLLABORATION TOOLS (FEATURE #7) - QUICK REFERENCE GUIDE           ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  FEATURE                           STATUS    IMPLEMENTATION %    PRIORITY              ║
+║  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━  ━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━           ║
+║  1. Team Hiring with Scorecards     ❌        0%                 HIGH                   ║
+║  2. @Mentions in Notes/Comments     ❌        0%                 HIGH                   ║
+║  3. Interview Panel Coordination    ❌        0%                 HIGH                   ║
+║  4. Live Feedback During Interviews ❌        0%                 VERY HIGH              ║
+║  5. Hiring Committee Voting         ❌        0%                 HIGH                   ║
+║  6. Real-Time Infrastructure        ❌        0%                 CRITICAL               ║
+║  7. Multi-User Interview Support    ❌        0%                 HIGH                   ║
+║  8. Team-Based Decision Making      ❌        0%                 HIGH                   ║
+║  9. Rich Comment System             ❌        0%                 MEDIUM                 ║
+║  10. Collaborative Feedback         ❌        0%                 HIGH                   ║
+║                                                                                        ║
+║  OVERALL FEATURE COMPLETION:                  0%                 NOT STARTED            ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                    WHAT EXISTS                                         ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  ✅ Interview Scheduling System                                                       ║
+║     - Single recruiter scheduling with date/time/timezone                            ║
+║     - Meeting links support                                                           ║
+║     - Status tracking (SCHEDULED, COMPLETED, CANCELLED, etc.)                        ║
+║                                                                                        ║
+║  ✅ Basic Feedback System                                                             ║
+║     - Post-interview feedback submission                                             ║
+║     - 1-5 star rating system                                                         ║
+║     - Text feedback (non-collaborative)                                              ║
+║                                                                                        ║
+║  ✅ Application Notes                                                                 ║
+║     - Plain text notes field on applications                                         ║
+║     - Plain text notes field on interviews                                           ║
+║                                                                                        ║
+║  ✅ 1-on-1 Messaging                                                                  ║
+║     - Basic messaging between candidates and recruiters                              ║
+║     - Message status tracking (SENT, DELIVERED, READ)                               ║
+║     - Attachment support                                                             ║
+║                                                                                        ║
+║  ✅ Notification System                                                               ║
+║     - Email-based notifications                                                      ║
+║     - Multiple notification types                                                    ║
+║     - Read/unread tracking                                                           ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                              WHAT'S MISSING (ALL)                                      ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  ❌ SCORECARD SYSTEM                                                                  ║
+║     - No scorecard database model                                                     ║
+║     - No multi-evaluator support                                                      ║
+║     - No scoring rubric/criteria                                                      ║
+║     - No score aggregation logic                                                      ║
+║     - No scorecard UI components                                                      ║
+║     - Missing 15+ API endpoints                                                       ║
+║                                                                                        ║
+║  ❌ @MENTION SYSTEM                                                                   ║
+║     - No mention parser/detector                                                      ║
+║     - No comment/mention database models                                             ║
+║     - No @mention autocomplete UI                                                     ║
+║     - No mention notification system                                                  ║
+║     - No threaded comments                                                           ║
+║     - Missing 6+ API endpoints                                                        ║
+║                                                                                        ║
+║  ❌ INTERVIEW PANEL COORDINATION                                                      ║
+║     - No InterviewPanel database model                                               ║
+║     - No panelist management                                                         ║
+║     - Only single recruiter per interview (hardcoded)                                ║
+║     - No panel roles (lead, participant, observer)                                   ║
+║     - No panelist invitation system                                                   ║
+║     - No panel calendar/availability coordination                                    ║
+║     - Missing 12+ API endpoints                                                       ║
+║                                                                                        ║
+║  ❌ LIVE FEEDBACK DURING INTERVIEWS                                                   ║
+║     - No WebSocket/Socket.IO infrastructure                                          ║
+║     - Feedback only allowed AFTER interview ends                                     ║
+║     - No synchronized collaborative editor                                           ║
+║     - No real-time scoring during interview                                          ║
+║     - No live panelist feedback aggregation                                          ║
+║     - No screen sharing/video integration                                            ║
+║     - Missing 8+ API endpoints                                                        ║
+║                                                                                        ║
+║  ❌ HIRING COMMITTEE VOTING SYSTEM                                                    ║
+║     - No Vote/CommitteeDecision database model                                       ║
+║     - No committee member management                                                  ║
+║     - No voting options/criteria                                                      ║
+║     - Single status field (not voting-based workflow)                                ║
+║     - No vote aggregation logic                                                       ║
+║     - No voting deadline system                                                       ║
+║     - No voting audit trail                                                          ║
+║     - Missing 10+ API endpoints                                                       ║
+║                                                                                        ║
+║  ❌ REAL-TIME COLLABORATION INFRASTRUCTURE                                            ║
+║     - No WebSocket server                                                            ║
+║     - No Socket.IO setup                                                             ║
+║     - No event broadcasting system                                                    ║
+║     - No presence/availability tracking                                              ║
+║     - No typing indicators                                                           ║
+║     - No connection management                                                       ║
+║     - No message queuing                                                             ║
+║                                                                                        ║
+║  ❌ GROUP COLLABORATION FEATURES                                                      ║
+║     - No group chat/channels                                                         ║
+║     - No message threads/replies                                                     ║
+║     - No rich text formatting                                                        ║
+║     - No message reactions/emoji                                                     ║
+║     - No message search/filtering                                                    ║
+║     - No collaborative document editing                                              ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                            DATABASE SCHEMA CHANGES NEEDED                              ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  REQUIRED NEW MODELS: (14 total)                                                      ║
+║                                                                                        ║
+║  1. Scorecard              - Evaluator feedback with criteria                         ║
+║  2. ScorecardCriteria      - Scoring rubric for scorecards                           ║
+║  3. ScorecardRating        - Individual criterion ratings                            ║
+║  4. InterviewPanel         - Panel metadata and members                              ║
+║  5. PanelMember            - Individual panelist info and roles                      ║
+║  6. PanelInvitation        - Invitations to join panel                               ║
+║  7. Comment                - Threaded comments on interviews/applications            ║
+║  8. CommentReply           - Replies to comments                                     ║
+║  9. Mention                - @mention tracking and notifications                     ║
+║  10. CommitteeVote         - Individual votes from committee members                 ║
+║  11. VotingSession         - Voting workflow metadata                                ║
+║  12. VotingRule            - Decision rules (majority, consensus, etc.)              ║
+║  13. FeedbackRound         - Round of feedback during/after interview                ║
+║  14. Reaction              - Emoji reactions to comments/feedback                    ║
+║                                                                                        ║
+║  MODIFIED MODELS:                                                                     ║
+║  - Interview (add panelId, votingSessionId)                                          ║
+║  - Application (add votingSessionId)                                                 ║
+║  - User (add preferences for mentions, voting)                                       ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                         MISSING API ENDPOINTS (51+)                                    ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  SCORECARD ENDPOINTS (5):                                                             ║
+║    POST   /api/interviews/:id/scorecards                                             ║
+║    GET    /api/interviews/:id/scorecards                                             ║
+║    PUT    /api/scorecards/:id                                                        ║
+║    DELETE /api/scorecards/:id                                                        ║
+║    POST   /api/scorecards/:id/ratings                                                ║
+║                                                                                        ║
+║  PANEL ENDPOINTS (5):                                                                 ║
+║    POST   /api/interviews/:id/panel                                                  ║
+║    GET    /api/interviews/:id/panel                                                  ║
+║    PUT    /api/interviews/:id/panel/:memberId                                        ║
+║    DELETE /api/interviews/:id/panel/:memberId                                        ║
+║    POST   /api/interviews/:id/panel/invite                                           ║
+║                                                                                        ║
+║  COMMENT ENDPOINTS (5):                                                               ║
+║    POST   /api/interviews/:id/comments                                               ║
+║    GET    /api/interviews/:id/comments                                               ║
+║    PUT    /api/comments/:id                                                          ║
+║    DELETE /api/comments/:id                                                          ║
+║    POST   /api/comments/:id/replies                                                  ║
+║                                                                                        ║
+║  VOTING ENDPOINTS (4):                                                                ║
+║    POST   /api/applications/:id/voting-session                                       ║
+║    GET    /api/voting-sessions/:id                                                   ║
+║    POST   /api/voting-sessions/:id/vote                                              ║
+║    GET    /api/voting-sessions/:id/results                                           ║
+║                                                                                        ║
+║  MENTION ENDPOINTS (3):                                                               ║
+║    POST   /api/mentions/search                                                       ║
+║    GET    /api/mentions/:id                                                          ║
+║    POST   /api/mentions/:id/notify                                                   ║
+║                                                                                        ║
+║  WEBSOCKET EVENTS (29+):                                                              ║
+║    - comment:created, comment:updated, comment:deleted                               ║
+║    - scorecard:created, scorecard:updated                                            ║
+║    - panel:member:joined, panel:member:left                                          ║
+║    - vote:submitted, voting:closed                                                   ║
+║    - mention:user, mention:notification                                              ║
+║    - feedback:submitted, feedback:updated (live)                                     ║
+║    - (and more...)                                                                   ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                        IMPLEMENTATION EFFORT BREAKDOWN                                 ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  DATABASE & MODELS              ~40 hours    (Schema, migrations, models)            ║
+║  Backend API Development        ~80 hours    (Controllers, services, validation)      ║
+║  Frontend Components            ~60 hours    (UI/UX for all features)                ║
+║  Real-Time Infrastructure       ~40 hours    (WebSocket setup, events)               ║
+║  Testing & QA                   ~30 hours    (Unit, integration, E2E tests)          ║
+║  Documentation & Deployment     ~20 hours    (Docs, deployment guides)               ║
+║  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ║
+║  TOTAL ESTIMATED EFFORT         ~270 hours   (6-8 weeks for 1 developer)             ║
+║                                                                                        ║
+║  BREAKDOWN BY PRIORITY:                                                               ║
+║  - Phase 1 (Scorecards + Panel): ~100 hours  (2-3 weeks)                             ║
+║  - Phase 2 (Comments + Mentions): ~90 hours  (2 weeks)                               ║
+║  - Phase 3 (Voting + Real-Time):  ~80 hours  (2-3 weeks)                             ║
+║                                                                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                            KEY RECOMMENDATIONS                                        ║
+╠════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                        ║
+║  1. START WITH SCORECARD SYSTEM (Phase 1)                                            ║
+║     - Foundation for team-based evaluation                                           ║
+║     - Can be built without real-time infrastructure                                  ║
+║     - Enables ~40% of feature set                                                    ║
+║                                                                                        ║
+║  2. IMPLEMENT INTERVIEW PANEL SUPPORT (Phase 1)                                      ║
+║     - Enables multi-user interviews                                                   ║
+║     - Prerequisite for collaborative feedback                                        ║
+║     - Enables another ~30% of feature set                                            ║
+║                                                                                        ║
+║  3. ADD COMMENT THREADING & @MENTIONS (Phase 2)                                      ║
+║     - Build on scorecard/panel foundation                                            ║
+║     - Enables team discussion                                                        ║
+║     - Enables another ~20% of feature set                                            ║
+║                                                                                        ║
+║  4. IMPLEMENT VOTING SYSTEM (Phase 2)                                                ║
+║     - Final hiring decision mechanism                                                ║
+║     - Depends on panel and comments existing                                         ║
+║     - Enables another ~5% of feature set                                             ║
+║                                                                                        ║
+║  5. ADD REAL-TIME INFRASTRUCTURE (Phase 3) - OPTIONAL                                ║
+║     - Enables live feedback during interviews                                        ║
+║     - WebSocket/Socket.IO implementation                                             ║
+║     - Most complex feature                                                           ║
+║     - Can be added incrementally after Phases 1-2                                    ║
+║                                                                                        ║
+║  CRITICAL: Do NOT attempt Phase 3 before Phases 1-2 are complete!                   ║
+║                                                                                        ║
+╚════════════════════════════════════════════════════════════════════════════════════════╝
