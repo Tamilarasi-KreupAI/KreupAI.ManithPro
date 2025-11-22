@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { applicationAPI } from '../services/applicationAPI';
+import { applicationAPI } from "../services/api";
 import { interviewAPI } from '../services/interviewAPI';
 
 interface Achievement {
@@ -33,7 +33,7 @@ const Achievements: React.FC = () => {
       setLoading(true);
 
       // Fetch user data
-      const applications = await applicationAPI.getAll();
+      const { applications } = await applicationAPI.getAll();
       const interviews = await interviewAPI.getAll();
 
       // Calculate profile completeness
@@ -204,11 +204,10 @@ const Achievements: React.FC = () => {
         {achievements.map((achievement) => (
           <div
             key={achievement.id}
-            className={`relative rounded-lg p-4 border-2 transition-all ${
-              achievement.unlocked
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 bg-gray-50 opacity-60'
-            }`}
+            className={`relative rounded-lg p-4 border-2 transition-all ${achievement.unlocked
+              ? 'border-green-500 bg-green-50'
+              : 'border-gray-200 bg-gray-50 opacity-60'
+              }`}
           >
             {achievement.unlocked && (
               <div className="absolute top-2 right-2">

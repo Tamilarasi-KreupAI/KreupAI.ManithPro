@@ -27,7 +27,7 @@ const JobRecommendations: React.FC = () => {
       const allJobs = jobsData.jobs.filter(j => j.status === 'OPEN');
 
       // Simple recommendation algorithm based on skills matching
-      const scored Jobs = allJobs.map(job => {
+      const scoredJobs = allJobs.map(job => {
         let score = 0;
 
         // Match skills
@@ -42,7 +42,7 @@ const JobRecommendations: React.FC = () => {
         // Match location
         if (userData.location && job.location) {
           if (job.location.toLowerCase().includes(userData.location.toLowerCase()) ||
-              userData.location.toLowerCase().includes(job.location.toLowerCase())) {
+            userData.location.toLowerCase().includes(job.location.toLowerCase())) {
             score += 5;
           }
         }
@@ -228,9 +228,8 @@ const JobRecommendations: React.FC = () => {
                         </div>
                         <button
                           onClick={() => handleToggleSave(job.id)}
-                          className={`text-2xl ${
-                            savedJobIds.has(job.id) ? 'text-yellow-500' : 'text-gray-300'
-                          } hover:text-yellow-500`}
+                          className={`text-2xl ${savedJobIds.has(job.id) ? 'text-yellow-500' : 'text-gray-300'
+                            } hover:text-yellow-500`}
                           title={savedJobIds.has(job.id) ? 'Unsave job' : 'Save job'}
                         >
                           {savedJobIds.has(job.id) ? '★' : '☆'}
@@ -280,11 +279,10 @@ const JobRecommendations: React.FC = () => {
                         return (
                           <span
                             key={index}
-                            className={`px-3 py-1 rounded-full text-sm ${
-                              isMatch
+                            className={`px-3 py-1 rounded-full text-sm ${isMatch
                                 ? 'bg-green-100 text-green-800 font-medium'
                                 : 'bg-blue-100 text-blue-800'
-                            }`}
+                              }`}
                           >
                             {isMatch && '✓ '}
                             {skill}

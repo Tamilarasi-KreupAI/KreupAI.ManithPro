@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { applicationAPI } from '../services/applicationAPI';
-import { jobAPI } from '../services/jobAPI';
+import { applicationAPI, jobAPI } from '../services/api';
 import { interviewAPI } from '../services/interviewAPI';
 
 const EnhancedCandidateDashboard: React.FC = () => {
@@ -33,13 +32,13 @@ const EnhancedCandidateDashboard: React.FC = () => {
       setLoading(true);
 
       // Fetch applications
-      const applications = await applicationAPI.getAll();
+      const { applications } = await applicationAPI.getAll();
 
       // Fetch interviews
       const interviews = await interviewAPI.getUpcoming();
 
       // Fetch recommended jobs
-      const allJobs = await jobAPI.getAll();
+      const { jobs: allJobs } = await jobAPI.getAll();
       const recommendedJobs = allJobs.slice(0, 3); // Simple recommendation for now
 
       // Calculate stats

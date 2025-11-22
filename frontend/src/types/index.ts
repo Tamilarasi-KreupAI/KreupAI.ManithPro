@@ -1,4 +1,4 @@
-export type UserRole = 'CANDIDATE' | 'RECRUITER' | 'ADMIN';
+export type UserRole = 'CANDIDATE' | 'RECRUITER' | 'ADMIN' | 'B2B';
 
 export type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'REMOTE';
 

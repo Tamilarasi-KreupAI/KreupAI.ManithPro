@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { recommendationService } from '../services/recommendationService';
-import { jobAPI } from '../services/jobAPI';
-import { applicationAPI } from '../services/applicationAPI';
+import { jobAPI, applicationAPI } from '../services/api';
 import axios from 'axios';
 
 const RecruiterRecommendations: React.FC = () => {
@@ -28,7 +27,7 @@ const RecruiterRecommendations: React.FC = () => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [jobsData, candidatesData, applicationsData] = await Promise.all([
+      const [{ jobs: jobsData }, candidatesData, { applications: applicationsData }] = await Promise.all([
         jobAPI.getAll(),
         fetchCandidates(),
         applicationAPI.getAll(),
@@ -124,11 +123,10 @@ const RecruiterRecommendations: React.FC = () => {
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('recommendations')}
-                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${
-                  activeTab === 'recommendations'
+                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${activeTab === 'recommendations'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,11 +137,10 @@ const RecruiterRecommendations: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('scoring')}
-                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${
-                  activeTab === 'scoring'
+                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${activeTab === 'scoring'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,11 +151,10 @@ const RecruiterRecommendations: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('diversity')}
-                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${
-                  activeTab === 'diversity'
+                className={`py-4 px-8 text-center border-b-2 font-medium text-sm ${activeTab === 'diversity'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

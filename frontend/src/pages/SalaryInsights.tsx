@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { jobAPI } from '../services/jobAPI';
+import { jobAPI } from '../services/api';
 
 const SalaryInsights: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -21,7 +21,7 @@ const SalaryInsights: React.FC = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const data = await jobAPI.getAll();
+      const { jobs: data } = await jobAPI.getAll();
       const jobsWithSalary = data.filter((job: any) => job.salaryMin && job.salaryMax);
       setJobs(jobsWithSalary);
     } catch (error) {

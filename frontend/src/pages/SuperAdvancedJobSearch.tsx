@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobAPI } from '../services/jobAPI';
+import { jobAPI } from '../services/api';
 
 interface Job {
   id: string;
@@ -51,7 +51,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const data = await jobAPI.getAll();
+      const { jobs: data } = await jobAPI.getAll();
       const openJobs = data.filter((job: any) => job.status === 'OPEN');
       setJobs(openJobs);
 

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { messageAPI, Conversation, Message } from '../services/message API';
+import { messageAPI, Conversation, Message } from '../services/messageAPI';
+import MessageBubble from '../components/MessageBubble';
+import MessageTemplates from '../components/MessageTemplates';
+import CodeSnippetShare from '../components/CodeSnippetShare';
 
 const Messages: React.FC = () => {
   const { user } = useAuth();
@@ -75,9 +78,8 @@ const Messages: React.FC = () => {
               <div
                 key={conv.user.id}
                 onClick={() => setSelectedConversation(conv)}
-                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                  selectedConversation?.user.id === conv.user.id ? 'bg-primary-50 dark:bg-primary-900/20' : ''
-                }`}
+                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedConversation?.user.id === conv.user.id ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                  }`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
