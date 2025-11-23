@@ -145,7 +145,7 @@ const AdvancedJobSearch: React.FC = () => {
   const hasActiveFilters = Object.values(filters).some(v => v !== '');
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Job Search</h1>

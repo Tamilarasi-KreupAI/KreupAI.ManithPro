@@ -65,7 +65,7 @@ export const authAPI = {
   login: (data: { email: string; password: string }) => {
     if (USE_MOCK) {
       // Simulate login
-      const user = mockUsers.find(u => u.email === data.email) || mockUsers[0];
+      const user = mockUsers.find(u => u.email.toLowerCase() === data.email.toLowerCase().trim()) || mockUsers[0];
       return mockDelay({
         message: 'Login successful',
         user: user,

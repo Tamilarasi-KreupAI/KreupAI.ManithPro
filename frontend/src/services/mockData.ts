@@ -21,6 +21,24 @@ export const mockUsers: User[] = [
         role: 'RECRUITER',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+    },
+    {
+        id: '3',
+        email: 'client@manithpro.com',
+        firstName: 'Business',
+        lastName: 'Client',
+        role: 'BUSINESS_CLIENT',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+    {
+        id: '4',
+        email: 'vendor@manithpro.com',
+        firstName: 'Business',
+        lastName: 'Vendor',
+        role: 'BUSINESS_VENDOR',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
     }
 ];
 

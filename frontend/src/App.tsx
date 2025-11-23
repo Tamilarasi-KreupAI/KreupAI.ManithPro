@@ -49,6 +49,16 @@ import AdminBilling from './pages/AdminBilling';
 import AdminReports from './pages/AdminReports';
 import AdminMonitoring from './pages/AdminMonitoring';
 
+// B2B Imports
+import B2BLayout from './components/b2b/B2BLayout';
+import B2BDashboard from './pages/b2b/B2BDashboard';
+import BulkRequirements from './pages/b2b/BulkRequirements';
+import PostRequirement from './pages/b2b/PostRequirement';
+import CandidateSupply from './pages/b2b/CandidateSupply';
+import UploadSupply from './pages/b2b/UploadSupply';
+import Contracts from './pages/b2b/Contracts';
+import Invoices from './pages/b2b/Invoices';
+
 function App() {
   return (
     <Router>
@@ -60,342 +70,355 @@ function App() {
             </a>
             <Navbar />
             <main id="main-content" role="main" tabIndex={-1}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute>
-                  <Jobs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/jobs/:id"
-              element={
-                <ProtectedRoute>
-                  <JobDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/applications/:id"
-              element={
-                <ProtectedRoute>
-                  <ApplicationDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/enhanced"
-              element={
-                <ProtectedRoute>
-                  <EnhancedProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/saved-jobs"
-              element={
-                <ProtectedRoute>
-                  <SavedJobs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/companies/:name"
-              element={
-                <ProtectedRoute>
-                  <CompanyProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/companies/:name/enhanced"
-              element={
-                <ProtectedRoute>
-                  <EnhancedCompanyProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/applications"
-              element={
-                <ProtectedRoute>
-                  <Applications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/resumes"
-              element={
-                <ProtectedRoute>
-                  <ResumeManager />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <ProtectedRoute>
-                  <AdvancedJobSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recommendations"
-              element={
-                <ProtectedRoute>
-                  <JobRecommendations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/jobs/new"
-              element={
-                <ProtectedRoute>
-                  <JobForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/jobs/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <JobForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruiter/dashboard"
-              element={
-                <ProtectedRoute>
-                  <RecruiterDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruiter/applications"
-              element={
-                <ProtectedRoute>
-                  <RecruiterApplications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruiter/kanban"
-              element={
-                <ProtectedRoute>
-                  <ApplicationKanban />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/candidates"
-              element={
-                <ProtectedRoute>
-                  <CandidateSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/interviews"
-              element={
-                <ProtectedRoute>
-                  <Interviews />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/interviews/:id"
-              element={
-                <ProtectedRoute>
-                  <InterviewDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/interview-calendar"
-              element={
-                <ProtectedRoute>
-                  <InterviewCalendar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/messages"
-              element={
-                <ProtectedRoute>
-                  <Messages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/advanced-search"
-              element={
-                <ProtectedRoute>
-                  <SuperAdvancedJobSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/achievements"
-              element={
-                <ProtectedRoute>
-                  <AchievementsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/salary-insights"
-              element={
-                <ProtectedRoute>
-                  <SalaryInsights />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/smart-recommendations"
-              element={
-                <ProtectedRoute>
-                  <SmartRecommendations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruiter/recommendations"
-              element={
-                <ProtectedRoute>
-                  <RecruiterRecommendations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <ProtectedRoute>
-                  <AdminUserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/jobs"
-              element={
-                <ProtectedRoute>
-                  <AdminJobManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/applications"
-              element={
-                <ProtectedRoute>
-                  <AdminApplicationManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/configuration"
-              element={
-                <ProtectedRoute>
-                  <AdminConfiguration />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/communication"
-              element={
-                <ProtectedRoute>
-                  <AdminCommunication />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/interviews"
-              element={
-                <ProtectedRoute>
-                  <AdminInterviewManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/analytics"
-              element={
-                <ProtectedRoute>
-                  <AdminAdvancedAnalytics />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/content"
-              element={
-                <ProtectedRoute>
-                  <AdminContentManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/audit-logs"
-              element={
-                <ProtectedRoute>
-                  <AdminAuditLogs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/billing"
-              element={
-                <ProtectedRoute>
-                  <AdminBilling />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/reports"
-              element={
-                <ProtectedRoute>
-                  <AdminReports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/monitoring"
-              element={
-                <ProtectedRoute>
-                  <AdminMonitoring />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs"
+                  element={
+                    <ProtectedRoute>
+                      <Jobs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/:id"
+                  element={
+                    <ProtectedRoute>
+                      <JobDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/applications/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ApplicationDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/enhanced"
+                  element={
+                    <ProtectedRoute>
+                      <EnhancedProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/saved-jobs"
+                  element={
+                    <ProtectedRoute>
+                      <SavedJobs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/companies/:name"
+                  element={
+                    <ProtectedRoute>
+                      <CompanyProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/companies/:name/enhanced"
+                  element={
+                    <ProtectedRoute>
+                      <EnhancedCompanyProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/applications"
+                  element={
+                    <ProtectedRoute>
+                      <Applications />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/resumes"
+                  element={
+                    <ProtectedRoute>
+                      <ResumeManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/search"
+                  element={
+                    <ProtectedRoute>
+                      <AdvancedJobSearch />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recommendations"
+                  element={
+                    <ProtectedRoute>
+                      <JobRecommendations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/new"
+                  element={
+                    <ProtectedRoute>
+                      <JobForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <JobForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recruiter/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <RecruiterDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recruiter/applications"
+                  element={
+                    <ProtectedRoute>
+                      <RecruiterApplications />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recruiter/kanban"
+                  element={
+                    <ProtectedRoute>
+                      <ApplicationKanban />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/candidates"
+                  element={
+                    <ProtectedRoute>
+                      <CandidateSearch />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/interviews"
+                  element={
+                    <ProtectedRoute>
+                      <Interviews />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/interviews/:id"
+                  element={
+                    <ProtectedRoute>
+                      <InterviewDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/interview-calendar"
+                  element={
+                    <ProtectedRoute>
+                      <InterviewCalendar />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/messages"
+                  element={
+                    <ProtectedRoute>
+                      <Messages />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/advanced-search"
+                  element={
+                    <ProtectedRoute>
+                      <SuperAdvancedJobSearch />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/achievements"
+                  element={
+                    <ProtectedRoute>
+                      <AchievementsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/salary-insights"
+                  element={
+                    <ProtectedRoute>
+                      <SalaryInsights />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/smart-recommendations"
+                  element={
+                    <ProtectedRoute>
+                      <SmartRecommendations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recruiter/recommendations"
+                  element={
+                    <ProtectedRoute>
+                      <RecruiterRecommendations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute>
+                      <AdminUserManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/jobs"
+                  element={
+                    <ProtectedRoute>
+                      <AdminJobManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/applications"
+                  element={
+                    <ProtectedRoute>
+                      <AdminApplicationManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/configuration"
+                  element={
+                    <ProtectedRoute>
+                      <AdminConfiguration />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/communication"
+                  element={
+                    <ProtectedRoute>
+                      <AdminCommunication />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/interviews"
+                  element={
+                    <ProtectedRoute>
+                      <AdminInterviewManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/analytics"
+                  element={
+                    <ProtectedRoute>
+                      <AdminAdvancedAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/content"
+                  element={
+                    <ProtectedRoute>
+                      <AdminContentManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/audit-logs"
+                  element={
+                    <ProtectedRoute>
+                      <AdminAuditLogs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/billing"
+                  element={
+                    <ProtectedRoute>
+                      <AdminBilling />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reports"
+                  element={
+                    <ProtectedRoute>
+                      <AdminReports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/monitoring"
+                  element={
+                    <ProtectedRoute>
+                      <AdminMonitoring />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* B2B Routes */}
+                <Route path="/b2b" element={<ProtectedRoute><B2BLayout /></ProtectedRoute>}>
+                  <Route path="dashboard" element={<B2BDashboard />} />
+                  <Route path="requirements" element={<BulkRequirements />} />
+                  <Route path="requirements/new" element={<PostRequirement />} />
+                  <Route path="supply" element={<CandidateSupply />} />
+                  <Route path="supply/upload" element={<UploadSupply />} />
+                  <Route path="contracts" element={<Contracts />} />
+                  <Route path="invoices" element={<Invoices />} />
+                  <Route path="settings" element={<div className="p-6">Settings Page (Coming Soon)</div>} />
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </main>
-          <PWAInstallPrompt />
+            <PWAInstallPrompt />
           </div>
         </AuthProvider>
       </ThemeProvider>

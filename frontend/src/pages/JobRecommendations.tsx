@@ -128,7 +128,7 @@ const JobRecommendations: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           <p className="mt-4 text-gray-600">Finding jobs for you...</p>
@@ -139,8 +139,8 @@ const JobRecommendations: React.FC = () => {
 
   if (!user?.skills || user.skills.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="w-full px-4 py-8">
+        <div className="w-full px-4">
           <div className="bg-white rounded-lg shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">💡</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -162,7 +162,7 @@ const JobRecommendations: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Jobs For You</h1>
         <p className="text-gray-600">

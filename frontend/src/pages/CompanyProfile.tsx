@@ -29,7 +29,7 @@ const CompanyProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading company profile...</div>
       </div>
     );
@@ -37,7 +37,7 @@ const CompanyProfile: React.FC = () => {
 
   if (!company) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Company Not Found</h2>
           <Link to="/jobs" className="text-primary-600 hover:text-primary-800">
@@ -49,7 +49,7 @@ const CompanyProfile: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       {/* Company Header */}
       <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
         <div className="flex items-start gap-6 mb-6">

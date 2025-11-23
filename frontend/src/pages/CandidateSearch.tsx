@@ -149,7 +149,7 @@ const CandidateSearch: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Candidate Search</h1>
           <p className="text-gray-600 mt-1">Loading candidates...</p>
@@ -164,7 +164,7 @@ const CandidateSearch: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Candidate Search</h1>
         <p className="text-gray-600 mt-1">

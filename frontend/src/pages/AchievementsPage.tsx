@@ -7,7 +7,7 @@ const AchievementsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate(-1)}
           className="text-primary-600 hover:text-primary-700 mb-6 flex items-center gap-2"
