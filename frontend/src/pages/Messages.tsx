@@ -60,36 +60,39 @@ const Messages: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex">
+    <div className="h-screen bg-slate-50 relative overflow-hidden flex">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
       {/* Conversations List */}
-      <div className="w-1/3 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Messages</h2>
+      <div className="w-1/3 bg-white/80 backdrop-blur-md border-r border-slate-200 overflow-y-auto z-10">
+        <div className="p-4 border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+          <h2 className="text-xl font-bold text-slate-800">Messages</h2>
         </div>
         {loading ? (
           <div className="flex justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="text-center p-8 text-gray-500 dark:text-gray-400">No conversations yet</div>
+          <div className="text-center p-8 text-slate-500">No conversations yet</div>
         ) : (
           <div>
             {conversations.map((conv) => (
               <div
                 key={conv.user.id}
                 onClick={() => setSelectedConversation(conv)}
-                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedConversation?.user.id === conv.user.id ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${selectedConversation?.user.id === conv.user.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'border-l-4 border-l-transparent'
                   }`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-slate-900">
                       {conv.user.firstName} {conv.user.lastName}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{conv.lastMessage.content}</p>
+                    <p className="text-sm text-slate-500 truncate">{conv.lastMessage.content}</p>
                   </div>
                   {conv.unreadCount > 0 && (
-                    <span className="bg-primary-600 text-white text-xs rounded-full px-2 py-1">
+                    <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-1 shadow-sm">
                       {conv.unreadCount}
                     </span>
                   )}
@@ -111,7 +114,7 @@ const Messages: React.FC = () => {
               <p className="text-sm text-gray-600 dark:text-gray-400">{selectedConversation.user.email}</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
               {messages.map((message) => (
                 <MessageBubble
                   key={message.id}
@@ -139,11 +142,11 @@ const Messages: React.FC = () => {
               ))}
             </div>
 
-            <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 bg-white border-t border-slate-200">
               <div className="flex gap-2 mb-2">
                 <MessageTemplates
                   onSelectTemplate={(content) => setNewMessage(content)}
-                  userRole={user?.role || 'CANDIDATE'}
+                  userRole={(user?.role as any) || 'CANDIDATE'}
                 />
                 <CodeSnippetShare
                   onInsertSnippet={(snippet) => {

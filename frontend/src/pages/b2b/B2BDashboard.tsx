@@ -26,16 +26,19 @@ const B2BDashboard: React.FC = () => {
     const stats = isVendor ? vendorStats : clientStats;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isVendor ? 'Vendor Dashboard' : 'Client Dashboard'}
-                </h1>
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        {isVendor ? 'Vendor Dashboard' : 'Client Dashboard'}
+                    </h1>
+                    <p className="text-slate-500 mt-1">Manage your {isVendor ? 'consultants and placements' : 'requirements and contracts'}</p>
+                </div>
                 <div className="flex space-x-3">
                     {!isVendor && (
                         <Link
                             to="/b2b/requirements/new"
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl shadow-lg shadow-blue-500/30 text-white bg-blue-600 hover:bg-blue-700 transition-all hover:-translate-y-0.5"
                         >
                             <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -46,7 +49,7 @@ const B2BDashboard: React.FC = () => {
                     {isVendor && (
                         <Link
                             to="/b2b/supply/upload"
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            className="inline-flex items-center px-6 py-3 border border-slate-200 text-sm font-medium rounded-xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 transition-all hover:-translate-y-0.5"
                         >
                             <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -58,34 +61,34 @@ const B2BDashboard: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((item) => (
-                    <div key={item.name} className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
+                    <div key={item.name} className="bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow rounded-xl border border-slate-100">
+                        <div className="p-6">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="flex-shrink-0 p-3 bg-blue-50 rounded-lg">
+                                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                                     </svg>
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{item.name}</dt>
+                                        <dt className="text-sm font-medium text-slate-500 truncate">{item.name}</dt>
                                         <dd>
-                                            <div className="text-lg font-medium text-gray-900 dark:text-white">{item.value}</div>
+                                            <div className="text-2xl font-bold text-slate-900">{item.value}</div>
                                         </dd>
                                     </dl>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
+                        <div className="bg-slate-50 px-6 py-3 border-t border-slate-100">
                             <div className="text-sm">
                                 <span
                                     className={`font-medium ${item.changeType === 'increase'
                                         ? 'text-green-600'
                                         : item.changeType === 'warning'
                                             ? 'text-yellow-600'
-                                            : 'text-gray-500'
+                                            : 'text-slate-500'
                                         }`}
                                 >
                                     {item.change}
@@ -97,25 +100,25 @@ const B2BDashboard: React.FC = () => {
             </div>
 
             {/* Recent Activity & Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Active Requirements / Placements */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                <div className="bg-white shadow-sm rounded-xl border border-slate-100">
+                    <div className="px-6 py-5 border-b border-slate-100">
+                        <h3 className="text-lg leading-6 font-bold text-slate-900">
                             {isVendor ? 'Recent Placements' : 'Recent Requirements'}
                         </h3>
                     </div>
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <ul className="divide-y divide-slate-100">
                         {[
                             { title: 'Senior Java Developers', count: 5, status: 'Active', applicants: 12 },
                             { title: 'DevOps Engineers', count: 2, status: 'Active', applicants: 8 },
                             { title: 'React Frontend Lead', count: 1, status: 'Draft', applicants: 0 },
                         ].map((req, idx) => (
-                            <li key={idx} className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <li key={idx} className="px-6 py-4 hover:bg-slate-50 transition-colors">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-sm font-medium text-primary-600 truncate">{req.title}</div>
+                                    <div className="text-sm font-semibold text-blue-600 truncate">{req.title}</div>
                                     <div className="ml-2 flex-shrink-0 flex">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${req.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                        <span className={`px-2.5 py-0.5 inline-flex text-xs font-bold rounded-full ${req.status === 'Active' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-slate-100 text-slate-800 border border-slate-200'
                                             }`}>
                                             {req.status}
                                         </span>
@@ -123,44 +126,44 @@ const B2BDashboard: React.FC = () => {
                                 </div>
                                 <div className="mt-2 sm:flex sm:justify-between">
                                     <div className="sm:flex">
-                                        <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <p className="flex items-center text-sm text-slate-500">
                                             {isVendor ? `Placed: ${req.count}` : `Required: ${req.count}`}
                                         </p>
                                     </div>
-                                    <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
+                                    <div className="mt-2 flex items-center text-sm text-slate-500 sm:mt-0">
                                         <p>{req.applicants} {isVendor ? 'Candidates Submitted' : 'Candidates Proposed'}</p>
                                     </div>
                                 </div>
                             </li>
                         ))}
                     </ul>
-                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-4 sm:px-6 rounded-b-lg">
+                    <div className="bg-slate-50 px-6 py-4 rounded-b-xl border-t border-slate-100">
                         <div className="text-sm">
-                            <Link to="/b2b/requirements" className="font-medium text-primary-600 hover:text-primary-500">
-                                View all {isVendor ? 'placements' : 'requirements'} <span aria-hidden="true">&rarr;</span>
+                            <Link to="/b2b/requirements" className="font-medium text-blue-600 hover:text-blue-500 flex items-center gap-1">
+                                View all {isVendor ? 'placements' : 'requirements'} <span>&rarr;</span>
                             </Link>
                         </div>
                     </div>
                 </div>
 
                 {/* Pending Contracts */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Pending Contracts</h3>
+                <div className="bg-white shadow-sm rounded-xl border border-slate-100">
+                    <div className="px-6 py-5 border-b border-slate-100">
+                        <h3 className="text-lg leading-6 font-bold text-slate-900">Pending Contracts</h3>
                     </div>
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <ul className="divide-y divide-slate-100">
                         {[
                             { partner: isVendor ? 'Client A' : 'TechSolutions Inc.', role: 'Java Developer', status: 'Waiting for Signature', date: '2023-10-25' },
                             { partner: isVendor ? 'Client B' : 'InnovateSoft', role: 'DevOps Engineer', status: 'In Negotiation', date: '2023-10-24' },
                         ].map((contract, idx) => (
-                            <li key={idx} className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <li key={idx} className="px-6 py-4 hover:bg-slate-50 transition-colors">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{contract.partner}</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">{contract.date}</div>
+                                    <div className="text-sm font-medium text-slate-900">{contract.partner}</div>
+                                    <div className="text-sm text-slate-500">{contract.date}</div>
                                 </div>
                                 <div className="mt-2 flex justify-between items-center">
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">{contract.role}</div>
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${contract.status === 'Waiting for Signature' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                                    <div className="text-sm text-slate-500">{contract.role}</div>
+                                    <span className={`px-2.5 py-0.5 inline-flex text-xs font-bold rounded-full ${contract.status === 'Waiting for Signature' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
                                         }`}>
                                         {contract.status}
                                     </span>
@@ -168,10 +171,10 @@ const B2BDashboard: React.FC = () => {
                             </li>
                         ))}
                     </ul>
-                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-4 sm:px-6 rounded-b-lg">
+                    <div className="bg-slate-50 px-6 py-4 rounded-b-xl border-t border-slate-100">
                         <div className="text-sm">
-                            <Link to="/b2b/contracts" className="font-medium text-primary-600 hover:text-primary-500">
-                                View all contracts <span aria-hidden="true">&rarr;</span>
+                            <Link to="/b2b/contracts" className="font-medium text-blue-600 hover:text-blue-500 flex items-center gap-1">
+                                View all contracts <span>&rarr;</span>
                             </Link>
                         </div>
                     </div>
