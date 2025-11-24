@@ -161,56 +161,56 @@ const AdminConfiguration = () => {
 
   if (loading || !config) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="w-full">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="p-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">System Configuration</h1>
-          <p className="text-gray-600 mt-2">Manage platform settings and configuration</p>
+          <h1 className="text-3xl font-bold text-slate-900">System Configuration</h1>
+          <p className="text-slate-500 mt-2">Manage platform settings and configuration</p>
         </div>
 
         {/* System Stats */}
         {stats && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">System Status</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-gray-600 text-sm">Database</p>
-                <p className="text-lg font-semibold">{stats.database.totalUsers} Users</p>
-                <p className="text-sm text-gray-500">{stats.database.activeUsers} active</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">Content</p>
-                <p className="text-lg font-semibold">{stats.database.totalJobs} Jobs</p>
-                <p className="text-sm text-gray-500">{stats.database.totalApplications} applications</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">Storage</p>
-                <p className="text-lg font-semibold">{stats.storage.used.toFixed(2)} MB</p>
-                <p className="text-sm text-gray-500">{stats.storage.files} files</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">System</p>
-                <p className="text-lg font-semibold">Uptime: {formatUptime(stats.uptime)}</p>
-                <p className="text-sm text-gray-500">
-                  Memory: {stats.memory.used.toFixed(0)}/{stats.memory.total.toFixed(0)} MB
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Database</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.database.totalUsers}</p>
+              <p className="text-sm text-slate-500 mt-1">{stats.database.activeUsers} active users</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Content</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.database.totalJobs}</p>
+              <p className="text-sm text-slate-500 mt-1">{stats.database.totalApplications} applications</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Storage</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.storage.used.toFixed(2)} MB</p>
+              <p className="text-sm text-slate-500 mt-1">{stats.storage.files} files</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">System</p>
+              <p className="text-xl font-bold text-slate-900 mb-1">{formatUptime(stats.uptime)}</p>
+              <p className="text-sm text-slate-500">
+                Mem: {stats.memory.used.toFixed(0)}/{stats.memory.total.toFixed(0)} MB
+              </p>
             </div>
           </div>
         )}
 
         {/* Configuration Tabs */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           {/* Tab Headers */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-slate-100">
             <div className="flex overflow-x-auto">
               {[
                 { id: 'site', label: 'Site Settings', icon: '🌐' },
@@ -223,13 +223,12 @@ const AdminConfiguration = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-b-2 border-blue-500 text-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-6 py-4 font-bold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab.id
+                      ? 'text-blue-600 bg-blue-50/50 border-b-2 border-blue-600'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
+                  <span className="text-lg">{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -237,52 +236,58 @@ const AdminConfiguration = () => {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-8">
             {/* Site Settings */}
             {activeTab === 'site' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Site Settings</h3>
-                <div className="space-y-4">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">Site Settings</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Site Name</label>
                     <input
                       type="text"
                       value={config.site.name}
                       onChange={(e) => setConfig({ ...config, site: { ...config.site, name: e.target.value } })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Site Description</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Site Description</label>
                     <textarea
                       value={config.site.description}
                       onChange={(e) => setConfig({ ...config, site: { ...config.site, description: e.target.value } })}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.site.maintenanceMode}
                       onChange={(e) => setConfig({ ...config, site: { ...config.site, maintenanceMode: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Maintenance Mode</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Maintenance Mode</label>
+                      <p className="text-xs text-slate-500">Enable to prevent users from accessing the site</p>
+                    </div>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.site.allowRegistration}
                       onChange={(e) => setConfig({ ...config, site: { ...config.site, allowRegistration: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Allow User Registration</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Allow User Registration</label>
+                      <p className="text-xs text-slate-500">Allow new users to sign up</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => handleSave('site', config.site)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Site Settings'}
                   </button>
@@ -292,51 +297,57 @@ const AdminConfiguration = () => {
 
             {/* Job Settings */}
             {activeTab === 'jobs' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Job Posting Settings</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">Job Posting Settings</h3>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.jobs.requireApproval}
                       onChange={(e) => setConfig({ ...config, jobs: { ...config.jobs, requireApproval: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Require Admin Approval for Job Postings</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Require Admin Approval</label>
+                      <p className="text-xs text-slate-500">Jobs must be approved by an admin before going live</p>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Jobs Per Recruiter</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Max Jobs Per Recruiter</label>
                     <input
                       type="number"
                       value={config.jobs.maxJobsPerRecruiter}
                       onChange={(e) => setConfig({ ...config, jobs: { ...config.jobs, maxJobsPerRecruiter: parseInt(e.target.value) } })}
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Job Expiration (days)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Job Expiration (days)</label>
                     <input
                       type="number"
                       value={config.jobs.jobExpirationDays}
                       onChange={(e) => setConfig({ ...config, jobs: { ...config.jobs, jobExpirationDays: parseInt(e.target.value) } })}
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.jobs.featuredJobsEnabled}
                       onChange={(e) => setConfig({ ...config, jobs: { ...config.jobs, featuredJobsEnabled: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Enable Featured Jobs</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Enable Featured Jobs</label>
+                      <p className="text-xs text-slate-500">Allow recruiters to pay for featured job listings</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => handleSave('jobs', config.jobs)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Job Settings'}
                   </button>
@@ -346,43 +357,46 @@ const AdminConfiguration = () => {
 
             {/* Application Settings */}
             {activeTab === 'applications' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Application Settings</h3>
-                <div className="space-y-4">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">Application Settings</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Applications Per Candidate</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Max Applications Per Candidate</label>
                     <input
                       type="number"
                       value={config.applications.maxApplicationsPerCandidate}
                       onChange={(e) => setConfig({ ...config, applications: { ...config.applications, maxApplicationsPerCandidate: parseInt(e.target.value) } })}
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.applications.allowWithdrawal}
                       onChange={(e) => setConfig({ ...config, applications: { ...config.applications, allowWithdrawal: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Allow Application Withdrawal</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Allow Application Withdrawal</label>
+                      <p className="text-xs text-slate-500">Candidates can withdraw their applications</p>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Auto-Reject After (days)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Auto-Reject After (days)</label>
                     <input
                       type="number"
                       value={config.applications.autoRejectAfterDays}
                       onChange={(e) => setConfig({ ...config, applications: { ...config.applications, autoRejectAfterDays: parseInt(e.target.value) } })}
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
-                    <p className="text-sm text-gray-500 mt-1">Set to 0 to disable auto-rejection</p>
+                    <p className="text-xs text-slate-500 mt-1">Set to 0 to disable auto-rejection</p>
                   </div>
                   <button
                     onClick={() => handleSave('applications', config.applications)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Application Settings'}
                   </button>
@@ -392,49 +406,55 @@ const AdminConfiguration = () => {
 
             {/* Email Settings */}
             {activeTab === 'email' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Email Configuration</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">Email Configuration</h3>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.email.enabled}
                       onChange={(e) => setConfig({ ...config, email: { ...config.email, enabled: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Enable Email Sending</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Enable Email Sending</label>
+                      <p className="text-xs text-slate-500">Allow the system to send emails</p>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">From Name</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">From Name</label>
                     <input
                       type="text"
                       value={config.email.fromName}
                       onChange={(e) => setConfig({ ...config, email: { ...config.email, fromName: e.target.value } })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">From Email Address</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">From Email Address</label>
                     <input
                       type="email"
                       value={config.email.fromEmail}
                       onChange={(e) => setConfig({ ...config, email: { ...config.email, fromEmail: e.target.value } })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.email.notificationsEnabled}
                       onChange={(e) => setConfig({ ...config, email: { ...config.email, notificationsEnabled: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Enable Email Notifications</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Enable Email Notifications</label>
+                      <p className="text-xs text-slate-500">Send notifications for important events</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => handleSave('email', config.email)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Email Settings'}
                   </button>
@@ -444,35 +464,35 @@ const AdminConfiguration = () => {
 
             {/* Upload Settings */}
             {activeTab === 'uploads' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">File Upload Settings</h3>
-                <div className="space-y-4">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">File Upload Settings</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max File Size (MB)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Max File Size (MB)</label>
                     <input
                       type="number"
                       value={config.uploads.maxFileSize}
                       onChange={(e) => setConfig({ ...config, uploads: { ...config.uploads, maxFileSize: parseInt(e.target.value) } })}
                       min="1"
                       max="50"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Allowed File Types</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Allowed File Types</label>
                     <input
                       type="text"
                       value={config.uploads.allowedFileTypes.join(', ')}
                       onChange={(e) => setConfig({ ...config, uploads: { ...config.uploads, allowedFileTypes: e.target.value.split(',').map(t => t.trim()) } })}
                       placeholder=".pdf, .doc, .docx"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
-                    <p className="text-sm text-gray-500 mt-1">Comma-separated list of file extensions</p>
+                    <p className="text-xs text-slate-500 mt-1">Comma-separated list of file extensions</p>
                   </div>
                   <button
                     onClick={() => handleSave('uploads', config.uploads)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Upload Settings'}
                   </button>
@@ -482,54 +502,57 @@ const AdminConfiguration = () => {
 
             {/* Security Settings */}
             {activeTab === 'security' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Security Settings</h3>
-                <div className="space-y-4">
+              <div className="space-y-6 max-w-3xl">
+                <h3 className="text-xl font-bold text-slate-900">Security Settings</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Password Length</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Minimum Password Length</label>
                     <input
                       type="number"
                       value={config.security.passwordMinLength}
                       onChange={(e) => setConfig({ ...config, security: { ...config.security, passwordMinLength: parseInt(e.target.value) } })}
                       min="6"
                       max="20"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <input
                       type="checkbox"
                       checked={config.security.requireEmailVerification}
                       onChange={(e) => setConfig({ ...config, security: { ...config.security, requireEmailVerification: e.target.checked } })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Require Email Verification</label>
+                    <div>
+                      <label className="text-sm font-bold text-slate-900 block">Require Email Verification</label>
+                      <p className="text-xs text-slate-500">Users must verify email before logging in</p>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Session Timeout (minutes)</label>
                     <input
                       type="number"
                       value={config.security.sessionTimeout}
                       onChange={(e) => setConfig({ ...config, security: { ...config.security, sessionTimeout: parseInt(e.target.value) } })}
                       min="15"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Login Attempts</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Max Login Attempts</label>
                     <input
                       type="number"
                       value={config.security.maxLoginAttempts}
                       onChange={(e) => setConfig({ ...config, security: { ...config.security, maxLoginAttempts: parseInt(e.target.value) } })}
                       min="3"
                       max="10"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <button
                     onClick={() => handleSave('security', config.security)}
                     disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Security Settings'}
                   </button>
@@ -540,15 +563,15 @@ const AdminConfiguration = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mt-6">
-          <h3 className="text-lg font-semibold text-red-900 mb-2">Danger Zone</h3>
-          <p className="text-sm text-red-700 mb-4">
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-8 mt-8">
+          <h3 className="text-xl font-bold text-red-900 mb-2">Danger Zone</h3>
+          <p className="text-sm text-red-700 mb-6">
             Reset all configuration to default values. This action cannot be undone.
           </p>
           <button
             onClick={handleReset}
             disabled={saving}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+            className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 font-bold shadow-lg shadow-red-500/20 transition-all hover:-translate-y-0.5"
           >
             Reset to Defaults
           </button>

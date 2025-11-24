@@ -46,7 +46,6 @@ const AdminUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -133,54 +132,58 @@ const AdminUserManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="w-full">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-2">Manage all users in the system</p>
+          <h1 className="text-3xl font-bold text-slate-900">User Management</h1>
+          <p className="text-slate-500 mt-2">Manage all users in the system</p>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Total Users</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-1">Total Users</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Candidates</p>
-              <p className="text-2xl font-bold text-green-600">{stats.byRole.candidate}</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-1">Candidates</p>
+              <p className="text-3xl font-bold text-green-600">{stats.byRole.candidate}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Recruiters</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.byRole.recruiter}</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-1">Recruiters</p>
+              <p className="text-3xl font-bold text-blue-600">{stats.byRole.recruiter}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm">Admins</p>
-              <p className="text-2xl font-bold text-red-600">{stats.byRole.admin}</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-1">Admins</p>
+              <p className="text-3xl font-bold text-red-600">{stats.byRole.admin}</p>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
             </div>
             <div>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white text-slate-700"
               >
                 <option value="">All Roles</option>
                 <option value="CANDIDATE">Candidate</option>
@@ -191,13 +194,13 @@ const AdminUserManagement = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleSearch}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all"
               >
                 Search
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 font-medium shadow-lg shadow-green-500/30 transition-all"
               >
                 + New User
               </button>
@@ -206,7 +209,7 @@ const AdminUserManagement = () => {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -214,37 +217,37 @@ const AdminUserManagement = () => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-slate-100">
+                  <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         User
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Activity
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Joined
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-slate-100">
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
+                      <tr key={user.id} className="hover:bg-blue-50/50 transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="font-medium text-gray-900">
+                            <div className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
                               {user.firstName} {user.lastName}
                             </div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                            <div className="text-sm text-slate-500">{user.email}</div>
                             {user.phone && (
-                              <div className="text-xs text-gray-400">{user.phone}</div>
+                              <div className="text-xs text-slate-400 mt-0.5">{user.phone}</div>
                             )}
                           </div>
                         </td>
@@ -252,34 +255,39 @@ const AdminUserManagement = () => {
                           <select
                             value={user.role}
                             onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                            className={`px-3 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-blue-500 ${
-                              user.role === 'ADMIN' ? 'bg-red-100 text-red-700' :
-                              user.role === 'RECRUITER' ? 'bg-blue-100 text-blue-700' :
-                              'bg-green-100 text-green-700'
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border-0 focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${user.role === 'ADMIN' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
+                              user.role === 'RECRUITER' ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' :
+                                'bg-green-50 text-green-700 hover:bg-green-100'
+                              }`}
                           >
                             <option value="CANDIDATE">Candidate</option>
                             <option value="RECRUITER">Recruiter</option>
                             <option value="ADMIN">Admin</option>
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                           <div>
                             {user.role === 'RECRUITER' && (
-                              <div>Jobs: {user._count.postedJobs}</div>
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                                Jobs: {user._count.postedJobs}
+                              </div>
                             )}
                             {user.role === 'CANDIDATE' && (
-                              <div>Applications: {user._count.applications}</div>
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                                Applications: {user._count.applications}
+                              </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                           {new Date(user.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Delete
                           </button>
@@ -291,43 +299,43 @@ const AdminUserManagement = () => {
               </div>
 
               {/* Pagination */}
-              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="bg-white px-4 py-4 flex items-center justify-between border-t border-slate-100 sm:px-6">
                 <div className="flex-1 flex justify-between sm:hidden">
                   <button
                     onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                     disabled={pagination.page === 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                     disabled={pagination.page === pagination.totalPages}
-                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
                 </div>
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm text-gray-700">
-                      Showing page <span className="font-medium">{pagination.page}</span> of{' '}
-                      <span className="font-medium">{pagination.totalPages}</span> ({pagination.total} total users)
+                    <p className="text-sm text-slate-500">
+                      Showing page <span className="font-bold text-slate-900">{pagination.page}</span> of{' '}
+                      <span className="font-bold text-slate-900">{pagination.totalPages}</span> ({pagination.total} total users)
                     </p>
                   </div>
                   <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                       <button
                         onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                         disabled={pagination.page === 1}
-                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        className="relative inline-flex items-center px-2 py-2 rounded-l-lg border border-slate-200 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Previous
                       </button>
                       <button
                         onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                         disabled={pagination.page === pagination.totalPages}
-                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        className="relative inline-flex items-center px-2 py-2 rounded-r-lg border border-slate-200 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </button>
@@ -342,56 +350,56 @@ const AdminUserManagement = () => {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Create New User</h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-slate-100 transform transition-all scale-100">
+            <h2 className="text-2xl font-bold mb-6 text-slate-900">Create New User</h2>
             <form onSubmit={handleCreateUser}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                   <input
                     type="email"
                     name="email"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
                   <input
                     type="password"
                     name="password"
                     required
                     minLength={6}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
                     <input
                       type="text"
                       name="firstName"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
                     <input
                       type="text"
                       name="lastName"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Role</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                   <select
                     name="role"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
                   >
                     <option value="CANDIDATE">Candidate</option>
                     <option value="RECRUITER">Recruiter</option>
@@ -399,33 +407,33 @@ const AdminUserManagement = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone (optional)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone (optional)</label>
                   <input
                     type="tel"
                     name="phone"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Location (optional)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Location (optional)</label>
                   <input
                     type="text"
                     name="location"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
               </div>
-              <div className="mt-6 flex gap-3">
+              <div className="mt-8 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Create User
                 </button>

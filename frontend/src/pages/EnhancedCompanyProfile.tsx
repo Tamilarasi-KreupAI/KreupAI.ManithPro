@@ -244,54 +244,55 @@ const EnhancedCompanyProfile: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
       {/* Cover Image */}
-      <div className="relative h-96 bg-gradient-to-r from-primary-600 to-primary-700">
+      <div className="relative h-96 bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
         <img
           src={company.coverImage}
           alt={company.name}
-          className="w-full h-full object-cover opacity-50"
+          className="w-full h-full object-cover opacity-40 mix-blend-overlay"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
 
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="w-full">
-            <div className="flex items-end gap-6">
-              <div className="w-32 h-32 bg-white rounded-lg shadow-xl p-4 flex items-center justify-center">
-                <img src={company.logo} alt={company.name} className="w-full h-full object-contain" loading="lazy" />
+        <div className="absolute bottom-0 left-0 right-0 p-8 max-w-7xl mx-auto w-full">
+          <div className="flex flex-col md:flex-row items-end gap-8">
+            <div className="w-32 h-32 bg-white rounded-2xl shadow-xl p-4 flex items-center justify-center -mb-12 relative z-10 border-4 border-white">
+              <img src={company.logo} alt={company.name} className="w-full h-full object-contain" loading="lazy" />
+            </div>
+            <div className="flex-1 text-white pb-2">
+              <h1 className="text-5xl font-bold mb-2 tracking-tight">{company.name}</h1>
+              <p className="text-xl text-blue-100 mb-4 font-medium">{company.tagline}</p>
+              <div className="flex flex-wrap gap-3 text-sm font-bold">
+                <span className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">{company.industry}</span>
+                <span className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">{company.size}</span>
+                <span className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">Founded {company.founded}</span>
+                <span className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">📍 {company.location}</span>
               </div>
-              <div className="flex-1 text-white pb-2">
-                <h1 className="text-5xl font-bold mb-2">{company.name}</h1>
-                <p className="text-xl text-gray-200 mb-3">{company.tagline}</p>
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <span className="bg-white/20 px-3 py-1 rounded-full">{company.industry}</span>
-                  <span className="bg-white/20 px-3 py-1 rounded-full">{company.size}</span>
-                  <span className="bg-white/20 px-3 py-1 rounded-full">Founded {company.founded}</span>
-                  <span className="bg-white/20 px-3 py-1 rounded-full">📍 {company.location}</span>
-                </div>
-              </div>
-              <div className="pb-2">
-                <button className="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold shadow-lg">
-                  View Open Positions
-                </button>
-              </div>
+            </div>
+            <div className="pb-2">
+              <button className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all font-bold shadow-lg shadow-blue-600/30 hover:-translate-y-0.5">
+                View Open Positions
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* About Section */}
-        <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">About {company.name}</h2>
-          <p className="text-gray-700 text-lg leading-relaxed mb-6">{company.description}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-12 mt-4">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">About {company.name}</h2>
+          <p className="text-slate-600 text-lg leading-relaxed mb-8">{company.description}</p>
           <div className="flex items-center gap-4">
             <a
               href={company.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+              className="flex items-center gap-2 px-6 py-3 bg-slate-50 text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors border border-slate-200"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -302,7 +303,7 @@ const EnhancedCompanyProfile: React.FC = () => {
         </div>
 
         {/* Company Culture */}
-        <div className="mb-8">
+        <div className="mb-12">
           <CompanyCulture
             videos={cultureVideos}
             testimonials={testimonials}
@@ -311,23 +312,26 @@ const EnhancedCompanyProfile: React.FC = () => {
         </div>
 
         {/* Team Gallery */}
-        <div className="mb-8">
+        <div className="mb-12">
           <TeamGallery members={teamMembers} />
         </div>
 
         {/* Call to Action */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl shadow-lg p-12 text-white text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Join Our Team?</h2>
-          <p className="text-xl text-primary-100 mb-8 w-full px-4">
-            We're always looking for talented individuals who are passionate about technology and innovation
-          </p>
-          <div className="flex gap-4 justify-center">
-            <button className="px-8 py-4 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-semibold text-lg">
-              Browse Open Positions
-            </button>
-            <button className="px-8 py-4 bg-primary-500 text-white rounded-lg hover:bg-primary-400 transition-colors font-semibold text-lg">
-              Learn More About Us
-            </button>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl shadow-xl p-12 text-white text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="relative z-10">
+            <h2 className="text-4xl font-bold mb-6">Ready to Join Our Team?</h2>
+            <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto font-medium">
+              We're always looking for talented individuals who are passionate about technology and innovation
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button className="px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-bold text-lg shadow-lg">
+                Browse Open Positions
+              </button>
+              <button className="px-8 py-4 bg-blue-500/30 backdrop-blur-sm text-white border border-white/30 rounded-xl hover:bg-blue-500/40 transition-all font-bold text-lg">
+                Learn More About Us
+              </button>
+            </div>
           </div>
         </div>
       </div>

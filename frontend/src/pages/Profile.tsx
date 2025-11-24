@@ -144,18 +144,21 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">My Profile</h1>
+              <p className="text-slate-500">
                 {user.email} • {user.role}
               </p>
-              <div className="mt-2 inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                <span className="text-sm font-medium">{user.firstName} {user.lastName}</span>
+              <div className="mt-2 inline-flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-1 rounded-full">
+                <span className="text-sm font-medium text-slate-700">{user.firstName} {user.lastName}</span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -163,13 +166,13 @@ const Profile: React.FC = () => {
                 <>
                   <button
                     onClick={() => setEditing(true)}
-                    className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700"
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     Edit Profile
                   </button>
                   <button
                     onClick={() => setShowPasswordModal(true)}
-                    className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
+                    className="bg-slate-600 text-white px-6 py-2.5 rounded-xl hover:bg-slate-700 font-bold transition-all"
                   >
                     Change Password
                   </button>
@@ -178,7 +181,7 @@ const Profile: React.FC = () => {
                       logout();
                       navigate('/login');
                     }}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2"
+                    className="bg-red-500 text-white px-4 py-2.5 rounded-xl hover:bg-red-600 flex items-center gap-2 font-bold transition-all"
                     title="Logout"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -192,7 +195,7 @@ const Profile: React.FC = () => {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                    className="bg-green-600 text-white px-6 py-2.5 rounded-xl hover:bg-green-700 disabled:bg-slate-400 font-bold shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {saving ? 'Saving...' : 'Save Changes'}
                   </button>
@@ -201,7 +204,7 @@ const Profile: React.FC = () => {
                       setEditing(false);
                       loadProfile();
                     }}
-                    className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
+                    className="bg-slate-200 text-slate-800 px-6 py-2.5 rounded-xl hover:bg-slate-300 font-bold transition-all"
                   >
                     Cancel
                   </button>
@@ -213,11 +216,11 @@ const Profile: React.FC = () => {
           {/* Profile Form */}
           <div className="space-y-6">
             {/* Basic Information */}
-            <div className="border-b pb-6">
-              <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            <div className="border-b border-slate-100 pb-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Basic Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     First Name
                   </label>
                   {editing ? (
@@ -226,10 +229,10 @@ const Profile: React.FC = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   ) : (
-                    <p className="text-gray-900">{user.firstName}</p>
+                    <p className="text-slate-900 font-medium">{user.firstName}</p>
                   )}
                 </div>
 
@@ -283,8 +286,8 @@ const Profile: React.FC = () => {
             </div>
 
             {/* Professional Information */}
-            <div className="border-b pb-6">
-              <h2 className="text-xl font-semibold mb-4">Professional Information</h2>
+            <div className="border-b border-slate-100 pb-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Professional Information</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
@@ -294,11 +297,11 @@ const Profile: React.FC = () => {
                       value={formData.bio}
                       onChange={handleChange}
                       rows={4}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       placeholder="Tell us about yourself..."
                     />
                   ) : (
-                    <p className="text-gray-900">{user.bio || 'Not provided'}</p>
+                    <p className="text-slate-600">{user.bio || 'Not provided'}</p>
                   )}
                 </div>
 
@@ -359,7 +362,7 @@ const Profile: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleAddSkill}
-                          className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+                          className="bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 font-bold shadow-md shadow-blue-500/30 transition-all"
                         >
                           Add
                         </button>
@@ -368,7 +371,7 @@ const Profile: React.FC = () => {
                         {formData.skills.map((skill, index) => (
                           <span
                             key={index}
-                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                            className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full text-sm flex items-center gap-2 font-medium"
                           >
                             {skill}
                             <button
@@ -388,13 +391,13 @@ const Profile: React.FC = () => {
                         user.skills.map((skill, index) => (
                           <span
                             key={index}
-                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                            className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full text-sm font-medium"
                           >
                             {skill}
                           </span>
                         ))
                       ) : (
-                        <p className="text-gray-900">No skills added</p>
+                        <p className="text-slate-600">No skills added</p>
                       )}
                     </div>
                   )}
@@ -403,8 +406,8 @@ const Profile: React.FC = () => {
             </div>
 
             {/* Links */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Links</h2>
+            <div className="border-b border-slate-100 pb-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Links</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -424,7 +427,7 @@ const Profile: React.FC = () => {
                       href={user.linkedIn}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-800"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
                     >
                       {user.linkedIn}
                     </a>
@@ -451,7 +454,7 @@ const Profile: React.FC = () => {
                       href={user.portfolio}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-800"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
                     >
                       {user.portfolio}
                     </a>
@@ -474,7 +477,7 @@ const Profile: React.FC = () => {
 
               <div className="space-y-6">
                 {/* Theme Settings */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <div className="bg-slate-50 border border-slate-100 p-6 rounded-xl">
                   <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -590,8 +593,8 @@ const Profile: React.FC = () => {
       {/* Password Change Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4">Change Password</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Change Password</h2>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -604,7 +607,7 @@ const Profile: React.FC = () => {
                     setPasswordData({ ...passwordData, currentPassword: e.target.value })
                   }
                   required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
 
@@ -644,13 +647,13 @@ const Profile: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+                  className="flex-1 bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl hover:bg-slate-300 font-bold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
+                  className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all"
                 >
                   Change Password
                 </button>

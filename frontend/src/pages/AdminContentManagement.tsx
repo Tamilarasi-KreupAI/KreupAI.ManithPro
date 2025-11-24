@@ -392,392 +392,365 @@ const AdminContentManagement: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Content Management</h1>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
 
-      {/* Statistics */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">FAQs</div>
-            <div className="text-2xl font-bold">{stats.faqs.total}</div>
-            <div className="text-xs text-gray-500">{stats.faqs.published} published</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Email Templates</div>
-            <div className="text-2xl font-bold">{stats.emailTemplates.total}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Notification Templates</div>
-            <div className="text-2xl font-bold">{stats.notificationTemplates.total}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Static Pages</div>
-            <div className="text-2xl font-bold">{stats.staticPages.total}</div>
-            <div className="text-xs text-gray-500">{stats.staticPages.published} published</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Help Articles</div>
-            <div className="text-2xl font-bold">{stats.helpArticles.total}</div>
-            <div className="text-xs text-gray-500">{stats.helpArticles.published} published</div>
-          </div>
-        </div>
-      )}
+      <div className="p-8 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Content Management</h1>
+        <p className="text-slate-500 mb-8">Manage FAQs, templates, pages, and help articles</p>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="border-b">
-          <div className="flex space-x-4 px-6">
-            <button
-              onClick={() => setActiveTab('faqs')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'faqs'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              FAQs
-            </button>
-            <button
-              onClick={() => setActiveTab('email-templates')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'email-templates'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Email Templates
-            </button>
-            <button
-              onClick={() => setActiveTab('notification-templates')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'notification-templates'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Notification Templates
-            </button>
-            <button
-              onClick={() => setActiveTab('static-pages')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'static-pages'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Static Pages
-            </button>
-            <button
-              onClick={() => setActiveTab('help-articles')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'help-articles'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Help Articles
-            </button>
+        {/* Statistics */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FAQs</div>
+              <div className="text-3xl font-bold text-slate-900 mb-1">{stats.faqs.total}</div>
+              <div className="text-xs font-medium text-green-600 bg-green-50 inline-block px-2 py-1 rounded-lg">{stats.faqs.published} published</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Templates</div>
+              <div className="text-3xl font-bold text-slate-900">{stats.emailTemplates.total}</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Notification Templates</div>
+              <div className="text-3xl font-bold text-slate-900">{stats.notificationTemplates.total}</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Static Pages</div>
+              <div className="text-3xl font-bold text-slate-900 mb-1">{stats.staticPages.total}</div>
+              <div className="text-xs font-medium text-green-600 bg-green-50 inline-block px-2 py-1 rounded-lg">{stats.staticPages.published} published</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Help Articles</div>
+              <div className="text-3xl font-bold text-slate-900 mb-1">{stats.helpArticles.total}</div>
+              <div className="text-xs font-medium text-green-600 bg-green-50 inline-block px-2 py-1 rounded-lg">{stats.helpArticles.published} published</div>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="p-6">
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : (
-            <>
-              {/* FAQs Tab */}
-              {activeTab === 'faqs' && (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Frequently Asked Questions</h2>
-                    <button
-                      onClick={handleCreateFAQ}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Add FAQ
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {faqs.map((faq) => (
-                      <div key={faq.id} className="border rounded p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium mb-1">{faq.question}</div>
-                            <div className="text-sm text-gray-600 mb-2">{faq.answer.substring(0, 150)}...</div>
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="bg-gray-100 px-2 py-1 rounded">{faq.category}</span>
-                              <span className={`px-2 py-1 rounded ${faq.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                {faq.published ? 'Published' : 'Draft'}
-                              </span>
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+          <div className="border-b border-slate-100">
+            <div className="flex overflow-x-auto">
+              {(['faqs', 'email-templates', 'notification-templates', 'static-pages', 'help-articles'] as TabType[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-5 font-bold text-sm whitespace-nowrap transition-all ${activeTab === tab
+                      ? 'text-blue-600 bg-blue-50/50 border-b-2 border-blue-600'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    }`}
+                >
+                  {tab.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-8">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                {/* FAQs Tab */}
+                {activeTab === 'faqs' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-900">Frequently Asked Questions</h2>
+                      <button
+                        onClick={handleCreateFAQ}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                      >
+                        + Add FAQ
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {faqs.map((faq) => (
+                        <div key={faq.id} className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 pr-4">
+                              <div className="font-bold text-lg text-slate-900 mb-2">{faq.question}</div>
+                              <div className="text-slate-600 mb-3">{faq.answer.substring(0, 150)}...</div>
+                              <div className="flex items-center gap-3 text-xs font-bold">
+                                <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full">{faq.category}</span>
+                                <span className={`px-3 py-1 rounded-full border ${faq.published ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}`}>
+                                  {faq.published ? 'Published' : 'Draft'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => {
+                                  setEditingFAQ(faq);
+                                  setShowFAQModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 font-bold text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFAQ(faq.id)}
+                                className="text-red-500 hover:text-red-700 font-bold text-sm"
+                              >
+                                Delete
+                              </button>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Templates Tab */}
+                {activeTab === 'email-templates' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-900">Email Templates</h2>
+                      <button
+                        onClick={handleCreateEmailTemplate}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                      >
+                        + Add Template
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {emailTemplates.map((template) => (
+                        <div key={template.id} className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="font-bold text-slate-900">{template.name}</div>
+                            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{template.type}</span>
+                          </div>
+                          <div className="text-sm text-slate-600 mb-4 font-medium">Subject: <span className="text-slate-800">{template.subject}</span></div>
+                          <div className="flex justify-end gap-3 pt-2 border-t border-slate-200">
                             <button
                               onClick={() => {
-                                setEditingFAQ(faq);
-                                setShowFAQModal(true);
+                                setEditingEmailTemplate(template);
+                                setShowEmailTemplateModal(true);
                               }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-blue-600 hover:text-blue-800 text-sm font-bold"
                             >
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteFAQ(faq.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
+                              onClick={() => handleDeleteEmailTemplate(template.id)}
+                              className="text-red-500 hover:text-red-700 text-sm font-bold"
                             >
                               Delete
                             </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Email Templates Tab */}
-              {activeTab === 'email-templates' && (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Email Templates</h2>
-                    <button
-                      onClick={handleCreateEmailTemplate}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Add Template
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {emailTemplates.map((template) => (
-                      <div key={template.id} className="border rounded p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="font-medium">{template.name}</div>
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{template.type}</span>
-                        </div>
-                        <div className="text-sm text-gray-600 mb-2">Subject: {template.subject}</div>
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingEmailTemplate(template);
-                              setShowEmailTemplateModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteEmailTemplate(template.id)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Notification Templates Tab */}
-              {activeTab === 'notification-templates' && (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Notification Templates</h2>
-                    <button
-                      onClick={handleCreateNotificationTemplate}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Add Template
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {notificationTemplates.map((template) => (
-                      <div key={template.id} className="border rounded p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="font-medium">{template.name}</div>
-                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">{template.type}</span>
-                        </div>
-                        <div className="text-sm font-medium mb-1">{template.title}</div>
-                        <div className="text-sm text-gray-600 mb-2">{template.message.substring(0, 100)}...</div>
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingNotificationTemplate(template);
-                              setShowNotificationTemplateModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteNotificationTemplate(template.id)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Static Pages Tab */}
-              {activeTab === 'static-pages' && (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Static Pages</h2>
-                    <button
-                      onClick={handleCreateStaticPage}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Add Page
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {staticPages.map((page) => (
-                      <div key={page.id} className="border rounded p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium mb-1">{page.title}</div>
-                            <div className="text-sm text-gray-600 mb-2">Slug: /{page.slug}</div>
-                            <span className={`px-2 py-1 rounded text-xs ${page.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {page.published ? 'Published' : 'Draft'}
-                            </span>
+                {/* Notification Templates Tab */}
+                {activeTab === 'notification-templates' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-900">Notification Templates</h2>
+                      <button
+                        onClick={handleCreateNotificationTemplate}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                      >
+                        + Add Template
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {notificationTemplates.map((template) => (
+                        <div key={template.id} className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="font-bold text-slate-900">{template.name}</div>
+                            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">{template.type}</span>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="text-sm font-bold text-slate-800 mb-1">{template.title}</div>
+                          <div className="text-sm text-slate-600 mb-4">{template.message.substring(0, 100)}...</div>
+                          <div className="flex justify-end gap-3 pt-2 border-t border-slate-200">
                             <button
                               onClick={() => {
-                                setEditingStaticPage(page);
-                                setShowStaticPageModal(true);
+                                setEditingNotificationTemplate(template);
+                                setShowNotificationTemplateModal(true);
                               }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-blue-600 hover:text-blue-800 text-sm font-bold"
                             >
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteStaticPage(page.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
+                              onClick={() => handleDeleteNotificationTemplate(template.id)}
+                              className="text-red-500 hover:text-red-700 text-sm font-bold"
                             >
                               Delete
                             </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Help Articles Tab */}
-              {activeTab === 'help-articles' && (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Help Articles</h2>
-                    <button
-                      onClick={handleCreateHelpArticle}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Add Article
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {helpArticles.map((article) => (
-                      <div key={article.id} className="border rounded p-4 hover:bg-gray-50">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium mb-1">{article.title}</div>
-                            <div className="text-sm text-gray-600 mb-2">Slug: /{article.slug}</div>
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="bg-gray-100 px-2 py-1 rounded">{article.category}</span>
-                              <span className={`px-2 py-1 rounded ${article.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                {article.published ? 'Published' : 'Draft'}
+                {/* Static Pages Tab */}
+                {activeTab === 'static-pages' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-900">Static Pages</h2>
+                      <button
+                        onClick={handleCreateStaticPage}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                      >
+                        + Add Page
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {staticPages.map((page) => (
+                        <div key={page.id} className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-bold text-lg text-slate-900 mb-1">{page.title}</div>
+                              <div className="text-sm text-slate-500 font-medium mb-3">Slug: <span className="text-slate-700">/{page.slug}</span></div>
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold border ${page.published ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}`}>
+                                {page.published ? 'Published' : 'Draft'}
                               </span>
                             </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingHelpArticle(article);
-                                setShowHelpArticleModal(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteHelpArticle(article.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => {
+                                  setEditingStaticPage(page);
+                                  setShowStaticPageModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-bold"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteStaticPage(page.id)}
+                                className="text-red-500 hover:text-red-700 text-sm font-bold"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+
+                {/* Help Articles Tab */}
+                {activeTab === 'help-articles' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-900">Help Articles</h2>
+                      <button
+                        onClick={handleCreateHelpArticle}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                      >
+                        + Add Article
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {helpArticles.map((article) => (
+                        <div key={article.id} className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-bold text-lg text-slate-900 mb-1">{article.title}</div>
+                              <div className="text-sm text-slate-500 font-medium mb-3">Slug: <span className="text-slate-700">/{article.slug}</span></div>
+                              <div className="flex items-center gap-3 text-xs font-bold">
+                                <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full">{article.category}</span>
+                                <span className={`px-3 py-1 rounded-full border ${article.published ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}`}>
+                                  {article.published ? 'Published' : 'Draft'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => {
+                                  setEditingHelpArticle(article);
+                                  setShowHelpArticleModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-bold"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteHelpArticle(article.id)}
+                                className="text-red-500 hover:text-red-700 text-sm font-bold"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       {/* FAQ Modal */}
       {showFAQModal && editingFAQ && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{editingFAQ.id ? 'Edit FAQ' : 'Add FAQ'}</h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">{editingFAQ.id ? 'Edit FAQ' : 'Add FAQ'}</h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Question</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Question</label>
                 <input
                   type="text"
                   value={editingFAQ.question}
                   onChange={(e) => setEditingFAQ({ ...editingFAQ, question: e.target.value })}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Answer</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Answer</label>
                 <textarea
                   value={editingFAQ.answer}
                   onChange={(e) => setEditingFAQ({ ...editingFAQ, answer: e.target.value })}
                   rows={4}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
                   <input
                     type="text"
                     value={editingFAQ.category}
                     onChange={(e) => setEditingFAQ({ ...editingFAQ, category: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Published</label>
-                  <input
-                    type="checkbox"
-                    checked={editingFAQ.published}
-                    onChange={(e) => setEditingFAQ({ ...editingFAQ, published: e.target.checked })}
-                    className="mt-3"
-                  />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+                  <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={editingFAQ.published}
+                      onChange={(e) => setEditingFAQ({ ...editingFAQ, published: e.target.checked })}
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                    />
+                    <span className="text-sm font-medium text-slate-700">Published</span>
+                  </label>
                 </div>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   onClick={() => setShowFAQModal(false)}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                  className="px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveFAQ}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                 >
                   Save
                 </button>
