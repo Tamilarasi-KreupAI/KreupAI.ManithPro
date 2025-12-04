@@ -105,7 +105,7 @@ const JobDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading job details...</div>
       </div>
     );
@@ -113,7 +113,7 @@ const JobDetail: React.FC = () => {
 
   if (!job) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Job not found</div>
       </div>
     );
@@ -123,7 +123,7 @@ const JobDetail: React.FC = () => {
   const canApply = user?.role === 'CANDIDATE' && job.status === 'OPEN';
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
         <div className="flex justify-between items-start mb-6">

@@ -1,5 +1,4 @@
-import { jobAPI } from './jobAPI';
-import { applicationAPI } from './applicationAPI';
+import { jobAPI, applicationAPI } from './api';
 
 interface SkillMatch {
   skill: string;
@@ -49,8 +48,8 @@ class RecommendationService {
   // Get job recommendations for a candidate
   async getJobRecommendations(user: any): Promise<JobRecommendation[]> {
     try {
-      const allJobs = await jobAPI.getAll();
-      const userApplications = await applicationAPI.getAll();
+      const { jobs: allJobs } = await jobAPI.getAll();
+      const { applications: userApplications } = await applicationAPI.getAll();
       const appliedJobIds = new Set(userApplications.map((app: any) => app.jobId));
 
       // Filter out jobs already applied to
@@ -127,7 +126,7 @@ class RecommendationService {
   // Get skill gap analysis
   async getSkillGapAnalysis(user: any): Promise<SkillGap[]> {
     try {
-      const allJobs = await jobAPI.getAll();
+      const { jobs: allJobs } = await jobAPI.getAll();
       const userSkills = (user?.skills || []).map((s: string) => s.toLowerCase());
 
       // Aggregate all skills from jobs
@@ -172,7 +171,7 @@ class RecommendationService {
   // Get career path suggestions
   async getCareerPathSuggestions(user: any): Promise<any[]> {
     try {
-      const allJobs = await jobAPI.getAll();
+      const { jobs: allJobs } = await jobAPI.getAll();
       const userSkills = user?.skills || [];
 
       // Define career progression paths (mock data - in real app, use ML model)
@@ -226,7 +225,7 @@ class RecommendationService {
       if (!job) return [];
 
       const jobSkills = job.skills || [];
-      const applications = await applicationAPI.getByJobId(jobId);
+      const { applications } = await applicationAPI.getAll({ jobId });
       const appliedCandidateIds = new Set(applications.map((app: any) => app.candidateId));
 
       // Filter out candidates who already applied
@@ -245,11 +244,11 @@ class RecommendationService {
 
         // Experience match
         const experienceMatch = candidate.experience
-          ? candidate.experience.toLowerCase().includes(job.experienceLevel?.toLowerCase() || '')
+          ? candidate.experience.toLowerCase().includes(job.experience?.toLowerCase() || '')
           : false;
 
         // Salary match
-        const salaryMatch = candidate.expectedSalary
+        const salaryMatch = candidate.expectedSalary && job.salaryMax
           ? candidate.expectedSalary <= job.salaryMax
           : true;
 

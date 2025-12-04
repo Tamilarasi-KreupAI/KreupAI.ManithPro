@@ -140,15 +140,15 @@ const ResumeManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading resumes...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full px-4 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold mb-2">Resume Manager</h1>
         <p className="text-gray-600 mb-8">
           Upload and manage your resumes. Use them when applying for jobs.

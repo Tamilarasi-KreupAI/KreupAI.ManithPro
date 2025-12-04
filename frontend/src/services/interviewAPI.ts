@@ -67,9 +67,32 @@ export interface UpdateInterviewData {
   rating?: number;
 }
 
+import { mockInterviews } from './mockData';
+
+const USE_MOCK = true;
+
+const mockDelay = <T>(data: T, ms = 500): Promise<T> => {
+  return new Promise((resolve) => setTimeout(() => resolve(data), ms));
+};
+
 export const interviewAPI = {
   // Create interview
   create: async (data: CreateInterviewData): Promise<Interview> => {
+    if (USE_MOCK) {
+      const newInterview = {
+        id: Math.random().toString(),
+        ...data,
+        status: 'SCHEDULED' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        scheduledById: '2',
+        candidateId: '1',
+        application: null,
+        scheduledBy: null,
+        candidate: null
+      };
+      return mockDelay(newInterview as unknown as Interview);
+    }
     const response = await api.post('/', data);
     return response.data;
   },
@@ -81,41 +104,68 @@ export const interviewAPI = {
     from?: string;
     to?: string;
   }): Promise<Interview[]> => {
+    if (USE_MOCK) {
+      return mockDelay(mockInterviews as unknown as Interview[]);
+    }
     const response = await api.get('/', { params });
     return response.data;
   },
 
   // Get interview by ID
   getById: async (id: string): Promise<Interview> => {
+    if (USE_MOCK) {
+      const interview = mockInterviews.find(i => i.id === id);
+      if (!interview) throw new Error('Interview not found');
+      return mockDelay(interview as unknown as Interview);
+    }
     const response = await api.get(`/${id}`);
     return response.data;
   },
 
   // Update interview
   update: async (id: string, data: UpdateInterviewData): Promise<Interview> => {
+    if (USE_MOCK) {
+      const interview = mockInterviews.find(i => i.id === id);
+      if (!interview) throw new Error('Interview not found');
+      const updated = { ...interview, ...data };
+      return mockDelay(updated as unknown as Interview);
+    }
     const response = await api.put(`/${id}`, data);
     return response.data;
   },
 
   // Delete interview
   delete: async (id: string): Promise<void> => {
+    if (USE_MOCK) return mockDelay(undefined);
     await api.delete(`/${id}`);
   },
 
   // Get upcoming interviews
   getUpcoming: async (): Promise<Interview[]> => {
+    if (USE_MOCK) {
+      return mockDelay(mockInterviews as unknown as Interview[]);
+    }
     const response = await api.get('/upcoming');
     return response.data;
   },
 
   // Get interviews for an application
   getByApplication: async (applicationId: string): Promise<Interview[]> => {
+    if (USE_MOCK) {
+      return mockDelay(mockInterviews.filter(i => i.applicationId === applicationId) as unknown as Interview[]);
+    }
     const response = await api.get(`/application/${applicationId}`);
     return response.data;
   },
 
   // Submit feedback
   submitFeedback: async (id: string, data: { feedback: string; rating: number }): Promise<Interview> => {
+    if (USE_MOCK) {
+      const interview = mockInterviews.find(i => i.id === id);
+      if (!interview) throw new Error('Interview not found');
+      const updated = { ...interview, ...data };
+      return mockDelay(updated as unknown as Interview);
+    }
     const response = await api.post(`/${id}/feedback`, data);
     return response.data;
   },

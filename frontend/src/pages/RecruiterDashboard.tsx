@@ -95,7 +95,7 @@ const RecruiterDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading analytics...</div>
       </div>
     );
@@ -103,14 +103,14 @@ const RecruiterDashboard: React.FC = () => {
 
   if (!analytics) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Failed to load analytics</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Recruiter Dashboard</h1>

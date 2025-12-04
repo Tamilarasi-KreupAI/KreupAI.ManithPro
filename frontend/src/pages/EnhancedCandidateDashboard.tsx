@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { applicationAPI } from '../services/applicationAPI';
-import { jobAPI } from '../services/jobAPI';
+import { applicationAPI, jobAPI } from '../services/api';
 import { interviewAPI } from '../services/interviewAPI';
 
 const EnhancedCandidateDashboard: React.FC = () => {
@@ -33,13 +32,13 @@ const EnhancedCandidateDashboard: React.FC = () => {
       setLoading(true);
 
       // Fetch applications
-      const applications = await applicationAPI.getAll();
+      const { applications } = await applicationAPI.getAll();
 
       // Fetch interviews
       const interviews = await interviewAPI.getUpcoming();
 
       // Fetch recommended jobs
-      const allJobs = await jobAPI.getAll();
+      const { jobs: allJobs } = await jobAPI.getAll();
       const recommendedJobs = allJobs.slice(0, 3); // Simple recommendation for now
 
       // Calculate stats
@@ -143,8 +142,11 @@ const EnhancedCandidateDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden py-8">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">

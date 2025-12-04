@@ -1,24 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { applicationAPI } from '../services/applicationAPI';
+import { applicationAPI } from '../services/api';
 
-interface Application {
-  id: string;
-  status: string;
-  candidate: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    skills: string[];
-  };
-  job: {
-    id: string;
-    title: string;
-  };
-  appliedAt: string;
-}
+import { Application, ApplicationStatus } from '../types';
 
 const ApplicationKanban: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +26,7 @@ const ApplicationKanban: React.FC = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const data = await applicationAPI.getAll();
+      const { applications: data } = await applicationAPI.getAll();
       setApplications(data);
     } catch (error) {
       console.error('Failed to fetch applications:', error);
@@ -66,7 +51,7 @@ const ApplicationKanban: React.FC = () => {
       return;
     }
 
-    const newStatus = destination.droppableId;
+    const newStatus = destination.droppableId as ApplicationStatus;
 
     try {
       // Update the status in backend
@@ -169,9 +154,8 @@ const ApplicationKanban: React.FC = () => {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`min-h-[600px] space-y-3 ${
-                            snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg p-2' : ''
-                          }`}
+                          className={`min-h-[600px] space-y-3 ${snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg p-2' : ''
+                            }`}
                         >
                           {columnApplications.map((application, index) => (
                             <Draggable
@@ -184,9 +168,8 @@ const ApplicationKanban: React.FC = () => {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
-                                    snapshot.isDragging ? 'shadow-lg ring-2 ring-primary-500' : ''
-                                  }`}
+                                  className={`bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-lg ring-2 ring-primary-500' : ''
+                                    }`}
                                   onClick={(e) => {
                                     if (!snapshot.isDragging) {
                                       navigate(`/applications/${application.id}`);
@@ -198,23 +181,23 @@ const ApplicationKanban: React.FC = () => {
                                     <div className="flex-shrink-0">
                                       <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
                                         <span className="text-sm font-bold text-primary-600">
-                                          {application.candidate.firstName[0]}
-                                          {application.candidate.lastName[0]}
+                                          {application.candidate?.firstName?.[0]}
+                                          {application.candidate?.lastName?.[0]}
                                         </span>
                                       </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <h3 className="font-semibold text-gray-900 truncate">
-                                        {application.candidate.firstName} {application.candidate.lastName}
+                                        {application.candidate?.firstName} {application.candidate?.lastName}
                                       </h3>
                                       <p className="text-sm text-gray-600 truncate">
-                                        {application.job.title}
+                                        {application.job?.title}
                                       </p>
                                     </div>
                                   </div>
 
                                   {/* Skills */}
-                                  {application.candidate.skills && application.candidate.skills.length > 0 && (
+                                  {application.candidate?.skills && application.candidate.skills.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mb-3">
                                       {application.candidate.skills.slice(0, 3).map((skill, idx) => (
                                         <span

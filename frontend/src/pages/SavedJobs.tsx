@@ -33,14 +33,14 @@ const SavedJobs: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading saved jobs...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Saved Jobs</h1>
 
       {savedJobs.length > 0 ? (

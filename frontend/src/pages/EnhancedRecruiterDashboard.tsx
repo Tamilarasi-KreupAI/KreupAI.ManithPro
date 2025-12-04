@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { jobAPI } from '../services/jobAPI';
-import { applicationAPI } from '../services/applicationAPI';
+import { jobAPI, applicationAPI } from '../services/api';
 import { interviewAPI } from '../services/interviewAPI';
 
 const EnhancedRecruiterDashboard: React.FC = () => {
@@ -33,11 +32,11 @@ const EnhancedRecruiterDashboard: React.FC = () => {
       setLoading(true);
 
       // Fetch jobs
-      const jobs = await jobAPI.getAll();
+      const { jobs } = await jobAPI.getAll();
       const activeJobs = jobs.filter((j: any) => j.status === 'OPEN');
 
       // Fetch applications
-      const applications = await applicationAPI.getAll();
+      const { applications } = await applicationAPI.getAll();
 
       // Fetch interviews
       const interviews = await interviewAPI.getUpcoming();
@@ -144,7 +143,7 @@ const EnhancedRecruiterDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Recruitment Analytics</h1>
@@ -210,8 +209,8 @@ const EnhancedRecruiterDashboard: React.FC = () => {
               <AreaChart data={applicationTrend}>
                 <defs>
                   <linearGradient id="colorApplications" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -271,12 +270,11 @@ const EnhancedRecruiterDashboard: React.FC = () => {
                   onClick={() => navigate(`/jobs/${job.id}`)}
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      index === 0 ? 'bg-yellow-100 text-yellow-600' :
-                      index === 1 ? 'bg-gray-100 text-gray-600' :
-                      index === 2 ? 'bg-orange-100 text-orange-600' :
-                      'bg-blue-100 text-blue-600'
-                    }`}>
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${index === 0 ? 'bg-yellow-100 text-yellow-600' :
+                        index === 1 ? 'bg-gray-100 text-gray-600' :
+                          index === 2 ? 'bg-orange-100 text-orange-600' :
+                            'bg-blue-100 text-blue-600'
+                      }`}>
                       <span className="font-bold">{index + 1}</span>
                     </div>
                     <div className="flex-1">

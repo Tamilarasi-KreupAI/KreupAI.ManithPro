@@ -89,7 +89,7 @@ const ApplicationDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Loading application details...</div>
       </div>
     );
@@ -97,7 +97,7 @@ const ApplicationDetail: React.FC = () => {
 
   if (!application) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center">Application not found</div>
       </div>
     );
@@ -107,8 +107,8 @@ const ApplicationDetail: React.FC = () => {
   const isCandidate = user && application.candidateId === user.id;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full px-4 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
           <div className="flex justify-between items-start mb-6">

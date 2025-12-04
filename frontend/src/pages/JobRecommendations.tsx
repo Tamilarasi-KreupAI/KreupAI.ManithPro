@@ -27,7 +27,7 @@ const JobRecommendations: React.FC = () => {
       const allJobs = jobsData.jobs.filter(j => j.status === 'OPEN');
 
       // Simple recommendation algorithm based on skills matching
-      const scored Jobs = allJobs.map(job => {
+      const scoredJobs = allJobs.map(job => {
         let score = 0;
 
         // Match skills
@@ -42,7 +42,7 @@ const JobRecommendations: React.FC = () => {
         // Match location
         if (userData.location && job.location) {
           if (job.location.toLowerCase().includes(userData.location.toLowerCase()) ||
-              userData.location.toLowerCase().includes(job.location.toLowerCase())) {
+            userData.location.toLowerCase().includes(job.location.toLowerCase())) {
             score += 5;
           }
         }
@@ -128,7 +128,7 @@ const JobRecommendations: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           <p className="mt-4 text-gray-600">Finding jobs for you...</p>
@@ -139,8 +139,8 @@ const JobRecommendations: React.FC = () => {
 
   if (!user?.skills || user.skills.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="w-full px-4 py-8">
+        <div className="w-full px-4">
           <div className="bg-white rounded-lg shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">💡</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -162,7 +162,7 @@ const JobRecommendations: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Jobs For You</h1>
         <p className="text-gray-600">
@@ -228,9 +228,8 @@ const JobRecommendations: React.FC = () => {
                         </div>
                         <button
                           onClick={() => handleToggleSave(job.id)}
-                          className={`text-2xl ${
-                            savedJobIds.has(job.id) ? 'text-yellow-500' : 'text-gray-300'
-                          } hover:text-yellow-500`}
+                          className={`text-2xl ${savedJobIds.has(job.id) ? 'text-yellow-500' : 'text-gray-300'
+                            } hover:text-yellow-500`}
                           title={savedJobIds.has(job.id) ? 'Unsave job' : 'Save job'}
                         >
                           {savedJobIds.has(job.id) ? '★' : '☆'}
@@ -280,11 +279,10 @@ const JobRecommendations: React.FC = () => {
                         return (
                           <span
                             key={index}
-                            className={`px-3 py-1 rounded-full text-sm ${
-                              isMatch
+                            className={`px-3 py-1 rounded-full text-sm ${isMatch
                                 ? 'bg-green-100 text-green-800 font-medium'
                                 : 'bg-blue-100 text-blue-800'
-                            }`}
+                              }`}
                           >
                             {isMatch && '✓ '}
                             {skill}

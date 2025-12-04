@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobAPI } from '../services/jobAPI';
+import { jobAPI } from '../services/api';
 
 interface Job {
   id: string;
@@ -51,7 +51,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const data = await jobAPI.getAll();
+      const { jobs: data } = await jobAPI.getAll();
       const openJobs = data.filter((job: any) => job.status === 'OPEN');
       setJobs(openJobs);
 
@@ -169,7 +169,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Advanced Job Search</h1>

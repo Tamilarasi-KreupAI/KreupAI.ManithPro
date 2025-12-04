@@ -256,7 +256,7 @@ const EnhancedCompanyProfile: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <div className="flex items-end gap-6">
               <div className="w-32 h-32 bg-white rounded-lg shadow-xl p-4 flex items-center justify-center">
                 <img src={company.logo} alt={company.name} className="w-full h-full object-contain" loading="lazy" />
@@ -281,7 +281,7 @@ const EnhancedCompanyProfile: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* About Section */}
         <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">About {company.name}</h2>
@@ -318,7 +318,7 @@ const EnhancedCompanyProfile: React.FC = () => {
         {/* Call to Action */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl shadow-lg p-12 text-white text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Join Our Team?</h2>
-          <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-100 mb-8 w-full px-4">
             We're always looking for talented individuals who are passionate about technology and innovation
           </p>
           <div className="flex gap-4 justify-center">
