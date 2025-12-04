@@ -112,7 +112,7 @@ const RecruiterApplications: React.FC = () => {
   const handleDownloadResumes = async () => {
     const selected = sortedApplications.filter((app) => selectedApplications.has(app.id));
     selected.forEach((app) => {
-      window.open(`http://localhost:5000/${app.resume}`, '_blank');
+      window.open(`http://localhost:5001/${app.resume}`, '_blank');
     });
     alert(`Opening ${selected.length} resumes in new tabs`);
   };
@@ -357,7 +357,7 @@ const RecruiterApplications: React.FC = () => {
                           View
                         </Link>
                         <a
-                          href={`http://localhost:5000/${application.resume}`}
+                          href={`http://localhost:5001/${application.resume}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 hover:border-blue-200 transition-all font-medium"

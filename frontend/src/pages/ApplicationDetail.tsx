@@ -231,7 +231,7 @@ const ApplicationDetail: React.FC = () => {
           <div className="mb-6">
             <h2 className="font-semibold text-lg mb-2">Resume</h2>
             <a
-              href={`http://localhost:5000/${application.resume}`}
+              href={`http://localhost:5001/${application.resume}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"

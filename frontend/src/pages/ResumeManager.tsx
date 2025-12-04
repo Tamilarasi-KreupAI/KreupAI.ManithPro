@@ -259,7 +259,7 @@ const ResumeManager: React.FC = () => {
 
                     <div className="flex gap-2 sm:ml-auto">
                       <a
-                        href={`http://localhost:5000${resume.filePath}`}
+                        href={`http://localhost:5001${resume.filePath}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-colors"
