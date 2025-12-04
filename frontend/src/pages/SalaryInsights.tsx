@@ -1,4 +1,4 @@
-```
+
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { jobAPI } from '../services/api';
@@ -225,7 +225,7 @@ const SalaryInsights: React.FC = () => {
                   style={{ fontSize: '12px', fontWeight: 500 }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value) => `$${ value / 1000 } k`}
+                  tickFormatter={(value) => { return `$${value / 1000} k`; }}
                 />
                 <Tooltip
                   cursor={{ fill: '#F1F5F9' }}
@@ -250,7 +250,7 @@ const SalaryInsights: React.FC = () => {
                   style={{ fontSize: '12px', fontWeight: 500 }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value) => `$${ value / 1000 } k`}
+                  tickFormatter={(value) => { return `$${value / 1000} k`; }}
                 />
                 <YAxis
                   dataKey="role"
