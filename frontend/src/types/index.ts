@@ -6398,3 +6398,388 @@ export interface TimezoneConversion {
     formatted: string;
   };
 }
+
+// ============================================
+// BATCH 16: REMINDERS & NOTIFICATIONS (3.3.x)
+// ============================================
+
+// Channel Types
+export type NotificationChannelType = 'EMAIL' | 'SMS' | 'WHATSAPP' | 'PUSH' | 'IN_APP';
+export type ReminderStatus = 'PENDING' | 'SENT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
+export type ConfirmationStatus = 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'EXPIRED';
+export type PrepMaterialType = 'DOCUMENT' | 'VIDEO' | 'LINK' | 'CHECKLIST' | 'GUIDE';
+export type DigestMode = 'INSTANT' | 'HOURLY' | 'DAILY' | 'WEEKLY';
+
+// 3.3.1, 3.3.6 Reminder Schedule
+export interface ReminderSchedule {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  reminderTimes: number[]; // Minutes before event
+  eventTypes: string[];
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  whatsappEnabled: boolean;
+  pushEnabled: boolean;
+  emailTemplateId?: string;
+  smsTemplateId?: string;
+  whatsappTemplateId?: string;
+  scope: 'USER' | 'TEAM' | 'ORGANIZATION';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.3.2-3.3.4 Notification Channel
+export interface NotificationChannel {
+  id: string;
+  userId: string;
+  channelType: NotificationChannelType;
+  isEnabled: boolean;
+  isPrimary: boolean;
+  // Email
+  emailAddress?: string;
+  emailVerified: boolean;
+  emailVerifiedAt?: string;
+  // SMS
+  phoneNumber?: string;
+  phoneCountryCode?: string;
+  phoneVerified: boolean;
+  phoneVerifiedAt?: string;
+  smsCarrier?: string;
+  // WhatsApp
+  whatsappNumber?: string;
+  whatsappVerified: boolean;
+  whatsappOptIn: boolean;
+  whatsappOptInAt?: string;
+  // Push
+  pushToken?: string;
+  pushPlatform?: 'IOS' | 'ANDROID' | 'WEB';
+  pushEnabled: boolean;
+  // Quiet Hours
+  quietHoursEnabled: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  timezone?: string;
+  // Rate Limiting
+  maxPerHour?: number;
+  maxPerDay?: number;
+  lastUsedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Reminder Notification Instance
+export interface ReminderNotification {
+  id: string;
+  userId: string;
+  interviewId?: string;
+  interview?: Interview;
+  reminderType: 'PRE_INTERVIEW' | 'DAY_OF' | 'FOLLOW_UP';
+  scheduledFor: string;
+  minutesBefore: number;
+  status: ReminderStatus;
+  sentAt?: string;
+  deliveredAt?: string;
+  failedAt?: string;
+  failureReason?: string;
+  retryCount: number;
+  maxRetries: number;
+  channel: NotificationChannelType;
+  recipientAddress?: string;
+  subject?: string;
+  body?: string;
+  templateId?: string;
+  templateData?: Record<string, any>;
+  externalMessageId?: string;
+  providerResponse?: Record<string, any>;
+  openedAt?: string;
+  clickedAt?: string;
+  interactionData?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.3.4 Push Subscription
+export interface PushSubscription {
+  id: string;
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  platform: 'WEB' | 'IOS' | 'ANDROID';
+  browser?: string;
+  browserVersion?: string;
+  deviceName?: string;
+  deviceModel?: string;
+  isActive: boolean;
+  lastPingAt?: string;
+  failedAttempts: number;
+  interviewReminders: boolean;
+  applicationUpdates: boolean;
+  messageNotifications: boolean;
+  systemAlerts: boolean;
+  subscribedAt: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.3.7 Confirmation Request
+export interface ConfirmationRequest {
+  id: string;
+  recipientId: string;
+  recipient?: User;
+  senderId: string;
+  sender?: User;
+  interviewId: string;
+  interview?: Interview;
+  requestType: 'ATTENDANCE' | 'RESCHEDULE' | 'CANCELLATION';
+  message?: string;
+  token: string;
+  expiresAt: string;
+  status: ConfirmationStatus;
+  respondedAt?: string;
+  responseMessage?: string;
+  declineReason?: 'SCHEDULING_CONFLICT' | 'NOT_INTERESTED' | 'OTHER';
+  suggestReschedule: boolean;
+  suggestedTimes?: Array<{ startTime: string; endTime: string }>;
+  notificationsSent: number;
+  lastNotificationAt?: string;
+  channelsUsed: string[];
+  reminderSchedule?: number[];
+  nextReminderAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.3.8 Prep Material
+export interface PrepMaterial {
+  id: string;
+  createdById: string;
+  createdBy?: User;
+  title: string;
+  description?: string;
+  materialType: PrepMaterialType;
+  content?: string;
+  fileUrl?: string;
+  externalUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  category?: 'COMPANY_INFO' | 'ROLE_INFO' | 'INTERVIEW_TIPS' | 'TECHNICAL_PREP';
+  tags: string[];
+  forInterviewTypes: string[];
+  forJobIds: string[];
+  forDepartments: string[];
+  isPublic: boolean;
+  isActive: boolean;
+  sendAutomatically: boolean;
+  hoursBefore: number;
+  viewCount: number;
+  downloadCount: number;
+  deliveries?: PrepMaterialDelivery[];
+  _count?: {
+    deliveries: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Prep Material Delivery
+export interface PrepMaterialDelivery {
+  id: string;
+  materialId: string;
+  material?: PrepMaterial;
+  recipientId: string;
+  recipient?: User;
+  interviewId?: string;
+  interview?: Interview;
+  deliveryMethod: 'EMAIL' | 'SMS' | 'WHATSAPP' | 'IN_APP';
+  scheduledFor: string;
+  status: 'PENDING' | 'SENT' | 'DELIVERED' | 'VIEWED' | 'FAILED';
+  sentAt?: string;
+  deliveredAt?: string;
+  viewedAt?: string;
+  failedAt?: string;
+  failureReason?: string;
+  openCount: number;
+  downloadCount: number;
+  timeSpentSeconds?: number;
+  helpfulRating?: number;
+  feedbackText?: string;
+  externalMessageId?: string;
+  trackingPixelId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Notification Preferences
+export interface NotificationPreference {
+  id: string;
+  userId: string;
+  notificationsEnabled: boolean;
+  digestMode: DigestMode;
+  digestTime?: string;
+  digestDay?: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  whatsappEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  interviewReminders: boolean;
+  applicationUpdates: boolean;
+  messageAlerts: boolean;
+  jobAlerts: boolean;
+  systemAnnouncements: boolean;
+  marketingEmails: boolean;
+  defaultReminderTimes?: number[];
+  confirmationRequests: boolean;
+  prepMaterialDelivery: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  quietHoursTimezone?: string;
+  unsubscribedAt?: string;
+  unsubscribeReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Notification Stats
+export interface NotificationStats {
+  total: {
+    sent: number;
+    delivered: number;
+    failed: number;
+    opened: number;
+  };
+  deliveryRate: string;
+  openRate: string;
+  byChannel: Record<string, number>;
+}
+
+// API Input Types
+export interface CreateReminderScheduleInput {
+  name: string;
+  description?: string;
+  isDefault?: boolean;
+  reminderTimes?: number[];
+  eventTypes?: string[];
+  emailEnabled?: boolean;
+  smsEnabled?: boolean;
+  whatsappEnabled?: boolean;
+  pushEnabled?: boolean;
+  emailTemplateId?: string;
+  smsTemplateId?: string;
+  whatsappTemplateId?: string;
+  scope?: 'USER' | 'TEAM' | 'ORGANIZATION';
+}
+
+export interface UpsertNotificationChannelInput {
+  channelType: NotificationChannelType;
+  isEnabled?: boolean;
+  isPrimary?: boolean;
+  emailAddress?: string;
+  phoneNumber?: string;
+  phoneCountryCode?: string;
+  whatsappNumber?: string;
+  pushToken?: string;
+  pushPlatform?: 'IOS' | 'ANDROID' | 'WEB';
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  timezone?: string;
+}
+
+export interface ScheduleReminderInput {
+  interviewId: string;
+  reminderType: 'PRE_INTERVIEW' | 'DAY_OF' | 'FOLLOW_UP';
+  scheduledFor: string;
+  minutesBefore: number;
+  channel: NotificationChannelType;
+  subject?: string;
+  body?: string;
+}
+
+export interface CreateConfirmationRequestInput {
+  recipientId: string;
+  interviewId: string;
+  requestType?: 'ATTENDANCE' | 'RESCHEDULE' | 'CANCELLATION';
+  message?: string;
+  expiresInHours?: number;
+}
+
+export interface ConfirmationResponseInput {
+  response: 'confirm' | 'decline';
+  responseMessage?: string;
+  declineReason?: string;
+  suggestReschedule?: boolean;
+  suggestedTimes?: Array<{ startTime: string; endTime: string }>;
+}
+
+export interface CreatePrepMaterialInput {
+  title: string;
+  description?: string;
+  materialType: PrepMaterialType;
+  content?: string;
+  fileUrl?: string;
+  externalUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  category?: string;
+  tags?: string[];
+  forInterviewTypes?: string[];
+  forJobIds?: string[];
+  forDepartments?: string[];
+  isPublic?: boolean;
+  sendAutomatically?: boolean;
+  hoursBefore?: number;
+}
+
+export interface SchedulePrepDeliveryInput {
+  materialId: string;
+  recipientId: string;
+  interviewId?: string;
+  deliveryMethod?: 'EMAIL' | 'SMS' | 'WHATSAPP' | 'IN_APP';
+  scheduledFor: string;
+}
+
+export interface UpdateNotificationPreferencesInput {
+  notificationsEnabled?: boolean;
+  digestMode?: DigestMode;
+  digestTime?: string;
+  digestDay?: string;
+  emailEnabled?: boolean;
+  smsEnabled?: boolean;
+  whatsappEnabled?: boolean;
+  pushEnabled?: boolean;
+  inAppEnabled?: boolean;
+  interviewReminders?: boolean;
+  applicationUpdates?: boolean;
+  messageAlerts?: boolean;
+  jobAlerts?: boolean;
+  systemAnnouncements?: boolean;
+  marketingEmails?: boolean;
+  defaultReminderTimes?: number[];
+  confirmationRequests?: boolean;
+  prepMaterialDelivery?: boolean;
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  quietHoursTimezone?: string;
+}
+
+export interface RegisterPushSubscriptionInput {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  platform?: 'WEB' | 'IOS' | 'ANDROID';
+  browser?: string;
+  browserVersion?: string;
+  deviceName?: string;
+  deviceModel?: string;
+}

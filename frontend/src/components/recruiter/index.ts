@@ -6,3 +6,6 @@ export { default as ExtendedAIContentHub } from './ExtendedAIContentHub';
 
 // Recruiter Components - Batch 15: Calendar & Scheduling
 export { default as CalendarSchedulingHub } from './CalendarSchedulingHub';
+
+// Recruiter Components - Batch 16: Reminders & Notifications
+export { default as RemindersNotificationsHub } from './RemindersNotificationsHub';

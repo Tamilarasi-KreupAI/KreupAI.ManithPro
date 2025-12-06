@@ -135,6 +135,17 @@ model User {
   panelMemberships       PanelMember[]
   timezonePreference     TimezonePreference?
 
+  // Batch 16: Reminders & Notifications
+  reminderSchedules      ReminderSchedule[]
+  notificationChannels   NotificationChannel[]
+  reminderNotifications  ReminderNotification[]
+  confirmationRequests   ConfirmationRequest[]    @relation("ConfirmationRecipient")
+  sentConfirmations      ConfirmationRequest[]    @relation("ConfirmationSender")
+  prepMaterials          PrepMaterial[]
+  prepDeliveries         PrepMaterialDelivery[]   @relation("PrepDeliveryRecipient")
+  notificationPreference NotificationPreference?
+  pushSubscriptions      PushSubscription[]
+
   @@map("users")
 }
 
@@ -243,6 +254,11 @@ model Interview {
   scheduledBy     User            @relation("ScheduledInterviews", fields: [scheduledById], references: [id])
   candidateId     String
   candidate       User            @relation("CandidateInterviews", fields: [candidateId], references: [id])
+
+  // Batch 16: Reminders & Notifications
+  reminderNotifications  ReminderNotification[]
+  confirmationRequests   ConfirmationRequest[]
+  prepMaterialDeliveries PrepMaterialDelivery[]
 
   @@index([status, scheduledAt])
   @@index([candidateId])
@@ -7038,4 +7054,414 @@ model TimezonePreference {
   updatedAt             DateTime            @updatedAt
 
   @@map("timezone_preferences")
+}
+
+// ============================================
+// BATCH 16: REMINDERS & NOTIFICATIONS (3.3.x)
+// ============================================
+
+// 3.3.1 - EMAIL REMINDERS & 3.3.6 - REMINDER CUSTOMIZATION
+model ReminderSchedule {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Schedule Configuration
+  name                  String              // e.g., "Standard Interview Reminder"
+  description           String?
+  isDefault             Boolean             @default(false)
+  isActive              Boolean             @default(true)
+
+  // Reminder Timing (array of minutes before event)
+  reminderTimes         Json                // e.g., [1440, 60, 15] for 24h, 1h, 15min
+
+  // Event Types this schedule applies to
+  eventTypes            String[]            @default([]) // INTERVIEW, SCREENING, PANEL, etc.
+
+  // Channel Configuration
+  emailEnabled          Boolean             @default(true)
+  smsEnabled            Boolean             @default(false)
+  whatsappEnabled       Boolean             @default(false)
+  pushEnabled           Boolean             @default(true)
+
+  // Templates
+  emailTemplateId       String?
+  smsTemplateId         String?
+  whatsappTemplateId    String?
+
+  // Scope
+  scope                 String              @default("USER") // USER, TEAM, ORGANIZATION
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([isDefault])
+  @@index([isActive])
+  @@map("reminder_schedules")
+}
+
+// 3.3.2-3.3.4 - NOTIFICATION CHANNELS (SMS, WhatsApp, Push)
+model NotificationChannel {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Channel Type
+  channelType           String              // EMAIL, SMS, WHATSAPP, PUSH
+  isEnabled             Boolean             @default(true)
+  isPrimary             Boolean             @default(false)
+
+  // Channel-Specific Configuration
+  // Email
+  emailAddress          String?
+  emailVerified         Boolean             @default(false)
+  emailVerifiedAt       DateTime?
+
+  // SMS
+  phoneNumber           String?
+  phoneCountryCode      String?
+  phoneVerified         Boolean             @default(false)
+  phoneVerifiedAt       DateTime?
+  smsCarrier            String?
+
+  // WhatsApp
+  whatsappNumber        String?
+  whatsappVerified      Boolean             @default(false)
+  whatsappOptIn         Boolean             @default(false)
+  whatsappOptInAt       DateTime?
+
+  // Push
+  pushToken             String?
+  pushPlatform          String?             // IOS, ANDROID, WEB
+  pushEnabled           Boolean             @default(true)
+
+  // Delivery Preferences
+  quietHoursEnabled     Boolean             @default(false)
+  quietHoursStart       String?             // e.g., "22:00"
+  quietHoursEnd         String?             // e.g., "08:00"
+  timezone              String?
+
+  // Rate Limiting
+  maxPerHour            Int?
+  maxPerDay             Int?
+
+  // Metadata
+  lastUsedAt            DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, channelType])
+  @@index([userId])
+  @@index([channelType])
+  @@map("notification_channels")
+}
+
+// Reminder Notification Instance
+model ReminderNotification {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Associated Interview
+  interviewId           String?
+  interview             Interview?          @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+
+  // Reminder Details
+  reminderType          String              // PRE_INTERVIEW, DAY_OF, FOLLOW_UP
+  scheduledFor          DateTime            // When reminder should be sent
+  minutesBefore         Int                 // Minutes before event
+
+  // Delivery Status
+  status                String              @default("PENDING") // PENDING, SENT, DELIVERED, FAILED, CANCELLED
+  sentAt                DateTime?
+  deliveredAt           DateTime?
+  failedAt              DateTime?
+  failureReason         String?
+  retryCount            Int                 @default(0)
+  maxRetries            Int                 @default(3)
+
+  // Channel Used
+  channel               String              // EMAIL, SMS, WHATSAPP, PUSH
+  recipientAddress      String?             // Email, phone, or push token
+
+  // Content
+  subject               String?
+  body                  String?
+  templateId            String?
+  templateData          Json?               // Variables for template
+
+  // External IDs (from providers)
+  externalMessageId     String?             // Provider's message ID
+  providerResponse      Json?               // Full provider response
+
+  // Tracking
+  openedAt              DateTime?
+  clickedAt             DateTime?
+  interactionData       Json?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([interviewId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("reminder_notifications")
+}
+
+// 3.3.4 - PUSH NOTIFICATIONS
+model PushSubscription {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Subscription Details
+  endpoint              String              @unique
+  p256dh                String              // Public key
+  auth                  String              // Auth secret
+
+  // Platform Info
+  platform              String              @default("WEB") // WEB, IOS, ANDROID
+  browser               String?             // Chrome, Firefox, Safari
+  browserVersion        String?
+  deviceName            String?
+  deviceModel           String?
+
+  // Status
+  isActive              Boolean             @default(true)
+  lastPingAt            DateTime?
+  failedAttempts        Int                 @default(0)
+
+  // Notification Preferences
+  interviewReminders    Boolean             @default(true)
+  applicationUpdates    Boolean             @default(true)
+  messageNotifications  Boolean             @default(true)
+  systemAlerts          Boolean             @default(true)
+
+  // Metadata
+  subscribedAt          DateTime            @default(now())
+  expiresAt             DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("push_subscriptions")
+}
+
+// 3.3.5 - CALENDAR EVENT UPDATES
+// (Uses existing CalendarEvent model with sync tracking)
+
+// 3.3.7 - CONFIRMATION REQUESTS
+model ConfirmationRequest {
+  id                    String              @id @default(uuid())
+
+  // Recipient
+  recipientId           String
+  recipient             User                @relation("ConfirmationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  // Sender
+  senderId              String
+  sender                User                @relation("ConfirmationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Associated Interview
+  interviewId           String
+  interview             Interview           @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  // Request Details
+  requestType           String              @default("ATTENDANCE") // ATTENDANCE, RESCHEDULE, CANCELLATION
+  message               String?             // Custom message from sender
+
+  // Confirmation Token
+  token                 String              @unique @default(uuid())
+  expiresAt             DateTime
+
+  // Status
+  status                String              @default("PENDING") // PENDING, CONFIRMED, DECLINED, EXPIRED
+  respondedAt           DateTime?
+  responseMessage       String?             // Optional message from recipient
+
+  // Decline Options
+  declineReason         String?             // SCHEDULING_CONFLICT, NOT_INTERESTED, OTHER
+  suggestReschedule     Boolean             @default(false)
+  suggestedTimes        Json?               // Array of suggested alternative times
+
+  // Notification Tracking
+  notificationsSent     Int                 @default(0)
+  lastNotificationAt    DateTime?
+  channelsUsed          String[]            @default([]) // EMAIL, SMS, etc.
+
+  // Reminders
+  reminderSchedule      Json?               // When to send reminder if no response
+  nextReminderAt        DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([recipientId])
+  @@index([senderId])
+  @@index([interviewId])
+  @@index([status])
+  @@index([token])
+  @@map("confirmation_requests")
+}
+
+// 3.3.8 - PREP MATERIAL DELIVERY
+model PrepMaterial {
+  id                    String              @id @default(uuid())
+  createdById           String
+  createdBy             User                @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Material Info
+  title                 String
+  description           String?
+  materialType          String              // DOCUMENT, VIDEO, LINK, CHECKLIST, GUIDE
+
+  // Content
+  content               String?             // Rich text content
+  fileUrl               String?             // Uploaded file URL
+  externalUrl           String?             // External link
+
+  // File Details
+  fileName              String?
+  fileSize              Int?
+  mimeType              String?
+
+  // Categorization
+  category              String?             // COMPANY_INFO, ROLE_INFO, INTERVIEW_TIPS, TECHNICAL_PREP
+  tags                  String[]            @default([])
+
+  // Target Audience
+  forInterviewTypes     String[]            @default([]) // TECHNICAL, BEHAVIORAL, etc.
+  forJobIds             String[]            @default([]) // Specific jobs
+  forDepartments        String[]            @default([])
+
+  // Visibility
+  isPublic              Boolean             @default(false)
+  isActive              Boolean             @default(true)
+
+  // Delivery Settings
+  sendAutomatically     Boolean             @default(true)
+  hoursBefore           Int                 @default(24) // Hours before interview to send
+
+  // Usage Stats
+  viewCount             Int                 @default(0)
+  downloadCount         Int                 @default(0)
+
+  // Relations
+  deliveries            PrepMaterialDelivery[]
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([createdById])
+  @@index([materialType])
+  @@index([isActive])
+  @@map("prep_materials")
+}
+
+model PrepMaterialDelivery {
+  id                    String              @id @default(uuid())
+
+  // Material
+  materialId            String
+  material              PrepMaterial        @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  // Recipient
+  recipientId           String
+  recipient             User                @relation("PrepDeliveryRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  // Interview
+  interviewId           String?
+  interview             Interview?          @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+
+  // Delivery Details
+  deliveryMethod        String              @default("EMAIL") // EMAIL, SMS, WHATSAPP, IN_APP
+  scheduledFor          DateTime
+
+  // Status
+  status                String              @default("PENDING") // PENDING, SENT, DELIVERED, VIEWED, FAILED
+  sentAt                DateTime?
+  deliveredAt           DateTime?
+  viewedAt              DateTime?
+  failedAt              DateTime?
+  failureReason         String?
+
+  // Tracking
+  openCount             Int                 @default(0)
+  downloadCount         Int                 @default(0)
+  timeSpentSeconds      Int?                // Estimated reading/viewing time
+
+  // Feedback
+  helpfulRating         Int?                // 1-5 rating
+  feedbackText          String?
+
+  // External Tracking
+  externalMessageId     String?
+  trackingPixelId       String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([materialId, recipientId, interviewId])
+  @@index([materialId])
+  @@index([recipientId])
+  @@index([interviewId])
+  @@index([status])
+  @@map("prep_material_deliveries")
+}
+
+// User Notification Preferences (aggregated settings)
+model NotificationPreference {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Global Settings
+  notificationsEnabled  Boolean             @default(true)
+  digestMode            String              @default("INSTANT") // INSTANT, HOURLY, DAILY, WEEKLY
+  digestTime            String?             // Preferred time for digest (e.g., "09:00")
+  digestDay             String?             // For weekly digest (e.g., "MONDAY")
+
+  // Channel Preferences
+  emailEnabled          Boolean             @default(true)
+  smsEnabled            Boolean             @default(false)
+  whatsappEnabled       Boolean             @default(false)
+  pushEnabled           Boolean             @default(true)
+  inAppEnabled          Boolean             @default(true)
+
+  // Notification Type Preferences
+  interviewReminders    Boolean             @default(true)
+  applicationUpdates    Boolean             @default(true)
+  messageAlerts         Boolean             @default(true)
+  jobAlerts             Boolean             @default(true)
+  systemAnnouncements   Boolean             @default(true)
+  marketingEmails       Boolean             @default(false)
+
+  // Reminder Preferences
+  defaultReminderTimes  Json?               // e.g., [1440, 60, 15] minutes before
+  confirmationRequests  Boolean             @default(true)
+  prepMaterialDelivery  Boolean             @default(true)
+
+  // Quiet Hours
+  quietHoursEnabled     Boolean             @default(false)
+  quietHoursStart       String?             // e.g., "22:00"
+  quietHoursEnd         String?             // e.g., "08:00"
+  quietHoursTimezone    String?
+
+  // Unsubscribe Tracking
+  unsubscribedAt        DateTime?
+  unsubscribeReason     String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("notification_preferences")
 }
