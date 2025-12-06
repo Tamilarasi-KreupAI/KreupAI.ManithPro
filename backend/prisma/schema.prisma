@@ -11560,3 +11560,546 @@ model TeamActivityLog {
   @@index([performedAt])
   @@map("team_activity_logs")
 }
+
+// ============================================================================
+// BATCH 25: COLLABORATIVE EVALUATION (6.2.1-6.2.9)
+// ============================================================================
+
+// 6.2.1 Scorecard Templates
+model ScorecardTemplate {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?             // Optional - null means company-wide
+
+  // Template Details
+  name                  String
+  description           String?             @db.Text
+  category              String              // TECHNICAL, BEHAVIORAL, CULTURE, LEADERSHIP, etc.
+  version               Int                 @default(1)
+
+  // Criteria
+  criteria              Json                // Array of {id, name, description, weight, scale, rubric}
+  totalWeight           Float               @default(100)
+  passingScore          Float?
+
+  // Scoring Configuration
+  scoreScale            String              @default("1-5") // 1-5, 1-10, PASS_FAIL
+  allowPartialScores    Boolean             @default(true)
+  requireComments       Boolean             @default(false)
+  requireEvidence       Boolean             @default(false)
+
+  // Usage
+  isDefault             Boolean             @default(false)
+  isActive              Boolean             @default(true)
+  usageCount            Int                 @default(0)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([category])
+  @@index([isActive])
+  @@map("scorecard_templates")
+}
+
+// 6.2.2 Interview Feedback Forms
+model InterviewFeedback {
+  id                    String              @id @default(uuid())
+  companyId             String
+  interviewId           String
+  candidateId           String
+  jobId                 String
+  interviewerId         String
+
+  // Scorecard
+  scorecardTemplateId   String?
+  scores                Json                // Array of {criteriaId, score, comment, evidence}
+  overallScore          Float?
+  weightedScore         Float?
+
+  // Recommendation
+  recommendation        String              // STRONG_HIRE, HIRE, NO_DECISION, NO_HIRE, STRONG_NO_HIRE
+  confidenceLevel       String?             // HIGH, MEDIUM, LOW
+
+  // Detailed Feedback
+  strengths             Json?               // Array of strength observations
+  concerns              Json?               // Array of concerns
+  redFlags              Json?               // Array of red flags
+  areasToProbe          Json?               // Areas for next interviewer to explore
+
+  // Summary
+  summary               String?             @db.Text
+  privateNotes          String?             @db.Text // Only visible to author
+
+  // Blind Mode
+  isBlindSubmission     Boolean             @default(false)
+  visibleToOthers       Boolean             @default(false)
+  revealedAt            DateTime?
+
+  // Status
+  status                String              @default("DRAFT") // DRAFT, SUBMITTED, REVISED, FINALIZED
+  submittedAt           DateTime?
+  dueDate               DateTime?
+  isOverdue             Boolean             @default(false)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([interviewId, interviewerId])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([interviewerId])
+  @@index([status])
+  @@index([recommendation])
+  @@map("interview_feedback")
+}
+
+// 6.2.3 Blind Evaluation Mode Configuration
+model BlindEvaluationConfig {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?             // null = company-wide default
+
+  // Blind Mode Settings
+  isEnabled             Boolean             @default(true)
+  blindUntilSubmitted   Boolean             @default(true)  // Hide until all submit
+  blindUntilDeadline    Boolean             @default(false) // Hide until deadline
+  blindUntilRevealed    Boolean             @default(false) // Manual reveal
+
+  // What to Hide
+  hideOtherScores       Boolean             @default(true)
+  hideOtherComments     Boolean             @default(true)
+  hideOtherRecommendations Boolean          @default(true)
+  hideInterviewerNames  Boolean             @default(false)
+
+  // Reveal Settings
+  autoRevealAfterAll    Boolean             @default(true)
+  revealDelay           Int?                // Minutes after last submission
+  requireMinSubmissions Int                 @default(1)
+
+  // Exceptions
+  allowManagerView      Boolean             @default(false) // Hiring manager can always see
+  allowLeadView         Boolean             @default(false) // Lead recruiter can always see
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, jobId])
+  @@index([companyId])
+  @@map("blind_evaluation_configs")
+}
+
+// 6.2.4 Feedback Aggregation
+model FeedbackAggregation {
+  id                    String              @id @default(uuid())
+  companyId             String
+  candidateId           String
+  jobId                 String
+  roundNumber           Int?                // null = all rounds aggregated
+
+  // Aggregated Scores
+  averageScore          Float
+  weightedAverageScore  Float?
+  medianScore           Float?
+  minScore              Float
+  maxScore              Float
+  scoreStandardDev      Float?
+
+  // By Criteria
+  criteriaBreakdown     Json                // {criteriaId: {avg, min, max, scores[]}}
+
+  // Recommendations
+  hireVotes             Int                 @default(0)
+  noHireVotes           Int                 @default(0)
+  noDecisionVotes       Int                 @default(0)
+  totalVotes            Int                 @default(0)
+  consensusRecommendation String?
+
+  // Themes
+  commonStrengths       Json?               // Most mentioned strengths
+  commonConcerns        Json?               // Most mentioned concerns
+  keyInsights           Json?               // AI-extracted insights
+
+  // Disagreement Detection
+  hasDisagreement       Boolean             @default(false)
+  disagreementLevel     String?             // MINOR, MODERATE, MAJOR
+  disagreementAreas     Json?               // Where reviewers differ
+
+  // Status
+  feedbackCount         Int                 @default(0)
+  expectedFeedbackCount Int                 @default(0)
+  isComplete            Boolean             @default(false)
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId, roundNumber])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@map("feedback_aggregations")
+}
+
+// 6.2.5 Calibration Sessions
+model CalibrationSession {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?
+
+  // Session Details
+  name                  String
+  description           String?             @db.Text
+  purpose               String              // INITIAL, ONGOING, POST_HIRE_REVIEW, TRAINING
+  scheduledAt           DateTime
+  duration              Int                 @default(60) // minutes
+
+  // Participants
+  facilitatorId         String
+  participants          Json                // Array of {userId, role, attended}
+  minParticipants       Int                 @default(2)
+
+  // Candidates to Review
+  candidateIds          Json                // Array of candidateIds for calibration
+  focusAreas            Json?               // Specific areas to calibrate on
+
+  // Session Content
+  agenda                Json?               // Session agenda items
+  discussionPoints      Json?               // Key points discussed
+  decisions             Json?               // Decisions made
+  actionItems           Json?               // Follow-up actions
+
+  // Calibration Results
+  calibrationScores     Json?               // Before/after score adjustments
+  alignmentAchieved     Boolean             @default(false)
+  alignmentNotes        String?             @db.Text
+
+  // Recording
+  meetingLink           String?
+  recordingUrl          String?
+  transcript            String?             @db.Text
+
+  // Status
+  status                String              @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("calibration_sessions")
+}
+
+// 6.2.6 Decision Voting
+model HiringDecisionVote {
+  id                    String              @id @default(uuid())
+  companyId             String
+  candidateId           String
+  jobId                 String
+  roundNumber           Int?                // Specific round or final decision
+
+  // Voter
+  voterId               String
+  voterRole             String              // INTERVIEWER, HIRING_MANAGER, RECRUITER, etc.
+
+  // Vote
+  vote                  String              // STRONG_HIRE, HIRE, NO_DECISION, NO_HIRE, STRONG_NO_HIRE
+  confidence            String              @default("MEDIUM") // HIGH, MEDIUM, LOW
+  weight                Float               @default(1.0)      // Vote weight
+
+  // Reasoning
+  primaryReason         String?
+  detailedReasoning     String?             @db.Text
+  conditions            Json?               // Conditions for hire (salary, start date, etc.)
+
+  // Evidence
+  supportingEvidence    Json?               // Links to feedback, notes
+  concerns              Json?
+
+  // Status
+  isBinding             Boolean             @default(false)     // Final decision authority
+  isAnonymous           Boolean             @default(false)
+
+  // Metadata
+  votedAt               DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId, roundNumber, voterId])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([voterId])
+  @@index([vote])
+  @@map("hiring_decision_votes")
+}
+
+// Voting Round Summary
+model VotingRoundSummary {
+  id                    String              @id @default(uuid())
+  companyId             String
+  candidateId           String
+  jobId                 String
+  roundNumber           Int?
+
+  // Vote Counts
+  strongHireCount       Int                 @default(0)
+  hireCount             Int                 @default(0)
+  noDecisionCount       Int                 @default(0)
+  noHireCount           Int                 @default(0)
+  strongNoHireCount     Int                 @default(0)
+  totalVotes            Int                 @default(0)
+  expectedVotes         Int                 @default(0)
+
+  // Weighted Results
+  weightedScore         Float?              // Weighted average of votes
+  consensusLevel        String?             // UNANIMOUS, STRONG, MODERATE, WEAK, NONE
+
+  // Decision
+  outcome               String?             // PASS, FAIL, PENDING, NEEDS_DISCUSSION
+  finalDecision         String?             // HIRE, NO_HIRE, HOLD
+  decisionMadeBy        String?
+  decisionMadeAt        DateTime?
+  decisionRationale     String?             @db.Text
+
+  // Status
+  votingOpen            Boolean             @default(true)
+  votingDeadline        DateTime?
+  isComplete            Boolean             @default(false)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId, roundNumber])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@map("voting_round_summaries")
+}
+
+// 6.2.7 Evaluation Deadlines
+model EvaluationDeadline {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?
+
+  // Deadline Configuration
+  name                  String
+  deadlineType          String              // FEEDBACK, VOTING, CALIBRATION, DECISION
+  relativeTo            String              // INTERVIEW_END, ROUND_END, APPLICATION_DATE
+  hoursAfter            Int                 @default(24)
+  businessHoursOnly     Boolean             @default(true)
+
+  // Escalation
+  enableReminders       Boolean             @default(true)
+  reminderHoursBefore   Json                // [24, 4, 1] - reminder schedule
+  escalationEnabled     Boolean             @default(false)
+  escalateTo            String?             // userId to escalate to
+  escalateAfterHours    Int?
+
+  // Penalties
+  trackCompliance       Boolean             @default(true)
+  blockPipelineProgress Boolean             @default(false)
+
+  // Active
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([deadlineType])
+  @@map("evaluation_deadlines")
+}
+
+// Deadline Tracking Instance
+model DeadlineInstance {
+  id                    String              @id @default(uuid())
+  companyId             String
+  deadlineConfigId      String
+  candidateId           String
+  jobId                 String
+  assigneeId            String
+
+  // Deadline
+  dueAt                 DateTime
+  deadlineType          String
+
+  // Status
+  status                String              @default("PENDING") // PENDING, COMPLETED, OVERDUE, EXCUSED
+  completedAt           DateTime?
+
+  // Reminders
+  remindersSent         Json?               // Array of {sentAt, type}
+  escalated             Boolean             @default(false)
+  escalatedAt           DateTime?
+  escalatedTo           String?
+
+  // Extension
+  extendedBy            String?
+  extendedAt            DateTime?
+  originalDueAt         DateTime?
+  extensionReason       String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([dueAt])
+  @@map("deadline_instances")
+}
+
+// 6.2.8 Disagreement Resolution
+model EvaluationDisagreement {
+  id                    String              @id @default(uuid())
+  companyId             String
+  candidateId           String
+  jobId                 String
+
+  // Disagreement Details
+  disagreementType      String              // SCORE, RECOMMENDATION, CRITERIA, INTERPRETATION
+  severity              String              // MINOR, MODERATE, MAJOR, CRITICAL
+  criteriaId            String?             // If about specific criteria
+
+  // Parties
+  reviewerIds           Json                // Array of disagreeing reviewers
+  primaryReviewerId     String?             // Main opposing view
+  secondaryReviewerId   String?             // Other opposing view
+
+  // Disagreement Data
+  positions             Json                // {userId: {score, reasoning, evidence}}
+  scoreDifference       Float?
+  description           String              @db.Text
+
+  // Resolution Process
+  resolutionMethod      String?             // DISCUSSION, MEDIATOR, TIEBREAKER, CONSENSUS, MANAGER_DECISION
+  mediatorId            String?
+  discussionNotes       String?             @db.Text
+
+  // Outcome
+  resolution            String?             // RESOLVED, UNRESOLVED, ESCALATED, DISMISSED
+  finalDecision         Json?               // What was decided
+  resolvedById          String?
+  resolvedAt            DateTime?
+  resolutionRationale   String?             @db.Text
+
+  // Status
+  status                String              @default("IDENTIFIED") // IDENTIFIED, IN_DISCUSSION, RESOLVED, ESCALATED
+
+  // Metadata
+  identifiedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([severity])
+  @@index([status])
+  @@map("evaluation_disagreements")
+}
+
+// 6.2.9 Historical Comparison
+model CandidateComparison {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String
+
+  // Current Candidate
+  candidateId           String
+  candidateScore        Float
+  candidateStrengths    Json
+  candidateConcerns     Json
+
+  // Comparison Set
+  comparisonType        String              // SIMILAR_ROLE, SAME_ROUND, TOP_PERFORMERS, RECENT_HIRES
+  comparedCandidateIds  Json                // Array of candidate IDs compared
+
+  // Comparison Results
+  percentileRank        Float?              // Where candidate ranks (0-100)
+  relativeStrength      String?             // ABOVE_AVERAGE, AVERAGE, BELOW_AVERAGE
+  standoutAreas         Json?               // Areas where candidate excels
+  gapAreas              Json?               // Areas where candidate lags
+
+  // Benchmark Data
+  benchmarkAvgScore     Float?
+  benchmarkMedianScore  Float?
+  benchmarkTopScore     Float?
+  benchmarkCriteriaAvg  Json?               // By criteria comparison
+
+  // Insights
+  keyDifferentiators    Json?               // What sets candidate apart
+  riskFactors           Json?               // Comparison-based risks
+  recommendations       Json?               // Based on comparison
+
+  // Metadata
+  comparedAt            DateTime            @default(now())
+  comparisonCount       Int                 @default(0)
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([candidateId])
+  @@map("candidate_comparisons")
+}
+
+// Historical Hiring Benchmark
+model HiringBenchmark {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?             // null = company-wide
+  roleCategory          String?             // ENGINEERING, PRODUCT, DESIGN, etc.
+
+  // Benchmark Period
+  periodStart           DateTime
+  periodEnd             DateTime
+
+  // Hiring Data
+  totalCandidates       Int
+  totalHires            Int
+  totalOffers           Int
+
+  // Score Benchmarks
+  avgHiredScore         Float
+  minHiredScore         Float
+  maxHiredScore         Float
+  medianHiredScore      Float
+
+  // By Criteria
+  criteriaBenchmarks    Json                // {criteriaId: {avgHired, avgRejected, threshold}}
+
+  // Success Metrics (post-hire)
+  avgPerformanceRating  Float?
+  retentionRate90Days   Float?
+  retentionRate1Year    Float?
+  promotionRate         Float?
+
+  // Patterns
+  successIndicators     Json?               // What predicted success
+  failureIndicators     Json?               // What predicted failure
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([roleCategory])
+  @@map("hiring_benchmarks")
+}

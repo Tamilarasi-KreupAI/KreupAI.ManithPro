@@ -11441,3 +11441,448 @@ export interface HiringTeamStats {
   activePanels: number;
   activeCoverages: number;
 }
+
+// ============================================================================
+// BATCH 25: COLLABORATIVE EVALUATION (6.2.1-6.2.9)
+// ============================================================================
+
+// 6.2.1 Scorecard Templates
+export type RatingScaleType = 'NUMERIC' | 'STAR' | 'LIKERT' | 'PERCENTAGE' | 'CUSTOM';
+export type InterviewStageType = 'PHONE_SCREEN' | 'TECHNICAL' | 'BEHAVIORAL' | 'CULTURE_FIT' | 'FINAL' | 'CUSTOM';
+
+export interface RatingScale {
+  type: RatingScaleType;
+  min: number;
+  max: number;
+  labels?: Record<number, string>;
+  allowHalf?: boolean;
+}
+
+export interface ScorecardCriteria {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  weight: number;
+  ratingScale: RatingScale;
+  guidelines?: string[];
+  examples?: {
+    low: string;
+    medium: string;
+    high: string;
+  };
+  isRequired: boolean;
+}
+
+export interface ScorecardTemplate {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  jobId?: string;
+  interviewStage: InterviewStageType;
+  criteria: ScorecardCriteria[];
+  ratingScale: RatingScale;
+  requiredFields: string[];
+  optionalFields: string[];
+  autoScoring: boolean;
+  passingThreshold?: number;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 6.2.2 Interview Feedback Forms
+export type FeedbackStatus = 'DRAFT' | 'SUBMITTED' | 'REVIEWED' | 'FINALIZED';
+export type HiringRecommendation = 'STRONG_HIRE' | 'HIRE' | 'LEAN_HIRE' | 'LEAN_NO_HIRE' | 'NO_HIRE' | 'STRONG_NO_HIRE';
+
+export interface CriteriaRating {
+  criteriaId: string;
+  criteriaName: string;
+  rating: number;
+  notes?: string;
+  evidence?: string[];
+}
+
+export interface InterviewFeedback {
+  id: string;
+  companyId: string;
+  applicationId: string;
+  interviewId?: string;
+  scorecardTemplateId?: string;
+  evaluatorId: string;
+  evaluatorName?: string;
+  ratings: CriteriaRating[];
+  overallScore?: number;
+  strengths: string[];
+  weaknesses: string[];
+  recommendation: HiringRecommendation;
+  notes?: string;
+  attachments?: string[];
+  timeSpent?: number;
+  status: FeedbackStatus;
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface FeedbackDraft {
+  applicationId: string;
+  interviewId?: string;
+  scorecardTemplateId?: string;
+  ratings: CriteriaRating[];
+  overallScore?: number;
+  strengths: string[];
+  weaknesses: string[];
+  recommendation?: HiringRecommendation;
+  notes?: string;
+}
+
+// 6.2.3 Blind Evaluation Mode
+export interface BlindEvaluationConfig {
+  id: string;
+  companyId: string;
+  jobId: string;
+  hiddenFields: string[];
+  revealStage?: InterviewStageType;
+  anonymizeNames: boolean;
+  hidePhotos: boolean;
+  hideCompanyNames: boolean;
+  hideEducationInstitutions: boolean;
+  customRules?: BlindRule[];
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface BlindRule {
+  field: string;
+  action: 'HIDE' | 'ANONYMIZE' | 'REDACT';
+  replacement?: string;
+  conditions?: Record<string, unknown>;
+}
+
+export interface AnonymizedCandidate {
+  id: string;
+  anonymousId: string;
+  applicationId: string;
+  skills?: string[];
+  experience?: string;
+  summary?: string;
+  assessmentScores?: Record<string, number>;
+  blindMode: boolean;
+}
+
+// 6.2.4 Feedback Aggregation
+export interface AggregatedScore {
+  criteriaId: string;
+  criteriaName: string;
+  average: number;
+  min: number;
+  max: number;
+  standardDeviation: number;
+  ratings: number[];
+}
+
+export interface FeedbackAggregation {
+  id: string;
+  companyId: string;
+  applicationId: string;
+  interviewStage?: InterviewStageType;
+  feedbackIds: string[];
+  feedbackCount: number;
+  aggregatedScores: AggregatedScore[];
+  consensusRating?: number;
+  strengthsSummary: string[];
+  weaknessesSummary: string[];
+  keyInsights?: string[];
+  recommendationBreakdown: Record<HiringRecommendation, number>;
+  finalRecommendation?: HiringRecommendation;
+  aggregatedAt: string;
+  aggregatedBy: string;
+}
+
+// 6.2.5 Calibration Sessions
+export type CalibrationStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface CalibrationParticipant {
+  userId: string;
+  name: string;
+  role: string;
+  attended?: boolean;
+  joinedAt?: string;
+  leftAt?: string;
+}
+
+export interface CalibrationSession {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  jobId?: string;
+  scheduledDate: string;
+  participants: CalibrationParticipant[];
+  applicationIds: string[];
+  agenda?: string[];
+  calibrationCriteria?: string[];
+  targetDuration?: number;
+  facilitatorId: string;
+  status: CalibrationStatus;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  outcomes?: CalibrationOutcome[];
+  adjustedRatings?: Record<string, number>;
+  notes?: string;
+  actionItems?: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CalibrationOutcome {
+  applicationId: string;
+  originalRating: number;
+  adjustedRating: number;
+  adjustmentReason: string;
+  votedBy: string[];
+}
+
+// 6.2.6 Decision Voting
+export type VotingDecision = 'HIRE' | 'NO_HIRE' | 'MAYBE' | 'ABSTAIN';
+export type VotingRoundStatus = 'OPEN' | 'CLOSED' | 'EXPIRED';
+export type VotingType = 'SIMPLE_MAJORITY' | 'UNANIMOUS' | 'WEIGHTED' | 'RANKED';
+
+export interface HiringDecisionVote {
+  id: string;
+  companyId: string;
+  applicationId: string;
+  votingRoundId: string;
+  voterId: string;
+  voterName?: string;
+  decision: VotingDecision;
+  confidence?: number;
+  reasoning?: string;
+  conditions?: string[];
+  feedbackReference?: string;
+  votedAt: string;
+}
+
+export interface VotingRoundSummary {
+  id: string;
+  companyId: string;
+  applicationId: string;
+  roundNumber: number;
+  votingType: VotingType;
+  voters: string[];
+  totalVoters: number;
+  votesReceived: number;
+  voteBreakdown?: Record<VotingDecision, number>;
+  deadline?: string;
+  requiredVotes?: number;
+  passingThreshold?: number;
+  status: VotingRoundStatus;
+  finalDecision?: VotingDecision;
+  decisionNotes?: string;
+  createdBy: string;
+  closedAt?: string;
+  closedBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 6.2.7 Evaluation Deadlines
+export type DeadlineType = 'FEEDBACK_SUBMISSION' | 'VOTE_SUBMISSION' | 'CALIBRATION' | 'DECISION' | 'CUSTOM';
+export type DeadlineTrigger = 'INTERVIEW_COMPLETED' | 'APPLICATION_RECEIVED' | 'STAGE_CHANGE' | 'MANUAL';
+export type DeadlineInstanceStatus = 'PENDING' | 'COMPLETED' | 'OVERDUE' | 'WAIVED' | 'EXTENDED';
+
+export interface ReminderSchedule {
+  daysBefore: number[];
+  hoursBeforeDeadline?: number;
+  notifyOverdue: boolean;
+  overdueReminderIntervalHours?: number;
+}
+
+export interface EscalationRule {
+  hoursOverdue: number;
+  escalateTo: string[];
+  action: 'NOTIFY' | 'REASSIGN' | 'AUTO_EXTEND' | 'MARK_INCOMPLETE';
+}
+
+export interface EvaluationDeadline {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  jobId?: string;
+  deadlineType: DeadlineType;
+  daysFromTrigger: number;
+  triggerEvent: DeadlineTrigger;
+  reminderSchedule?: ReminderSchedule;
+  escalationRules?: EscalationRule[];
+  autoActions?: Record<string, unknown>;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DeadlineInstance {
+  id: string;
+  deadlineId: string;
+  applicationId: string;
+  assigneeId: string;
+  assigneeName?: string;
+  dueDate: string;
+  status: DeadlineInstanceStatus;
+  remindersSent?: number;
+  lastReminderAt?: string;
+  completedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 6.2.8 Disagreement Resolution
+export type DisagreementType = 'SCORE_VARIANCE' | 'RECOMMENDATION_CONFLICT' | 'CRITERIA_INTERPRETATION' | 'BIAS_CONCERN' | 'OTHER';
+export type DisagreementStatus = 'OPEN' | 'IN_DISCUSSION' | 'ESCALATED' | 'RESOLVED' | 'DISMISSED';
+export type ResolutionMethod = 'DISCUSSION' | 'CALIBRATION' | 'MANAGER_DECISION' | 'ADDITIONAL_INTERVIEW' | 'VOTE';
+
+export interface EvaluationDisagreement {
+  id: string;
+  companyId: string;
+  applicationId: string;
+  feedbackIds: string[];
+  disagreementType: DisagreementType;
+  criteriaInvolved?: string[];
+  scoreDifference?: number;
+  description: string;
+  suggestedResolution?: string;
+  flaggedBy: string;
+  status: DisagreementStatus;
+  resolution?: string;
+  resolutionMethod?: ResolutionMethod;
+  adjustedScores?: Record<string, number>;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  escalatedTo?: string;
+  escalationReason?: string;
+  escalatedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 6.2.9 Historical Comparison
+export interface CandidateComparison {
+  id: string;
+  companyId: string;
+  jobId: string;
+  applicationIds: string[];
+  candidateCount: number;
+  comparisonCriteria: string[];
+  scores: Record<string, CandidateComparisonScore>;
+  rankings: CandidateRanking[];
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CandidateComparisonScore {
+  applicationId: string;
+  candidateName?: string;
+  criteriaScores: Record<string, number>;
+  overallScore: number;
+  rank?: number;
+}
+
+export interface CandidateRanking {
+  applicationId: string;
+  rank: number;
+  criteriaRanks: Record<string, number>;
+  notes?: string;
+}
+
+export type BenchmarkType = 'ROLE' | 'DEPARTMENT' | 'COMPANY' | 'INDUSTRY';
+
+export interface HiringBenchmark {
+  id: string;
+  companyId: string;
+  jobId?: string;
+  benchmarkType: BenchmarkType;
+  periodStart: string;
+  periodEnd: string;
+  metrics: BenchmarkMetrics;
+  thresholds: BenchmarkThresholds;
+  historicalData?: HistoricalDataPoint[];
+  successIndicators?: SuccessIndicator[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface BenchmarkMetrics {
+  averageOverallScore: number;
+  averageCriteriaScores: Record<string, number>;
+  hireRate: number;
+  offerAcceptRate: number;
+  timeToHire: number;
+  qualityOfHire?: number;
+  retention90Days?: number;
+  retention1Year?: number;
+}
+
+export interface BenchmarkThresholds {
+  minimumOverallScore: number;
+  minimumCriteriaScores: Record<string, number>;
+  strongHireThreshold: number;
+  hireThreshold: number;
+  noHireThreshold: number;
+}
+
+export interface HistoricalDataPoint {
+  date: string;
+  metrics: Partial<BenchmarkMetrics>;
+  candidateCount: number;
+  hiredCount: number;
+}
+
+export interface SuccessIndicator {
+  metric: string;
+  value: number;
+  benchmark: number;
+  variance: number;
+  trend: 'UP' | 'DOWN' | 'STABLE';
+}
+
+export interface HistoricalComparison {
+  candidateScores: AggregatedScore[];
+  benchmarkComparison: BenchmarkComparisonResult[];
+  percentileRanking: Record<string, number>;
+}
+
+export interface BenchmarkComparisonResult {
+  benchmarkId: string;
+  benchmarkType: BenchmarkType;
+  metrics: BenchmarkMetrics;
+  thresholds: BenchmarkThresholds;
+  candidatePosition: 'ABOVE' | 'WITHIN' | 'BELOW';
+  percentile?: number;
+}
+
+// Collaborative Evaluation Stats
+export interface CollaborativeEvaluationStats {
+  scorecardTemplates: number;
+  feedbacksSubmitted: number;
+  aggregationsCreated: number;
+  calibrationSessions: number;
+  votingRounds: number;
+  disagreements: {
+    total: number;
+    open: number;
+    resolved: number;
+  };
+  candidateComparisons: number;
+  hiringBenchmarks: number;
+  avgFeedbackTimeMinutes: number;
+}
