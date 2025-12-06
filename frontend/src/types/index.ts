@@ -15258,3 +15258,381 @@ export interface DepartmentComparison {
     values: Record<string, number>;
   }>;
 }
+
+// ==========================================
+// Batch 32: Market Intelligence Types (9.3.1-9.3.6)
+// ==========================================
+
+// 9.3.1 Salary Market Data
+export interface SalaryMarketData {
+  id: string;
+  organizationId: string;
+  jobTitle: string;
+  jobFamily?: string;
+  level?: string;
+  location: string;
+  country: string;
+  region?: string;
+  isRemote: boolean;
+  currency: string;
+  minSalary: number;
+  maxSalary: number;
+  medianSalary: number;
+  percentile25?: number;
+  percentile75?: number;
+  percentile90?: number;
+  bonusMin?: number;
+  bonusMax?: number;
+  bonusMedian?: number;
+  equityMin?: number;
+  equityMax?: number;
+  equityMedian?: number;
+  dataSource: string;
+  sampleSize?: number;
+  confidenceLevel?: number;
+  effectiveDate: string;
+  expiryDate?: string;
+  industry?: string;
+  companySize?: string;
+  trendDirection?: string;
+  trendPercentage?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SalaryComparison {
+  jobTitle: string;
+  location: string;
+  organizationSalary: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  marketSalary: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  variance: {
+    minVariance: number;
+    maxVariance: number;
+    medianVariance: number;
+  };
+  competitiveness: string;
+  recommendations: string[];
+}
+
+export interface SalaryTrend {
+  jobTitle: string;
+  location: string;
+  period: string;
+  dataPoints: Array<{
+    month: string;
+    median: number;
+    change: number;
+  }>;
+  overallChange: number;
+  averageMonthlyChange: number;
+  forecast: {
+    nextQuarter: number;
+    nextYear: number;
+    confidence: number;
+  };
+}
+
+// 9.3.2 Talent Pool Analysis
+export interface TalentPoolAnalysis {
+  id: string;
+  organizationId: string;
+  analysisName: string;
+  analysisType: string;
+  status: string;
+  targetSkills?: string[];
+  targetLocations?: string[];
+  experienceRange?: { min: number; max: number };
+  educationLevel?: string;
+  totalCandidates?: number;
+  qualifiedCandidates?: number;
+  activeJobSeekers?: number;
+  passiveCandidates?: number;
+  skillDistribution?: Record<string, number>;
+  locationDistribution?: Record<string, number>;
+  experienceDistribution?: Record<string, number>;
+  salaryDistribution?: Record<string, number>;
+  availabilityScore?: number;
+  competitionLevel?: string;
+  avgTimeToHire?: number;
+  recommendations?: string[];
+  completedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 9.3.3 Competitor Hiring Insights
+export interface CompetitorInsight {
+  id: string;
+  organizationId: string;
+  competitorName: string;
+  competitorDomain?: string;
+  industry?: string;
+  companySize?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalJobPostings: number;
+  activeJobPostings: number;
+  closedJobPostings: number;
+  engineeringJobs: number;
+  salesJobs: number;
+  marketingJobs: number;
+  operationsJobs: number;
+  otherJobs: number;
+  avgPostingDuration?: number;
+  hiringVelocity?: string;
+  topSkills?: string[];
+  emergingSkills?: string[];
+  primaryLocations?: string[];
+  remoteRatio?: number;
+  avgSalaryRange?: { min: number; max: number; currency: string };
+  growthTrend?: string;
+  growthRate?: number;
+  source?: string;
+  lastUpdated: string;
+  historicalData?: Array<{
+    month: string;
+    postings: number;
+    hires: number;
+  }>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 9.3.4 Skills Demand Trends
+export interface SkillDemandTrend {
+  id: string;
+  organizationId: string;
+  skillName: string;
+  skillCategory?: string;
+  skillType?: string;
+  periodStart: string;
+  periodEnd: string;
+  granularity: string;
+  demandScore?: number;
+  mentionCount: number;
+  jobPostingCount: number;
+  growthRate?: number;
+  trendDirection?: string;
+  velocityScore?: number;
+  maturityLevel?: string;
+  industryDemand?: Record<string, number>;
+  locationDemand?: Record<string, number>;
+  salaryPremium?: number;
+  avgSalaryWithSkill?: number;
+  relatedSkills?: string[];
+  substitutes?: string[];
+  forecastDemand?: Record<string, number>;
+  confidenceScore?: number;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmergingSkill {
+  skillName: string;
+  growthRate: number;
+  demandScore: number;
+  category: string;
+}
+
+export interface SkillForecast {
+  skillName: string;
+  currentDemandScore: number;
+  forecast: Array<{
+    period: string;
+    demandScore: number;
+    confidence: number;
+  }>;
+  factors: Array<{
+    factor: string;
+    impact: string;
+    weight: number;
+  }>;
+  recommendations: string[];
+}
+
+// 9.3.5 Location Intelligence
+export interface LocationIntelligence {
+  id: string;
+  organizationId: string;
+  locationName: string;
+  locationType: string;
+  country: string;
+  region?: string;
+  timezone?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalTalentPool?: number;
+  activeTalentPool?: number;
+  talentDensity?: number;
+  costOfLiving?: number;
+  avgSalary?: number;
+  salaryIndex?: number;
+  remoteRatio?: number;
+  hybridRatio?: number;
+  onsiteRatio?: number;
+  remoteGrowth?: number;
+  competitorPresence?: number;
+  hiringActivity?: string;
+  talentDemand?: number;
+  educationLevel?: Record<string, number>;
+  experienceLevel?: Record<string, number>;
+  skillAvailability?: Record<string, number>;
+  unemploymentRate?: number;
+  techJobGrowth?: number;
+  startupActivity?: number;
+  techInfrastructure?: number;
+  connectivity?: number;
+  recommendations?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationComparison {
+  locations: string[];
+  metrics: Array<{
+    metric: string;
+    [key: string]: string | number;
+  }>;
+  recommendation: string;
+}
+
+export interface RemoteWorkTrends {
+  overallRemoteAdoption: number;
+  hybridAdoption: number;
+  onsiteOnly: number;
+  yearOverYearChange: {
+    remote: number;
+    hybrid: number;
+    onsite: number;
+  };
+  byRole: Record<string, { remote: number; hybrid: number; onsite: number }>;
+  byCompanySize: Record<string, { remote: number; hybrid: number; onsite: number }>;
+  forecast: Record<string, { remote: number; hybrid: number; onsite: number }>;
+}
+
+// 9.3.6 Industry Trends
+export interface IndustryTrend {
+  id: string;
+  organizationId: string;
+  industryName: string;
+  industryCode?: string;
+  subIndustry?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalHiring?: number;
+  hiringGrowth?: number;
+  hiringVelocity?: string;
+  seasonality?: Record<string, number>;
+  topRoles?: Array<{ role: string; percentage: number; growth: number }>;
+  emergingRoles?: string[];
+  decliningRoles?: string[];
+  topSkills?: string[];
+  emergingSkills?: string[];
+  skillGaps?: string[];
+  avgSalaryGrowth?: number;
+  compensationTrends?: Record<string, unknown>;
+  remoteAdoption?: number;
+  hybridAdoption?: number;
+  workModeShift?: Record<string, unknown>;
+  marketSize?: number;
+  marketGrowth?: number;
+  investmentTrend?: Record<string, unknown>;
+  talentFlow?: Record<string, unknown>;
+  retentionTrends?: number;
+  turnoverRate?: number;
+  outlook?: string;
+  predictions?: Record<string, unknown>;
+  confidenceScore?: number;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IndustryComparison {
+  industries: string[];
+  metrics: Array<{
+    metric: string;
+    [key: string]: string | number;
+  }>;
+  insights: string[];
+}
+
+export interface IndustryForecast {
+  industryName: string;
+  currentMetrics: {
+    hiringGrowth: number;
+    avgSalary: number;
+    remoteAdoption: number;
+  };
+  forecast: Array<{
+    period: string;
+    hiringGrowth: number;
+    avgSalaryGrowth: number;
+    confidence: number;
+  }>;
+  keyDrivers: string[];
+  risks: string[];
+}
+
+// Market Intelligence Dashboard
+export interface MarketIntelligenceDashboard {
+  snapshot: {
+    date: string;
+    marketHealthScore: number;
+    salaryIndexChange: number;
+    talentAvailabilityScore: number;
+    competitorActivityScore: number;
+    skillDemandShift: number;
+  };
+  topInsights: Array<{
+    type: string;
+    title: string;
+    description: string;
+    severity: string;
+  }>;
+  quickStats: {
+    trackedCompetitors: number;
+    salaryDataPoints: number;
+    talentPoolAnalyses: number;
+    skillsTracked: number;
+    locationsMonitored: number;
+  };
+  recentActivity: Array<{
+    action: string;
+    target: string;
+    time: string;
+  }>;
+}
+
+export interface MarketSnapshot {
+  id: string;
+  organizationId: string;
+  snapshotDate: string;
+  snapshotType: string;
+  salaryIndexChange?: number;
+  talentAvailabilityScore?: number;
+  competitorActivityScore?: number;
+  skillDemandShift?: number;
+  marketHealthScore?: number;
+  topInsights?: string[];
+  alerts?: Array<{ type: string; message: string }>;
+  recommendations?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}

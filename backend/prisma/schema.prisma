@@ -15333,3 +15333,390 @@ model TeamHiringMetrics {
   @@index([periodStart, periodEnd])
   @@map("team_hiring_metrics")
 }
+
+// ==========================================
+// Batch 32: Market Intelligence (9.3.1-9.3.6)
+// ==========================================
+
+// 9.3.1 Salary Market Data
+model SalaryMarketData {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Job identification
+  jobTitle        String
+  jobFamily       String?
+  level           String?  // entry, mid, senior, lead, executive
+
+  // Location
+  location        String
+  country         String
+  region          String?
+  isRemote        Boolean  @default(false)
+
+  // Compensation data
+  currency        String   @default("USD")
+  minSalary       Float
+  maxSalary       Float
+  medianSalary    Float
+  percentile25    Float?
+  percentile75    Float?
+  percentile90    Float?
+
+  // Additional compensation
+  bonusMin        Float?
+  bonusMax        Float?
+  bonusMedian     Float?
+  equityMin       Float?
+  equityMax       Float?
+  equityMedian    Float?
+
+  // Metadata
+  dataSource      String   // internal, survey, market_data_provider
+  sampleSize      Int?
+  confidenceLevel Float?
+  effectiveDate   DateTime
+  expiryDate      DateTime?
+
+  industry        String?
+  companySize     String?  // startup, small, medium, large, enterprise
+
+  trendDirection  String?  // increasing, stable, decreasing
+  trendPercentage Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([jobTitle])
+  @@index([location])
+  @@index([effectiveDate])
+  @@map("salary_market_data")
+}
+
+// 9.3.2 Talent Pool Analysis
+model TalentPoolAnalysis {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Analysis parameters
+  analysisName    String
+  analysisType    String   // skill_based, location_based, experience_based, combined
+  status          String   @default("pending") // pending, processing, completed, failed
+
+  // Target criteria
+  targetSkills    Json?    // Array of skills
+  targetLocations Json?    // Array of locations
+  experienceRange Json?    // {min: X, max: Y}
+  educationLevel  String?
+
+  // Results
+  totalCandidates Int?
+  qualifiedCandidates Int?
+  activeJobSeekers Int?
+  passiveCandidates Int?
+
+  // Breakdown
+  skillDistribution Json?   // Skill counts
+  locationDistribution Json? // Location counts
+  experienceDistribution Json?
+  salaryDistribution Json?
+
+  // Availability
+  availabilityScore Float?  // 0-100
+  competitionLevel String?  // low, medium, high, very_high
+  avgTimeToHire Float?      // days
+
+  // Recommendations
+  recommendations Json?
+
+  completedAt     DateTime?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([analysisType])
+  @@map("talent_pool_analyses")
+}
+
+// 9.3.3 Competitor Hiring Insights
+model CompetitorInsight {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Competitor identification
+  competitorName  String
+  competitorDomain String?
+  industry        String?
+  companySize     String?
+
+  // Tracking period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Job postings data
+  totalJobPostings Int     @default(0)
+  activeJobPostings Int    @default(0)
+  closedJobPostings Int    @default(0)
+
+  // Department breakdown
+  engineeringJobs Int      @default(0)
+  salesJobs       Int      @default(0)
+  marketingJobs   Int      @default(0)
+  operationsJobs  Int      @default(0)
+  otherJobs       Int      @default(0)
+
+  // Hiring velocity
+  avgPostingDuration Float?   // days
+  hiringVelocity String?     // slow, normal, aggressive
+
+  // Skills in demand
+  topSkills       Json?       // Array of skills
+  emergingSkills  Json?       // New skills being sought
+
+  // Location insights
+  primaryLocations Json?
+  remoteRatio     Float?      // Percentage of remote jobs
+
+  // Salary insights
+  avgSalaryRange  Json?       // {min, max, currency}
+
+  // Trends
+  growthTrend     String?     // growing, stable, contracting
+  growthRate      Float?      // Percentage
+
+  source          String?     // linkedin, indeed, glassdoor, etc.
+  lastUpdated     DateTime    @default(now())
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([competitorName])
+  @@index([periodStart, periodEnd])
+  @@map("competitor_insights")
+}
+
+// 9.3.4 Skills Demand Trends
+model SkillDemandTrend {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Skill identification
+  skillName       String
+  skillCategory   String?  // technical, soft, industry_specific, certification
+  skillType       String?  // programming, framework, tool, methodology
+
+  // Time period
+  periodStart     DateTime
+  periodEnd       DateTime
+  granularity     String   @default("monthly") // daily, weekly, monthly, quarterly
+
+  // Demand metrics
+  demandScore     Float?   // 0-100 normalized
+  mentionCount    Int      @default(0)
+  jobPostingCount Int      @default(0)
+  growthRate      Float?   // Percentage change
+
+  // Trend analysis
+  trendDirection  String?  // emerging, growing, stable, declining
+  velocityScore   Float?   // Speed of change
+  maturityLevel   String?  // emerging, growing, mature, declining
+
+  // Industry breakdown
+  industryDemand  Json?    // Industry -> demand mapping
+  locationDemand  Json?    // Location -> demand mapping
+
+  // Salary impact
+  salaryPremium   Float?   // Percentage premium for skill
+  avgSalaryWithSkill Float?
+
+  // Related skills
+  relatedSkills   Json?    // Commonly paired skills
+  substitutes     Json?    // Alternative skills
+
+  // Predictions
+  forecastDemand  Json?    // Future demand predictions
+  confidenceScore Float?
+
+  source          String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([skillName])
+  @@index([skillCategory])
+  @@index([periodStart, periodEnd])
+  @@map("skill_demand_trends")
+}
+
+// 9.3.5 Location Intelligence
+model LocationIntelligence {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Location identification
+  locationName    String
+  locationType    String   // city, state, country, region
+  country         String
+  region          String?
+  timezone        String?
+
+  // Analysis period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Talent metrics
+  totalTalentPool Int?
+  activeTalentPool Int?
+  talenDensity    Float?   // Per capita
+
+  // Cost metrics
+  costOfLiving    Float?   // Index
+  avgSalary       Float?
+  salaryIndex     Float?   // Compared to baseline
+
+  // Work mode trends
+  remoteRatio     Float?   // Percentage
+  hybridRatio     Float?
+  onsiteRatio     Float?
+  remoteGrowth    Float?   // Trend
+
+  // Competition
+  competitorPresence Int?  // Number of competitors
+  hiringActivity  String?  // low, medium, high
+  talentDemand    Float?   // Demand index
+
+  // Quality indicators
+  educationLevel  Json?    // Distribution
+  experienceLevel Json?    // Distribution
+  skillAvailability Json?  // Skills available
+
+  // Economic factors
+  unemploymentRate Float?
+  techJobGrowth   Float?
+  startupActivity Float?   // Ecosystem score
+
+  // Infrastructure
+  techInfrastructure Float? // Score
+  connectivity    Float?   // Score
+
+  recommendations Json?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([locationName])
+  @@index([country])
+  @@index([periodStart, periodEnd])
+  @@map("location_intelligence")
+}
+
+// 9.3.6 Industry Trends
+model IndustryTrend {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Industry identification
+  industryName    String
+  industryCode    String?  // NAICS, SIC, etc.
+  subIndustry     String?
+
+  // Analysis period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Hiring trends
+  totalHiring     Int?
+  hiringGrowth    Float?   // Percentage change
+  hiringVelocity  String?  // slow, normal, fast
+  seasonality     Json?    // Monthly patterns
+
+  // Role trends
+  topRoles        Json?    // Most hired roles
+  emergingRoles   Json?    // New roles appearing
+  decliningRoles  Json?    // Roles being phased out
+
+  // Skills trends
+  topSkills       Json?    // Most demanded skills
+  emergingSkills  Json?    // New skills
+  skillGaps       Json?    // Hard to fill skills
+
+  // Compensation trends
+  avgSalaryGrowth Float?   // Percentage
+  compensationTrends Json? // By role/level
+
+  // Work mode
+  remoteAdoption  Float?   // Percentage
+  hybridAdoption  Float?
+  workModeShift   Json?    // Historical trend
+
+  // Market factors
+  marketSize      Float?   // In billions
+  marketGrowth    Float?   // Percentage
+  investmentTrend Json?    // VC/PE activity
+
+  // Talent dynamics
+  talentFlow      Json?    // Where talent comes from/goes to
+  retentionTrends Float?
+  turnoverRate    Float?
+
+  // Predictions
+  outlook         String?  // positive, neutral, negative
+  predictions     Json?
+  confidenceScore Float?
+
+  source          String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([industryName])
+  @@index([periodStart, periodEnd])
+  @@map("industry_trends")
+}
+
+// Market Intelligence Dashboard Snapshot
+model MarketIntelligenceSnapshot {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  snapshotDate    DateTime @default(now())
+  snapshotType    String   @default("daily") // daily, weekly, monthly
+
+  // Summary metrics
+  salaryIndexChange Float?
+  talentAvailabilityScore Float?
+  competitorActivityScore Float?
+  skillDemandShift Float?
+  marketHealthScore Float?
+
+  // Top insights
+  topInsights     Json?    // Array of key insights
+  alerts          Json?    // Important changes/warnings
+  recommendations Json?    // Action items
+
+  // Detailed data references
+  salaryDataIds   Json?    // References to SalaryMarketData
+  talentPoolIds   Json?    // References to TalentPoolAnalysis
+  competitorIds   Json?    // References to CompetitorInsight
+  skillTrendIds   Json?    // References to SkillDemandTrend
+  locationIds     Json?    // References to LocationIntelligence
+  industryIds     Json?    // References to IndustryTrend
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([snapshotDate])
+  @@index([snapshotType])
+  @@map("market_intelligence_snapshots")
+}

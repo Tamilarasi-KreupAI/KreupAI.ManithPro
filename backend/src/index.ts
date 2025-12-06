@@ -47,6 +47,7 @@ import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes';
 import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
 import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
 import batch31ExecutiveDashboardsRoutes from './routes/batch31ExecutiveDashboards.routes';
+import batch32MarketIntelligenceRoutes from './routes/batch32MarketIntelligence.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -120,6 +121,7 @@ app.get('/', (req, res) => {
       batch29Compliance: '/api/compliance',
       batch30RecruitmentAnalytics: '/api/recruitment-analytics',
       batch31ExecutiveDashboards: '/api/executive',
+      batch32MarketIntelligence: '/api/market-intelligence',
     },
   });
 });
@@ -168,6 +170,7 @@ app.use('/api/data-protection', batch28DataProtectionRoutes);
 app.use('/api/compliance', batch29ComplianceRoutes);
 app.use('/api/recruitment-analytics', batch30RecruitmentAnalyticsRoutes);
 app.use('/api/executive', batch31ExecutiveDashboardsRoutes);
+app.use('/api/market-intelligence', batch32MarketIntelligenceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -54,3 +54,6 @@ export { default as RecruitmentAnalyticsHub } from './RecruitmentAnalyticsHub';
 
 // Recruiter Components - Batch 31: Executive Dashboards
 export { default as ExecutiveDashboardsHub } from './ExecutiveDashboardsHub';
+
+// Recruiter Components - Batch 32: Market Intelligence
+export { default as MarketIntelligenceHub } from './MarketIntelligenceHub';
