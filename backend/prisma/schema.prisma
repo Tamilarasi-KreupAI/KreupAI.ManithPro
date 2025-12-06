@@ -4904,3 +4904,324 @@ model MarketSalaryData {
   @@index([jobFamily, seniorityLevel])
   @@map("market_salary_data")
 }
+
+// ============================================
+// BATCH 11: AI CONTENT GENERATION FOR RECRUITERS
+// ============================================
+
+// 2.2.1 - AI Job Description Generator
+model GeneratedJobDescription {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String              // User who generated
+
+  // Input Parameters
+  jobTitle              String
+  department            String?
+  seniorityLevel        String              // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  employmentType        String              // FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP
+  workMode              String              // REMOTE, HYBRID, ONSITE
+  location              String?
+
+  // Requirements Input
+  requiredSkills        Json                // Array of required skills
+  preferredSkills       Json?               // Array of nice-to-have skills
+  yearsExperience       Int?
+  educationLevel        String?             // HIGH_SCHOOL, BACHELORS, MASTERS, PHD
+
+  // Company Context
+  companyDescription    String?
+  teamSize              Int?
+  reportingTo           String?
+
+  // Generated Content
+  generatedTitle        String?             // AI-optimized title
+  generatedSummary      String?             @db.Text
+  generatedResponsibilities Json?           // Array of responsibilities
+  generatedRequirements Json?               // Structured requirements
+  generatedBenefits     Json?               // Array of benefits
+  generatedQualifications Json?             // Array of qualifications
+  fullDescription       String?             @db.Text // Complete formatted JD
+
+  // AI Metadata
+  modelVersion          String
+  promptTokens          Int?
+  completionTokens      Int?
+  generationTimeMs      Int?
+  confidenceScore       Float?
+
+  // Quality Scores
+  readabilityScore      Float?
+  inclusivityScore      Float?
+  seoScore              Float?
+  completenessScore     Float?
+
+  // Usage
+  status                String              @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  usedInJobPostings     Json?               // Array of job posting IDs
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId, status])
+  @@index([createdById])
+  @@map("generated_job_descriptions")
+}
+
+// 2.2.2 - Job Title Optimizer
+model JobTitleSuggestion {
+  id                    String              @id @default(uuid())
+  originalTitle         String
+  companyId             String?
+  createdById           String
+
+  // Suggestions
+  suggestions           Json                // Array of suggested titles with scores
+  // [{title, seoScore, inclusivityScore, clarityScore, industryMatch, reasoning}]
+
+  // Best Suggestion
+  recommendedTitle      String
+  recommendationReason  String?             @db.Text
+
+  // Analysis
+  originalTitleIssues   Json?               // Issues with original title
+  keywordAnalysis       Json?               // SEO keywords analysis
+  competitorTitles      Json?               // Similar titles from competitors
+  industryTrends        Json?               // Trending title formats
+
+  // Scores
+  originalSeoScore      Float?
+  originalInclusivityScore Float?
+  improvedSeoScore      Float?
+  improvedInclusivityScore Float?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@map("job_title_suggestions")
+}
+
+// 2.2.3 - Requirements Analyzer
+model RequirementsAnalysis {
+  id                    String              @id @default(uuid())
+  jobDescriptionId      String?             // Optional link to job description
+  companyId             String?
+  createdById           String
+
+  // Input
+  rawRequirements       String              @db.Text
+  jobTitle              String?
+  industry              String?
+
+  // Analysis Results
+  essentialRequirements Json                // Must-have requirements
+  // [{requirement, importance, category, reasoning}]
+  niceToHaveRequirements Json               // Optional requirements
+  // [{requirement, importance, category, reasoning}]
+
+  // Categorization
+  technicalSkills       Json?               // Technical requirements
+  softSkills            Json?               // Soft skill requirements
+  educationRequirements Json?               // Education requirements
+  experienceRequirements Json?              // Experience requirements
+  certificationRequirements Json?           // Certification requirements
+
+  // Issues & Recommendations
+  overlyRestrictive     Json?               // Requirements that may exclude good candidates
+  potentiallyBiased     Json?               // Requirements that may be biased
+  marketMismatch        Json?               // Requirements rare in the market
+  recommendations       Json?               // Suggestions for improvement
+
+  // Metrics
+  essentialCount        Int
+  niceToHaveCount       Int
+  restrictiveScore      Float?              // 0-100, lower is better
+  marketAlignmentScore  Float?              // 0-100, higher is better
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([jobDescriptionId])
+  @@map("requirements_analyses")
+}
+
+// 2.2.4 - Inclusive Language Checker
+model InclusiveLanguageCheck {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  createdById           String
+
+  // Input
+  contentType           String              // JOB_DESCRIPTION, JOB_TITLE, EMAIL, MESSAGE
+  originalContent       String              @db.Text
+
+  // Analysis
+  overallScore          Float               // 0-100 inclusivity score
+  grade                 String              // A, B, C, D, F
+
+  // Issues Found
+  issues                Json                // Array of issues
+  // [{phrase, issue, severity, category, suggestion, startIndex, endIndex}]
+
+  // Categories
+  genderBiasIssues      Json?               // Gender-coded language
+  ageBiasIssues         Json?               // Age-related bias
+  abilityBiasIssues     Json?               // Disability-related bias
+  culturalBiasIssues    Json?               // Cultural/ethnic bias
+  educationBiasIssues   Json?               // Educational elitism
+  socioeconomicBiasIssues Json?             // Socioeconomic bias
+
+  // Suggestions
+  suggestedContent      String?             @db.Text // Full rewritten content
+  alternativePhrases    Json?               // Specific phrase alternatives
+
+  // Statistics
+  issueCount            Int
+  severeIssueCount      Int
+  moderateIssueCount    Int
+  minorIssueCount       Int
+
+  // Tone Analysis
+  toneAnalysis          Json?               // {formal, friendly, aggressive, etc.}
+  readabilityLevel      String?             // Grade level
+  wordCount             Int?
+
+  // Metadata
+  modelVersion          String
+  processingTimeMs      Int?
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([contentType])
+  @@map("inclusive_language_checks")
+}
+
+// 2.2.5 - Salary Range Suggester
+model SalaryRangeSuggestion {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  createdById           String
+
+  // Input Parameters
+  jobTitle              String
+  normalizedTitle       String?             // Standardized title
+  location              String
+  country               String
+  state                 String?
+  city                  String?
+
+  seniorityLevel        String              // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  yearsExperience       Int?
+  requiredSkills        Json?               // Skills affecting salary
+  industry              String?
+  companySize           String?             // STARTUP, SMALL, MEDIUM, LARGE, ENTERPRISE
+  employmentType        String              @default("FULL_TIME")
+
+  // Suggested Range
+  currency              String              @default("USD")
+  suggestedMin          Float
+  suggestedMax          Float
+  suggestedMidpoint     Float
+
+  // Confidence
+  confidenceLevel       String              // HIGH, MEDIUM, LOW
+  confidenceScore       Float               // 0-100
+
+  // Market Data
+  marketPercentile25    Float?
+  marketMedian          Float?
+  marketPercentile75    Float?
+  marketPercentile90    Float?
+
+  // Comparisons
+  industryComparison    String?             // BELOW_MARKET, AT_MARKET, ABOVE_MARKET
+  locationComparison    String?             // How this compares to local market
+  companyComparison     String?             // How this compares to similar companies
+
+  // Factors
+  salaryFactors         Json?               // Factors affecting the range
+  // [{factor, impact, description}]
+  skillPremiums         Json?               // Premium for specific skills
+  locationAdjustment    Float?              // % adjustment for location
+
+  // Recommendations
+  recommendations       Json?               // Strategic recommendations
+  competitivenessScore  Float?              // How competitive this range is
+
+  // Data Sources
+  dataSources           Json?               // Sources used for calculation
+  dataFreshness         String?             // How recent the data is
+  sampleSize            Int?                // Number of data points
+
+  // Metadata
+  modelVersion          String
+  calculatedAt          DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([normalizedTitle, location])
+  @@map("salary_range_suggestions")
+}
+
+// 2.2.6 - Interview Questions Generator
+model GeneratedInterviewQuestions {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  createdById           String
+  jobId                 String?             // Optional link to job posting
+
+  // Input
+  jobTitle              String
+  seniorityLevel        String
+  department            String?
+  requiredSkills        Json?
+  competencies          Json?               // Key competencies to assess
+  interviewRound        String?             // SCREENING, TECHNICAL, BEHAVIORAL, FINAL
+  interviewDuration     Int?                // Minutes
+
+  // Generated Questions
+  questions             Json                // Array of question objects
+  // [{question, category, skill, difficulty, expectedDuration, evaluationCriteria, followUps, redFlags, greenFlags}]
+
+  // Question Categories
+  technicalQuestions    Json?               // Technical/skill-based questions
+  behavioralQuestions   Json?               // STAR method questions
+  situationalQuestions  Json?               // Hypothetical scenario questions
+  cultureFitQuestions   Json?               // Company culture questions
+  problemSolvingQuestions Json?             // Analytical questions
+  leadershipQuestions   Json?               // Leadership assessment (for senior roles)
+
+  // Question Bank Metadata
+  totalQuestions        Int
+  estimatedDuration     Int?                // Total minutes for all questions
+  difficultyDistribution Json?              // {easy: x, medium: y, hard: z}
+
+  // Evaluation Guide
+  scoringRubric         Json?               // How to score answers
+  mustAskQuestions      Json?               // Essential questions
+  optionalQuestions     Json?               // Time-permitting questions
+
+  // Compliance
+  legalCompliance       Boolean             @default(true)
+  complianceNotes       Json?               // Legal considerations
+  avoidedTopics         Json?               // Topics to avoid
+
+  // Usage Tracking
+  timesUsed             Int                 @default(0)
+  averageRating         Float?
+  feedback              Json?               // Interviewer feedback
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([interviewRound])
+  @@map("generated_interview_questions")
+}

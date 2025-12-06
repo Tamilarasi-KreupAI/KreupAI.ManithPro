@@ -3937,3 +3937,488 @@ export interface CalibrationPerformance {
   hiringOutcomes: Record<string, { avgScore: number; successRate: number }>;
   recommendations: string[];
 }
+
+// ============================================
+// BATCH 11: AI CONTENT GENERATION FOR RECRUITERS
+// ============================================
+
+// Seniority Level Type
+export type SeniorityLevel = 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'EXECUTIVE';
+
+// Employment Type
+export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+
+// Work Mode Type
+export type WorkMode = 'REMOTE' | 'HYBRID' | 'ONSITE';
+
+// Education Level Type
+export type EducationLevel = 'HIGH_SCHOOL' | 'ASSOCIATE' | 'BACHELORS' | 'MASTERS' | 'PHD';
+
+// Job Description Status
+export type JobDescriptionStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+// Interview Round Type
+export type InterviewRound = 'SCREENING' | 'TECHNICAL' | 'BEHAVIORAL' | 'FINAL' | 'ONSITE';
+
+// Question Category
+export type QuestionCategory = 'TECHNICAL' | 'BEHAVIORAL' | 'SITUATIONAL' | 'CULTURE_FIT' | 'PROBLEM_SOLVING' | 'LEADERSHIP';
+
+// Question Difficulty
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+
+// Bias Category
+export type BiasCategory = 'gender' | 'age' | 'ability' | 'cultural' | 'education' | 'socioeconomic';
+
+// Bias Severity
+export type BiasSeverity = 'MINOR' | 'MODERATE' | 'SEVERE';
+
+// Inclusivity Grade
+export type InclusivityGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+
+// Market Comparison
+export type MarketComparison = 'BELOW_MARKET' | 'AT_MARKET' | 'ABOVE_MARKET';
+
+// Confidence Level
+export type ConfidenceLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+// 2.2.1 - Generated Job Description
+export interface GeneratedJobDescription {
+  id: string;
+  companyId: string;
+  createdById: string;
+
+  // Input Parameters
+  jobTitle: string;
+  department?: string;
+  seniorityLevel: SeniorityLevel;
+  employmentType: EmploymentType;
+  workMode: WorkMode;
+  location?: string;
+
+  // Requirements Input
+  requiredSkills: string[];
+  preferredSkills?: string[];
+  yearsExperience?: number;
+  educationLevel?: EducationLevel;
+
+  // Company Context
+  companyDescription?: string;
+  teamSize?: number;
+  reportingTo?: string;
+
+  // Generated Content
+  generatedTitle?: string;
+  generatedSummary?: string;
+  generatedResponsibilities?: string[];
+  generatedRequirements?: GeneratedRequirement[];
+  generatedBenefits?: string[];
+  generatedQualifications?: string[];
+  fullDescription?: string;
+
+  // AI Metadata
+  modelVersion: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  generationTimeMs?: number;
+  confidenceScore?: number;
+
+  // Quality Scores
+  readabilityScore?: number;
+  inclusivityScore?: number;
+  seoScore?: number;
+  completenessScore?: number;
+
+  // Usage
+  status: JobDescriptionStatus;
+  usedInJobPostings?: string[];
+
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedRequirement {
+  skill: string;
+  level: 'Expert' | 'Proficient' | 'Familiar';
+  required: boolean;
+}
+
+export interface GenerateJobDescriptionInput {
+  jobTitle: string;
+  department?: string;
+  seniorityLevel: SeniorityLevel;
+  employmentType: EmploymentType;
+  workMode: WorkMode;
+  location?: string;
+  requiredSkills: string[];
+  preferredSkills?: string[];
+  yearsExperience?: number;
+  educationLevel?: EducationLevel;
+  companyDescription?: string;
+  teamSize?: number;
+  reportingTo?: string;
+}
+
+// 2.2.2 - Job Title Suggestion
+export interface JobTitleSuggestion {
+  id: string;
+  originalTitle: string;
+  companyId?: string;
+  createdById: string;
+
+  // Suggestions
+  suggestions: TitleSuggestionOption[];
+
+  // Best Suggestion
+  recommendedTitle: string;
+  recommendationReason?: string;
+
+  // Analysis
+  originalTitleIssues?: TitleIssue[];
+  keywordAnalysis?: KeywordAnalysis;
+  competitorTitles?: string[];
+  industryTrends?: IndustryTrends;
+
+  // Scores
+  originalSeoScore?: number;
+  originalInclusivityScore?: number;
+  improvedSeoScore?: number;
+  improvedInclusivityScore?: number;
+
+  // Metadata
+  modelVersion: string;
+  createdAt: string;
+}
+
+export interface TitleSuggestionOption {
+  title: string;
+  seoScore: number;
+  inclusivityScore: number;
+  clarityScore: number;
+  industryMatch: number;
+  reasoning: string;
+}
+
+export interface TitleIssue {
+  issue: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface KeywordAnalysis {
+  topKeywords: string[];
+  searchVolume: {
+    high: string[];
+    medium: string[];
+    low: string[];
+  };
+}
+
+export interface IndustryTrends {
+  rising: string[];
+  stable: string[];
+  declining: string[];
+}
+
+// 2.2.3 - Requirements Analysis
+export interface RequirementsAnalysis {
+  id: string;
+  jobDescriptionId?: string;
+  companyId?: string;
+  createdById: string;
+
+  // Input
+  rawRequirements: string;
+  jobTitle?: string;
+  industry?: string;
+
+  // Analysis Results
+  essentialRequirements: AnalyzedRequirement[];
+  niceToHaveRequirements: AnalyzedRequirement[];
+
+  // Categorization
+  technicalSkills?: AnalyzedRequirement[];
+  softSkills?: SkillRequirement[];
+  educationRequirements?: EducationRequirementItem[];
+  experienceRequirements?: ExperienceRequirement[];
+  certificationRequirements?: CertificationRequirement[];
+
+  // Issues & Recommendations
+  overlyRestrictive?: RequirementIssue[];
+  potentiallyBiased?: RequirementIssue[];
+  marketMismatch?: RequirementIssue[];
+  recommendations?: string[];
+
+  // Metrics
+  essentialCount: number;
+  niceToHaveCount: number;
+  restrictiveScore?: number;
+  marketAlignmentScore?: number;
+
+  // Metadata
+  modelVersion: string;
+  createdAt: string;
+}
+
+export interface AnalyzedRequirement {
+  requirement: string;
+  importance: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'PREFERRED';
+  category: string;
+  reasoning: string;
+}
+
+export interface SkillRequirement {
+  skill: string;
+  importance: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface EducationRequirementItem {
+  level: EducationLevel;
+  field: string;
+  required: boolean;
+}
+
+export interface ExperienceRequirement {
+  years: string;
+  type: string;
+  required: boolean;
+}
+
+export interface CertificationRequirement {
+  certification: string;
+  required: boolean;
+}
+
+export interface RequirementIssue {
+  requirement: string;
+  issue: string;
+}
+
+// 2.2.4 - Inclusive Language Check
+export interface InclusiveLanguageCheck {
+  id: string;
+  companyId?: string;
+  createdById: string;
+
+  // Input
+  contentType: 'JOB_DESCRIPTION' | 'JOB_TITLE' | 'EMAIL' | 'MESSAGE';
+  originalContent: string;
+
+  // Analysis
+  overallScore: number;
+  grade: InclusivityGrade;
+
+  // Issues Found
+  issues: BiasIssue[];
+
+  // Categories
+  genderBiasIssues?: BiasIssue[];
+  ageBiasIssues?: BiasIssue[];
+  abilityBiasIssues?: BiasIssue[];
+  culturalBiasIssues?: BiasIssue[];
+  educationBiasIssues?: BiasIssue[];
+  socioeconomicBiasIssues?: BiasIssue[];
+
+  // Suggestions
+  suggestedContent?: string;
+  alternativePhrases?: AlternativePhrase[];
+
+  // Statistics
+  issueCount: number;
+  severeIssueCount: number;
+  moderateIssueCount: number;
+  minorIssueCount: number;
+
+  // Tone Analysis
+  toneAnalysis?: ToneAnalysis;
+  readabilityLevel?: string;
+  wordCount?: number;
+
+  // Metadata
+  modelVersion: string;
+  processingTimeMs?: number;
+  createdAt: string;
+}
+
+export interface BiasIssue {
+  phrase: string;
+  issue: string;
+  severity: BiasSeverity;
+  category: BiasCategory;
+  suggestion: string;
+  startIndex?: number;
+  endIndex?: number;
+}
+
+export interface AlternativePhrase {
+  original: string;
+  suggested: string;
+  reason: string;
+}
+
+export interface ToneAnalysis {
+  formal: number;
+  friendly: number;
+  professional: number;
+  inclusive: number;
+  aggressive?: number;
+}
+
+// 2.2.5 - Salary Range Suggestion
+export interface SalaryRangeSuggestion {
+  id: string;
+  companyId?: string;
+  createdById: string;
+
+  // Input Parameters
+  jobTitle: string;
+  normalizedTitle?: string;
+  location: string;
+  country: string;
+  state?: string;
+  city?: string;
+
+  seniorityLevel: SeniorityLevel;
+  yearsExperience?: number;
+  requiredSkills?: string[];
+  industry?: string;
+  companySize?: string;
+  employmentType: EmploymentType;
+
+  // Suggested Range
+  currency: string;
+  suggestedMin: number;
+  suggestedMax: number;
+  suggestedMidpoint: number;
+
+  // Confidence
+  confidenceLevel: ConfidenceLevel;
+  confidenceScore: number;
+
+  // Market Data
+  marketPercentile25?: number;
+  marketMedian?: number;
+  marketPercentile75?: number;
+  marketPercentile90?: number;
+
+  // Comparisons
+  industryComparison?: MarketComparison;
+  locationComparison?: MarketComparison;
+  companyComparison?: MarketComparison;
+
+  // Factors
+  salaryFactors?: SalaryFactor[];
+  skillPremiums?: SkillPremium[];
+  locationAdjustment?: number;
+
+  // Recommendations
+  recommendations?: string[];
+  competitivenessScore?: number;
+
+  // Data Sources
+  dataSources?: string[];
+  dataFreshness?: string;
+  sampleSize?: number;
+
+  // Metadata
+  modelVersion: string;
+  calculatedAt: string;
+}
+
+export interface SalaryFactor {
+  factor: string;
+  impact: string;
+  description: string;
+}
+
+export interface SkillPremium {
+  skill: string;
+  premium: number;
+}
+
+// 2.2.6 - Generated Interview Questions
+export interface GeneratedInterviewQuestions {
+  id: string;
+  companyId?: string;
+  createdById: string;
+  jobId?: string;
+
+  // Input
+  jobTitle: string;
+  seniorityLevel: SeniorityLevel;
+  department?: string;
+  requiredSkills?: string[];
+  competencies?: string[];
+  interviewRound?: InterviewRound;
+  interviewDuration?: number;
+
+  // Generated Questions
+  questions: InterviewQuestion[];
+
+  // Question Categories
+  technicalQuestions?: InterviewQuestion[];
+  behavioralQuestions?: InterviewQuestion[];
+  situationalQuestions?: InterviewQuestion[];
+  cultureFitQuestions?: InterviewQuestion[];
+  problemSolvingQuestions?: InterviewQuestion[];
+  leadershipQuestions?: InterviewQuestion[];
+
+  // Question Bank Metadata
+  totalQuestions: number;
+  estimatedDuration?: number;
+  difficultyDistribution?: DifficultyDistribution;
+
+  // Evaluation Guide
+  scoringRubric?: Record<number, string>;
+  mustAskQuestions?: string[];
+  optionalQuestions?: string[];
+
+  // Compliance
+  legalCompliance: boolean;
+  complianceNotes?: string[];
+  avoidedTopics?: string[];
+
+  // Usage Tracking
+  timesUsed: number;
+  averageRating?: number;
+  feedback?: QuestionFeedback[];
+
+  // Metadata
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewQuestion {
+  question: string;
+  category: QuestionCategory;
+  skill?: string;
+  difficulty: QuestionDifficulty;
+  expectedDuration: number;
+  evaluationCriteria?: string[];
+  followUps?: string[];
+  redFlags?: string[];
+  greenFlags?: string[];
+}
+
+export interface DifficultyDistribution {
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
+export interface QuestionFeedback {
+  rating: number;
+  feedback: string;
+  date: string;
+}
+
+export interface GenerateInterviewQuestionsInput {
+  jobTitle: string;
+  seniorityLevel: SeniorityLevel;
+  department?: string;
+  requiredSkills?: string[];
+  competencies?: string[];
+  interviewRound?: InterviewRound;
+  interviewDuration?: number;
+  jobId?: string;
+}
