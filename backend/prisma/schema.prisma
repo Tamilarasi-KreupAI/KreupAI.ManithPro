@@ -11164,3 +11164,399 @@ model RecommendationConfig {
   @@index([companyId])
   @@map("recommendation_configs")
 }
+
+// ============================================================================
+// BATCH 24: HIRING TEAM MANAGEMENT (6.1.1-6.1.7)
+// ============================================================================
+
+// 6.1.1 Hiring Team Creation
+model HiringTeam {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String
+
+  // Team Details
+  name                  String
+  description           String?             @db.Text
+  teamType              String              @default("STANDARD") // STANDARD, EXECUTIVE, HIGH_VOLUME
+
+  // Team Lead
+  leadRecruiterId       String
+  hiringManagerId       String?
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED, ARCHIVED
+  activatedAt           DateTime            @default(now())
+  completedAt           DateTime?
+
+  // Settings
+  settings              Json?               // Team-specific settings
+  notificationPrefs     Json?               // Notification preferences
+
+  // Metrics Summary
+  totalCandidates       Int                 @default(0)
+  totalInterviews       Int                 @default(0)
+  totalHires            Int                 @default(0)
+  avgTimeToHire         Float?
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([leadRecruiterId])
+  @@index([status])
+  @@map("hiring_teams")
+}
+
+// 6.1.2 Role-Based Permissions for Team Members
+model HiringTeamMember {
+  id                    String              @id @default(uuid())
+  teamId                String
+  userId                String
+  companyId             String
+
+  // Role
+  role                  String              // LEAD_RECRUITER, RECRUITER, HIRING_MANAGER, INTERVIEWER, COORDINATOR, VIEWER
+  title                 String?             // Display title
+
+  // Permissions
+  permissionLevel       String              @default("VIEWER") // VIEWER, COMMENTER, EDITOR, ADMIN
+  canViewCandidates     Boolean             @default(true)
+  canEditCandidates     Boolean             @default(false)
+  canScheduleInterviews Boolean             @default(false)
+  canSubmitFeedback     Boolean             @default(true)
+  canMakeDecisions      Boolean             @default(false)
+  canManageTeam         Boolean             @default(false)
+  canAccessReports      Boolean             @default(false)
+  customPermissions     Json?               // Additional custom permissions
+
+  // Availability
+  isActive              Boolean             @default(true)
+  availableFrom         DateTime?
+  availableUntil        DateTime?
+  maxInterviewsPerWeek  Int?
+  currentInterviewLoad  Int                 @default(0)
+
+  // Expertise
+  expertiseAreas        Json?               // Skills/areas they can interview for
+  interviewTypes        Json?               // Types of interviews they conduct
+
+  // Notifications
+  notifyOnNewCandidates Boolean             @default(true)
+  notifyOnInterviews    Boolean             @default(true)
+  notifyOnDecisions     Boolean             @default(true)
+
+  // Metadata
+  addedById             String
+  joinedAt              DateTime            @default(now())
+  lastActiveAt          DateTime?
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([companyId])
+  @@index([role])
+  @@map("hiring_team_members")
+}
+
+// 6.1.3 Interview Panel Setup
+model InterviewPanel {
+  id                    String              @id @default(uuid())
+  companyId             String
+  teamId                String
+  jobId                 String
+
+  // Panel Details
+  name                  String
+  roundNumber           Int                 // 1, 2, 3, etc.
+  roundType             String              // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, CULTURE, FINAL, OFFER
+
+  // Panel Members
+  panelMembers          Json                // Array of {userId, role, isRequired}
+  minPanelSize          Int                 @default(1)
+  maxPanelSize          Int                 @default(5)
+
+  // Interview Configuration
+  duration              Int                 @default(60) // minutes
+  format                String              @default("VIDEO") // IN_PERSON, VIDEO, PHONE
+  location              String?
+  videoLink             String?
+
+  // Scoring
+  scorecardTemplateId   String?
+  passingScore          Float?
+  requireUnanimous      Boolean             @default(false)
+
+  // Scheduling
+  schedulingMode        String              @default("MANUAL") // MANUAL, SELF_SCHEDULE, AUTO
+  bufferTime            Int                 @default(15) // minutes before/after
+  allowWeekends         Boolean             @default(false)
+  timeSlotPreferences   Json?               // Preferred times
+
+  // Status
+  isActive              Boolean             @default(true)
+  order                 Int                 // Order in interview process
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([teamId])
+  @@index([jobId])
+  @@index([roundNumber])
+  @@map("interview_panels")
+}
+
+// 6.1.4 Workload Dashboard Data
+model TeamWorkload {
+  id                    String              @id @default(uuid())
+  companyId             String
+  teamId                String
+  userId                String
+  periodStart           DateTime
+  periodEnd             DateTime
+
+  // Capacity
+  maxCapacity           Int                 // Max interviews/tasks
+  currentLoad           Int                 // Current assigned
+  availableCapacity     Int                 // Remaining capacity
+
+  // Interview Workload
+  scheduledInterviews   Int                 @default(0)
+  completedInterviews   Int                 @default(0)
+  cancelledInterviews   Int                 @default(0)
+
+  // Task Workload
+  pendingFeedback       Int                 @default(0)
+  pendingReviews        Int                 @default(0)
+  pendingDecisions      Int                 @default(0)
+
+  // Time Tracking
+  totalInterviewHours   Float               @default(0)
+  totalPrepHours        Float               @default(0)
+
+  // Quality Metrics
+  avgFeedbackTime       Float?              // Hours to submit feedback
+  feedbackQualityScore  Float?              // 0-100
+
+  // Availability
+  availableSlots        Json?               // Available time slots
+  blockedDates          Json?               // Blocked dates
+  timeZone              String              @default("UTC")
+
+  // Status
+  isOverloaded          Boolean             @default(false)
+  overloadAlertSent     Boolean             @default(false)
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([teamId, userId, periodStart, periodEnd])
+  @@index([companyId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([periodStart, periodEnd])
+  @@map("team_workloads")
+}
+
+// 6.1.5 Coverage Scheduling
+model CoverageSchedule {
+  id                    String              @id @default(uuid())
+  companyId             String
+  teamId                String
+
+  // Coverage Details
+  primaryUserId         String              // Who's away
+  coveringUserId        String              // Who's covering
+
+  // Time Period
+  startDate             DateTime
+  endDate               DateTime
+
+  // Reason
+  reason                String              // VACATION, SICK, LEAVE, TRAINING, OTHER
+  notes                 String?             @db.Text
+
+  // Coverage Scope
+  coverageType          String              @default("FULL") // FULL, PARTIAL, SPECIFIC_TASKS
+  coveredResponsibilities Json?             // What's being covered
+  excludedResponsibilities Json?            // What's not covered
+
+  // Handoff
+  handoffNotes          String?             @db.Text
+  handoffDocuments      Json?               // Links to handoff docs
+  handoffCompletedAt    DateTime?
+
+  // Approval
+  approvalStatus        String              @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedById          String?
+  approvedAt            DateTime?
+
+  // Notifications
+  notifyStakeholders    Boolean             @default(true)
+  stakeholdersNotified  Boolean             @default(false)
+
+  // Status
+  status                String              @default("SCHEDULED") // SCHEDULED, ACTIVE, COMPLETED, CANCELLED
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([teamId])
+  @@index([primaryUserId])
+  @@index([coveringUserId])
+  @@index([startDate, endDate])
+  @@index([status])
+  @@map("coverage_schedules")
+}
+
+// 6.1.6 Team Performance Metrics
+model TeamPerformance {
+  id                    String              @id @default(uuid())
+  companyId             String
+  teamId                String
+  periodType            String              // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  periodStart           DateTime
+  periodEnd             DateTime
+
+  // Pipeline Metrics
+  candidatesSourced     Int                 @default(0)
+  candidatesScreened    Int                 @default(0)
+  interviewsScheduled   Int                 @default(0)
+  interviewsCompleted   Int                 @default(0)
+  offersExtended        Int                 @default(0)
+  offersAccepted        Int                 @default(0)
+  hiresMade             Int                 @default(0)
+
+  // Efficiency Metrics
+  avgTimeToScreen       Float?              // days
+  avgTimeToInterview    Float?              // days
+  avgTimeToOffer        Float?              // days
+  avgTimeToHire         Float?              // days
+  avgInterviewsPerHire  Float?
+
+  // Quality Metrics
+  candidateQualityScore Float?              // avg candidate rating
+  interviewQualityScore Float?              // feedback quality
+  offerAcceptanceRate   Float?              // %
+  newHireRetention90    Float?              // % retained at 90 days
+
+  // Team Metrics
+  teamUtilization       Float?              // % of capacity used
+  avgFeedbackTurnaround Float?              // hours
+  feedbackCompletionRate Float?             // %
+  teamSatisfactionScore Float?
+
+  // Comparison
+  vsCompanyAvg          Json?               // Comparison to company average
+  vsPreviousPeriod      Json?               // Comparison to previous period
+  vsGoals               Json?               // Comparison to set goals
+
+  // Breakdowns
+  byRecruiter           Json?               // Metrics per recruiter
+  bySource              Json?               // Metrics by source
+  byStage               Json?               // Metrics by pipeline stage
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([teamId, periodType, periodStart])
+  @@index([companyId])
+  @@index([teamId])
+  @@index([periodType])
+  @@index([periodStart, periodEnd])
+  @@map("team_performance")
+}
+
+// 6.1.7 Hiring Manager Dashboard Configuration
+model HiringManagerDashboard {
+  id                    String              @id @default(uuid())
+  companyId             String
+  userId                String              // The hiring manager
+
+  // Dashboard Config
+  dashboardName         String              @default("My Hiring Dashboard")
+  layout                Json?               // Widget layout configuration
+
+  // Visible Jobs
+  visibleJobIds         Json?               // Specific jobs to show (null = all assigned)
+  pinnedJobIds          Json?               // Pinned jobs at top
+
+  // Widget Settings
+  widgets               Json                // Array of widget configs
+  defaultTimeRange      String              @default("LAST_30_DAYS")
+  autoRefresh           Boolean             @default(true)
+  refreshInterval       Int                 @default(300) // seconds
+
+  // Filters
+  defaultFilters        Json?               // Default filter settings
+  savedFilters          Json?               // Saved filter presets
+
+  // Notifications
+  emailDigest           Boolean             @default(true)
+  digestFrequency       String              @default("DAILY") // DAILY, WEEKLY
+  alertThresholds       Json?               // When to send alerts
+
+  // Quick Actions
+  quickActions          Json?               // Configured quick action buttons
+
+  // Preferences
+  showCompletedJobs     Boolean             @default(false)
+  showTeamMetrics       Boolean             @default(true)
+  compactMode           Boolean             @default(false)
+  colorScheme           String              @default("DEFAULT")
+
+  // Metadata
+  lastViewedAt          DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([userId])
+  @@map("hiring_manager_dashboards")
+}
+
+// Team Activity Log
+model TeamActivityLog {
+  id                    String              @id @default(uuid())
+  companyId             String
+  teamId                String
+  userId                String
+
+  // Activity
+  activityType          String              // MEMBER_ADDED, MEMBER_REMOVED, ROLE_CHANGED, INTERVIEW_SCHEDULED, etc.
+  entityType            String              // TEAM, MEMBER, CANDIDATE, INTERVIEW, etc.
+  entityId              String
+
+  // Details
+  description           String
+  metadata              Json?               // Additional context
+
+  // Before/After (for changes)
+  previousState         Json?
+  newState              Json?
+
+  // Metadata
+  performedAt           DateTime            @default(now())
+  ipAddress             String?
+  userAgent             String?
+
+  @@index([companyId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([activityType])
+  @@index([performedAt])
+  @@map("team_activity_logs")
+}

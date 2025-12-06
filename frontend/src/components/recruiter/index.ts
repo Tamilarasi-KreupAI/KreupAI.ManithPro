@@ -30,3 +30,6 @@ export { default as PredictiveAnalyticsHub } from './PredictiveAnalyticsHub';
 
 // Recruiter Components - Batch 23: Smart Recommendations
 export { default as SmartRecommendationsHub } from './SmartRecommendationsHub';
+
+// Recruiter Components - Batch 24: Hiring Team Management
+export { default as HiringTeamManagementHub } from './HiringTeamManagementHub';
