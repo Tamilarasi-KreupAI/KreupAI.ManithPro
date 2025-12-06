@@ -10454,3 +10454,511 @@ export interface AnalyzePipelineHealthInput {
   currentCandidates?: number;
   byStage?: Record<string, number>;
 }
+
+// ============================================================================
+// BATCH 23: SMART RECOMMENDATIONS (5.3.1-5.3.8)
+// ============================================================================
+
+// Common types for recommendations
+export type RecommendationType =
+  | 'JOB_RECOMMENDATION'
+  | 'CANDIDATE_RECOMMENDATION'
+  | 'SIMILAR_CANDIDATE'
+  | 'PASSIVE_CANDIDATE'
+  | 'SKILL_UP'
+  | 'RE_ENGAGEMENT'
+  | 'INTERVIEW_PANEL'
+  | 'SOURCING_CHANNEL';
+
+export type RecommendationStatus = 'ACTIVE' | 'VIEWED' | 'APPLIED' | 'DISMISSED' | 'EXPIRED';
+
+export type InteractionType = 'VIEW' | 'CLICK' | 'SAVE' | 'APPLY' | 'DISMISS' | 'SHARE';
+
+export type ActionType = 'CONTACT' | 'SCHEDULE_INTERVIEW' | 'ADD_TO_PIPELINE' | 'REJECT' | 'ARCHIVE';
+
+export type OutreachStatus = 'NOT_CONTACTED' | 'CONTACTED' | 'RESPONDED' | 'INTERESTED' | 'NOT_INTERESTED' | 'CONVERTED';
+
+export type SkillPriority = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type ReEngagementReason = 'GOOD_PREVIOUS_FIT' | 'NEW_SKILLS' | 'ROLE_CHANGE' | 'MARKET_CONDITIONS' | 'REFERRAL';
+
+export type ReEngagementStatus = 'PENDING' | 'CONTACTED' | 'RESPONDED' | 'RE_ENGAGED' | 'DECLINED' | 'NO_RESPONSE';
+
+export type InterviewerRole = 'LEAD' | 'TECHNICAL' | 'CULTURAL' | 'HR' | 'PEER';
+
+export type SourcingChannel = 'LINKEDIN' | 'INDEED' | 'GLASSDOOR' | 'REFERRAL' | 'CAREER_SITE' | 'JOB_BOARD' | 'UNIVERSITY' | 'AGENCY' | 'SOCIAL_MEDIA' | 'OTHER';
+
+// 5.3.1 Job Recommendation Types
+export interface JobRecommendation {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  matchScore: number;
+  skillMatchScore: number;
+  experienceMatchScore: number;
+  locationMatchScore: number;
+  salaryMatchScore: number;
+  cultureMatchScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  strengths: string[];
+  considerations: string[];
+  reasoning: string;
+  rank: number;
+  status: RecommendationStatus;
+  lastInteraction?: string;
+  viewedAt?: string;
+  appliedAt?: string;
+  dismissedAt?: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  job?: Job;
+  candidate?: User;
+}
+
+export interface GenerateJobRecommendationsInput {
+  candidateId: string;
+  limit?: number;
+  minMatchScore?: number;
+  preferredLocations?: string[];
+  preferredJobTypes?: JobType[];
+  salaryExpectation?: {
+    min?: number;
+    max?: number;
+  };
+  excludeApplied?: boolean;
+  excludeDismissed?: boolean;
+}
+
+export interface JobRecommendationInteractionInput {
+  interactionType: InteractionType;
+  duration?: number;
+  feedback?: string;
+}
+
+// 5.3.2 Candidate Recommendation Types
+export interface CandidateRecommendation {
+  id: string;
+  jobId: string;
+  candidateId: string;
+  recruiterId: string;
+  matchScore: number;
+  skillMatchScore: number;
+  experienceMatchScore: number;
+  educationMatchScore: number;
+  availabilityScore: number;
+  cultureFitScore: number;
+  matchedRequirements: string[];
+  partialMatches: string[];
+  missingRequirements: string[];
+  highlights: string[];
+  concerns: string[];
+  reasoning: string;
+  rank: number;
+  status: RecommendationStatus;
+  actionTaken?: ActionType;
+  actionTakenAt?: string;
+  notes?: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  job?: Job;
+  candidate?: User;
+}
+
+export interface GenerateCandidateRecommendationsInput {
+  jobId: string;
+  limit?: number;
+  minMatchScore?: number;
+  requiredSkills?: string[];
+  preferredExperience?: {
+    min?: number;
+    max?: number;
+  };
+  preferredLocations?: string[];
+  includePassive?: boolean;
+  excludeContacted?: boolean;
+}
+
+export interface CandidateRecommendationActionInput {
+  actionType: ActionType;
+  notes?: string;
+  scheduledDate?: string;
+}
+
+// 5.3.3 Similar Candidate Types
+export interface SimilarCandidateMatch {
+  id: string;
+  sourceCandidateId: string;
+  matchedCandidateId: string;
+  recruiterId: string;
+  similarityScore: number;
+  skillSimilarity: number;
+  experienceSimilarity: number;
+  educationSimilarity: number;
+  industrySimilarity: number;
+  roleSimilarity: number;
+  sharedSkills: string[];
+  uniqueToSource: string[];
+  uniqueToMatched: string[];
+  similarExperiences: string[];
+  differentiators: string[];
+  reasoning: string;
+  rank: number;
+  status: RecommendationStatus;
+  actionTaken?: ActionType;
+  actionTakenAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  sourceCandidate?: User;
+  matchedCandidate?: User;
+}
+
+export interface FindSimilarCandidatesInput {
+  sourceCandidateId: string;
+  limit?: number;
+  minSimilarity?: number;
+  focusAreas?: ('skills' | 'experience' | 'education' | 'industry' | 'role')[];
+  excludeContacted?: boolean;
+  jobId?: string;
+}
+
+export interface SimilarCandidateActionInput {
+  actionType: ActionType;
+  notes?: string;
+  jobId?: string;
+}
+
+// 5.3.4 Passive Candidate Types
+export interface PassiveCandidateProfile {
+  id: string;
+  candidateId: string;
+  recruiterId: string;
+  passiveScore: number;
+  engagementLevel: number;
+  responselikelihood: number;
+  conversionPotential: number;
+  lastActivityDate?: string;
+  estimatedAvailability?: string;
+  openToOpportunities: boolean;
+  preferredContactMethod?: string;
+  bestContactTime?: string;
+  interests: string[];
+  motivators: string[];
+  dealBreakers: string[];
+  targetRoles: string[];
+  targetCompanies: string[];
+  salaryExpectation?: number;
+  relocationWillingness?: string;
+  outreachStatus: OutreachStatus;
+  outreachHistory: OutreachHistoryEntry[];
+  lastContactedAt?: string;
+  lastResponseAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: User;
+}
+
+export interface OutreachHistoryEntry {
+  date: string;
+  method: string;
+  message?: string;
+  response?: string;
+  outcome?: string;
+  recruiterNotes?: string;
+}
+
+export interface IdentifyPassiveCandidatesInput {
+  criteria?: {
+    skills?: string[];
+    experience?: { min?: number; max?: number };
+    location?: string[];
+    industry?: string[];
+    roles?: string[];
+  };
+  limit?: number;
+  minPassiveScore?: number;
+  excludeContacted?: boolean;
+  targetJobId?: string;
+}
+
+export interface PassiveCandidateOutreachInput {
+  outreachStatus: OutreachStatus;
+  contactMethod?: string;
+  message?: string;
+  response?: string;
+  outcome?: string;
+  notes?: string;
+}
+
+// 5.3.5 Skill-Up Recommendation Types
+export interface SkillUpRecommendation {
+  id: string;
+  candidateId: string;
+  targetSkill: string;
+  currentLevel: number;
+  targetLevel: number;
+  priority: SkillPriority;
+  relevanceScore: number;
+  marketDemand: number;
+  careerImpact: number;
+  learningPath: LearningResource[];
+  estimatedTimeHours: number;
+  estimatedCost?: number;
+  reasoning: string;
+  relatedJobs: string[];
+  salaryImpact?: number;
+  progress: number;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED' | 'ABANDONED';
+  startedAt?: string;
+  completedAt?: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: User;
+}
+
+export interface LearningResource {
+  id: string;
+  title: string;
+  provider: string;
+  type: 'COURSE' | 'CERTIFICATION' | 'TUTORIAL' | 'BOOK' | 'PROJECT' | 'WORKSHOP' | 'MENTORSHIP';
+  url?: string;
+  duration?: string;
+  cost?: number;
+  rating?: number;
+  description?: string;
+  prerequisites?: string[];
+  order: number;
+  completed: boolean;
+  completedAt?: string;
+}
+
+export interface GenerateSkillUpRecommendationsInput {
+  candidateId: string;
+  targetRoles?: string[];
+  targetIndustries?: string[];
+  careerGoals?: string[];
+  timeCommitment?: 'LOW' | 'MEDIUM' | 'HIGH';
+  budget?: number;
+  limit?: number;
+}
+
+export interface UpdateSkillProgressInput {
+  progress: number;
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED' | 'ABANDONED';
+  completedResources?: string[];
+  notes?: string;
+}
+
+// 5.3.6 Re-Engagement Suggestion Types
+export interface ReEngagementSuggestion {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  recruiterId: string;
+  previousApplicationId?: string;
+  reEngagementScore: number;
+  fitImprovement: number;
+  timeSinceLastContact: number;
+  reason: ReEngagementReason;
+  reasoning: string;
+  previousFeedback?: string;
+  changesNoted: string[];
+  suggestedApproach: string;
+  suggestedMessage?: string;
+  bestContactTime?: string;
+  status: ReEngagementStatus;
+  contactedAt?: string;
+  respondedAt?: string;
+  outcome?: string;
+  notes?: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: User;
+  job?: Job;
+}
+
+export interface GenerateReEngagementSuggestionsInput {
+  jobId: string;
+  minReEngagementScore?: number;
+  minTimeSinceContact?: number;
+  maxTimeSinceContact?: number;
+  reasons?: ReEngagementReason[];
+  limit?: number;
+  excludeRejected?: boolean;
+}
+
+export interface UpdateReEngagementStatusInput {
+  status: ReEngagementStatus;
+  outcome?: string;
+  notes?: string;
+  nextFollowUpDate?: string;
+}
+
+// 5.3.7 Interview Panel Recommendation Types
+export interface InterviewPanelRecommendation {
+  id: string;
+  jobId: string;
+  candidateId: string;
+  recruiterId: string;
+  interviewerId: string;
+  role: InterviewerRole;
+  matchScore: number;
+  expertiseMatch: number;
+  availabilityScore: number;
+  interviewLoadScore: number;
+  diversityContribution: number;
+  reasoning: string;
+  expertiseAreas: string[];
+  previousInterviews: number;
+  averageRating?: number;
+  availableSlots: string[];
+  conflicts?: string[];
+  selected: boolean;
+  selectedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  job?: Job;
+  candidate?: User;
+  interviewer?: User;
+}
+
+export interface GenerateInterviewPanelRecommendationsInput {
+  jobId: string;
+  candidateId: string;
+  panelSize?: number;
+  requiredRoles?: InterviewerRole[];
+  requiredExpertise?: string[];
+  preferredDates?: string[];
+  excludeInterviewers?: string[];
+  diversityPreference?: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface SelectInterviewerInput {
+  notes?: string;
+  scheduledDate?: string;
+}
+
+// 5.3.8 Sourcing Channel Recommendation Types
+export interface SourcingChannelRecommendation {
+  id: string;
+  jobId?: string;
+  roleType: string;
+  recruiterId: string;
+  channel: SourcingChannel;
+  effectiveness: number;
+  costEfficiency: number;
+  qualityScore: number;
+  speedScore: number;
+  volumeScore: number;
+  historicalSuccess: number;
+  reasoning: string;
+  recommendations: string[];
+  estimatedCost?: number;
+  estimatedTimeToHire?: number;
+  estimatedCandidates?: number;
+  bestPractices: string[];
+  warnings?: string[];
+  rank: number;
+  createdAt: string;
+  updatedAt: string;
+  job?: Job;
+}
+
+export interface GenerateSourcingRecommendationsInput {
+  jobId?: string;
+  roleType: string;
+  budget?: number;
+  timeline?: string;
+  targetCandidates?: number;
+  preferredChannels?: SourcingChannel[];
+  excludedChannels?: SourcingChannel[];
+  prioritize?: 'COST' | 'SPEED' | 'QUALITY' | 'VOLUME';
+}
+
+// Recommendation Feedback Types
+export interface RecommendationFeedback {
+  id: string;
+  recommendationType: RecommendationType;
+  recommendationId: string;
+  userId: string;
+  rating: number;
+  relevance: number;
+  accuracy: number;
+  usefulness: number;
+  feedback?: string;
+  suggestions?: string;
+  wouldRecommend: boolean;
+  createdAt: string;
+}
+
+export interface SubmitRecommendationFeedbackInput {
+  recommendationType: RecommendationType;
+  recommendationId: string;
+  rating: number;
+  relevance?: number;
+  accuracy?: number;
+  usefulness?: number;
+  feedback?: string;
+  suggestions?: string;
+  wouldRecommend?: boolean;
+}
+
+// Recommendation Config Types
+export interface RecommendationConfig {
+  id: string;
+  recommendationType: RecommendationType;
+  enabled: boolean;
+  minScore: number;
+  maxResults: number;
+  refreshInterval: number;
+  weights: Record<string, number>;
+  filters: Record<string, unknown>;
+  features: Record<string, boolean>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateRecommendationConfigInput {
+  enabled?: boolean;
+  minScore?: number;
+  maxResults?: number;
+  refreshInterval?: number;
+  weights?: Record<string, number>;
+  filters?: Record<string, unknown>;
+  features?: Record<string, boolean>;
+}
+
+// Smart Recommendations Stats
+export interface SmartRecommendationsStats {
+  totalRecommendations: number;
+  activeRecommendations: number;
+  byType: Record<RecommendationType, number>;
+  averageMatchScore: number;
+  conversionRate: number;
+  feedbackScore: number;
+  topPerformingTypes: Array<{
+    type: RecommendationType;
+    count: number;
+    conversionRate: number;
+    avgScore: number;
+  }>;
+  recentActivity: Array<{
+    date: string;
+    recommendations: number;
+    interactions: number;
+    conversions: number;
+  }>;
+  channelEffectiveness: Array<{
+    channel: SourcingChannel;
+    effectiveness: number;
+    hires: number;
+    cost: number;
+  }>;
+}

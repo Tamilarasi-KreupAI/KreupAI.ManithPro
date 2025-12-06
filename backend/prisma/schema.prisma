@@ -10644,3 +10644,523 @@ model PredictionAuditLog {
   @@index([createdAt])
   @@map("prediction_audit_logs")
 }
+
+// ============================================================================
+// BATCH 23: SMART RECOMMENDATIONS (5.3.1 - 5.3.8)
+// ============================================================================
+
+// 5.3.1 Job Recommendations for Candidates
+model JobRecommendation {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  candidateId           String
+  jobId                 String
+
+  // Recommendation Details
+  recommendationScore   Float               // 0-100 match score
+  recommendationRank    Int                 // Rank among recommendations
+  recommendationType    String              // PERFECT_MATCH, STRONG_MATCH, GOOD_FIT, STRETCH_ROLE
+
+  // Match Breakdown
+  skillMatch            Float               // 0-1
+  experienceMatch       Float               // 0-1
+  locationMatch         Float               // 0-1
+  salaryMatch           Float               // 0-1
+  cultureMatch          Float?              // 0-1
+  growthMatch           Float?              // Career growth alignment
+
+  // Job Details (denormalized for quick access)
+  jobTitle              String
+  jobCompany            String?
+  jobLocation           String?
+  jobSalaryMin          Float?
+  jobSalaryMax          Float?
+
+  // Why Recommended
+  matchReasons          Json                // Array of reasons
+  highlightedSkills     String[]            @default([])
+  growthOpportunities   String[]            @default([])
+
+  // Gaps & Considerations
+  skillGaps             String[]            @default([])
+  considerationNotes    String?             @db.Text
+
+  // Candidate Interaction
+  viewedAt              DateTime?
+  clickedAt             DateTime?
+  savedAt               DateTime?
+  appliedAt             DateTime?
+  dismissedAt           DateTime?
+  dismissReason         String?
+
+  // Feedback
+  feedbackRating        Int?                // 1-5 stars
+  feedbackComment       String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  expiresAt             DateTime?
+  algorithmVersion      String              @default("1.0")
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([recommendationScore])
+  @@index([generatedAt])
+  @@map("job_recommendations")
+}
+
+// 5.3.2 Candidate Recommendations for Recruiters
+model CandidateRecommendation {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  jobId                 String
+  candidateId           String
+  recruiterId           String?
+
+  // Recommendation Details
+  recommendationScore   Float               // 0-100
+  recommendationRank    Int
+  recommendationType    String              // TOP_PICK, STRONG_CANDIDATE, WORTH_REVIEWING, HIDDEN_GEM
+
+  // Match Analysis
+  overallMatch          Float
+  skillMatch            Float
+  experienceMatch       Float
+  cultureFitEstimate    Float?
+  availabilityMatch     Float?
+
+  // Candidate Snapshot (denormalized)
+  candidateName         String?
+  candidateTitle        String?
+  candidateLocation     String?
+  candidateExperience   Int?                // Years
+  candidateSkills       String[]            @default([])
+
+  // Why Recommended
+  matchReasons          Json                // Detailed reasons
+  standoutFactors       String[]            @default([])
+  competitiveAdvantages String[]            @default([])
+
+  // Potential Concerns
+  potentialConcerns     Json?               // Flags to review
+  missingRequirements   String[]            @default([])
+
+  // Source Information
+  sourceChannel         String?             // Where candidate came from
+  previousInteractions  Json?               // Past touchpoints
+
+  // Recruiter Actions
+  viewedAt              DateTime?
+  shortlistedAt         DateTime?
+  contactedAt           DateTime?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  algorithmVersion      String              @default("1.0")
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([jobId, candidateId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([recommendationScore])
+  @@map("candidate_recommendations")
+}
+
+// 5.3.3 Similar Candidates Finder
+model SimilarCandidateMatch {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Source (the good candidate)
+  sourceCandidateId     String
+  sourceType            String              // TOP_PERFORMER, SUCCESSFUL_HIRE, TEMPLATE
+
+  // Similar Candidate Found
+  similarCandidateId    String
+
+  // Similarity Analysis
+  overallSimilarity     Float               // 0-1
+  skillSimilarity       Float
+  experienceSimilarity  Float
+  backgroundSimilarity  Float
+  careerPathSimilarity  Float?
+
+  // Shared Attributes
+  sharedSkills          String[]            @default([])
+  sharedExperiences     Json?               // Similar work history
+  sharedEducation       Json?               // Similar education
+
+  // Differences
+  keyDifferences        Json                // Notable differences
+  additionalStrengths   String[]            @default([])
+  developmentAreas      String[]            @default([])
+
+  // Context
+  forJobId              String?             // If searching for a specific job
+  searchCriteria        Json?               // What criteria was used
+
+  // Actions
+  reviewedAt            DateTime?
+  actionTaken           String?             // CONTACTED, SHORTLISTED, PASSED
+
+  // Metadata
+  foundAt               DateTime            @default(now())
+  algorithmVersion      String              @default("1.0")
+
+  @@unique([sourceCandidateId, similarCandidateId])
+  @@index([companyId])
+  @@index([sourceCandidateId])
+  @@index([overallSimilarity])
+  @@map("similar_candidate_matches")
+}
+
+// 5.3.4 Passive Candidate Identification
+model PassiveCandidateProfile {
+  id                    String              @id @default(uuid())
+  companyId             String
+  candidateId           String
+
+  // Passive Status
+  isPassive             Boolean             @default(true)
+  passiveScore          Float               // 0-100 (higher = more passive)
+  lastActiveDate        DateTime?           // Last job-seeking activity
+
+  // Engagement Signals
+  profileUpdateFrequency String?            // NEVER, RARELY, SOMETIMES, OFTEN
+  jobSearchActivity     String              // NONE, LOW, MODERATE, ACTIVE
+  responseToOutreach    String?             // UNRESPONSIVE, SLOW, RESPONSIVE, ENGAGED
+  networkActivity       String?             // Activity on professional networks
+
+  // Interest Indicators
+  openToOpportunities   Boolean?
+  preferredContactMethod String?
+  bestTimeToContact     String?
+  interestSignals       Json?               // Signals of potential interest
+
+  // Fit for Roles
+  recommendedForJobs    String[]            @default([])
+  matchingSkills        String[]            @default([])
+  targetRoles           String[]            @default([])
+  targetCompanies       String[]            @default([])
+
+  // Outreach History
+  timesContacted        Int                 @default(0)
+  lastContactedAt       DateTime?
+  lastResponseAt        DateTime?
+  outreachHistory       Json?               // History of outreach attempts
+
+  // Conversion Potential
+  conversionLikelihood  Float?              // Probability of converting
+  conversionFactors     Json?               // What might convert them
+
+  // Metadata
+  identifiedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, candidateId])
+  @@index([companyId])
+  @@index([passiveScore])
+  @@index([isPassive])
+  @@map("passive_candidate_profiles")
+}
+
+// 5.3.5 Skill-Up Recommendations
+model SkillUpRecommendation {
+  id                    String              @id @default(uuid())
+  companyId             String?             // null = system-wide
+
+  // Target
+  candidateId           String
+  targetJobId           String?             // Specific job they want
+  targetRoleTitle       String?             // General role they're targeting
+
+  // Current State
+  currentSkills         String[]            @default([])
+  currentLevel          String?             // JUNIOR, MID, SENIOR, etc.
+
+  // Skill Gaps
+  requiredSkills        String[]            @default([])
+  missingSkills         String[]            @default([])
+  partialSkills         Json?               // Skills they have partially
+
+  // Recommendations
+  skillRecommendations  Json                // Detailed recommendations
+  prioritySkills        String[]            @default([]) // Most important to learn
+  quickWins             String[]            @default([]) // Easy to acquire
+  longTermGoals         String[]            @default([]) // Bigger investments
+
+  // Learning Paths
+  suggestedCourses      Json?               // Course recommendations
+  suggestedCertifications Json?             // Certifications to pursue
+  suggestedProjects     Json?               // Projects to build
+  estimatedTimeToReady  Int?                // Months to be job-ready
+
+  // Career Impact
+  salaryImpact          Json?               // Expected salary increase
+  jobOpportunityImpact  Float?              // % increase in matching jobs
+  careerGrowthPath      Json?               // Career progression enabled
+
+  // Progress Tracking
+  skillsAcquired        String[]            @default([])
+  progressPercentage    Float               @default(0)
+  lastProgressUpdate    DateTime?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  expiresAt             DateTime?
+  updatedAt             DateTime            @updatedAt
+
+  @@index([candidateId])
+  @@index([targetRoleTitle])
+  @@map("skill_up_recommendations")
+}
+
+// 5.3.6 Re-Engagement Suggestions
+model ReEngagementSuggestion {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target Job
+  jobId                 String
+  jobTitle              String
+
+  // Past Candidate
+  candidateId           String
+  candidateName         String?
+  previousJobId         String?             // Job they applied to before
+  previousApplicationDate DateTime?
+  previousOutcome       String?             // REJECTED, WITHDRAWN, OFFER_DECLINED
+
+  // Why Re-engage
+  reEngagementScore     Float               // 0-100 fit for new role
+  reEngagementReasons   Json                // Why they're a good fit now
+  whatChanged           Json?               // What's different now
+
+  // Fit Analysis
+  currentFitScore       Float
+  previousFitScore      Float?
+  fitImprovement        Float?              // How much better fit now
+
+  // Candidate Updates
+  newSkills             String[]            @default([])
+  newExperience         Json?               // New work experience
+  newCertifications     String[]            @default([])
+  careerProgression     String?             // How they've grown
+
+  // Previous Interaction Context
+  previousFeedback      String?             @db.Text
+  previousRejectionReason String?
+  previousInterviewNotes String?            @db.Text
+
+  // Suggested Approach
+  suggestedOutreach     String?             @db.Text
+  talkingPoints         String[]            @default([])
+  potentialConcerns     String[]            @default([])
+
+  // Actions
+  suggestionStatus      String              @default("PENDING") // PENDING, REVIEWED, CONTACTED, CONVERTED, DISMISSED
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  actionNotes           String?             @db.Text
+
+  // Metadata
+  suggestedAt           DateTime            @default(now())
+  expiresAt             DateTime?
+
+  @@unique([jobId, candidateId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([reEngagementScore])
+  @@map("re_engagement_suggestions")
+}
+
+// 5.3.7 Interview Panel Recommendations
+model InterviewPanelRecommendation {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Context
+  jobId                 String
+  candidateId           String
+  interviewRound        String?             // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, FINAL
+
+  // Recommended Interviewer
+  interviewerId         String
+  interviewerName       String?
+  interviewerTitle      String?
+  interviewerDepartment String?
+
+  // Recommendation Details
+  recommendationScore   Float               // 0-100 fit score
+  recommendationRank    Int
+  recommendationType    String              // BEST_FIT, GOOD_FIT, BACKUP
+
+  // Why Recommended
+  matchReasons          Json                // Why this interviewer
+  relevantExpertise     String[]            @default([])
+  sharedBackground      Json?               // Common ground with candidate
+
+  // Interviewer Metrics
+  interviewerRating     Float?              // Historical performance
+  feedbackQuality       Float?              // Quality of feedback given
+  availabilityScore     Float?              // Schedule availability
+  diversityConsideration Boolean            @default(false)
+
+  // Interview Focus
+  suggestedFocusAreas   String[]            @default([])
+  suggestedQuestions    Json?               // Recommended questions
+  assessmentCriteria    Json?               // What to evaluate
+
+  // Scheduling
+  suggestedDuration     Int?                // Minutes
+  preferredTimeSlots    Json?               // When available
+
+  // Actions
+  selected              Boolean             @default(false)
+  selectedAt            DateTime?
+  declinedReason        String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  algorithmVersion      String              @default("1.0")
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([interviewerId])
+  @@map("interview_panel_recommendations")
+}
+
+// 5.3.8 Sourcing Channel Recommendations
+model SourcingChannelRecommendation {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?
+
+  // Target Role
+  roleTitle             String
+  roleLevel             String?             // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  requiredSkills        String[]            @default([])
+  location              String?
+  industry              String?
+
+  // Recommended Channel
+  channelName           String              // LinkedIn, Indeed, GitHub, Referrals, etc.
+  channelType           String              // JOB_BOARD, SOCIAL, REFERRAL, AGENCY, EVENT, DIRECT
+
+  // Recommendation Details
+  recommendationScore   Float               // 0-100 effectiveness
+  recommendationRank    Int
+  confidenceLevel       Float               // Confidence in recommendation
+
+  // Channel Metrics
+  expectedCandidates    Int?                // Expected volume
+  expectedQuality       Float?              // Quality score 0-1
+  expectedCost          Float?              // Cost per hire
+  expectedTimeToHire    Int?                // Days
+  historicalSuccessRate Float?              // Past success %
+
+  // Why Recommended
+  channelStrengths      String[]            @default([])
+  bestFor               String[]            @default([]) // What this channel excels at
+  considerations        String[]            @default([])
+
+  // Historical Data
+  pastHiresFromChannel  Int                 @default(0)
+  pastSuccessRate       Float?
+  avgTimeToHire         Int?
+  avgCostPerHire        Float?
+
+  // Action Items
+  suggestedActions      Json                // How to use this channel
+  budgetRecommendation  Float?
+  timelineRecommendation String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  dataFreshness         DateTime?
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([channelName])
+  @@index([recommendationScore])
+  @@map("sourcing_channel_recommendations")
+}
+
+// Recommendation Feedback (for improving recommendations)
+model RecommendationFeedback {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // What recommendation
+  recommendationType    String              // JOB, CANDIDATE, SIMILAR, PASSIVE, SKILL_UP, REENGAGE, PANEL, SOURCING
+  recommendationId      String
+
+  // Who gave feedback
+  userId                String
+  userRole              String              // CANDIDATE, RECRUITER, HIRING_MANAGER
+
+  // Feedback
+  rating                Int                 // 1-5 stars
+  wasHelpful            Boolean?
+  wasAccurate           Boolean?
+  feedbackText          String?             @db.Text
+
+  // Outcome
+  actionTaken           String?             // What they did with recommendation
+  outcome               String?             // Result of the action
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([recommendationType])
+  @@index([recommendationId])
+  @@map("recommendation_feedback")
+}
+
+// Recommendation Configuration
+model RecommendationConfig {
+  id                    String              @id @default(uuid())
+  companyId             String
+  recommendationType    String              // Which type of recommendation
+
+  // Algorithm Settings
+  algorithmVersion      String              @default("1.0")
+  isEnabled             Boolean             @default(true)
+
+  // Weights
+  weights               Json                // Factor weights
+  thresholds            Json                // Score thresholds
+
+  // Filters
+  includeFilters        Json?               // What to include
+  excludeFilters        Json?               // What to exclude
+  diversitySettings     Json?               // Diversity considerations
+
+  // Frequency
+  refreshFrequency      String              @default("DAILY") // REALTIME, HOURLY, DAILY, WEEKLY
+  maxRecommendations    Int                 @default(20)
+
+  // Personalization
+  usePersonalization    Boolean             @default(true)
+  personalizationFactors Json?
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, recommendationType])
+  @@index([companyId])
+  @@map("recommendation_configs")
+}

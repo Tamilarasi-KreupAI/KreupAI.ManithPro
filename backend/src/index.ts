@@ -38,6 +38,7 @@ import batch19AIKnowledgeBaseRoutes from './routes/batch19AIKnowledgeBase.routes
 import batch20VideoInterviewRoutes from './routes/batch20VideoInterview.routes';
 import batch21SemanticMatchingRoutes from './routes/batch21SemanticMatching.routes';
 import batch22PredictiveAnalyticsRoutes from './routes/batch22PredictiveAnalytics.routes';
+import batch23SmartRecommendationsRoutes from './routes/batch23SmartRecommendations.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -102,6 +103,7 @@ app.get('/', (req, res) => {
       batch20VideoInterview: '/api/video',
       batch21SemanticMatching: '/api/matching',
       batch22PredictiveAnalytics: '/api/predictions',
+      batch23SmartRecommendations: '/api/recommendations',
     },
   });
 });
@@ -141,6 +143,7 @@ app.use('/api/knowledge-base', batch19AIKnowledgeBaseRoutes);
 app.use('/api/video', batch20VideoInterviewRoutes);
 app.use('/api/matching', batch21SemanticMatchingRoutes);
 app.use('/api/predictions', batch22PredictiveAnalyticsRoutes);
+app.use('/api/recommendations', batch23SmartRecommendationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -27,3 +27,6 @@ export { default as SemanticMatchingHub } from './SemanticMatchingHub';
 
 // Recruiter Components - Batch 22: Predictive Analytics
 export { default as PredictiveAnalyticsHub } from './PredictiveAnalyticsHub';
+
+// Recruiter Components - Batch 23: Smart Recommendations
+export { default as SmartRecommendationsHub } from './SmartRecommendationsHub';
