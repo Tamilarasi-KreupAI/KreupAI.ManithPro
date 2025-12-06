@@ -12195,3 +12195,606 @@ export interface MessageSearchResult extends Message {
   conversation?: Conversation;
   highlightedContent?: string;
 }
+
+// ============================================================================
+// BATCH 27: AUTHENTICATION & ACCESS (8.1.1-8.1.11)
+// ============================================================================
+
+// 8.1.1 Two-Factor Authentication
+export type TwoFactorMethod = 'TOTP' | 'SMS' | 'EMAIL' | 'BACKUP_CODES';
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  method: TwoFactorMethod | null;
+  verifiedAt?: string;
+  methods: {
+    totp: boolean;
+    sms: boolean;
+    email: boolean;
+  };
+  backupCodes: {
+    used: number;
+    generatedAt?: string;
+  };
+  recovery: {
+    email: string | null;
+    phone: string | null;
+  };
+}
+
+export interface TwoFactorSetupResponse {
+  message: string;
+  method: TwoFactorMethod;
+  qrCode?: string;
+  requiresVerification: boolean;
+}
+
+export interface BackupCodesResponse {
+  message: string;
+  codes: string[];
+  warning: string;
+}
+
+// 8.1.2, 8.1.3 SSO Integration
+export type SSOProviderType = 'SAML' | 'OAUTH2' | 'OIDC';
+export type SSOProviderName = 'google' | 'microsoft' | 'okta' | 'custom';
+
+export interface SSOProvider {
+  id: string;
+  organizationId?: string;
+  name: string;
+  type: SSOProviderType;
+  provider?: SSOProviderName;
+  isEnabled: boolean;
+  isDefault: boolean;
+
+  // SAML config
+  samlEntityId?: string;
+  samlSsoUrl?: string;
+  samlCertificate?: string;
+  samlLogoutUrl?: string;
+  samlNameIdFormat?: string;
+
+  // OAuth2/OIDC config
+  clientId?: string;
+  clientSecret?: string;
+  authorizationUrl?: string;
+  tokenUrl?: string;
+  userInfoUrl?: string;
+  scopes?: string[];
+  callbackUrl?: string;
+
+  // Provider-specific
+  tenantId?: string;
+  oktaDomain?: string;
+
+  // Settings
+  attributeMapping?: Record<string, string>;
+  allowedDomains?: string[];
+  autoCreateUsers?: boolean;
+  defaultRole?: string;
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SSOSession {
+  id: string;
+  userId: string;
+  providerId: string;
+  ssoSessionId?: string;
+  isActive: boolean;
+  lastUsedAt: string;
+  createdAt: string;
+}
+
+export interface SSOLoginResponse {
+  redirectUrl: string;
+  provider: string;
+  type: SSOProviderType;
+}
+
+// 8.1.4 Password Policies
+export interface PasswordPolicy {
+  id?: string;
+  organizationId?: string;
+
+  // Complexity
+  minLength: number;
+  maxLength: number;
+  requireUppercase: boolean;
+  requireLowercase: boolean;
+  requireNumbers: boolean;
+  requireSpecialChars: boolean;
+  specialCharsAllowed?: string;
+
+  // History & Rotation
+  passwordHistoryCount: number;
+  maxPasswordAgeDays: number;
+  minPasswordAgeDays: number;
+  warnBeforeExpireDays: number;
+
+  // Lockout
+  maxFailedAttempts: number;
+  lockoutDurationMins: number;
+  resetCounterAfterMins: number;
+
+  // Additional
+  preventCommonPasswords: boolean;
+  preventUserInfoInPwd: boolean;
+
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type PasswordStrength = 'weak' | 'fair' | 'strong' | 'very_strong';
+
+export interface PasswordValidationResult {
+  isValid: boolean;
+  errors: string[];
+  strength: PasswordStrength;
+}
+
+// 8.1.5 Session Management
+export interface UserSession {
+  id: string;
+  userId: string;
+  sessionToken: string;
+
+  // Device info
+  deviceId?: string;
+  deviceType?: string;
+  deviceName?: string;
+  browser?: string;
+  browserVersion?: string;
+  operatingSystem?: string;
+  osVersion?: string;
+
+  // Location
+  ipAddress?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Status
+  isActive: boolean;
+  isCurrent?: boolean;
+  lastActivityAt: string;
+  expiresAt: string;
+  terminatedAt?: string;
+  terminatedReason?: string;
+
+  // Security
+  isTrusted: boolean;
+  riskScore: number;
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SessionSettings {
+  id?: string;
+  userId?: string;
+  organizationId?: string;
+
+  sessionTimeoutMins: number;
+  idleTimeoutMins: number;
+  absoluteTimeoutHours: number;
+
+  maxConcurrentSessions: number;
+  singleSessionOnly: boolean;
+  terminateOldest: boolean;
+
+  allowRememberMe: boolean;
+  rememberMeDays: number;
+
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 8.1.6 IP Whitelisting
+export type IPEnforcementMode = 'BLOCK' | 'WARN' | 'LOG';
+
+export interface IPWhitelist {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  ipAddress?: string;
+  ipRangeStart?: string;
+  ipRangeEnd?: string;
+  cidrBlock?: string;
+
+  appliesToAll: boolean;
+  appliesToRoles?: string[];
+  appliesToUsers?: string[];
+
+  isEnabled: boolean;
+  enforcementMode: IPEnforcementMode;
+
+  activeStartTime?: string;
+  activeEndTime?: string;
+  activeDays?: string[];
+
+  createdBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface IPAccessCheckResult {
+  allowed: boolean;
+  matchedRule?: string;
+  reason?: string;
+  enforcementMode?: IPEnforcementMode;
+}
+
+// 8.1.7 Trusted Devices
+export type DeviceTrustLevel = 'STANDARD' | 'HIGH' | 'ALWAYS';
+
+export interface TrustedDevice {
+  id: string;
+  userId: string;
+
+  deviceFingerprint: string;
+  deviceId?: string;
+
+  deviceName?: string;
+  deviceType: string;
+  browser?: string;
+  browserVersion?: string;
+  operatingSystem?: string;
+  osVersion?: string;
+
+  isTrusted: boolean;
+  trustLevel: DeviceTrustLevel;
+  verificationMethod?: string;
+
+  lastUsedAt: string;
+  lastIpAddress?: string;
+  lastLocation?: string;
+
+  expiresAt?: string;
+  autoRenew: boolean;
+
+  createdAt: string;
+  updatedAt?: string;
+  revokedAt?: string;
+  revokedReason?: string;
+}
+
+// 8.1.8 Login Anomaly Detection
+export type AnomalyType = 'new_location' | 'new_device' | 'impossible_travel' | 'brute_force_suspected';
+export type AnomalyAction = 'BLOCK' | 'CHALLENGE' | 'WARN' | 'LOG';
+
+export interface LoginAttempt {
+  id: string;
+  userId?: string;
+  email: string;
+  success: boolean;
+  failureReason?: string;
+
+  ipAddress: string;
+  userAgent?: string;
+  deviceFingerprint?: string;
+
+  country?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+
+  riskScore: number;
+  riskFactors?: string[];
+  isAnomaly: boolean;
+  anomalyType?: AnomalyType;
+  actionTaken?: string;
+
+  createdAt: string;
+}
+
+export interface LoginAnomalyConfig {
+  id?: string;
+  organizationId?: string;
+
+  enableAnomalyDetection: boolean;
+  enableImpossibleTravel: boolean;
+  enableNewLocationAlert: boolean;
+  enableNewDeviceAlert: boolean;
+  enableBruteForceDetect: boolean;
+
+  maxTravelSpeedKmh: number;
+  suspiciousCountryList?: string[];
+  blockedCountryList?: string[];
+
+  anomalyAction: AnomalyAction;
+  alertAdmins: boolean;
+  alertUser: boolean;
+
+  modelSensitivity: 'LOW' | 'MEDIUM' | 'HIGH';
+  learningPeriodDays: number;
+
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LoginAttemptResult {
+  id: string;
+  riskScore: number;
+  isAnomaly: boolean;
+  anomalyType?: AnomalyType;
+  actionRequired?: string;
+}
+
+// 8.1.9 API Key Management
+export interface APIKey {
+  id: string;
+  userId: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  keyPrefix: string;
+  lastFourChars: string;
+
+  scopes?: string[];
+  allowedEndpoints?: string[];
+  allowedIPs?: string[];
+
+  rateLimit: number;
+  rateLimitWindow: number;
+
+  isActive: boolean;
+  expiresAt?: string;
+
+  lastUsedAt?: string;
+  lastUsedIP?: string;
+  totalRequests: number;
+
+  createdAt: string;
+  updatedAt?: string;
+  revokedAt?: string;
+  revokedBy?: string;
+  revokedReason?: string;
+}
+
+export interface APIKeyCreateResponse {
+  id: string;
+  name: string;
+  key: string;
+  keyPrefix: string;
+  lastFourChars: string;
+  scopes?: string[];
+  expiresAt?: string;
+  warning: string;
+}
+
+export interface APIKeyUsageLog {
+  id: string;
+  apiKeyId: string;
+  endpoint: string;
+  method: string;
+  statusCode: number;
+  responseTimeMs: number;
+  ipAddress: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export interface APIKeyUsageStats {
+  endpoint: string;
+  _count: number;
+  _avg: { responseTimeMs: number };
+}
+
+// 8.1.10 Role-Based Access Control (RBAC)
+export interface RBACRole {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  displayName: string;
+  description?: string;
+
+  level: number;
+  parentRoleId?: string;
+
+  isSystem: boolean;
+  isActive: boolean;
+
+  permissions?: RolePermission[];
+  _count?: { userRoles: number };
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  category: string;
+  resource: string;
+  action: string;
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type GrantType = 'ALLOW' | 'DENY';
+
+export interface RolePermission {
+  id: string;
+  roleId: string;
+  permissionId: string;
+  grantType: GrantType;
+  conditions?: Record<string, any>;
+  permission?: Permission;
+  createdAt: string;
+}
+
+export interface UserRoleAssignment {
+  id: string;
+  userId: string;
+  roleId: string;
+  organizationId?: string;
+  departmentId?: string;
+  startsAt: string;
+  expiresAt?: string;
+  assignedBy?: string;
+  role?: RBACRole;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UserPermissionOverride {
+  id: string;
+  userId: string;
+  permissionId: string;
+  grantType: GrantType;
+  organizationId?: string;
+  resourceId?: string;
+  expiresAt?: string;
+  reason?: string;
+  grantedBy?: string;
+  permission?: Permission;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PermissionCheckResult {
+  allowed: boolean;
+  source: 'user_override' | 'role' | null;
+}
+
+// 8.1.11 Attribute-Based Access Control (ABAC)
+export type ABACEffect = 'ALLOW' | 'DENY';
+export type ABACConditionOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains' | 'between';
+
+export interface ABACCondition {
+  attribute: string;
+  operator: ABACConditionOperator;
+  value: any;
+}
+
+export interface ABACConditionGroup {
+  all?: (ABACCondition | ABACConditionGroup)[];
+  any?: (ABACCondition | ABACConditionGroup)[];
+  none?: (ABACCondition | ABACConditionGroup)[];
+}
+
+export interface ABACPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  priority: number;
+
+  targetResource: string;
+  targetAction?: string;
+
+  conditions: ABACConditionGroup | ABACCondition;
+  effect: ABACEffect;
+
+  isEnabled: boolean;
+
+  createdBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type ABACAttributeCategory = 'user' | 'resource' | 'environment' | 'context';
+export type ABACAttributeDataType = 'string' | 'number' | 'boolean' | 'array' | 'date';
+
+export interface ABACAttribute {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+
+  category: ABACAttributeCategory;
+  dataType: ABACAttributeDataType;
+
+  source: string;
+  sourcePath?: string;
+
+  allowedValues?: any[];
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ABACEvaluationResult {
+  allowed: boolean;
+  matchedPolicy?: string;
+  effect?: ABACEffect;
+  reason?: string;
+}
+
+// Security Audit Log
+export type SecurityEventType =
+  | 'login'
+  | 'logout'
+  | 'password_change'
+  | '2fa_enable'
+  | '2fa_disable'
+  | 'api_key_create'
+  | 'api_key_revoke'
+  | 'role_assign'
+  | 'role_revoke'
+  | 'permission_change';
+
+export type SecurityEventCategory = 'authentication' | 'authorization' | 'configuration';
+export type SecurityRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface SecurityAuditLog {
+  id: string;
+  userId?: string;
+
+  eventType: SecurityEventType;
+  eventCategory: SecurityEventCategory;
+  eventAction: string;
+
+  description: string;
+  details?: Record<string, any>;
+
+  targetType?: string;
+  targetId?: string;
+
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+
+  riskLevel: SecurityRiskLevel;
+
+  createdAt: string;
+}
+
+// Security Stats
+export interface SecurityStats {
+  twoFactorAuth: {
+    enabledUsers: number;
+  };
+  sessions: {
+    active: number;
+  };
+  loginAttempts: {
+    last24h: number;
+    anomalies24h: number;
+  };
+  apiKeys: {
+    active: number;
+  };
+  rbac: {
+    roles: number;
+    permissions: number;
+  };
+  auditLogs: {
+    highRiskLast7d: number;
+  };
+}

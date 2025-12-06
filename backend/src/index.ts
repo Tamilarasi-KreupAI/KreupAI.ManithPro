@@ -42,6 +42,7 @@ import batch23SmartRecommendationsRoutes from './routes/batch23SmartRecommendati
 import batch24HiringTeamManagementRoutes from './routes/batch24HiringTeamManagement.routes';
 import batch25CollaborativeEvaluationRoutes from './routes/batch25CollaborativeEvaluation.routes';
 import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunication.routes';
+import batch27AuthenticationAccessRoutes from './routes/batch27AuthenticationAccess.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -110,6 +111,7 @@ app.get('/', (req, res) => {
       batch24HiringTeamManagement: '/api/hiring-teams',
       batch25CollaborativeEvaluation: '/api/evaluation',
       batch26RealtimeCommunication: '/api/realtime',
+      batch27AuthenticationAccess: '/api/security',
     },
   });
 });
@@ -153,6 +155,7 @@ app.use('/api/recommendations', batch23SmartRecommendationsRoutes);
 app.use('/api/hiring-teams', batch24HiringTeamManagementRoutes);
 app.use('/api/evaluation', batch25CollaborativeEvaluationRoutes);
 app.use('/api/realtime', batch26RealtimeCommunicationRoutes);
+app.use('/api/security', batch27AuthenticationAccessRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

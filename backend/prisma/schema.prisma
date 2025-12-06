@@ -12541,3 +12541,739 @@ model TypingIndicator {
   @@index([expiresAt])
   @@map("typing_indicators")
 }
+
+// ============================================================================
+// BATCH 27: AUTHENTICATION & ACCESS (8.1.1-8.1.11)
+// ============================================================================
+
+// 8.1.1 Two-Factor Authentication
+model TwoFactorAuth {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // 2FA Status
+  enabled               Boolean             @default(false)
+  method                String              @default("TOTP") // TOTP, SMS, EMAIL, BACKUP_CODES
+  verifiedAt            DateTime?
+
+  // TOTP Settings
+  totpSecret            String?             // Encrypted TOTP secret
+  totpVerified          Boolean             @default(false)
+
+  // SMS Settings
+  phoneNumber           String?
+  phoneVerified         Boolean             @default(false)
+
+  // Email Settings
+  emailVerified         Boolean             @default(false)
+
+  // Backup Codes
+  backupCodes           Json?               // Array of hashed backup codes
+  backupCodesUsed       Int                 @default(0)
+  backupCodesGenerated  DateTime?
+
+  // Recovery
+  recoveryEmail         String?
+  recoveryPhone         String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("two_factor_auth")
+}
+
+// 8.1.2, 8.1.3 SSO Provider Configuration
+model SSOProvider {
+  id                    String              @id @default(uuid())
+  organizationId        String?             // Optional, for org-specific SSO
+
+  // Provider Info
+  name                  String              // Display name
+  type                  String              // SAML, OAUTH2, OIDC
+  isEnabled             Boolean             @default(true)
+  isDefault             Boolean             @default(false)
+
+  // SAML Configuration
+  samlEntityId          String?
+  samlSsoUrl            String?
+  samlCertificate       String?             // Public certificate
+  samlLogoutUrl         String?
+  samlNameIdFormat      String?             @default("email")
+
+  // OAuth2/OIDC Configuration
+  clientId              String?
+  clientSecret          String?             // Encrypted
+  authorizationUrl      String?
+  tokenUrl              String?
+  userInfoUrl           String?
+  scopes                String[]            @default([])
+  callbackUrl           String?
+
+  // Provider-specific (Google, Microsoft, Okta)
+  provider              String?             // google, microsoft, okta, custom
+  tenantId              String?             // For Microsoft Azure AD
+  oktaDomain            String?             // For Okta
+
+  // Attribute Mapping
+  attributeMapping      Json?               // Map SSO attributes to user fields
+
+  // Domain restrictions
+  allowedDomains        String[]            @default([])
+
+  // Auto-provisioning
+  autoCreateUsers       Boolean             @default(false)
+  defaultRole           String              @default("CANDIDATE")
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  sessions              SSOSession[]
+
+  @@index([organizationId])
+  @@index([type])
+  @@map("sso_providers")
+}
+
+// SSO Session Tracking
+model SSOSession {
+  id                    String              @id @default(uuid())
+  userId                String
+  providerId            String
+
+  // Session Info
+  ssoSessionId          String?             // Provider's session ID
+  accessToken           String?             // Encrypted
+  refreshToken          String?             // Encrypted
+  idToken               String?             // Encrypted
+
+  // Token expiry
+  accessTokenExpiry     DateTime?
+  refreshTokenExpiry    DateTime?
+
+  // Status
+  isActive              Boolean             @default(true)
+  revokedAt             DateTime?
+  revokedReason         String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  lastUsedAt            DateTime            @default(now())
+
+  // Relations
+  provider              SSOProvider         @relation(fields: [providerId], references: [id])
+
+  @@index([userId])
+  @@index([providerId])
+  @@index([ssoSessionId])
+  @@map("sso_sessions")
+}
+
+// 8.1.4 Password Policy Configuration
+model PasswordPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique // null for global policy
+
+  // Complexity Requirements
+  minLength             Int                 @default(8)
+  maxLength             Int                 @default(128)
+  requireUppercase      Boolean             @default(true)
+  requireLowercase      Boolean             @default(true)
+  requireNumbers        Boolean             @default(true)
+  requireSpecialChars   Boolean             @default(true)
+  specialCharsAllowed   String              @default("!@#$%^&*()_+-=[]{}|;:,.<>?")
+
+  // History & Rotation
+  passwordHistoryCount  Int                 @default(5) // Prevent reuse of last N passwords
+  maxPasswordAgeDays    Int                 @default(90) // Force rotation after N days
+  minPasswordAgeDays    Int                 @default(1) // Prevent immediate re-change
+  warnBeforeExpireDays  Int                 @default(14)
+
+  // Lockout
+  maxFailedAttempts     Int                 @default(5)
+  lockoutDurationMins   Int                 @default(30)
+  resetCounterAfterMins Int                 @default(60)
+
+  // Additional Rules
+  preventCommonPasswords Boolean            @default(true)
+  preventUserInfoInPwd  Boolean             @default(true) // No name/email in password
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@map("password_policies")
+}
+
+// Password History for preventing reuse
+model PasswordHistory {
+  id                    String              @id @default(uuid())
+  userId                String
+  passwordHash          String              // Hashed password
+
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@map("password_history")
+}
+
+// 8.1.5 Session Management
+model UserSession {
+  id                    String              @id @default(uuid())
+  userId                String
+  sessionToken          String              @unique
+
+  // Device Info
+  deviceId              String?
+  deviceType            String?             // desktop, mobile, tablet
+  deviceName            String?
+  browser               String?
+  browserVersion        String?
+  operatingSystem       String?
+  osVersion             String?
+
+  // Location
+  ipAddress             String?
+  country               String?
+  region                String?
+  city                  String?
+  latitude              Float?
+  longitude             Float?
+
+  // Status
+  isActive              Boolean             @default(true)
+  lastActivityAt        DateTime            @default(now())
+  expiresAt             DateTime
+  terminatedAt          DateTime?
+  terminatedReason      String?             // logout, timeout, forced, security
+
+  // Security
+  isTrusted             Boolean             @default(false)
+  riskScore             Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+// Session Settings per user/org
+model SessionSettings {
+  id                    String              @id @default(uuid())
+  userId                String?             @unique // User-specific settings
+  organizationId        String?             @unique // Org-wide settings
+
+  // Timeout settings
+  sessionTimeoutMins    Int                 @default(30)
+  idleTimeoutMins       Int                 @default(15)
+  absoluteTimeoutHours  Int                 @default(24)
+
+  // Concurrent sessions
+  maxConcurrentSessions Int                 @default(5)
+  singleSessionOnly     Boolean             @default(false)
+  terminateOldest       Boolean             @default(true) // When limit reached
+
+  // Remember me
+  allowRememberMe       Boolean             @default(true)
+  rememberMeDays        Int                 @default(30)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("session_settings")
+}
+
+// 8.1.6 IP Whitelisting
+model IPWhitelist {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // IP Configuration
+  name                  String
+  description           String?
+  ipAddress             String?             // Single IP
+  ipRangeStart          String?             // Range start
+  ipRangeEnd            String?             // Range end
+  cidrBlock             String?             // CIDR notation (e.g., 192.168.1.0/24)
+
+  // Scope
+  appliesToAll          Boolean             @default(true)
+  appliesToRoles        String[]            @default([])
+  appliesToUsers        String[]            @default([])
+
+  // Status
+  isEnabled             Boolean             @default(true)
+  enforcementMode       String              @default("BLOCK") // BLOCK, WARN, LOG
+
+  // Time-based restrictions
+  activeStartTime       String?             // HH:MM format
+  activeEndTime         String?
+  activeDays            String[]            @default([]) // MON, TUE, etc.
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([isEnabled])
+  @@map("ip_whitelists")
+}
+
+// 8.1.7 Trusted Devices
+model TrustedDevice {
+  id                    String              @id @default(uuid())
+  userId                String
+
+  // Device Fingerprint
+  deviceFingerprint     String              // Hashed device fingerprint
+  deviceId              String?             // Optional persistent ID
+
+  // Device Info
+  deviceName            String?
+  deviceType            String              // desktop, mobile, tablet
+  browser               String?
+  browserVersion        String?
+  operatingSystem       String?
+  osVersion             String?
+
+  // Trust Status
+  isTrusted             Boolean             @default(true)
+  trustLevel            String              @default("STANDARD") // STANDARD, HIGH, ALWAYS
+  verificationMethod    String?             // 2fa, email, sms
+
+  // Last seen
+  lastUsedAt            DateTime            @default(now())
+  lastIpAddress         String?
+  lastLocation          String?
+
+  // Expiry
+  expiresAt             DateTime?           // null = never expires
+  autoRenew             Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  revokedAt             DateTime?
+  revokedReason         String?
+
+  @@unique([userId, deviceFingerprint])
+  @@index([userId])
+  @@index([isTrusted])
+  @@map("trusted_devices")
+}
+
+// 8.1.8 Login Attempts for Anomaly Detection
+model LoginAttempt {
+  id                    String              @id @default(uuid())
+  userId                String?             // null if user not found
+
+  // Attempt details
+  email                 String
+  success               Boolean
+  failureReason         String?             // invalid_password, account_locked, 2fa_failed, etc.
+
+  // Client info
+  ipAddress             String
+  userAgent             String?
+  deviceFingerprint     String?
+
+  // Location
+  country               String?
+  region                String?
+  city                  String?
+  latitude              Float?
+  longitude             Float?
+
+  // Risk assessment
+  riskScore             Int                 @default(0)
+  riskFactors           Json?               // Array of detected risk factors
+  isAnomaly             Boolean             @default(false)
+  anomalyType           String?             // new_location, new_device, impossible_travel, etc.
+
+  // Action taken
+  actionTaken           String?             // allowed, blocked, challenged
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@index([isAnomaly])
+  @@map("login_attempts")
+}
+
+// Login Anomaly Configuration
+model LoginAnomalyConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique
+
+  // Detection settings
+  enableAnomalyDetection Boolean            @default(true)
+  enableImpossibleTravel Boolean            @default(true)
+  enableNewLocationAlert Boolean            @default(true)
+  enableNewDeviceAlert   Boolean            @default(true)
+  enableBruteForceDetect Boolean            @default(true)
+
+  // Thresholds
+  maxTravelSpeedKmh     Int                 @default(1000) // For impossible travel
+  suspiciousCountryList String[]            @default([])
+  blockedCountryList    String[]            @default([])
+
+  // Action configuration
+  anomalyAction         String              @default("CHALLENGE") // BLOCK, CHALLENGE, WARN, LOG
+  alertAdmins           Boolean             @default(true)
+  alertUser             Boolean             @default(true)
+
+  // ML model settings
+  modelSensitivity      String              @default("MEDIUM") // LOW, MEDIUM, HIGH
+  learningPeriodDays    Int                 @default(30)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("login_anomaly_configs")
+}
+
+// 8.1.9 API Key Management
+model APIKey {
+  id                    String              @id @default(uuid())
+  userId                String
+  organizationId        String?
+
+  // Key info
+  name                  String
+  description           String?
+  keyPrefix             String              // First few chars for identification
+  keyHash               String              // Hashed full key
+  lastFourChars         String              // Last 4 chars for display
+
+  // Permissions
+  scopes                String[]            @default([]) // read:jobs, write:applications, etc.
+  allowedEndpoints      String[]            @default([]) // Specific endpoint restrictions
+  allowedIPs            String[]            @default([]) // IP restrictions
+
+  // Rate limiting
+  rateLimit             Int                 @default(1000) // Requests per hour
+  rateLimitWindow       Int                 @default(3600) // Window in seconds
+
+  // Status
+  isActive              Boolean             @default(true)
+  expiresAt             DateTime?
+
+  // Usage tracking
+  lastUsedAt            DateTime?
+  lastUsedIP            String?
+  totalRequests         Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  revokedAt             DateTime?
+  revokedBy             String?
+  revokedReason         String?
+
+  // Relations
+  usageLogs             APIKeyUsageLog[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+// API Key Usage Logs
+model APIKeyUsageLog {
+  id                    String              @id @default(uuid())
+  apiKeyId              String
+
+  // Request info
+  endpoint              String
+  method                String
+  statusCode            Int
+  responseTimeMs        Int
+
+  // Client info
+  ipAddress             String
+  userAgent             String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  apiKey                APIKey              @relation(fields: [apiKeyId], references: [id])
+
+  @@index([apiKeyId])
+  @@index([createdAt])
+  @@map("api_key_usage_logs")
+}
+
+// 8.1.10 Role-Based Access Control (RBAC)
+model Role {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Role info
+  name                  String
+  displayName           String
+  description           String?
+
+  // Hierarchy
+  level                 Int                 @default(0) // Higher = more permissions
+  parentRoleId          String?             // For role inheritance
+
+  // Status
+  isSystem              Boolean             @default(false) // Built-in roles
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  permissions           RolePermission[]
+  userRoles             UserRole[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("roles")
+}
+
+// Permission definitions
+model Permission {
+  id                    String              @id @default(uuid())
+
+  // Permission info
+  name                  String              @unique // e.g., jobs:create, applications:read
+  displayName           String
+  description           String?
+  category              String              // jobs, applications, users, admin, etc.
+
+  // Resource info
+  resource              String              // jobs, applications, users, etc.
+  action                String              // create, read, update, delete, manage
+
+  // Status
+  isSystem              Boolean             @default(false)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  rolePermissions       RolePermission[]
+  userOverrides         UserPermissionOverride[]
+
+  @@index([category])
+  @@index([resource])
+  @@map("permissions")
+}
+
+// Role-Permission mapping
+model RolePermission {
+  id                    String              @id @default(uuid())
+  roleId                String
+  permissionId          String
+
+  // Grant type
+  grantType             String              @default("ALLOW") // ALLOW, DENY
+
+  // Conditions
+  conditions            Json?               // Additional conditions for this permission
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  role                  Role                @relation(fields: [roleId], references: [id])
+  permission            Permission          @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// User Role assignments
+model UserRole {
+  id                    String              @id @default(uuid())
+  userId                String
+  roleId                String
+
+  // Scope
+  organizationId        String?
+  departmentId          String?
+
+  // Time-bound access
+  startsAt              DateTime            @default(now())
+  expiresAt             DateTime?
+
+  // Metadata
+  assignedBy            String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  role                  Role                @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId, organizationId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// User-level permission overrides
+model UserPermissionOverride {
+  id                    String              @id @default(uuid())
+  userId                String
+  permissionId          String
+
+  // Override type
+  grantType             String              // ALLOW, DENY
+
+  // Scope
+  organizationId        String?
+  resourceId            String?             // Specific resource ID
+
+  // Time-bound
+  expiresAt             DateTime?
+
+  // Metadata
+  reason                String?
+  grantedBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  permission            Permission          @relation(fields: [permissionId], references: [id])
+
+  @@unique([userId, permissionId, organizationId, resourceId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permission_overrides")
+}
+
+// 8.1.11 Attribute-Based Access Control (ABAC)
+model ABACPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Policy info
+  name                  String
+  description           String?
+  priority              Int                 @default(0) // Higher = evaluated first
+
+  // Target
+  targetResource        String              // jobs, applications, users, etc.
+  targetAction          String?             // create, read, update, delete, * for all
+
+  // Conditions (evaluated at runtime)
+  conditions            Json                // Complex condition tree
+  /*
+    Example conditions:
+    {
+      "all": [
+        { "attribute": "user.role", "operator": "eq", "value": "RECRUITER" },
+        { "attribute": "resource.department", "operator": "eq", "value": "${user.department}" },
+        { "attribute": "time.hour", "operator": "between", "value": [9, 17] }
+      ]
+    }
+  */
+
+  // Effect
+  effect                String              @default("ALLOW") // ALLOW, DENY
+
+  // Status
+  isEnabled             Boolean             @default(true)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([targetResource])
+  @@index([isEnabled])
+  @@map("abac_policies")
+}
+
+// ABAC Attribute Definitions
+model ABACAttribute {
+  id                    String              @id @default(uuid())
+
+  // Attribute info
+  name                  String              @unique // user.department, resource.owner, etc.
+  displayName           String
+  description           String?
+
+  // Type info
+  category              String              // user, resource, environment, context
+  dataType              String              // string, number, boolean, array, date
+
+  // Source
+  source                String              // database, jwt, header, computed
+  sourcePath            String?             // Path to extract value (e.g., jwt.claims.department)
+
+  // Validation
+  allowedValues         Json?               // For enum-like attributes
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([category])
+  @@map("abac_attributes")
+}
+
+// Security Audit Log
+model SecurityAuditLog {
+  id                    String              @id @default(uuid())
+  userId                String?
+
+  // Event info
+  eventType             String              // login, logout, password_change, 2fa_enable, etc.
+  eventCategory         String              // authentication, authorization, configuration
+  eventAction           String              // success, failure, attempt
+
+  // Details
+  description           String
+  details               Json?               // Additional event-specific details
+
+  // Target
+  targetType            String?             // user, role, permission, policy
+  targetId              String?
+
+  // Client info
+  ipAddress             String?
+  userAgent             String?
+  sessionId             String?
+
+  // Risk
+  riskLevel             String              @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([eventCategory])
+  @@index([createdAt])
+  @@index([riskLevel])
+  @@map("security_audit_logs")
+}

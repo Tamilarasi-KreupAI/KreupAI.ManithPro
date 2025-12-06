@@ -39,3 +39,6 @@ export { default as CollaborativeEvaluationHub } from './CollaborativeEvaluation
 
 // Recruiter Components - Batch 26: Real-Time Communication
 export { default as RealtimeCommunicationHub } from './RealtimeCommunicationHub';
+
+// Recruiter Components - Batch 27: Security & Access Control
+export { default as SecuritySettingsHub } from './SecuritySettingsHub';
