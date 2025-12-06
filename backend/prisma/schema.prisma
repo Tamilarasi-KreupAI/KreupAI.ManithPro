@@ -104,6 +104,14 @@ model User {
   notifications        Notification[]
   candidateProfile     CandidateProfile?
 
+  // Batch 13: AI Content for Candidates
+  profileEnhancements    ProfileEnhancement[]
+  experienceDescriptions ExperienceDescription[]
+  skillsGapAnalyses      SkillsGapAnalysis[]
+  coverLetters           CoverLetter[]
+  interviewPreps         InterviewPrep[]
+  salaryNegotiationAdvice SalaryNegotiationAdvice[]
+
   @@map("users")
 }
 
@@ -5627,4 +5635,350 @@ model CompetitorJobAnalysis {
   @@index([companyId])
   @@index([jobId])
   @@map("competitor_job_analyses")
+}
+
+// ==========================================
+// BATCH 13: AI Content Generation for Candidates (2.3.1-2.3.6)
+// ==========================================
+
+// 2.3.1 - AI Profile Enhancer
+model ProfileEnhancement {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Analysis
+  profileSection        String              // SUMMARY, EXPERIENCE, SKILLS, EDUCATION, PROJECTS
+  currentContent        String              @db.Text
+  analysisResults       Json                // Detailed analysis of current content
+
+  // Suggestions
+  suggestions           Json                // Array of improvement suggestions
+  enhancedContent       String?             @db.Text // AI-enhanced version
+  keyImprovements       Json                // Main improvements made
+
+  // Scores
+  originalScore         Float               // Score before enhancement
+  potentialScore        Float               // Score after enhancement
+  improvementPercentage Float
+
+  // Categories of improvements
+  clarityImprovements   Json?               // Making content clearer
+  impactImprovements    Json?               // Adding impact/metrics
+  keywordImprovements   Json?               // SEO/ATS optimization
+  formattingImprovements Json?              // Structure and format
+
+  // Status
+  status                String              @default("GENERATED") // GENERATED, APPLIED, DISMISSED
+  appliedAt             DateTime?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([profileSection])
+  @@map("profile_enhancements")
+}
+
+// 2.3.2 - Experience Description Generator
+model ExperienceDescription {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Input
+  jobTitle              String
+  companyName           String
+  industry              String?
+  duration              String?             // e.g., "2 years 3 months"
+  responsibilities      Json?               // Bullet points provided by user
+  technologies          Json?               // Tech used in role
+  achievements          Json?               // Accomplishments mentioned
+
+  // Generated Content
+  generatedSummary      String              @db.Text // Role summary
+  generatedBullets      Json                // Array of bullet points
+  impactStatements      Json                // Quantified achievements
+  skillsHighlighted     Json                // Skills emphasized
+
+  // Variations
+  variations            Json?               // Different versions (concise, detailed, technical)
+  toneOptions           Json?               // Professional, casual, technical tones
+
+  // Optimization
+  atsKeywords           Json                // Keywords for ATS systems
+  industryTerms         Json?               // Industry-specific language
+  actionVerbs           Json                // Strong action verbs used
+
+  // Scores
+  impactScore           Float               // How impactful the description is
+  clarityScore          Float               // Readability
+  atsScore              Float               // ATS optimization score
+
+  // Status
+  status                String              @default("GENERATED") // GENERATED, APPLIED, DISMISSED
+  selectedVariation     String?             // Which variation was chosen
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("experience_descriptions")
+}
+
+// 2.3.3 - Skills Gap Identifier
+model SkillsGapAnalysis {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Target
+  targetJobId           String?
+  targetJobTitle        String
+  targetIndustry        String?
+  targetSeniority       String?
+
+  // Current Skills Analysis
+  currentSkills         Json                // Skills user currently has
+  skillLevels           Json                // Proficiency levels of current skills
+
+  // Gap Analysis
+  requiredSkills        Json                // Skills needed for target role
+  missingSkills         Json                // Skills user doesn't have
+  underDevelopedSkills  Json                // Skills that need improvement
+  transferableSkills    Json                // Existing skills that apply
+
+  // Priority
+  criticalGaps          Json                // Must-have skills missing
+  importantGaps         Json                // Should-have skills missing
+  niceToHaveGaps        Json                // Nice-to-have skills missing
+
+  // Recommendations
+  learningPath          Json                // Suggested order to learn skills
+  resourceRecommendations Json              // Courses, certifications, projects
+  timeEstimates         Json                // Time to acquire each skill
+  priorityRanking       Json                // Which skills to focus on first
+
+  // Market Context
+  marketDemand          Json?               // How in-demand each skill is
+  salaryImpact          Json?               // Potential salary increase per skill
+  competitorAnalysis    Json?               // How other candidates compare
+
+  // Scores
+  overallReadiness      Float               // 0-100, how ready for target role
+  technicalReadiness    Float?
+  softSkillReadiness    Float?
+  experienceAlignment   Float?
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+
+  // Metadata
+  modelVersion          String
+  analyzedAt            DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([targetJobId])
+  @@map("skills_gap_analyses")
+}
+
+// 2.3.4 - Cover Letter Generator
+model CoverLetter {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Target Job
+  jobId                 String?
+  jobTitle              String
+  companyName           String
+  companyDescription    String?             @db.Text
+  jobDescription        String?             @db.Text
+
+  // Personalization Input
+  whyInterested         String?             @db.Text // Why candidate wants this job
+  relevantExperience    Json?               // Key experiences to highlight
+  keyAchievements       Json?               // Achievements to mention
+  connectionToCompany   String?             @db.Text // Any personal connection
+
+  // Generated Content
+  opening               String              @db.Text // Opening paragraph
+  body                  String              @db.Text // Main body
+  closing               String              @db.Text // Closing paragraph
+  fullLetter            String              @db.Text // Complete letter
+
+  // Variations
+  toneVariations        Json?               // Formal, friendly, enthusiastic
+  lengthVariations      Json?               // Brief, standard, detailed
+  focusVariations       Json?               // Technical, leadership, creative
+
+  // Optimization
+  keywordsUsed          Json                // Keywords from job description
+  skillsHighlighted     Json                // Skills emphasized
+  achievementsMentioned Json                // Quantified achievements included
+
+  // Scores
+  relevanceScore        Float               // How relevant to job posting
+  persuasivenessScore   Float               // How compelling
+  professionalismScore  Float               // Tone appropriateness
+  atsScore              Float               // ATS optimization
+
+  // Status
+  status                String              @default("DRAFT") // DRAFT, FINALIZED, SENT
+  selectedTone          String?
+  selectedLength        String?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@map("cover_letters")
+}
+
+// 2.3.5 - Interview Prep Coach
+model InterviewPrep {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Target Job
+  jobId                 String?
+  jobTitle              String
+  companyName           String
+  interviewType         String              // PHONE, VIDEO, ONSITE, TECHNICAL, BEHAVIORAL
+
+  // Company Research
+  companyInfo           Json?               // Company background, culture, values
+  recentNews            Json?               // Recent company news
+  interviewerInfo       Json?               // Info about interviewers if available
+
+  // Generated Questions
+  commonQuestions       Json                // Frequently asked questions
+  technicalQuestions    Json?               // Role-specific technical questions
+  behavioralQuestions   Json                // STAR method questions
+  situationalQuestions  Json?               // Hypothetical scenarios
+  companySpecificQuestions Json?            // Questions about this company
+
+  // Answer Guidance
+  sampleAnswers         Json                // Example answers for key questions
+  answerFrameworks      Json                // STAR, CAR, PAR frameworks
+  keyPointsToMention    Json                // Important things to say
+  thingsToAvoid         Json                // What not to say
+
+  // Questions to Ask
+  questionsForInterviewer Json              // Good questions to ask
+  questionsToAvoid      Json                // Questions not to ask
+
+  // Preparation Tips
+  preparationChecklist  Json                // Things to do before interview
+  dayOfTips             Json                // Day-of advice
+  commonMistakes        Json                // Mistakes to avoid
+  bodyLanguageTips      Json?               // Non-verbal communication
+
+  // Practice Sessions
+  practiceHistory       Json?               // Past practice sessions
+  feedbackHistory       Json?               // Feedback on practice answers
+  improvementAreas      Json?               // Areas to work on
+
+  // Confidence Metrics
+  preparednessScore     Float?              // How prepared the candidate is
+  practiceSessionsCompleted Int             @default(0)
+  estimatedConfidence   Float?              // Confidence level
+
+  // Status
+  status                String              @default("PREPARING") // PREPARING, READY, COMPLETED
+  interviewDate         DateTime?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@map("interview_preps")
+}
+
+// 2.3.6 - Salary Negotiation Advisor
+model SalaryNegotiationAdvice {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id])
+
+  // Target Position
+  jobId                 String?
+  jobTitle              String
+  companyName           String?
+  location              String
+  industry              String?
+
+  // Current Situation
+  currentSalary         Float?
+  yearsExperience       Int
+  highestEducation      String?
+  relevantCertifications Json?
+  uniqueSkills          Json?
+
+  // Offer Details
+  offeredSalary         Float?
+  offeredBonus          Float?
+  offeredEquity         Json?
+  offeredBenefits       Json?
+
+  // Market Data
+  marketData            Json                // Salary ranges from market
+  percentilePosition    Float               // Where offer falls in market
+  marketTrend           String?             // RISING, STABLE, DECLINING
+  demandLevel           String?             // HIGH, MEDIUM, LOW
+
+  // Negotiation Strategy
+  targetSalary          Float               // Recommended target
+  minimumAcceptable     Float               // Walk-away number
+  anchorNumber          Float               // First counter-offer
+  negotiationRange      Json                // Min to max range
+
+  // Tactics
+  negotiationScript     Json                // What to say
+  counterArguments      Json                // Responses to pushback
+  timingAdvice          Json                // When to negotiate
+  leveragePoints        Json                // What leverage candidate has
+
+  // Non-Salary Items
+  alternativeAsk        Json                // If salary is fixed
+  benefitsNegotiation   Json                // Benefits to negotiate
+  signingBonusAdvice    Json?               // Signing bonus strategy
+  equityNegotiation     Json?               // Equity negotiation tips
+
+  // Risk Assessment
+  riskLevel             String              // LOW, MEDIUM, HIGH
+  offerRescindRisk      Float               // Risk of offer being pulled
+  marketAlternatives    Json?               // Other opportunities
+
+  // Outcome Tracking
+  finalSalary           Float?
+  finalBonus            Float?
+  finalEquity           Json?
+  negotiationOutcome    String?             // WON, PARTIAL, DECLINED, ACCEPTED_AS_IS
+  lessonsLearned        Json?
+
+  // Status
+  status                String              @default("ADVISING") // ADVISING, NEGOTIATING, COMPLETED
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@map("salary_negotiation_advice")
 }

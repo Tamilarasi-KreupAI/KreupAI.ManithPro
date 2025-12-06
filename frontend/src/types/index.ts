@@ -4955,3 +4955,448 @@ export interface CompetitiveInsight {
   area: string;
   detail: string;
 }
+
+// ==========================================
+// BATCH 13: AI Content Generation for Candidates (2.3.1-2.3.6)
+// ==========================================
+
+// 2.3.1 - AI Profile Enhancer
+export type ProfileSection = 'SUMMARY' | 'EXPERIENCE' | 'SKILLS' | 'EDUCATION' | 'PROJECTS';
+export type EnhancementStatus = 'GENERATED' | 'APPLIED' | 'DISMISSED';
+
+export interface ProfileEnhancementSuggestion {
+  type: string;
+  suggestion: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  example?: string;
+  keywords?: string[];
+}
+
+export interface ProfileEnhancementAnalysis {
+  wordCount: number;
+  sentenceCount: number;
+  hasMetrics: boolean;
+  hasActionVerbs: boolean;
+  readabilityScore: number;
+  toneAnalysis: string;
+}
+
+export interface ProfileEnhancement {
+  id: string;
+  userId: string;
+  profileSection: ProfileSection;
+  currentContent: string;
+  analysisResults: ProfileEnhancementAnalysis;
+  suggestions: ProfileEnhancementSuggestion[];
+  enhancedContent?: string;
+  keyImprovements: string[];
+  originalScore: number;
+  potentialScore: number;
+  improvementPercentage: number;
+  clarityImprovements?: string[];
+  impactImprovements?: string[];
+  keywordImprovements?: string[];
+  formattingImprovements?: string[];
+  status: EnhancementStatus;
+  appliedAt?: Date;
+  modelVersion: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2.3.2 - Experience Description Generator
+export interface ExperienceDescriptionVariations {
+  concise: string[];
+  detailed: string[];
+  technical: string[];
+}
+
+export interface ExperienceDescriptionTones {
+  professional: string;
+  casual: string;
+  technical: string;
+}
+
+export interface ImpactStatement {
+  metric: string;
+  category: string;
+}
+
+export interface ExperienceDescription {
+  id: string;
+  userId: string;
+  jobTitle: string;
+  companyName: string;
+  industry?: string;
+  duration?: string;
+  responsibilities?: string[];
+  technologies?: string[];
+  achievements?: string[];
+  generatedSummary: string;
+  generatedBullets: string[];
+  impactStatements: ImpactStatement[];
+  skillsHighlighted: string[];
+  variations?: ExperienceDescriptionVariations;
+  toneOptions?: ExperienceDescriptionTones;
+  atsKeywords: string[];
+  industryTerms?: string[];
+  actionVerbs: string[];
+  impactScore: number;
+  clarityScore: number;
+  atsScore: number;
+  status: EnhancementStatus;
+  selectedVariation?: string;
+  modelVersion: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2.3.3 - Skills Gap Identifier
+export interface SkillRequirement {
+  skill: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  category: 'TECHNICAL' | 'SOFT_SKILL';
+}
+
+export interface SkillGap {
+  skill: string;
+  currentLevel?: number;
+  requiredLevel: number;
+}
+
+export interface TransferableSkill {
+  skill: string;
+  transfersTo: string;
+  transferability: number;
+}
+
+export interface LearningPathStep {
+  step: number;
+  skill: string;
+  duration: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface ResourceRecommendation {
+  skill: string;
+  resource: string;
+  type: 'COURSE' | 'BOOK' | 'PROJECT' | 'CERTIFICATION';
+  url?: string;
+}
+
+export interface SkillMarketDemand {
+  demand: 'HIGH' | 'MEDIUM' | 'LOW';
+  growth: string;
+}
+
+export interface SkillsGapAnalysis {
+  id: string;
+  userId: string;
+  targetJobId?: string;
+  targetJobTitle: string;
+  targetIndustry?: string;
+  targetSeniority?: string;
+  currentSkills: string[];
+  skillLevels: Record<string, number>;
+  requiredSkills: SkillRequirement[];
+  missingSkills: SkillRequirement[];
+  underDevelopedSkills: SkillGap[];
+  transferableSkills: TransferableSkill[];
+  criticalGaps: SkillRequirement[];
+  importantGaps: SkillRequirement[];
+  niceToHaveGaps: SkillRequirement[];
+  learningPath: LearningPathStep[];
+  resourceRecommendations: ResourceRecommendation[];
+  timeEstimates: Record<string, string>;
+  priorityRanking: string[];
+  marketDemand?: Record<string, SkillMarketDemand>;
+  salaryImpact?: Record<string, string>;
+  competitorAnalysis?: Record<string, unknown>;
+  overallReadiness: number;
+  technicalReadiness?: number;
+  softSkillReadiness?: number;
+  experienceAlignment?: number;
+  status: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+  modelVersion: string;
+  analyzedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2.3.4 - Cover Letter Generator
+export interface CoverLetterVariations {
+  formal: string;
+  friendly: string;
+  enthusiastic: string;
+}
+
+export interface CoverLetterLengthVariations {
+  brief: string;
+  standard: string;
+  detailed: string;
+}
+
+export interface CoverLetter {
+  id: string;
+  userId: string;
+  jobId?: string;
+  jobTitle: string;
+  companyName: string;
+  companyDescription?: string;
+  jobDescription?: string;
+  whyInterested?: string;
+  relevantExperience?: string[];
+  keyAchievements?: string[];
+  connectionToCompany?: string;
+  opening: string;
+  body: string;
+  closing: string;
+  fullLetter: string;
+  toneVariations?: CoverLetterVariations;
+  lengthVariations?: CoverLetterLengthVariations;
+  focusVariations?: Record<string, string>;
+  keywordsUsed: string[];
+  skillsHighlighted: string[];
+  achievementsMentioned: string[];
+  relevanceScore: number;
+  persuasivenessScore: number;
+  professionalismScore: number;
+  atsScore: number;
+  status: 'DRAFT' | 'FINALIZED' | 'SENT';
+  selectedTone?: string;
+  selectedLength?: string;
+  modelVersion: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2.3.5 - Interview Prep Coach
+export type InterviewType = 'PHONE' | 'VIDEO' | 'ONSITE' | 'TECHNICAL' | 'BEHAVIORAL';
+export type InterviewPrepStatus = 'PREPARING' | 'READY' | 'COMPLETED';
+
+export interface InterviewQuestion {
+  question: string;
+  category: string;
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
+  framework?: string;
+}
+
+export interface CompanyInfo {
+  description: string;
+  culture: string;
+  values: string[];
+}
+
+export interface CompanyNews {
+  headline: string;
+  date: string;
+}
+
+export interface AnswerFramework {
+  [key: string]: string;
+}
+
+export interface PracticeSession {
+  date: Date;
+  answers: Record<string, string>;
+  feedback: Record<string, unknown>;
+}
+
+export interface InterviewPrep {
+  id: string;
+  userId: string;
+  jobId?: string;
+  jobTitle: string;
+  companyName: string;
+  interviewType: InterviewType;
+  companyInfo?: CompanyInfo;
+  recentNews?: CompanyNews[];
+  interviewerInfo?: Record<string, unknown>;
+  commonQuestions: InterviewQuestion[];
+  technicalQuestions?: InterviewQuestion[];
+  behavioralQuestions: InterviewQuestion[];
+  situationalQuestions?: InterviewQuestion[];
+  companySpecificQuestions?: InterviewQuestion[];
+  sampleAnswers: Record<string, string>;
+  answerFrameworks: Record<string, AnswerFramework>;
+  keyPointsToMention: string[];
+  thingsToAvoid: string[];
+  questionsForInterviewer: string[];
+  questionsToAvoid: string[];
+  preparationChecklist: string[];
+  dayOfTips: string[];
+  commonMistakes: string[];
+  bodyLanguageTips?: string[];
+  practiceHistory?: PracticeSession[];
+  feedbackHistory?: Record<string, unknown>[];
+  improvementAreas?: string[];
+  preparednessScore?: number;
+  practiceSessionsCompleted: number;
+  estimatedConfidence?: number;
+  status: InterviewPrepStatus;
+  interviewDate?: Date;
+  modelVersion: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 2.3.6 - Salary Negotiation Advisor
+export type NegotiationStatus = 'ADVISING' | 'NEGOTIATING' | 'COMPLETED';
+export type NegotiationOutcome = 'WON' | 'PARTIAL' | 'DECLINED' | 'ACCEPTED_AS_IS';
+export type MarketTrend = 'RISING' | 'STABLE' | 'DECLINING';
+export type DemandLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface SalaryMarketData {
+  minimum: number;
+  maximum: number;
+  median: number;
+  percentile25: number;
+  percentile75: number;
+  percentile90: number;
+}
+
+export interface NegotiationRange {
+  min: number;
+  max: number;
+  target: number;
+}
+
+export interface NegotiationScript {
+  opener: string;
+  valueProposition: string;
+  ask: string;
+  closing: string;
+}
+
+export interface TimingAdvice {
+  when: string;
+  deadline: string;
+  bestTime: string;
+}
+
+export interface AlternativeNegotiation {
+  signingBonus: string;
+  reviewTimeline: string;
+  title: string;
+  startDate: string;
+}
+
+export interface BenefitsNegotiation {
+  pto: string;
+  remote: string;
+  education: string;
+  equipment: string;
+}
+
+export interface SalaryNegotiationAdvice {
+  id: string;
+  userId: string;
+  jobId?: string;
+  jobTitle: string;
+  companyName?: string;
+  location: string;
+  industry?: string;
+  currentSalary?: number;
+  yearsExperience: number;
+  highestEducation?: string;
+  relevantCertifications?: string[];
+  uniqueSkills?: string[];
+  offeredSalary?: number;
+  offeredBonus?: number;
+  offeredEquity?: Record<string, unknown>;
+  offeredBenefits?: string[];
+  marketData: SalaryMarketData;
+  percentilePosition: number;
+  marketTrend?: MarketTrend;
+  demandLevel?: DemandLevel;
+  targetSalary: number;
+  minimumAcceptable: number;
+  anchorNumber: number;
+  negotiationRange: NegotiationRange;
+  negotiationScript: NegotiationScript;
+  counterArguments: Record<string, string>;
+  timingAdvice: TimingAdvice;
+  leveragePoints: string[];
+  alternativeAsk: AlternativeNegotiation;
+  benefitsNegotiation: BenefitsNegotiation;
+  signingBonusAdvice?: { suggested: number; reasoning: string };
+  equityNegotiation?: { vesting: string; amount: string };
+  riskLevel: RiskLevel;
+  offerRescindRisk: number;
+  marketAlternatives?: string[];
+  finalSalary?: number;
+  finalBonus?: number;
+  finalEquity?: Record<string, unknown>;
+  negotiationOutcome?: NegotiationOutcome;
+  lessonsLearned?: string[];
+  status: NegotiationStatus;
+  modelVersion: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Request/Response types for Batch 13 APIs
+export interface EnhanceProfileRequest {
+  profileSection: ProfileSection;
+  currentContent: string;
+}
+
+export interface GenerateExperienceRequest {
+  jobTitle: string;
+  companyName: string;
+  industry?: string;
+  duration?: string;
+  responsibilities?: string[];
+  technologies?: string[];
+  achievements?: string[];
+}
+
+export interface AnalyzeSkillsGapRequest {
+  targetJobId?: string;
+  targetJobTitle: string;
+  targetIndustry?: string;
+  targetSeniority?: string;
+  currentSkills?: string[];
+}
+
+export interface GenerateCoverLetterRequest {
+  jobId?: string;
+  jobTitle: string;
+  companyName: string;
+  companyDescription?: string;
+  jobDescription?: string;
+  whyInterested?: string;
+  relevantExperience?: string[];
+  keyAchievements?: string[];
+  connectionToCompany?: string;
+}
+
+export interface GenerateInterviewPrepRequest {
+  jobId?: string;
+  jobTitle: string;
+  companyName: string;
+  interviewType: InterviewType;
+}
+
+export interface GetSalaryAdviceRequest {
+  jobId?: string;
+  jobTitle: string;
+  companyName?: string;
+  location: string;
+  industry?: string;
+  currentSalary?: number;
+  yearsExperience: number;
+  offeredSalary?: number;
+  offeredBonus?: number;
+  offeredEquity?: Record<string, unknown>;
+  offeredBenefits?: string[];
+}
+
+export interface RecordNegotiationOutcomeRequest {
+  finalSalary?: number;
+  finalBonus?: number;
+  finalEquity?: Record<string, unknown>;
+  outcome: NegotiationOutcome;
+  lessonsLearned?: string[];
+}
