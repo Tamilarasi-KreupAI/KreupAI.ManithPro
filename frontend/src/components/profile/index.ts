@@ -16,3 +16,6 @@ export { default as AdditionalIntegrationsHub } from './AdditionalIntegrationsHu
 
 // Profile Builder Components - Batch 4
 export { default as Batch4IntegrationsHub } from './Batch4IntegrationsHub';
+
+// Profile Builder Components - Batch 5
+export { default as VerificationHub } from './VerificationHub';

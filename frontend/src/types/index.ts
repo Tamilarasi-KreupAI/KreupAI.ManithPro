@@ -1692,3 +1692,443 @@ export interface AllIntegrationsStatusResponse extends IntegrationStatusResponse
     };
   };
 }
+
+// ============================================
+// BATCH 5: VERIFICATION & TRUST SYSTEM TYPES (Features 1.3.1-1.3.5)
+// ============================================
+
+// Verification Request Status
+export type VerificationRequestStatus = 'PENDING' | 'SENT' | 'COMPLETED' | 'EXPIRED' | 'DECLINED' | 'FAILED';
+
+// Reference Request Status
+export type ReferenceRequestStatus = 'PENDING' | 'SENT' | 'IN_PROGRESS' | 'COMPLETED' | 'DECLINED' | 'EXPIRED';
+
+// Endorsement Request Status
+export type EndorsementRequestStatus = 'PENDING' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+
+// Trust Score Tier
+export type TrustScoreTier = 'platinum' | 'gold' | 'silver' | 'bronze' | 'unverified';
+
+// Relationship types for endorsements
+export type EndorserRelationship = 'colleague' | 'manager' | 'direct_report' | 'client' | 'mentor' | 'mentee';
+
+// Reference relationship types
+export type ReferenceRelationship = 'direct_manager' | 'skip_level_manager' | 'hr' | 'team_lead' | 'cto' | 'ceo';
+
+// 1.3.1 - Email Domain Verification
+export interface EmailDomainVerification {
+  id: string;
+  profileId: string;
+  workExperienceId?: string;
+  workEmail: string;
+  emailDomain: string;
+  companyName: string;
+  verificationCode?: string;
+  verificationToken?: string;
+  verificationStatus: VerificationRequestStatus;
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  verificationAttempts: number;
+  maxAttempts: number;
+  domainInfo?: {
+    companyName?: string;
+    industry?: string;
+    size?: string;
+    website?: string;
+  };
+  mxRecordValid?: boolean;
+  domainCreatedAt?: string;
+  expiresAt?: string;
+  codeSentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.2 - LinkedIn Employment Verification
+export interface LinkedInEmploymentVerification {
+  id: string;
+  profileId: string;
+  workExperienceId: string;
+  linkedInProfileId?: string;
+  claimedCompanyName: string;
+  claimedTitle: string;
+  claimedStartDate: string;
+  claimedEndDate?: string;
+  claimedIsCurrent: boolean;
+  linkedInCompanyName?: string;
+  linkedInTitle?: string;
+  linkedInStartDate?: string;
+  linkedInEndDate?: string;
+  linkedInIsCurrent?: boolean;
+  companyNameMatch?: 'exact' | 'partial' | 'no_match' | 'not_found';
+  titleMatch?: 'exact' | 'partial' | 'no_match' | 'not_found';
+  dateMatch?: 'exact' | 'approximate' | 'no_match' | 'not_found';
+  overallMatch?: 'verified' | 'partial' | 'unverified' | 'mismatch';
+  matchScore?: number;
+  matchDetails?: Record<string, any>;
+  verificationStatus: VerificationRequestStatus;
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationError?: string;
+  needsManualReview: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  lastCheckedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.3 - Peer Endorsements
+export interface PeerEndorsement {
+  id: string;
+  profileId: string;
+  requestId?: string;
+  requestStatus: EndorsementRequestStatus;
+  requestSentAt?: string;
+  requestExpiresAt?: string;
+  requestMessage?: string;
+  // Endorser Information
+  endorserEmail: string;
+  endorserName: string;
+  endorserTitle?: string;
+  endorserCompany?: string;
+  endorserLinkedIn?: string;
+  endorserPhone?: string;
+  endorserAvatar?: string;
+  // Relationship Details
+  relationship: EndorserRelationship;
+  workedTogetherFrom?: string;
+  workedTogetherTo?: string;
+  workedAtCompany?: string;
+  sharedProjects: string[];
+  // Endorsement Content
+  endorsementTitle?: string;
+  endorsementText?: string;
+  strengths: string[];
+  areasOfExpertise: string[];
+  // Skill Endorsements
+  skillEndorsements?: Array<{
+    skillId?: string;
+    skillName: string;
+    rating: number;
+    comment?: string;
+  }>;
+  // Ratings (1-5)
+  overallRating?: number;
+  workQualityRating?: number;
+  collaborationRating?: number;
+  communicationRating?: number;
+  leadershipRating?: number;
+  technicalSkillsRating?: number;
+  reliabilityRating?: number;
+  // Would Work With Again
+  wouldWorkAgain?: boolean;
+  wouldRecommend?: boolean;
+  // Verification
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  verificationToken?: string;
+  // Privacy Settings
+  isPublic: boolean;
+  showOnProfile: boolean;
+  anonymizeEndorser: boolean;
+  // Timestamps
+  endorsedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.4 - Manager References
+export interface ManagerReference {
+  id: string;
+  profileId: string;
+  workExperienceId?: string;
+  requestId?: string;
+  requestStatus: ReferenceRequestStatus;
+  requestSentAt?: string;
+  requestExpiresAt?: string;
+  requestMessage?: string;
+  reminderSentAt?: string;
+  reminderCount: number;
+  // Manager/Reference Information
+  referenceEmail: string;
+  referenceName: string;
+  referenceTitle?: string;
+  referenceCompany?: string;
+  referencePhone?: string;
+  referenceLinkedIn?: string;
+  referenceAvatar?: string;
+  referenceRelationship: ReferenceRelationship;
+  // Employment Details Being Referenced
+  companyName: string;
+  candidateTitle: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  wasDirectReport?: boolean;
+  reportingDuration?: string;
+  // Structured Feedback Form (1-5 ratings)
+  overallPerformance?: number;
+  technicalCompetence?: number;
+  communicationSkills?: number;
+  teamworkCollaboration?: number;
+  problemSolving?: number;
+  leadership?: number;
+  initiative?: number;
+  reliability?: number;
+  adaptability?: number;
+  // Open-Ended Questions
+  keyStrengths?: string;
+  areasForImprovement?: string;
+  majorAccomplishments?: string;
+  reasonForLeaving?: string;
+  additionalComments?: string;
+  // Rehire Eligibility
+  eligibleForRehire?: 'yes' | 'no' | 'conditional' | 'not_applicable';
+  rehireComments?: string;
+  // Recommendation
+  overallRecommendation?: 'highly_recommend' | 'recommend' | 'recommend_with_reservations' | 'do_not_recommend';
+  recommendationText?: string;
+  // Verification
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  verificationToken?: string;
+  verificationNotes?: string;
+  // Privacy & Display
+  isPublic: boolean;
+  showOnProfile: boolean;
+  anonymizeReference: boolean;
+  shareWithEmployers: boolean;
+  // Timestamps
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.5 - Certification Verification
+export interface CertificationVerification {
+  id: string;
+  profileId: string;
+  certificationId: string;
+  certificationName: string;
+  issuingOrganization: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  issueDate: string;
+  expirationDate?: string;
+  // Verification API Details
+  verificationProvider?: string;
+  verificationEndpoint?: string;
+  apiResponse?: Record<string, any>;
+  // Verification Results
+  verificationStatus: VerificationRequestStatus;
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  // Verified Data (from issuer)
+  verifiedName?: string;
+  verifiedIssuingOrg?: string;
+  verifiedCredentialId?: string;
+  verifiedIssueDate?: string;
+  verifiedExpirationDate?: string;
+  verifiedHolderName?: string;
+  verifiedHolderEmail?: string;
+  verifiedSkills: string[];
+  // Match Analysis
+  nameMatch?: 'exact' | 'partial' | 'mismatch';
+  dateMatch?: 'exact' | 'approximate' | 'mismatch';
+  holderMatch?: 'exact' | 'partial' | 'mismatch';
+  overallMatch?: 'verified' | 'partial' | 'invalid' | 'expired';
+  matchScore?: number;
+  // Credential Status
+  credentialStatus?: 'active' | 'expired' | 'revoked' | 'suspended';
+  statusCheckedAt?: string;
+  // Badge/Digital Credential
+  badgeUrl?: string;
+  badgeImageUrl?: string;
+  badgeAssertionId?: string;
+  // Verification Errors
+  verificationError?: string;
+  errorCode?: string;
+  lastVerificationAttempt?: string;
+  verificationAttempts: number;
+  // Manual Review
+  needsManualReview: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  // Auto-Reverification
+  autoReverify: boolean;
+  nextReverificationAt?: string;
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Trust Score
+export interface TrustScore {
+  id: string;
+  profileId: string;
+  overallScore: number;
+  tier: TrustScoreTier;
+  // Component Scores
+  emailVerificationScore: number;
+  linkedInVerificationScore: number;
+  endorsementScore: number;
+  referenceScore: number;
+  certificationScore: number;
+  profileCompletenessScore: number;
+  activityScore: number;
+  // Verification Counts
+  verifiedEmails: number;
+  verifiedEmployments: number;
+  endorsementsReceived: number;
+  referencesReceived: number;
+  verifiedCertifications: number;
+  // Score Factors
+  scoreFactors?: Record<string, any>;
+  scoreHistory?: Array<{
+    score: number;
+    tier: TrustScoreTier;
+    timestamp: string;
+    reason?: string;
+  }>;
+  // Flags
+  hasVerifiedIdentity: boolean;
+  hasVerifiedEmployment: boolean;
+  hasEndorsements: boolean;
+  hasReferences: boolean;
+  hasVerifiedCerts: boolean;
+  // Last Calculation
+  lastCalculatedAt: string;
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Verification Status Summary
+export interface VerificationStatusSummary {
+  emailVerifications: {
+    total: number;
+    verified: number;
+    pending: number;
+  };
+  linkedInVerifications: {
+    total: number;
+    verified: number;
+    pending: number;
+  };
+  peerEndorsements: {
+    total: number;
+    received: number;
+    pending: number;
+  };
+  managerReferences: {
+    total: number;
+    completed: number;
+    pending: number;
+  };
+  certificationVerifications: {
+    total: number;
+    verified: number;
+    pending: number;
+  };
+  trustScore?: TrustScore;
+}
+
+// Request Email Verification payload
+export interface RequestEmailVerificationPayload {
+  workEmail: string;
+  companyName: string;
+  workExperienceId?: string;
+}
+
+// Request Peer Endorsement payload
+export interface RequestPeerEndorsementPayload {
+  endorserEmail: string;
+  endorserName: string;
+  endorserTitle?: string;
+  endorserCompany?: string;
+  relationship: EndorserRelationship;
+  workedAtCompany?: string;
+  workedTogetherFrom?: string;
+  workedTogetherTo?: string;
+  requestMessage?: string;
+}
+
+// Submit Peer Endorsement payload (for endorsers)
+export interface SubmitPeerEndorsementPayload {
+  endorsementTitle?: string;
+  endorsementText?: string;
+  strengths?: string[];
+  areasOfExpertise?: string[];
+  skillEndorsements?: Array<{
+    skillName: string;
+    rating: number;
+    comment?: string;
+  }>;
+  overallRating?: number;
+  workQualityRating?: number;
+  collaborationRating?: number;
+  communicationRating?: number;
+  leadershipRating?: number;
+  technicalSkillsRating?: number;
+  reliabilityRating?: number;
+  wouldWorkAgain?: boolean;
+  wouldRecommend?: boolean;
+}
+
+// Request Manager Reference payload
+export interface RequestManagerReferencePayload {
+  workExperienceId?: string;
+  referenceEmail: string;
+  referenceName: string;
+  referenceTitle?: string;
+  referenceCompany?: string;
+  referencePhone?: string;
+  referenceLinkedIn?: string;
+  referenceRelationship: ReferenceRelationship;
+  companyName: string;
+  candidateTitle: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  requestMessage?: string;
+}
+
+// Submit Manager Reference payload (for references)
+export interface SubmitManagerReferencePayload {
+  wasDirectReport?: boolean;
+  reportingDuration?: string;
+  overallPerformance?: number;
+  technicalCompetence?: number;
+  communicationSkills?: number;
+  teamworkCollaboration?: number;
+  problemSolving?: number;
+  leadership?: number;
+  initiative?: number;
+  reliability?: number;
+  adaptability?: number;
+  keyStrengths?: string;
+  areasForImprovement?: string;
+  majorAccomplishments?: string;
+  reasonForLeaving?: string;
+  additionalComments?: string;
+  eligibleForRehire?: 'yes' | 'no' | 'conditional' | 'not_applicable';
+  rehireComments?: string;
+  overallRecommendation?: 'highly_recommend' | 'recommend' | 'recommend_with_reservations' | 'do_not_recommend';
+  recommendationText?: string;
+}
+
+// Request Certification Verification payload
+export interface RequestCertificationVerificationPayload {
+  certificationId: string;
+  certificationName: string;
+  issuingOrganization: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  issueDate: string;
+  expirationDate?: string;
+}

@@ -667,6 +667,13 @@ model CandidateProfile {
   onlineCourseProfiles  OnlineCourseProfile[]
   academicProfiles      AcademicProfile[]
   customPortfolioLinks  CustomPortfolioLink[]
+  // Batch 5: Verification & Trust System
+  emailVerifications    EmailDomainVerification[]
+  linkedInVerifications LinkedInEmploymentVerification[]
+  peerEndorsements      PeerEndorsement[]
+  managerReferences     ManagerReference[]
+  certificationVerifications CertificationVerification[]
+  trustScore            TrustScore?
 
   @@index([userId])
   @@index([completenessScore])
@@ -2064,4 +2071,440 @@ model CustomPortfolioLink {
   @@index([linkType])
   @@index([isFeatured])
   @@map("custom_portfolio_links")
+}
+
+// ============================================
+// BATCH 5: VERIFICATION & TRUST SYSTEM (Features 1.3.1-1.3.5)
+// ============================================
+
+enum VerificationRequestStatus {
+  PENDING
+  SENT
+  COMPLETED
+  EXPIRED
+  DECLINED
+  FAILED
+}
+
+enum ReferenceRequestStatus {
+  PENDING
+  SENT
+  IN_PROGRESS
+  COMPLETED
+  DECLINED
+  EXPIRED
+}
+
+enum EndorsementRequestStatus {
+  PENDING
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+// 1.3.1 - Email Domain Verification
+model EmailDomainVerification {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Work Experience Link
+  workExperienceId      String?             // Optional link to work experience being verified
+
+  // Email Details
+  workEmail             String              // e.g., john@company.com
+  emailDomain           String              // e.g., company.com
+  companyName           String              // Company name from domain
+
+  // Verification
+  verificationCode      String?             // Code sent to work email
+  verificationToken     String?             @unique // Token for verification link
+  verificationStatus    VerificationRequestStatus @default(PENDING)
+
+  // Verification Results
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "code", "link", "oauth"
+  verificationAttempts  Int                 @default(0)
+  maxAttempts           Int                 @default(3)
+
+  // Domain Information (auto-detected)
+  domainInfo            Json?               // Company info from domain lookup
+  mxRecordValid         Boolean?            // MX record validation
+  domainCreatedAt       DateTime?           // Domain age for trust scoring
+
+  // Expiry
+  expiresAt             DateTime?           // When verification expires
+  codeSentAt            DateTime?           // When code was last sent
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, workEmail])
+  @@index([profileId])
+  @@index([emailDomain])
+  @@index([verificationStatus])
+  @@map("email_domain_verifications")
+}
+
+// 1.3.2 - LinkedIn Employment Verification
+model LinkedInEmploymentVerification {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Work Experience Link
+  workExperienceId      String              @unique
+
+  // LinkedIn Profile Link
+  linkedInProfileId     String?             // Link to connected LinkedIn profile
+
+  // Claimed Employment
+  claimedCompanyName    String
+  claimedTitle          String
+  claimedStartDate      DateTime
+  claimedEndDate        DateTime?
+  claimedIsCurrent      Boolean             @default(false)
+
+  // LinkedIn Data Match
+  linkedInCompanyName   String?
+  linkedInTitle         String?
+  linkedInStartDate     DateTime?
+  linkedInEndDate       DateTime?
+  linkedInIsCurrent     Boolean?
+
+  // Match Results
+  companyNameMatch      String?             // "exact", "partial", "no_match", "not_found"
+  titleMatch            String?             // "exact", "partial", "no_match", "not_found"
+  dateMatch             String?             // "exact", "approximate", "no_match", "not_found"
+  overallMatch          String?             // "verified", "partial", "unverified", "mismatch"
+  matchScore            Float?              // 0-100 confidence score
+  matchDetails          Json?               // Detailed match analysis
+
+  // Verification Status
+  verificationStatus    VerificationRequestStatus @default(PENDING)
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationError     String?
+
+  // Manual Review (if needed)
+  needsManualReview     Boolean             @default(false)
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  reviewNotes           String?
+
+  // Timestamps
+  lastCheckedAt         DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([workExperienceId])
+  @@index([verificationStatus])
+  @@map("linkedin_employment_verifications")
+}
+
+// 1.3.3 - Peer Endorsements
+model PeerEndorsement {
+  id                    String              @id @default(uuid())
+  profileId             String              // Profile being endorsed
+
+  // Endorsement Request
+  requestId             String?             @unique // For tracking requests
+  requestStatus         EndorsementRequestStatus @default(PENDING)
+  requestSentAt         DateTime?
+  requestExpiresAt      DateTime?
+  requestMessage        String?             // Personal message with request
+
+  // Endorser Information
+  endorserEmail         String
+  endorserName          String
+  endorserTitle         String?
+  endorserCompany       String?
+  endorserLinkedIn      String?
+  endorserPhone         String?
+  endorserAvatar        String?
+
+  // Relationship Details
+  relationship          String              // "colleague", "manager", "direct_report", "client", "mentor", "mentee"
+  workedTogetherFrom    DateTime?
+  workedTogetherTo      DateTime?
+  workedAtCompany       String?
+  sharedProjects        String[]            @default([])
+
+  // Endorsement Content
+  endorsementTitle      String?             // e.g., "Excellent Team Player"
+  endorsementText       String?             // Detailed endorsement
+  strengths             String[]            @default([]) // Key strengths mentioned
+  areasOfExpertise      String[]            @default([])
+
+  // Skill Endorsements
+  skillEndorsements     Json?               // Array of {skillId, skillName, rating, comment}
+
+  // Ratings
+  overallRating         Int?                // 1-5 stars
+  workQualityRating     Int?                // 1-5
+  collaborationRating   Int?                // 1-5
+  communicationRating   Int?                // 1-5
+  leadershipRating      Int?                // 1-5
+  technicalSkillsRating Int?                // 1-5
+  reliabilityRating     Int?                // 1-5
+
+  // Would Work With Again
+  wouldWorkAgain        Boolean?
+  wouldRecommend        Boolean?
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "email", "linkedin", "phone"
+  verificationToken     String?             @unique
+
+  // Privacy Settings
+  isPublic              Boolean             @default(true)
+  showOnProfile         Boolean             @default(true)
+  anonymizeEndorser     Boolean             @default(false)
+
+  // Timestamps
+  endorsedAt            DateTime?           // When endorsement was submitted
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([endorserEmail])
+  @@index([requestStatus])
+  @@map("peer_endorsements")
+}
+
+// 1.3.4 - Manager References System
+model ManagerReference {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Link to Work Experience
+  workExperienceId      String?
+
+  // Reference Request
+  requestId             String?             @unique
+  requestStatus         ReferenceRequestStatus @default(PENDING)
+  requestSentAt         DateTime?
+  requestExpiresAt      DateTime?
+  requestMessage        String?             // Personal message with request
+  reminderSentAt        DateTime?
+  reminderCount         Int                 @default(0)
+
+  // Manager/Reference Information
+  referenceEmail        String
+  referenceName         String
+  referenceTitle        String?
+  referenceCompany      String?
+  referencePhone        String?
+  referenceLinkedIn     String?
+  referenceAvatar       String?
+  referenceRelationship String              // "direct_manager", "skip_level_manager", "hr", "team_lead", "cto", "ceo"
+
+  // Employment Details Being Referenced
+  companyName           String
+  candidateTitle        String
+  employmentStartDate   DateTime?
+  employmentEndDate     DateTime?
+  wasDirectReport       Boolean?
+  reportingDuration     String?             // e.g., "2 years"
+
+  // Structured Feedback Form
+  overallPerformance    Int?                // 1-5 rating
+  technicalCompetence   Int?                // 1-5
+  communicationSkills   Int?                // 1-5
+  teamworkCollaboration Int?                // 1-5
+  problemSolving        Int?                // 1-5
+  leadership            Int?                // 1-5
+  initiative            Int?                // 1-5
+  reliability           Int?                // 1-5
+  adaptability          Int?                // 1-5
+
+  // Open-Ended Questions
+  keyStrengths          String?
+  areasForImprovement   String?
+  majorAccomplishments  String?
+  reasonForLeaving      String?
+  additionalComments    String?
+
+  // Rehire Eligibility
+  eligibleForRehire     String?             // "yes", "no", "conditional", "not_applicable"
+  rehireComments        String?
+
+  // Recommendation
+  overallRecommendation String?             // "highly_recommend", "recommend", "recommend_with_reservations", "do_not_recommend"
+  recommendationText    String?
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "email", "linkedin", "phone", "video_call"
+  verificationToken     String?             @unique
+  verificationNotes     String?
+
+  // Privacy & Display
+  isPublic              Boolean             @default(false)
+  showOnProfile         Boolean             @default(true)
+  anonymizeReference    Boolean             @default(false)
+  shareWithEmployers    Boolean             @default(true)
+
+  // Timestamps
+  completedAt           DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([workExperienceId])
+  @@index([referenceEmail])
+  @@index([requestStatus])
+  @@map("manager_references")
+}
+
+// 1.3.5 - Certification Verification
+model CertificationVerification {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Link to Certification
+  certificationId       String              @unique
+
+  // Certification Details (from candidate)
+  certificationName     String
+  issuingOrganization   String
+  credentialId          String?
+  credentialUrl         String?
+  issueDate             DateTime
+  expirationDate        DateTime?
+
+  // Verification API Details
+  verificationProvider  String?             // e.g., "credly", "accredible", "badgr", "api_direct"
+  verificationEndpoint  String?
+  apiResponse           Json?               // Raw API response
+
+  // Verification Results
+  verificationStatus    VerificationRequestStatus @default(PENDING)
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "api", "url_check", "manual", "issuer_contact"
+
+  // Verified Data (from issuer)
+  verifiedName          String?
+  verifiedIssuingOrg    String?
+  verifiedCredentialId  String?
+  verifiedIssueDate     DateTime?
+  verifiedExpirationDate DateTime?
+  verifiedHolderName    String?
+  verifiedHolderEmail   String?
+  verifiedSkills        String[]            @default([])
+
+  // Match Analysis
+  nameMatch             String?             // "exact", "partial", "mismatch"
+  dateMatch             String?             // "exact", "approximate", "mismatch"
+  holderMatch           String?             // "exact", "partial", "mismatch"
+  overallMatch          String?             // "verified", "partial", "invalid", "expired"
+  matchScore            Float?              // 0-100
+
+  // Credential Status
+  credentialStatus      String?             // "active", "expired", "revoked", "suspended"
+  statusCheckedAt       DateTime?
+
+  // Badge/Digital Credential
+  badgeUrl              String?
+  badgeImageUrl         String?
+  badgeAssertionId      String?
+
+  // Verification Errors
+  verificationError     String?
+  errorCode             String?
+  lastVerificationAttempt DateTime?
+  verificationAttempts  Int                 @default(0)
+
+  // Manual Review
+  needsManualReview     Boolean             @default(false)
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  reviewNotes           String?
+
+  // Auto-Reverification
+  autoReverify          Boolean             @default(true)
+  nextReverificationAt  DateTime?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([certificationId])
+  @@index([verificationStatus])
+  @@index([isVerified])
+  @@map("certification_verifications")
+}
+
+// Trust Score Calculation (composite model for 1.3.8)
+model TrustScore {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // Overall Score
+  overallScore          Float               @default(0) // 0-100
+  tier                  String?             // "platinum", "gold", "silver", "bronze", "unverified"
+
+  // Component Scores
+  emailVerificationScore Float              @default(0)
+  linkedInVerificationScore Float           @default(0)
+  endorsementScore      Float               @default(0)
+  referenceScore        Float               @default(0)
+  certificationScore    Float               @default(0)
+  profileCompletenessScore Float            @default(0)
+  activityScore         Float               @default(0)
+
+  // Verification Counts
+  verifiedEmails        Int                 @default(0)
+  verifiedEmployments   Int                 @default(0)
+  endorsementsReceived  Int                 @default(0)
+  referencesReceived    Int                 @default(0)
+  verifiedCertifications Int                @default(0)
+
+  // Score Factors
+  scoreFactors          Json?               // Detailed breakdown of scoring factors
+  scoreHistory          Json?               // Historical score changes
+
+  // Flags
+  hasVerifiedIdentity   Boolean             @default(false)
+  hasVerifiedEmployment Boolean             @default(false)
+  hasEndorsements       Boolean             @default(false)
+  hasReferences         Boolean             @default(false)
+  hasVerifiedCerts      Boolean             @default(false)
+
+  // Last Calculation
+  lastCalculatedAt      DateTime            @default(now())
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([overallScore])
+  @@index([tier])
+  @@map("trust_scores")
 }

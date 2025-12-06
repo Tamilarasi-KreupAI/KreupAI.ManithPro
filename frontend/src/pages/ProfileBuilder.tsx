@@ -13,8 +13,9 @@ import ProfileVersionHistory from '../components/profile/ProfileVersionHistory';
 import IntegrationsHub from '../components/profile/IntegrationsHub';
 import AdditionalIntegrationsHub from '../components/profile/AdditionalIntegrationsHub';
 import Batch4IntegrationsHub from '../components/profile/Batch4IntegrationsHub';
+import VerificationHub from '../components/profile/VerificationHub';
 
-type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations' | 'more-integrations' | 'developer-integrations';
+type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations' | 'more-integrations' | 'developer-integrations' | 'verification';
 
 const ProfileBuilder: React.FC = () => {
   const { user } = useAuth();
@@ -61,6 +62,7 @@ const ProfileBuilder: React.FC = () => {
     { id: 'integrations' as ProfileSection, label: 'Integrations', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
     { id: 'more-integrations' as ProfileSection, label: 'More Platforms', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
     { id: 'developer-integrations' as ProfileSection, label: 'Developer Hub', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
+    { id: 'verification' as ProfileSection, label: 'Verification', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
     { id: 'versions' as ProfileSection, label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
   ];
 
@@ -367,6 +369,10 @@ const ProfileBuilder: React.FC = () => {
 
             {activeSection === 'developer-integrations' && (
               <Batch4IntegrationsHub />
+            )}
+
+            {activeSection === 'verification' && (
+              <VerificationHub />
             )}
 
             {activeSection === 'versions' && (

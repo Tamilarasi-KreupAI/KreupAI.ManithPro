@@ -19,6 +19,7 @@ import profileVersioningRoutes from './routes/profileVersioning.routes';
 import integrationsRoutes from './routes/integrations.routes';
 import additionalIntegrationsRoutes from './routes/additionalIntegrations.routes';
 import batch4IntegrationsRoutes from './routes/batch4Integrations.routes';
+import verificationRoutes from './routes/verification.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -64,6 +65,7 @@ app.get('/', (req, res) => {
       integrations: '/api/integrations',
       additionalIntegrations: '/api/additional-integrations',
       batch4Integrations: '/api/batch4-integrations',
+      verification: '/api/verification',
     },
   });
 });
@@ -84,6 +86,7 @@ app.use('/api/profile-versions', profileVersioningRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/additional-integrations', additionalIntegrationsRoutes);
 app.use('/api/batch4-integrations', batch4IntegrationsRoutes);
+app.use('/api/verification', verificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
