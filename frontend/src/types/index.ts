@@ -5935,3 +5935,466 @@ export interface RecognizeEntitiesRequest {
   sourceId?: string;
   sourceText: string;
 }
+
+// ============================================
+// BATCH 15: SMART CALENDAR & AUTOMATED SCHEDULING
+// Features 3.1.1-3.2.4
+// ============================================
+
+// Calendar Provider Types
+export type CalendarProvider = 'GOOGLE' | 'OUTLOOK' | 'APPLE' | 'ICAL' | 'OTHER';
+export type SyncDirection = 'INBOUND' | 'OUTBOUND' | 'BIDIRECTIONAL';
+export type SyncStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'ERROR';
+export type EventStatus = 'CONFIRMED' | 'TENTATIVE' | 'CANCELLED';
+export type EventVisibility = 'BUSY' | 'FREE' | 'TENTATIVE';
+export type ConflictType = 'OVERLAP' | 'BACK_TO_BACK' | 'TRAVEL_TIME' | 'BUFFER_VIOLATION';
+export type ConflictSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type ConflictStatus = 'UNRESOLVED' | 'RESOLVED' | 'IGNORED';
+export type HolidayType = 'PUBLIC' | 'COMPANY' | 'PERSONAL' | 'RELIGIOUS' | 'OBSERVANCE';
+export type HolidayScope = 'USER' | 'COMPANY' | 'GLOBAL';
+export type MeetingType = 'PHONE_SCREEN' | 'VIDEO_INTERVIEW' | 'ONSITE' | 'PANEL' | 'CUSTOM';
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
+export type AvailabilityStatus = 'AVAILABLE' | 'BUSY' | 'TENTATIVE' | 'BLOCKED';
+export type AvailabilitySource = 'CALENDAR_SYNC' | 'MANUAL' | 'WORKING_HOURS' | 'HOLIDAY';
+export type PanelSessionStatus = 'SCHEDULING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type PanelRole = 'LEAD' | 'PANELIST' | 'OBSERVER' | 'NOTETAKER';
+export type PanelResponseStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'TENTATIVE';
+
+// 3.1.1-3.1.5 Calendar Integration Types
+export interface CalendarIntegration {
+  id: string;
+  userId: string;
+  provider: CalendarProvider;
+  name: string;
+  email?: string;
+  isDefault: boolean;
+  isPrimary: boolean;
+  syncEnabled: boolean;
+  syncDirection: SyncDirection;
+  lastSyncAt?: string;
+  syncStatus: SyncStatus;
+  syncError?: string;
+  color?: string;
+  timezone: string;
+  showInAvailability: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { events: number };
+}
+
+export interface CalendarEvent {
+  id: string;
+  calendarId: string;
+  userId: string;
+  title: string;
+  description?: string;
+  location?: string;
+  meetingLink?: string;
+  startTime: string;
+  endTime: string;
+  allDay: boolean;
+  timezone: string;
+  isRecurring: boolean;
+  recurrenceRule?: string;
+  status: EventStatus;
+  visibility: EventVisibility;
+  externalEventId?: string;
+  interviewId?: string;
+  applicationId?: string;
+  attendees?: Array<{ email: string; name?: string; status?: string }>;
+  organizer?: { email: string; name?: string };
+  syncStatus: string;
+  createdAt: string;
+  updatedAt: string;
+  calendar?: { name: string; provider: CalendarProvider; color?: string };
+}
+
+export interface ConnectCalendarRequest {
+  provider: CalendarProvider;
+  name: string;
+  email?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiry?: string;
+  calendarUrl?: string;
+  timezone?: string;
+}
+
+export interface CreateCalendarEventRequest {
+  calendarId: string;
+  title: string;
+  description?: string;
+  location?: string;
+  startTime: string;
+  endTime: string;
+  timezone?: string;
+  attendees?: Array<{ email: string; name?: string }>;
+}
+
+// 3.1.6 Conflict Detection Types
+export interface CalendarConflict {
+  id: string;
+  userId: string;
+  event1Id: string;
+  event2Id: string;
+  event1Title: string;
+  event2Title: string;
+  event1Start: string;
+  event1End: string;
+  event2Start: string;
+  event2End: string;
+  conflictType: ConflictType;
+  overlapMinutes: number;
+  severity: ConflictSeverity;
+  status: ConflictStatus;
+  resolution?: string;
+  resolvedAt?: string;
+  suggestions?: Array<{ action: string; description: string }>;
+  detectedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.1.7 Buffer Time Types
+export interface BufferTimeSettings {
+  id: string;
+  userId: string;
+  beforeMeeting: number;
+  afterMeeting: number;
+  beforeInterview: number;
+  afterInterview: number;
+  includeTravel: boolean;
+  defaultTravelTime: number;
+  phoneScreenBuffer: number;
+  videoInterviewBuffer: number;
+  onsiteInterviewBuffer: number;
+  panelInterviewBuffer: number;
+  autoApply: boolean;
+  applyToExternal: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 3.1.8 Working Hours Types
+export interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+export interface DaySchedule {
+  enabled: boolean;
+  slots: TimeSlot[];
+}
+
+export interface WorkingHours {
+  id: string;
+  userId: string;
+  name: string;
+  timezone: string;
+  isDefault: boolean;
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+  minNoticeHours: number;
+  maxAdvanceDays: number;
+  slotDuration: number;
+  slotIncrement: number;
+  lunchStart?: string;
+  lunchEnd?: string;
+  excludeLunch: boolean;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWorkingHoursRequest {
+  name?: string;
+  timezone?: string;
+  isDefault?: boolean;
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+  sunday?: DaySchedule;
+  minNoticeHours?: number;
+  maxAdvanceDays?: number;
+  slotDuration?: number;
+  slotIncrement?: number;
+  lunchStart?: string;
+  lunchEnd?: string;
+  excludeLunch?: boolean;
+}
+
+// 3.1.9 Holiday Types
+export interface Holiday {
+  id: string;
+  userId?: string;
+  name: string;
+  date: string;
+  endDate?: string;
+  isRecurring: boolean;
+  recurrenceRule?: string;
+  type: HolidayType;
+  country?: string;
+  region?: string;
+  isOfficial: boolean;
+  blockEntireDay: boolean;
+  blockStart?: string;
+  blockEnd?: string;
+  scope: HolidayScope;
+  source?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddHolidayRequest {
+  name: string;
+  date: string;
+  endDate?: string;
+  type: HolidayType;
+  country?: string;
+  region?: string;
+  blockEntireDay?: boolean;
+}
+
+// 3.2.1 Scheduling Link Types
+export interface SchedulingLink {
+  id: string;
+  userId: string;
+  slug: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  meetingType: MeetingType;
+  duration: number;
+  location?: string;
+  workingHoursId?: string;
+  bufferBefore: number;
+  bufferAfter: number;
+  minNotice: number;
+  maxAdvance: number;
+  maxBookingsPerDay?: number;
+  maxBookingsPerWeek?: number;
+  requireConfirmation: boolean;
+  autoConfirm: boolean;
+  confirmationMessage?: string;
+  questions?: Array<{ id: string; question: string; required: boolean }>;
+  notifyOnBooking: boolean;
+  reminderSchedule?: Array<{ hours: number; type: string }>;
+  brandColor?: string;
+  logoUrl?: string;
+  welcomeMessage?: string;
+  jobId?: string;
+  applicationId?: string;
+  viewCount: number;
+  bookingCount: number;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { bookings: number };
+  user?: { name: string; email: string };
+}
+
+export interface CreateSchedulingLinkRequest {
+  slug?: string;
+  name: string;
+  description?: string;
+  meetingType: MeetingType;
+  duration: number;
+  location?: string;
+  bufferBefore?: number;
+  bufferAfter?: number;
+  minNotice?: number;
+  maxAdvance?: number;
+  maxBookingsPerDay?: number;
+  maxBookingsPerWeek?: number;
+  requireConfirmation?: boolean;
+  autoConfirm?: boolean;
+  questions?: Array<{ question: string; required: boolean }>;
+  notifyOnBooking?: boolean;
+  brandColor?: string;
+  welcomeMessage?: string;
+  jobId?: string;
+  expiresAt?: string;
+}
+
+export interface SchedulingBooking {
+  id: string;
+  linkId: string;
+  bookerEmail: string;
+  bookerName: string;
+  bookerPhone?: string;
+  bookerTimezone: string;
+  startTime: string;
+  endTime: string;
+  status: BookingStatus;
+  candidateId?: string;
+  applicationId?: string;
+  interviewId?: string;
+  responses?: Record<string, string>;
+  meetingLink?: string;
+  meetingPassword?: string;
+  location?: string;
+  confirmationToken?: string;
+  confirmedAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  link?: { name: string; meetingType: MeetingType };
+}
+
+export interface BookSlotRequest {
+  bookerEmail: string;
+  bookerName: string;
+  bookerPhone?: string;
+  bookerTimezone: string;
+  startTime: string;
+  responses?: Record<string, string>;
+}
+
+export interface AvailableSlot {
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
+// 3.2.2 Availability Types
+export interface AvailabilitySlot {
+  id: string;
+  userId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  status: AvailabilityStatus;
+  source: AvailabilitySource;
+  preferenceScore: number;
+  isOptimal: boolean;
+  hasConflict: boolean;
+  conflictEventId?: string;
+  isPanelSlot: boolean;
+  panelSessionId?: string;
+  generatedAt: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GenerateAvailabilityRequest {
+  startDate: string;
+  endDate: string;
+  duration?: number;
+}
+
+// 3.2.3 Panel Coordinator Types
+export interface PanelSession {
+  id: string;
+  organizerId: string;
+  name: string;
+  description?: string;
+  duration: number;
+  jobId?: string;
+  applicationId?: string;
+  panelists: PanelMember[];
+  status: PanelSessionStatus;
+  minPanelistsRequired: number;
+  requireAllPanelists: boolean;
+  schedulingDeadline?: string;
+  preferredDates?: string[];
+  preferredTimeRanges?: Array<{ start: string; end: string }>;
+  excludedDates?: string[];
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  meetingLink?: string;
+  location?: string;
+  candidateId?: string;
+  candidateName?: string;
+  candidateEmail?: string;
+  invitesSentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  organizer?: { name: string; email: string };
+}
+
+export interface PanelMember {
+  id: string;
+  sessionId: string;
+  userId: string;
+  role: PanelRole;
+  isRequired: boolean;
+  isOptional: boolean;
+  responseStatus: PanelResponseStatus;
+  respondedAt?: string;
+  declineReason?: string;
+  availabilitySubmitted: boolean;
+  availableSlots?: Array<{ startTime: string; endTime: string }>;
+  preferredSlots?: Array<{ startTime: string; endTime: string }>;
+  unavailableDates?: string[];
+  invitedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: { name: string; email: string };
+}
+
+export interface CreatePanelSessionRequest {
+  name: string;
+  description?: string;
+  duration: number;
+  jobId?: string;
+  applicationId?: string;
+  candidateName?: string;
+  candidateEmail?: string;
+  panelists: Array<{ userId: string; role?: PanelRole; isRequired?: boolean }>;
+  preferredDates?: string[];
+}
+
+export interface SubmitPanelAvailabilityRequest {
+  availableSlots: Array<{ startTime: string; endTime: string }>;
+  preferredSlots?: Array<{ startTime: string; endTime: string }>;
+  unavailableDates?: string[];
+}
+
+export interface OptimalPanelTime {
+  startTime: string;
+  endTime: string;
+  panelistsAvailable: number;
+}
+
+// 3.2.4 Timezone Types
+export interface TimezonePreference {
+  id: string;
+  userId: string;
+  primaryTimezone: string;
+  autoDetect: boolean;
+  lastDetectedTimezone?: string;
+  lastDetectedAt?: string;
+  use24HourFormat: boolean;
+  showSecondaryTimezone: boolean;
+  secondaryTimezone?: string;
+  preferLocalTime: boolean;
+  includeTimezoneInInvites: boolean;
+  workLocation?: string;
+  travelSchedule?: Array<{ startDate: string; endDate: string; timezone: string }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimezoneConversion {
+  original: {
+    dateTime: string;
+    timezone: string;
+  };
+  converted: {
+    dateTime: string;
+    timezone: string;
+    formatted: string;
+  };
+}

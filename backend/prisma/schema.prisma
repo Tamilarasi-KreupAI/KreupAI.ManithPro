@@ -122,6 +122,19 @@ model User {
   semanticSearchIndices  SemanticSearchIndex[]
   entityRecognitions     EntityRecognition[]
 
+  // Batch 15: Calendar & Scheduling
+  calendarIntegrations   CalendarIntegration[]
+  calendarEvents         CalendarEvent[]
+  calendarConflicts      CalendarConflict[]
+  bufferTimeSettings     BufferTimeSettings?
+  workingHours           WorkingHours[]
+  holidayCalendars       HolidayCalendar[]
+  schedulingLinks        SchedulingLink[]
+  availabilitySlots      AvailabilitySlot[]
+  organizedPanelSessions PanelSession[]       @relation("PanelOrganizer")
+  panelMemberships       PanelMember[]
+  timezonePreference     TimezonePreference?
+
   @@map("users")
 }
 
@@ -6476,4 +6489,553 @@ model EntityRecognition {
   @@index([userId])
   @@index([sourceType, sourceId])
   @@map("entity_recognitions")
+}
+
+// ============================================
+// BATCH 15: SMART CALENDAR & AUTOMATED SCHEDULING
+// Features 3.1.1-3.2.4
+// ============================================
+
+// 3.1.1-3.1.5 - CALENDAR INTEGRATIONS
+model CalendarIntegration {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Integration Type
+  provider              String              // GOOGLE, OUTLOOK, APPLE, ICAL, OTHER
+  name                  String              // Display name
+  email                 String?             // Calendar email
+  isDefault             Boolean             @default(false)
+  isPrimary             Boolean             @default(false)
+
+  // OAuth Credentials (encrypted in production)
+  accessToken           String?
+  refreshToken          String?
+  tokenExpiry           DateTime?
+  scope                 String?
+
+  // iCal/CalDAV Settings
+  calendarUrl           String?             // For iCal feeds
+  caldavUrl             String?             // For CalDAV
+  caldavUsername        String?
+  caldavPassword        String?             // Encrypted
+
+  // Sync Settings
+  syncEnabled           Boolean             @default(true)
+  syncDirection         String              @default("BIDIRECTIONAL") // INBOUND, OUTBOUND, BIDIRECTIONAL
+  lastSyncAt            DateTime?
+  syncStatus            String              @default("PENDING") // PENDING, SYNCING, SYNCED, ERROR
+  syncError             String?
+
+  // Calendar Settings
+  color                 String?             // Calendar color
+  timezone              String              @default("UTC")
+  showInAvailability    Boolean             @default(true)
+
+  // Metadata
+  externalCalendarId    String?             // ID in external system
+  metadata              Json?               // Provider-specific metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  events                CalendarEvent[]
+
+  @@unique([userId, provider, email])
+  @@index([userId])
+  @@index([provider])
+  @@map("calendar_integrations")
+}
+
+model CalendarEvent {
+  id                    String              @id @default(uuid())
+  calendarId            String
+  calendar              CalendarIntegration @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Event Details
+  title                 String
+  description           String?
+  location              String?
+  meetingLink           String?
+
+  // Time
+  startTime             DateTime
+  endTime               DateTime
+  allDay                Boolean             @default(false)
+  timezone              String              @default("UTC")
+
+  // Recurrence
+  isRecurring           Boolean             @default(false)
+  recurrenceRule        String?             // RRULE format
+  recurrenceId          String?             // For recurring instances
+
+  // Status
+  status                String              @default("CONFIRMED") // CONFIRMED, TENTATIVE, CANCELLED
+  visibility            String              @default("BUSY") // BUSY, FREE, TENTATIVE
+
+  // External Reference
+  externalEventId       String?             // ID in external calendar
+  externalLink          String?             // Link to external event
+
+  // Interview Link
+  interviewId           String?
+  applicationId         String?
+
+  // Attendees (stored as JSON for flexibility)
+  attendees             Json?               // Array of attendee objects
+  organizer             Json?               // Organizer info
+
+  // Sync Status
+  syncStatus            String              @default("SYNCED") // SYNCED, PENDING_SYNC, CONFLICT
+  lastSyncAt            DateTime?
+
+  // Metadata
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([calendarId])
+  @@index([userId])
+  @@index([startTime, endTime])
+  @@map("calendar_events")
+}
+
+// 3.1.6 - CALENDAR CONFLICT DETECTION
+model CalendarConflict {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Conflicting Events
+  event1Id              String
+  event2Id              String
+  event1Title           String
+  event2Title           String
+  event1Start           DateTime
+  event1End             DateTime
+  event2Start           DateTime
+  event2End             DateTime
+
+  // Conflict Details
+  conflictType          String              // OVERLAP, BACK_TO_BACK, TRAVEL_TIME, BUFFER_VIOLATION
+  overlapMinutes        Int                 // Minutes of overlap
+  severity              String              // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Resolution
+  status                String              @default("UNRESOLVED") // UNRESOLVED, RESOLVED, IGNORED
+  resolution            String?             // How it was resolved
+  resolvedAt            DateTime?
+  resolvedBy            String?
+
+  // Suggestions
+  suggestions           Json?               // AI suggestions for resolution
+
+  // Metadata
+  detectedAt            DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("calendar_conflicts")
+}
+
+// 3.1.7 - BUFFER TIME SETTINGS
+model BufferTimeSettings {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Default Buffer Times
+  beforeMeeting         Int                 @default(0) // Minutes before meeting
+  afterMeeting          Int                 @default(0) // Minutes after meeting
+
+  // Interview-Specific Buffers
+  beforeInterview       Int                 @default(15)
+  afterInterview        Int                 @default(10)
+
+  // Travel Time
+  includeTravel         Boolean             @default(false)
+  defaultTravelTime     Int                 @default(30)
+
+  // Type-Specific Settings
+  phoneScreenBuffer     Int                 @default(5)
+  videoInterviewBuffer  Int                 @default(10)
+  onsiteInterviewBuffer Int                 @default(30)
+  panelInterviewBuffer  Int                 @default(15)
+
+  // Auto-Apply Settings
+  autoApply             Boolean             @default(true)
+  applyToExternal       Boolean             @default(false) // Apply to external calendar events too
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("buffer_time_settings")
+}
+
+// 3.1.8 - WORKING HOURS CONFIGURATION
+model WorkingHours {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Settings
+  name                  String              @default("Default")
+  timezone              String              @default("UTC")
+  isDefault             Boolean             @default(false)
+
+  // Weekly Schedule (JSON for flexibility)
+  // Format: { dayOfWeek: { enabled: boolean, slots: [{ start: "09:00", end: "17:00" }] } }
+  monday                Json
+  tuesday               Json
+  wednesday             Json
+  thursday              Json
+  friday                Json
+  saturday              Json
+  sunday                Json
+
+  // Availability Preferences
+  minNoticeHours        Int                 @default(24) // Minimum notice for scheduling
+  maxAdvanceDays        Int                 @default(30) // How far in advance to allow scheduling
+  slotDuration          Int                 @default(30) // Default slot duration in minutes
+  slotIncrement         Int                 @default(15) // Increment for slot start times
+
+  // Lunch/Break Settings
+  lunchStart            String?             // e.g., "12:00"
+  lunchEnd              String?             // e.g., "13:00"
+  excludeLunch          Boolean             @default(true)
+
+  // Effective Dates
+  effectiveFrom         DateTime?
+  effectiveTo           DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("working_hours")
+}
+
+// 3.1.9 - HOLIDAY CALENDAR
+model HolidayCalendar {
+  id                    String              @id @default(uuid())
+  userId                String?
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Holiday Info
+  name                  String
+  date                  DateTime
+  endDate               DateTime?           // For multi-day holidays
+  isRecurring           Boolean             @default(true)
+  recurrenceRule        String?             // RRULE for recurring holidays
+
+  // Classification
+  type                  String              // PUBLIC, COMPANY, PERSONAL, RELIGIOUS, OBSERVANCE
+  country               String?             // ISO country code
+  region                String?             // State/Province
+  isOfficial            Boolean             @default(false)
+
+  // Blocking Settings
+  blockEntireDay        Boolean             @default(true)
+  blockStart            String?             // Partial day block start
+  blockEnd              String?             // Partial day block end
+
+  // Scope
+  scope                 String              @default("USER") // USER, COMPANY, GLOBAL
+  companyId             String?             // For company-wide holidays
+
+  // Metadata
+  source                String?             // Where this holiday data came from
+  externalId            String?             // ID in external holiday API
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@index([country, region])
+  @@map("holiday_calendars")
+}
+
+// 3.2.1 - SELF-SCHEDULING LINKS
+model SchedulingLink {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Link Settings
+  slug                  String              @unique // URL-friendly slug
+  name                  String
+  description           String?
+  isActive              Boolean             @default(true)
+
+  // Meeting Type
+  meetingType           String              // PHONE_SCREEN, VIDEO_INTERVIEW, ONSITE, PANEL, CUSTOM
+  duration              Int                 // Duration in minutes
+  location              String?             // Physical location or video link type
+
+  // Availability
+  workingHoursId        String?             // Link to specific working hours
+  bufferBefore          Int                 @default(0)
+  bufferAfter           Int                 @default(0)
+  minNotice             Int                 @default(24) // Hours
+  maxAdvance            Int                 @default(30) // Days
+
+  // Booking Limits
+  maxBookingsPerDay     Int?
+  maxBookingsPerWeek    Int?
+
+  // Confirmation Settings
+  requireConfirmation   Boolean             @default(false)
+  autoConfirm           Boolean             @default(true)
+  confirmationMessage   String?
+
+  // Questions for Booker
+  questions             Json?               // Array of questions to ask
+
+  // Notifications
+  notifyOnBooking       Boolean             @default(true)
+  reminderSchedule      Json?               // When to send reminders
+
+  // Branding
+  brandColor            String?
+  logoUrl               String?
+  welcomeMessage        String?
+
+  // Job/Application Link
+  jobId                 String?
+  applicationId         String?
+
+  // Analytics
+  viewCount             Int                 @default(0)
+  bookingCount          Int                 @default(0)
+
+  // Expiry
+  expiresAt             DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  bookings              SchedulingBooking[]
+
+  @@index([userId])
+  @@index([slug])
+  @@map("scheduling_links")
+}
+
+model SchedulingBooking {
+  id                    String              @id @default(uuid())
+  linkId                String
+  link                  SchedulingLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  // Booker Info
+  bookerEmail           String
+  bookerName            String
+  bookerPhone           String?
+  bookerTimezone        String
+
+  // Booking Details
+  startTime             DateTime
+  endTime               DateTime
+  status                String              @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW
+
+  // Associated Records
+  candidateId           String?
+  applicationId         String?
+  interviewId           String?
+
+  // Question Responses
+  responses             Json?
+
+  // Meeting Details
+  meetingLink           String?
+  meetingPassword       String?
+  location              String?
+
+  // Confirmation
+  confirmationToken     String?
+  confirmedAt           DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+
+  // Reminders
+  remindersSent         Json?               // Track which reminders were sent
+
+  // Metadata
+  ipAddress             String?
+  userAgent             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([linkId])
+  @@index([bookerEmail])
+  @@index([startTime])
+  @@map("scheduling_bookings")
+}
+
+// 3.2.2 - AUTO-AVAILABILITY DETECTION
+model AvailabilitySlot {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Time Slot
+  date                  DateTime            @db.Date
+  startTime             DateTime
+  endTime               DateTime
+  timezone              String              @default("UTC")
+
+  // Availability Status
+  status                String              @default("AVAILABLE") // AVAILABLE, BUSY, TENTATIVE, BLOCKED
+  source                String              // CALENDAR_SYNC, MANUAL, WORKING_HOURS, HOLIDAY
+
+  // Slot Quality
+  preferenceScore       Float               @default(1.0) // 0-1, higher is more preferred
+  isOptimal             Boolean             @default(false) // AI-determined optimal slot
+
+  // Conflicts
+  hasConflict           Boolean             @default(false)
+  conflictEventId       String?
+
+  // For Panel Scheduling
+  isPanelSlot           Boolean             @default(false)
+  panelSessionId        String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  expiresAt             DateTime            // When this slot data becomes stale
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId, date])
+  @@index([status])
+  @@map("availability_slots")
+}
+
+// 3.2.3 - PANEL INTERVIEW COORDINATOR
+model PanelSession {
+  id                    String              @id @default(uuid())
+  organizerId           String
+  organizer             User                @relation("PanelOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+
+  // Session Details
+  name                  String
+  description           String?
+  duration              Int                 // Duration in minutes
+
+  // Associated Records
+  jobId                 String?
+  applicationId         String?
+
+  // Panelists
+  panelists             PanelMember[]
+
+  // Status
+  status                String              @default("SCHEDULING") // SCHEDULING, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  // Scheduling Settings
+  minPanelistsRequired  Int                 @default(2)
+  requireAllPanelists   Boolean             @default(false)
+  schedulingDeadline    DateTime?
+
+  // Preferred Times
+  preferredDates        Json?               // Array of preferred dates
+  preferredTimeRanges   Json?               // Preferred time ranges
+  excludedDates         Json?               // Dates to exclude
+
+  // Scheduling Result
+  scheduledStartTime    DateTime?
+  scheduledEndTime      DateTime?
+  meetingLink           String?
+  location              String?
+
+  // Candidate Info
+  candidateId           String?
+  candidateName         String?
+  candidateEmail        String?
+
+  // Notifications
+  invitesSentAt         DateTime?
+  remindersSentAt       Json?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizerId])
+  @@index([status])
+  @@map("panel_sessions")
+}
+
+model PanelMember {
+  id                    String              @id @default(uuid())
+  sessionId             String
+  session               PanelSession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Role
+  role                  String              @default("PANELIST") // LEAD, PANELIST, OBSERVER, NOTETAKER
+  isRequired            Boolean             @default(true)
+  isOptional            Boolean             @default(false)
+
+  // Response
+  responseStatus        String              @default("PENDING") // PENDING, ACCEPTED, DECLINED, TENTATIVE
+  respondedAt           DateTime?
+  declineReason         String?
+
+  // Availability Submitted
+  availabilitySubmitted Boolean             @default(false)
+  availableSlots        Json?               // Array of available time slots
+  preferredSlots        Json?               // Array of preferred time slots
+  unavailableDates      Json?               // Dates they're unavailable
+
+  // Metadata
+  invitedAt             DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+  @@map("panel_members")
+}
+
+// 3.2.4 - TIMEZONE INTELLIGENCE
+model TimezonePreference {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Primary Timezone
+  primaryTimezone       String              @default("UTC")
+  autoDetect            Boolean             @default(true)
+  lastDetectedTimezone  String?
+  lastDetectedAt        DateTime?
+
+  // Display Preferences
+  use24HourFormat       Boolean             @default(false)
+  showSecondaryTimezone Boolean             @default(false)
+  secondaryTimezone     String?
+
+  // Meeting Preferences
+  preferLocalTime       Boolean             @default(true) // Show times in local TZ
+  includeTimezoneInInvites Boolean          @default(true)
+
+  // Travel/Remote Settings
+  workLocation          String?             // City for TZ detection
+  travelSchedule        Json?               // Known travel affecting TZ
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("timezone_preferences")
 }
