@@ -13277,3 +13277,579 @@ model SecurityAuditLog {
   @@index([riskLevel])
   @@map("security_audit_logs")
 }
+
+// ============================================================================
+// BATCH 28: DATA PROTECTION (8.2.1-8.2.8)
+// ============================================================================
+
+// 8.2.1, 8.2.8 Encryption Key Management
+model EncryptionKey {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Key Info
+  name                  String
+  description           String?
+  keyType               String              // MASTER, DATA, FIELD, BACKUP
+  algorithm             String              @default("AES-256-GCM")
+
+  // Key Material (encrypted with master key or HSM)
+  encryptedKeyMaterial  String
+  keyCheckValue         String?             // KCV for verification
+
+  // Version & Rotation
+  version               Int                 @default(1)
+  previousKeyId         String?             // For key rotation
+  rotationDue           DateTime?
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, PENDING_ROTATION, ROTATED, REVOKED, DESTROYED
+  activatedAt           DateTime?
+  expiresAt             DateTime?
+
+  // Usage
+  purpose               String[]            @default([]) // database, files, backups, api_tokens
+  allowedOperations     String[]            @default([]) // encrypt, decrypt, sign, verify
+
+  // HSM Integration
+  isHSMKey              Boolean             @default(false)
+  hsmKeyId              String?
+  hsmProvider           String?             // aws_kms, azure_keyvault, gcp_kms, hashicorp_vault
+
+  // Audit
+  lastUsedAt            DateTime?
+  usageCount            Int                 @default(0)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId])
+  @@index([keyType])
+  @@index([status])
+  @@map("encryption_keys")
+}
+
+// Key Rotation Schedule
+model KeyRotationSchedule {
+  id                    String              @id @default(uuid())
+  keyId                 String
+
+  // Schedule
+  rotationIntervalDays  Int                 @default(90)
+  nextRotationAt        DateTime
+  lastRotationAt        DateTime?
+
+  // Notifications
+  notifyBeforeDays      Int                 @default(14)
+  notifyEmails          String[]            @default([])
+
+  // Auto rotation
+  autoRotate            Boolean             @default(false)
+  autoRevokeOldDays     Int                 @default(30)
+
+  // Status
+  isEnabled             Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([keyId])
+  @@index([nextRotationAt])
+  @@map("key_rotation_schedules")
+}
+
+// 8.2.3 PII Detection & Masking Configuration
+model PIIDetectionConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Detection settings
+  isEnabled             Boolean             @default(true)
+  scanFrequency         String              @default("REALTIME") // REALTIME, HOURLY, DAILY
+
+  // PII Types to detect
+  detectEmail           Boolean             @default(true)
+  detectPhone           Boolean             @default(true)
+  detectSSN             Boolean             @default(true)
+  detectCreditCard      Boolean             @default(true)
+  detectAddress         Boolean             @default(true)
+  detectDOB             Boolean             @default(true)
+  detectPassport        Boolean             @default(true)
+  detectDriverLicense   Boolean             @default(true)
+  customPatterns        Json?               // Custom regex patterns
+
+  // Action settings
+  defaultAction         String              @default("MASK") // MASK, ENCRYPT, REDACT, LOG_ONLY
+  maskingChar           String              @default("*")
+  preserveFormat        Boolean             @default(true)
+
+  // Notifications
+  alertOnDetection      Boolean             @default(true)
+  alertEmails           String[]            @default([])
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId])
+  @@map("pii_detection_configs")
+}
+
+// PII Detection Log
+model PIIDetectionLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Detection info
+  sourceType            String              // database, upload, api_request
+  sourceLocation        String              // table.column, file_path, endpoint
+  recordId              String?
+
+  // PII found
+  piiType               String              // email, phone, ssn, etc.
+  piiCount              Int                 @default(1)
+  confidence            Float               // 0-1 confidence score
+
+  // Action taken
+  actionTaken           String              // masked, encrypted, redacted, logged
+  originalHash          String?             // Hash of original for verification
+
+  // Metadata
+  detectedAt            DateTime            @default(now())
+  processedBy           String?
+
+  @@index([organizationId])
+  @@index([piiType])
+  @@index([detectedAt])
+  @@map("pii_detection_logs")
+}
+
+// 8.2.4 Data Anonymization Rules
+model AnonymizationRule {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Rule info
+  name                  String
+  description           String?
+  isEnabled             Boolean             @default(true)
+
+  // Target
+  targetTable           String
+  targetColumn          String
+
+  // Anonymization method
+  method                String              // hash, fake, mask, shuffle, null, generalize
+  methodConfig          Json?               // Method-specific config
+
+  // Conditional application
+  conditions            Json?               // When to apply (e.g., only for certain roles)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, targetTable, targetColumn])
+  @@index([organizationId])
+  @@index([targetTable])
+  @@map("anonymization_rules")
+}
+
+// Anonymization Job
+model AnonymizationJob {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Job info
+  name                  String
+  description           String?
+  jobType               String              // FULL, INCREMENTAL, SELECTIVE
+
+  // Scope
+  targetEnvironment     String              // production, staging, analytics
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  ruleIds               String[]            @default([])
+
+  // Execution
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  startedAt             DateTime?
+  completedAt           DateTime?
+  recordsProcessed      Int                 @default(0)
+  errorCount            Int                 @default(0)
+  errorLog              Json?
+
+  // Scheduling
+  isScheduled           Boolean             @default(false)
+  cronExpression        String?
+  nextRunAt             DateTime?
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([nextRunAt])
+  @@map("anonymization_jobs")
+}
+
+// 8.2.5 Secure File Storage
+model SecureFile {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  uploadedBy            String?
+
+  // File info
+  originalName          String
+  storedName            String              // UUID-based name
+  mimeType              String
+  fileSize              Int
+
+  // Storage location
+  storageProvider       String              @default("LOCAL") // LOCAL, S3, AZURE_BLOB, GCS
+  storagePath           String
+  storageRegion         String?
+
+  // Encryption
+  isEncrypted           Boolean             @default(true)
+  encryptionKeyId       String?
+  encryptionAlgorithm   String?             @default("AES-256-GCM")
+  checksum              String?             // SHA-256 of encrypted content
+
+  // Classification
+  classification        String              @default("INTERNAL") // PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED
+  containsPII           Boolean             @default(false)
+  piiTypes              String[]            @default([])
+
+  // Access control
+  accessLevel           String              @default("OWNER") // PUBLIC, AUTHENTICATED, OWNER, SPECIFIC
+  allowedUsers          String[]            @default([])
+  allowedRoles          String[]            @default([])
+
+  // Retention
+  retentionPolicy       String?
+  expiresAt             DateTime?
+  deletedAt             DateTime?
+  deleteReason          String?
+
+  // Versioning
+  version               Int                 @default(1)
+  previousVersionId     String?
+
+  // Audit
+  downloadCount         Int                 @default(0)
+  lastAccessedAt        DateTime?
+
+  // Metadata
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  accessLogs            FileAccessLog[]
+
+  @@index([organizationId])
+  @@index([uploadedBy])
+  @@index([classification])
+  @@index([containsPII])
+  @@index([expiresAt])
+  @@map("secure_files")
+}
+
+// File Access Log
+model FileAccessLog {
+  id                    String              @id @default(uuid())
+  fileId                String
+  userId                String?
+
+  // Access info
+  action                String              // VIEW, DOWNLOAD, SHARE, DELETE
+  ipAddress             String?
+  userAgent             String?
+
+  // Outcome
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  // Metadata
+  accessedAt            DateTime            @default(now())
+
+  // Relations
+  file                  SecureFile          @relation(fields: [fileId], references: [id])
+
+  @@index([fileId])
+  @@index([userId])
+  @@index([accessedAt])
+  @@map("file_access_logs")
+}
+
+// 8.2.6 Data Residency Configuration
+model DataResidencyConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String              @unique
+
+  // Primary Region
+  primaryRegion         String              // us-east, eu-west, ap-south, etc.
+  primaryProvider       String              // aws, azure, gcp
+
+  // Data categories and their regions
+  piiDataRegion         String?             // Override for PII data
+  backupRegion          String?             // Region for backups
+  analyticsRegion       String?             // Region for analytics data
+
+  // Replication
+  enableReplication     Boolean             @default(false)
+  replicaRegions        String[]            @default([])
+
+  // Compliance
+  gdprCompliant         Boolean             @default(false)
+  ccpaCompliant         Boolean             @default(false)
+  hipaaCompliant        Boolean             @default(false)
+
+  // Transfer rules
+  allowCrossBorderTransfer Boolean          @default(true)
+  approvedCountries     String[]            @default([])
+  blockedCountries      String[]            @default([])
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("data_residency_configs")
+}
+
+// 8.2.7 Backup & Recovery
+model BackupConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Backup settings
+  name                  String
+  description           String?
+  isEnabled             Boolean             @default(true)
+
+  // Scope
+  backupType            String              @default("FULL") // FULL, INCREMENTAL, DIFFERENTIAL
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  includeFiles          Boolean             @default(true)
+
+  // Schedule
+  schedule              String              // cron expression
+  retentionDays         Int                 @default(30)
+  maxBackups            Int                 @default(10)
+
+  // Storage
+  storageProvider       String              // LOCAL, S3, AZURE_BLOB, GCS
+  storagePath           String
+  storageRegion         String?
+
+  // Encryption
+  encryptBackups        Boolean             @default(true)
+  encryptionKeyId       String?
+
+  // Notifications
+  notifyOnSuccess       Boolean             @default(false)
+  notifyOnFailure       Boolean             @default(true)
+  notifyEmails          String[]            @default([])
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  backups               Backup[]
+
+  @@index([organizationId])
+  @@map("backup_configs")
+}
+
+// Backup Record
+model Backup {
+  id                    String              @id @default(uuid())
+  configId              String
+  organizationId        String?
+
+  // Backup info
+  backupType            String              // FULL, INCREMENTAL, DIFFERENTIAL
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED, VERIFYING
+
+  // Timing
+  startedAt             DateTime?
+  completedAt           DateTime?
+  duration              Int?                // seconds
+
+  // Size
+  sizeBytes             BigInt?
+  compressedSizeBytes   BigInt?
+  recordCount           Int?
+
+  // Storage
+  storagePath           String?
+  storageRegion         String?
+
+  // Encryption
+  isEncrypted           Boolean             @default(true)
+  encryptionKeyId       String?
+  checksum              String?
+
+  // Verification
+  verifiedAt            DateTime?
+  isVerified            Boolean             @default(false)
+  verificationResult    Json?
+
+  // Retention
+  expiresAt             DateTime?
+  deletedAt             DateTime?
+
+  // Error handling
+  errorMessage          String?
+  errorDetails          Json?
+  retryCount            Int                 @default(0)
+
+  // Metadata
+  triggeredBy           String?             // SCHEDULED, MANUAL, API
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  config                BackupConfig        @relation(fields: [configId], references: [id])
+  restores              RestoreJob[]
+
+  @@index([configId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("backups")
+}
+
+// Restore Job
+model RestoreJob {
+  id                    String              @id @default(uuid())
+  backupId              String
+  organizationId        String?
+
+  // Restore info
+  restoreType           String              // FULL, PARTIAL, POINT_IN_TIME
+  targetEnvironment     String              // production, staging, new_instance
+
+  // Scope
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  pointInTime           DateTime?
+
+  // Status
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED, CANCELLED
+
+  // Progress
+  startedAt             DateTime?
+  completedAt           DateTime?
+  progress              Int                 @default(0)       // percentage
+  recordsRestored       Int                 @default(0)
+
+  // Error handling
+  errorMessage          String?
+  errorDetails          Json?
+
+  // Validation
+  validateAfterRestore  Boolean             @default(true)
+  validationResult      Json?
+
+  // Metadata
+  requestedBy           String
+  approvedBy            String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  backup                Backup              @relation(fields: [backupId], references: [id])
+
+  @@index([backupId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("restore_jobs")
+}
+
+// 8.2.2 TLS Configuration (for compliance tracking)
+model TLSConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique
+
+  // TLS Settings
+  minVersion            String              @default("1.2") // 1.2, 1.3
+  preferredVersion      String              @default("1.3")
+
+  // Cipher suites
+  allowedCipherSuites   String[]            @default([])
+  blockedCipherSuites   String[]            @default([])
+
+  // Certificate
+  certificateProvider   String?             // letsencrypt, digicert, custom
+  certificateExpiry     DateTime?
+  autoRenew             Boolean             @default(true)
+  renewBeforeDays       Int                 @default(30)
+
+  // HSTS
+  hstsEnabled           Boolean             @default(true)
+  hstsMaxAge            Int                 @default(31536000)
+  hstsIncludeSubdomains Boolean             @default(true)
+  hstsPreload           Boolean             @default(false)
+
+  // Other security headers
+  enableCertTransparency Boolean            @default(true)
+  enableOCSPStapling     Boolean            @default(true)
+
+  // Metadata
+  lastAuditedAt         DateTime?
+  auditResult           Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("tls_configs")
+}
+
+// Data Protection Audit Log
+model DataProtectionAuditLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  // Event info
+  eventType             String              // encryption, decryption, key_access, backup, restore, pii_access
+  eventCategory         String              // keys, data, files, backups
+
+  // Resource
+  resourceType          String              // key, file, table, backup
+  resourceId            String
+
+  // Details
+  description           String
+  details               Json?
+
+  // Outcome
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  // Client info
+  ipAddress             String?
+  userAgent             String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([resourceType])
+  @@index([createdAt])
+  @@map("data_protection_audit_logs")
+}

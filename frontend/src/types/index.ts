@@ -12798,3 +12798,766 @@ export interface SecurityStats {
     highRiskLast7d: number;
   };
 }
+
+// ==========================================
+// Batch 28: Data Protection Types (8.2.1-8.2.8)
+// ==========================================
+
+// 8.2.1 Encryption Key Management
+export type EncryptionKeyType = 'AES_256_GCM' | 'AES_256_CBC' | 'RSA_4096' | 'RSA_2048' | 'ECDSA_P384';
+export type EncryptionKeyStatus = 'ACTIVE' | 'PENDING_ROTATION' | 'ROTATING' | 'RETIRED' | 'REVOKED';
+export type EncryptionKeyPurpose = 'DATA_ENCRYPTION' | 'KEY_WRAPPING' | 'SIGNING' | 'AUTHENTICATION' | 'BACKUP';
+export type KeyStorageType = 'SOFTWARE' | 'HSM' | 'CLOUD_KMS';
+
+export interface EncryptionKey {
+  id: string;
+  name: string;
+  description?: string;
+
+  keyType: EncryptionKeyType;
+  purpose: EncryptionKeyPurpose;
+  status: EncryptionKeyStatus;
+
+  storageType: KeyStorageType;
+  hsmKeyId?: string;
+  cloudKmsKeyId?: string;
+
+  keyFingerprint: string;
+  publicKeyPem?: string;
+
+  version: number;
+  previousVersionId?: string;
+
+  createdAt: string;
+  activatedAt?: string;
+  lastRotatedAt?: string;
+  expiresAt?: string;
+  retiredAt?: string;
+
+  rotationEnabled: boolean;
+  rotationIntervalDays?: number;
+
+  allowedOperations: string[];
+
+  metadata?: Record<string, any>;
+}
+
+export interface KeyRotationSchedule {
+  id: string;
+  keyId: string;
+
+  cronExpression: string;
+  rotationIntervalDays: number;
+
+  lastRotationAt?: string;
+  nextRotationAt: string;
+
+  autoRotateEnabled: boolean;
+  notifyBeforeDays: number;
+  notificationEmails: string[];
+
+  retainVersionCount: number;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KeyRotationEvent {
+  id: string;
+  keyId: string;
+
+  eventType: 'SCHEDULED' | 'MANUAL' | 'EMERGENCY' | 'AUTOMATED';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+
+  previousVersion: number;
+  newVersion: number;
+
+  initiatedBy?: string;
+  startedAt: string;
+  completedAt?: string;
+
+  errorMessage?: string;
+  details?: Record<string, any>;
+}
+
+// 8.2.2 TLS Configuration
+export type TLSVersion = 'TLS_1_2' | 'TLS_1_3';
+export type CertificateStatus = 'VALID' | 'EXPIRING_SOON' | 'EXPIRED' | 'REVOKED' | 'PENDING';
+
+export interface TLSConfig {
+  id: string;
+
+  minVersion: TLSVersion;
+  maxVersion: TLSVersion;
+
+  cipherSuites: string[];
+  preferServerCipherOrder: boolean;
+
+  hsts: {
+    enabled: boolean;
+    maxAge: number;
+    includeSubdomains: boolean;
+    preload: boolean;
+  };
+
+  certificateInfo: {
+    issuer: string;
+    subject: string;
+    serialNumber: string;
+    validFrom: string;
+    validTo: string;
+    status: CertificateStatus;
+    daysUntilExpiry: number;
+    fingerprint: string;
+    san: string[];
+  };
+
+  ocspStapling: boolean;
+  sessionTickets: boolean;
+  sessionTimeout: number;
+
+  clientCertificateAuth: {
+    enabled: boolean;
+    required: boolean;
+    trustedCAs: string[];
+  };
+
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+// 8.2.3 PII Detection & Masking
+export type PIIType =
+  | 'SSN'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'CREDIT_CARD'
+  | 'PASSPORT'
+  | 'DRIVERS_LICENSE'
+  | 'BANK_ACCOUNT'
+  | 'DATE_OF_BIRTH'
+  | 'ADDRESS'
+  | 'IP_ADDRESS'
+  | 'NAME'
+  | 'CUSTOM';
+
+export type MaskingStrategy =
+  | 'FULL_MASK'
+  | 'PARTIAL_MASK'
+  | 'HASH'
+  | 'TOKENIZE'
+  | 'REDACT'
+  | 'ENCRYPT';
+
+export interface PIIDetectionConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  piiTypes: PIIType[];
+  customPatterns?: {
+    name: string;
+    pattern: string;
+    description?: string;
+  }[];
+
+  scanLocations: {
+    databases: boolean;
+    files: boolean;
+    logs: boolean;
+    apiResponses: boolean;
+  };
+
+  maskingStrategy: MaskingStrategy;
+  maskingOptions: {
+    maskChar: string;
+    preserveLength: boolean;
+    preserveFormat: boolean;
+    showLastN?: number;
+    showFirstN?: number;
+  };
+
+  autoMask: boolean;
+  logDetections: boolean;
+  alertOnDetection: boolean;
+  alertThreshold?: number;
+
+  excludePatterns?: string[];
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PIIDetectionLog {
+  id: string;
+  configId: string;
+
+  piiType: PIIType;
+  detectedValue: string; // Masked
+
+  location: {
+    type: 'DATABASE' | 'FILE' | 'LOG' | 'API_RESPONSE';
+    path: string;
+    field?: string;
+    lineNumber?: number;
+  };
+
+  action: 'DETECTED' | 'MASKED' | 'ALERTED' | 'BLOCKED';
+
+  matchedPattern?: string;
+  confidence: number;
+
+  userId?: string;
+  requestId?: string;
+
+  createdAt: string;
+}
+
+export interface PIIScanResult {
+  scanId: string;
+  status: 'SCANNING' | 'COMPLETED' | 'FAILED';
+
+  scannedItems: number;
+  detections: {
+    piiType: PIIType;
+    count: number;
+    locations: string[];
+  }[];
+
+  totalDetections: number;
+  maskedCount: number;
+
+  startedAt: string;
+  completedAt?: string;
+
+  errors?: string[];
+}
+
+// 8.2.4 Data Anonymization
+export type AnonymizationMethod =
+  | 'GENERALIZATION'
+  | 'SUPPRESSION'
+  | 'PSEUDONYMIZATION'
+  | 'DATA_SWAPPING'
+  | 'NOISE_ADDITION'
+  | 'AGGREGATION'
+  | 'K_ANONYMITY'
+  | 'L_DIVERSITY'
+  | 'T_CLOSENESS';
+
+export interface AnonymizationRule {
+  id: string;
+  name: string;
+  description?: string;
+
+  targetField: string;
+  targetTable?: string;
+
+  method: AnonymizationMethod;
+
+  options: {
+    generalizationLevel?: number;
+    kValue?: number;
+    lValue?: number;
+    tValue?: number;
+    noiseLevel?: number;
+    aggregationType?: 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
+    replacementValue?: string;
+    preserveFormat?: boolean;
+    seedValue?: string;
+  };
+
+  conditions?: {
+    field: string;
+    operator: 'equals' | 'contains' | 'gt' | 'lt' | 'regex';
+    value: string;
+  }[];
+
+  priority: number;
+  isActive: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AnonymizationJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface AnonymizationJob {
+  id: string;
+  name: string;
+
+  ruleIds: string[];
+
+  sourceType: 'DATABASE' | 'FILE' | 'API';
+  sourceConfig: Record<string, any>;
+
+  destinationType: 'DATABASE' | 'FILE' | 'API';
+  destinationConfig: Record<string, any>;
+
+  status: AnonymizationJobStatus;
+
+  progress: number;
+  totalRecords?: number;
+  processedRecords?: number;
+
+  startedAt?: string;
+  completedAt?: string;
+
+  errors?: string[];
+  warnings?: string[];
+
+  createdBy: string;
+  createdAt: string;
+}
+
+// 8.2.5 Secure File Storage
+export type FileEncryptionMethod = 'AES_256_GCM' | 'AES_256_CBC' | 'CHACHA20_POLY1305';
+export type FileStorageLocation = 'LOCAL' | 'S3' | 'AZURE_BLOB' | 'GCS';
+
+export interface SecureFile {
+  id: string;
+  originalName: string;
+  storageName: string;
+
+  mimeType: string;
+  size: number;
+
+  encryptionMethod: FileEncryptionMethod;
+  encryptionKeyId: string;
+
+  storageLocation: FileStorageLocation;
+  storagePath: string;
+  storageRegion?: string;
+
+  checksum: string;
+  checksumAlgorithm: 'SHA256' | 'SHA512';
+
+  metadata?: Record<string, any>;
+  tags?: string[];
+
+  accessControl: {
+    ownerId: string;
+    readAccess: string[];
+    writeAccess: string[];
+    publicAccess: boolean;
+    expiresAt?: string;
+  };
+
+  virusScanStatus: 'PENDING' | 'CLEAN' | 'INFECTED' | 'SCAN_FAILED';
+  virusScanDate?: string;
+
+  retentionPolicy?: {
+    deleteAfterDays?: number;
+    archiveAfterDays?: number;
+    legalHold: boolean;
+  };
+
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  lastAccessedAt?: string;
+}
+
+export interface FileAccessLog {
+  id: string;
+  fileId: string;
+
+  action: 'VIEW' | 'DOWNLOAD' | 'UPLOAD' | 'DELETE' | 'SHARE' | 'MODIFY';
+
+  userId: string;
+  userEmail?: string;
+
+  ipAddress: string;
+  userAgent?: string;
+
+  success: boolean;
+  errorMessage?: string;
+
+  metadata?: Record<string, any>;
+
+  createdAt: string;
+}
+
+export interface FileShare {
+  id: string;
+  fileId: string;
+
+  shareType: 'USER' | 'GROUP' | 'LINK';
+  sharedWith?: string;
+
+  permissions: ('READ' | 'WRITE' | 'DELETE')[];
+
+  expiresAt?: string;
+  accessCount: number;
+  maxAccessCount?: number;
+
+  password?: boolean; // Indicates if password protected
+
+  createdBy: string;
+  createdAt: string;
+}
+
+// 8.2.6 Data Residency
+export type DataResidencyRegion =
+  | 'US_EAST'
+  | 'US_WEST'
+  | 'EU_WEST'
+  | 'EU_CENTRAL'
+  | 'APAC_SOUTHEAST'
+  | 'APAC_EAST';
+
+export type ComplianceFramework = 'GDPR' | 'CCPA' | 'HIPAA' | 'SOC2' | 'LGPD' | 'PDPA';
+
+export interface DataResidencyConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  primaryRegion: DataResidencyRegion;
+  allowedRegions: DataResidencyRegion[];
+
+  dataTypes: string[];
+
+  complianceFrameworks: ComplianceFramework[];
+
+  replicationConfig?: {
+    enabled: boolean;
+    targetRegions: DataResidencyRegion[];
+    syncMode: 'SYNCHRONOUS' | 'ASYNCHRONOUS';
+    lagTolerance?: number;
+  };
+
+  crossBorderTransfer: {
+    allowed: boolean;
+    requiresConsent: boolean;
+    approvedCountries?: string[];
+    dataTransferAgreement?: string;
+  };
+
+  retentionPolicy: {
+    defaultRetentionDays: number;
+    byDataType?: Record<string, number>;
+  };
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegionInfo {
+  id: DataResidencyRegion;
+  name: string;
+  country: string;
+  countryCode: string;
+
+  complianceFrameworks: ComplianceFramework[];
+
+  datacenters: {
+    provider: string;
+    location: string;
+    tier: number;
+  }[];
+
+  features: {
+    encryption: boolean;
+    backup: boolean;
+    replication: boolean;
+    edgeNodes: boolean;
+  };
+
+  latency?: number;
+  isAvailable: boolean;
+}
+
+// 8.2.7 Backup & Recovery
+export type BackupType = 'FULL' | 'INCREMENTAL' | 'DIFFERENTIAL';
+export type BackupStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CORRUPTED';
+export type BackupStorageType = 'LOCAL' | 'S3' | 'AZURE_BLOB' | 'GCS' | 'TAPE';
+
+export interface BackupConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  backupType: BackupType;
+
+  schedule: {
+    enabled: boolean;
+    cronExpression: string;
+    timezone: string;
+  };
+
+  sources: {
+    databases: string[];
+    tables?: string[];
+    files?: string[];
+    includeBlobs: boolean;
+  };
+
+  storage: {
+    type: BackupStorageType;
+    path: string;
+    region?: DataResidencyRegion;
+
+    encryption: {
+      enabled: boolean;
+      keyId?: string;
+    };
+
+    compression: {
+      enabled: boolean;
+      algorithm: 'GZIP' | 'LZ4' | 'ZSTD';
+      level: number;
+    };
+  };
+
+  retention: {
+    dailyCount: number;
+    weeklyCount: number;
+    monthlyCount: number;
+    yearlyCount: number;
+  };
+
+  notifications: {
+    onSuccess: boolean;
+    onFailure: boolean;
+    emails: string[];
+  };
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Backup {
+  id: string;
+  configId: string;
+  configName: string;
+
+  backupType: BackupType;
+  status: BackupStatus;
+
+  sizeBytes: number;
+  compressedSizeBytes?: number;
+
+  storagePath: string;
+  storageType: BackupStorageType;
+  storageRegion?: DataResidencyRegion;
+
+  encryptionKeyId?: string;
+  checksum: string;
+
+  tablesIncluded: number;
+  recordsIncluded: number;
+
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+
+  verifiedAt?: string;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'FAILED';
+
+  expiresAt?: string;
+
+  errorMessage?: string;
+
+  metadata?: Record<string, any>;
+}
+
+export type RestoreJobStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface RestoreJob {
+  id: string;
+  backupId: string;
+
+  restoreType: 'FULL' | 'PARTIAL' | 'POINT_IN_TIME';
+
+  targetDatabase?: string;
+  tables?: string[];
+  pointInTime?: string;
+
+  status: RestoreJobStatus;
+  progress: number;
+
+  tablesRestored?: number;
+  recordsRestored?: number;
+
+  overwriteExisting: boolean;
+  createNewDatabase: boolean;
+
+  startedAt?: string;
+  completedAt?: string;
+
+  errorMessage?: string;
+  warnings?: string[];
+
+  initiatedBy: string;
+  createdAt: string;
+}
+
+// 8.2.8 Key Lifecycle Management
+export interface KeyLifecycleEvent {
+  id: string;
+  keyId: string;
+  keyName: string;
+
+  eventType: 'CREATED' | 'ACTIVATED' | 'ROTATED' | 'SUSPENDED' | 'RETIRED' | 'REVOKED' | 'DESTROYED';
+
+  previousState?: EncryptionKeyStatus;
+  newState: EncryptionKeyStatus;
+
+  reason?: string;
+
+  performedBy?: string;
+  performedAt: string;
+
+  metadata?: Record<string, any>;
+}
+
+export interface KeyUsageAnalytics {
+  keyId: string;
+  keyName: string;
+
+  period: {
+    start: string;
+    end: string;
+  };
+
+  operations: {
+    encrypt: number;
+    decrypt: number;
+    sign: number;
+    verify: number;
+    wrap: number;
+    unwrap: number;
+  };
+
+  uniqueUsers: number;
+  uniqueApplications: number;
+
+  errorRate: number;
+  avgLatencyMs: number;
+
+  peakUsage: {
+    timestamp: string;
+    operationsPerSecond: number;
+  };
+}
+
+// Data Protection Audit Log
+export type DataProtectionEventType =
+  | 'KEY_OPERATION'
+  | 'PII_DETECTION'
+  | 'DATA_ANONYMIZATION'
+  | 'FILE_ACCESS'
+  | 'BACKUP_OPERATION'
+  | 'RESTORE_OPERATION'
+  | 'CONFIG_CHANGE'
+  | 'COMPLIANCE_CHECK';
+
+export interface DataProtectionAuditLog {
+  id: string;
+
+  eventType: DataProtectionEventType;
+  action: string;
+
+  resourceType: string;
+  resourceId: string;
+
+  userId?: string;
+  userEmail?: string;
+
+  details: Record<string, any>;
+
+  ipAddress?: string;
+  userAgent?: string;
+
+  status: 'SUCCESS' | 'FAILURE';
+  errorMessage?: string;
+
+  createdAt: string;
+}
+
+// Data Protection Statistics
+export interface DataProtectionStats {
+  encryption: {
+    activeKeys: number;
+    pendingRotation: number;
+    keysRotatedLast30d: number;
+    hsmEnabled: boolean;
+  };
+
+  piiDetection: {
+    activeConfigs: number;
+    detectionsLast24h: number;
+    maskedLast24h: number;
+    alertsLast24h: number;
+  };
+
+  anonymization: {
+    activeRules: number;
+    jobsLast7d: number;
+    recordsAnonymized: number;
+  };
+
+  secureStorage: {
+    totalFiles: number;
+    totalSizeGB: number;
+    encryptedPercentage: number;
+    accessesLast24h: number;
+  };
+
+  backup: {
+    activeConfigs: number;
+    backupsLast7d: number;
+    lastBackupAt?: string;
+    totalBackupSizeGB: number;
+    verifiedBackups: number;
+  };
+
+  compliance: {
+    frameworks: ComplianceFramework[];
+    lastCheckAt?: string;
+    passRate: number;
+    criticalIssues: number;
+  };
+}
+
+// Data Protection Dashboard
+export interface DataProtectionDashboard {
+  stats: DataProtectionStats;
+
+  recentActivity: DataProtectionAuditLog[];
+
+  alerts: {
+    id: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    type: string;
+    message: string;
+    createdAt: string;
+    acknowledged: boolean;
+  }[];
+
+  keyRotationSchedule: {
+    keyId: string;
+    keyName: string;
+    nextRotation: string;
+    daysUntil: number;
+  }[];
+
+  backupSchedule: {
+    configId: string;
+    configName: string;
+    nextBackup: string;
+    lastBackupStatus?: BackupStatus;
+  }[];
+
+  complianceStatus: {
+    framework: ComplianceFramework;
+    status: 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT';
+    lastCheck: string;
+    issues: number;
+  }[];
+}
