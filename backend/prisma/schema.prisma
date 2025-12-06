@@ -102,6 +102,7 @@ model User {
   sentMessages         Message[]       @relation("SentMessages")
   receivedMessages     Message[]       @relation("ReceivedMessages")
   notifications        Notification[]
+  candidateProfile     CandidateProfile?
 
   @@map("users")
 }
@@ -558,4 +559,458 @@ model SystemConfig {
   @@index([category])
   @@index([isPublic])
   @@map("system_configs")
+}
+
+// ============================================
+// CV-LESS RECRUITMENT & RICH PROFILES (Features 1.1.1 - 1.1.5)
+// ============================================
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum SkillProficiencyLevel {
+  BEGINNER        // 1-2
+  ELEMENTARY      // 3-4
+  INTERMEDIATE    // 5-6
+  ADVANCED        // 7-8
+  EXPERT          // 9-10
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+  APPRENTICESHIP
+  SELF_EMPLOYED
+}
+
+// 1.1.1 - Structured Profile Builder
+model CandidateProfile {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // Professional Summary
+  headline              String?             // Professional headline (e.g., "Senior Software Engineer")
+  summary               String?             // Professional summary/bio
+
+  // Personal Information
+  dateOfBirth           DateTime?
+  nationality           String?
+  languages             Json?               // Array of {language, proficiency}
+
+  // Contact & Location
+  address               String?
+  city                  String?
+  state                 String?
+  country               String?
+  zipCode               String?
+  preferredLocation     String[]            @default([])
+  willingToRelocate     Boolean             @default(false)
+  remotePreference      String?             // "remote", "hybrid", "onsite", "flexible"
+
+  // Career Preferences
+  expectedSalary        Float?
+  expectedSalaryCurrency String?            @default("USD")
+  noticePeriod          String?             // e.g., "2 weeks", "1 month", "immediate"
+  availableFrom         DateTime?
+  jobTypes              String[]            @default([]) // Array of preferred job types
+  industries            String[]            @default([]) // Preferred industries
+
+  // Profile Completeness
+  completenessScore     Int                 @default(0) // 0-100
+  lastCompletedSection  String?
+
+  // Social Links
+  website               String?
+  github                String?
+  linkedin              String?
+  twitter               String?
+  stackoverflow         String?
+  dribbble              String?
+  behance               String?
+  medium                String?
+  kaggle                String?
+
+  // Profile Settings
+  isPublic              Boolean             @default(true)
+  allowMessages         Boolean             @default(true)
+  showSalaryExpectation Boolean             @default(false)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workExperiences       WorkExperience[]
+  educations            Education[]
+  certifications        Certification[]
+  skills                CandidateSkill[]
+  projects              Project[]
+  achievements          Achievement[]
+
+  @@index([userId])
+  @@index([completenessScore])
+  @@index([isPublic])
+  @@map("candidate_profiles")
+}
+
+// 1.1.3 - Experience Timeline
+model WorkExperience {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Company Information
+  companyName           String
+  companyLogo           String?
+  companyWebsite        String?
+  companyLinkedin       String?
+  companySize           String?             // e.g., "1-50", "51-200", "201-500", "500+"
+  industry              String?
+
+  // Role Information
+  title                 String
+  employmentType        EmploymentType
+  department            String?
+
+  // Location
+  location              String?
+  isRemote              Boolean             @default(false)
+
+  // Duration
+  startDate             DateTime
+  endDate               DateTime?
+  isCurrent             Boolean             @default(false)
+
+  // Details
+  description           String?             // Rich text description
+  responsibilities      String[]            @default([])
+  achievements          String[]            @default([])
+
+  // Technologies & Skills Used
+  technologies          String[]            @default([])
+  skills                String[]            @default([])
+
+  // Verification
+  verificationStatus    VerificationStatus  @default(PENDING)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "linkedin", "email", "reference"
+  referenceEmail        String?             // Manager/colleague email for verification
+
+  // Metrics & Impact
+  teamSize              Int?                // Size of team managed
+  budget                Float?              // Budget managed
+  revenue               Float?              // Revenue generated
+
+  // Display Order
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([startDate])
+  @@index([isCurrent])
+  @@index([verificationStatus])
+  @@map("work_experiences")
+}
+
+// 1.1.4 - Education & Certifications Hub
+model Education {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Institution
+  institutionName       String
+  institutionLogo       String?
+  institutionWebsite    String?
+  institutionLocation   String?
+  institutionType       String?             // "university", "college", "online", "bootcamp"
+
+  // Degree/Program
+  degree                String              // e.g., "Bachelor of Science", "Master of Arts"
+  fieldOfStudy          String              // e.g., "Computer Science"
+  specialization        String?             // Minor or focus area
+
+  // Duration
+  startDate             DateTime
+  endDate               DateTime?
+  isOngoing             Boolean             @default(false)
+
+  // Academic Details
+  grade                 String?             // e.g., "3.8 GPA", "First Class Honours"
+  gradeScale            String?             // e.g., "4.0", "percentage"
+  activities            String[]            @default([]) // Clubs, societies
+  achievements          String[]            @default([]) // Dean's list, scholarships
+
+  // Projects & Thesis
+  thesis                String?             // Thesis title
+  thesisDescription     String?
+  courseProjects        Json?               // Array of {name, description, technologies}
+
+  // Verification
+  verificationStatus    VerificationStatus  @default(PENDING)
+  verifiedAt            DateTime?
+  verificationMethod    String?
+  certificateUrl        String?             // URL to degree certificate
+
+  // Display Order
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([startDate])
+  @@index([verificationStatus])
+  @@map("educations")
+}
+
+model Certification {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Certification Details
+  name                  String
+  issuingOrganization   String
+  organizationLogo      String?
+  organizationWebsite   String?
+
+  // Credential
+  credentialId          String?
+  credentialUrl         String?             // URL to verify certification
+
+  // Duration
+  issueDate             DateTime
+  expirationDate        DateTime?
+  doesNotExpire         Boolean             @default(false)
+
+  // Details
+  description           String?
+  skills                String[]            @default([])
+
+  // Verification
+  verificationStatus    VerificationStatus  @default(PENDING)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "api", "manual", "url"
+
+  // Display Order
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([issueDate])
+  @@index([expirationDate])
+  @@index([verificationStatus])
+  @@map("certifications")
+}
+
+// 1.1.2 - Dynamic Skills Matrix
+model CandidateSkill {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Skill Information
+  name                  String
+  category              String?             // e.g., "Programming Languages", "Frameworks", "Soft Skills"
+  subcategory           String?             // e.g., "Frontend", "Backend", "Database"
+
+  // Proficiency
+  proficiencyLevel      Int                 @default(5) // 1-10 scale
+  proficiencyLabel      SkillProficiencyLevel @default(INTERMEDIATE)
+  yearsOfExperience     Float?
+
+  // Last Used
+  lastUsed              DateTime?
+
+  // Evidence
+  projects              String[]            @default([]) // Project IDs where skill was used
+  certifications        String[]            @default([]) // Certification IDs proving skill
+
+  // Verification & Endorsements
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "assessment", "certification", "endorsement"
+  endorsementCount      Int                 @default(0)
+
+  // Tags
+  tags                  String[]            @default([])
+
+  // Display Order
+  isPrimary             Boolean             @default(false) // Featured skill
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  endorsements          SkillEndorsement[]
+
+  @@unique([profileId, name])
+  @@index([profileId])
+  @@index([category])
+  @@index([proficiencyLevel])
+  @@index([isPrimary])
+  @@map("candidate_skills")
+}
+
+model SkillEndorsement {
+  id                    String              @id @default(uuid())
+  skillId               String
+
+  // Endorser Information
+  endorserId            String              // User ID of endorser
+  endorserName          String
+  endorserTitle         String?
+  endorserCompany       String?
+  endorserLinkedin      String?
+  relationship          String?             // "colleague", "manager", "client", "mentor"
+
+  // Endorsement Details
+  comment               String?
+  rating                Int?                // Optional 1-5 rating
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  skill                 CandidateSkill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, endorserId])
+  @@index([skillId])
+  @@index([endorserId])
+  @@map("skill_endorsements")
+}
+
+// 1.1.5 - Project Portfolio
+model Project {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Project Information
+  title                 String
+  shortDescription      String?             // Brief one-liner
+  description           String?             // Full description (rich text)
+
+  // Project Type & Status
+  projectType           String?             // "personal", "professional", "open-source", "freelance", "academic"
+  status                String?             // "completed", "in-progress", "on-hold", "archived"
+
+  // Duration
+  startDate             DateTime?
+  endDate               DateTime?
+  isOngoing             Boolean             @default(false)
+
+  // Technical Details
+  technologies          String[]            @default([])
+  frameworks            String[]            @default([])
+  languages             String[]            @default([])
+  tools                 String[]            @default([])
+
+  // Links
+  repositoryUrl         String?             // GitHub, GitLab, etc.
+  liveUrl               String?             // Deployed project URL
+  demoUrl               String?             // Demo video URL
+  documentationUrl      String?
+
+  // Media
+  thumbnailUrl          String?
+  images                String[]            @default([])
+  videos                String[]            @default([])
+
+  // Role & Team
+  role                  String?             // Your role in the project
+  teamSize              Int?
+  contributions         String[]            @default([]) // Specific contributions
+
+  // Impact & Metrics
+  impact                String?             // Description of impact
+  users                 Int?                // Number of users
+  downloads             Int?                // Number of downloads
+  stars                 Int?                // GitHub stars
+  forks                 Int?                // GitHub forks
+
+  // Associated Work Experience
+  workExperienceId      String?             // Link to work experience if professional project
+
+  // Visibility
+  isPublic              Boolean             @default(true)
+  isFeatured            Boolean             @default(false)
+
+  // Display Order
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([projectType])
+  @@index([isFeatured])
+  @@index([isPublic])
+  @@map("projects")
+}
+
+// Achievement Badges System (bonus feature 1.1.6 preview)
+model Achievement {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Achievement Details
+  title                 String
+  description           String?
+  type                  String              // "profile", "activity", "skill", "milestone"
+  category              String?             // e.g., "profile_completion", "applications", "interviews"
+
+  // Badge Information
+  badgeIcon             String?
+  badgeColor            String?
+  points                Int                 @default(0)
+
+  // Progress (for progressive achievements)
+  currentProgress       Int                 @default(0)
+  targetProgress        Int                 @default(1)
+  isCompleted           Boolean             @default(false)
+
+  // Timestamps
+  earnedAt              DateTime?
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, type, category])
+  @@index([profileId])
+  @@index([type])
+  @@index([isCompleted])
+  @@map("achievements")
 }

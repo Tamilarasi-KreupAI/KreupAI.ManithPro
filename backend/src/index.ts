@@ -13,6 +13,7 @@ import interviewRoutes from './routes/interview.routes';
 import messageRoutes from './routes/message.routes';
 import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
+import candidateProfileRoutes from './routes/candidateProfile.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -52,6 +53,7 @@ app.get('/', (req, res) => {
       messages: '/api/messages',
       notifications: '/api/notifications',
       admin: '/api/admin',
+      candidateProfile: '/api/candidate-profile',
     },
   });
 });
@@ -66,6 +68,7 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/candidate-profile', candidateProfileRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
