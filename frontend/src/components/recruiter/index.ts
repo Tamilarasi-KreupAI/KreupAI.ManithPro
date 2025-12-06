@@ -45,3 +45,6 @@ export { default as SecuritySettingsHub } from './SecuritySettingsHub';
 
 // Recruiter Components - Batch 28: Data Protection
 export { default as DataProtectionHub } from './DataProtectionHub';
+
+// Recruiter Components - Batch 29: Compliance Features
+export { default as ComplianceHub } from './ComplianceHub';

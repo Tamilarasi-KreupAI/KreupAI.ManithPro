@@ -13561,3 +13561,558 @@ export interface DataProtectionDashboard {
     issues: number;
   }[];
 }
+
+// ==========================================
+// Batch 29: Compliance Features Types (8.3.1-8.3.11)
+// ==========================================
+
+// 8.3.1 GDPR Compliance
+export type ConsentType = 'data_processing' | 'marketing' | 'third_party' | 'cookies' | 'analytics';
+export type LegalBasis = 'consent' | 'contract' | 'legal_obligation' | 'vital_interests' | 'public_task' | 'legitimate_interests';
+
+export interface GDPRConsentRecord {
+  id: string;
+  userId: string;
+
+  consentType: ConsentType;
+  purpose: string;
+  legalBasis: LegalBasis;
+
+  granted: boolean;
+  grantedAt?: string;
+  revokedAt?: string;
+  expiresAt?: string;
+
+  source: string;
+  ipAddress?: string;
+  userAgent?: string;
+
+  version: number;
+  policyVersion?: string;
+
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.2 CCPA Compliance
+export type CCPARequestType = 'know' | 'delete' | 'opt_out' | 'opt_in';
+export type CCPARequestStatus = 'pending' | 'verified' | 'processing' | 'completed' | 'rejected';
+
+export interface CCPARequest {
+  id: string;
+  userId?: string;
+
+  requestType: CCPARequestType;
+  requestSource: string;
+  requesterEmail: string;
+  requesterName?: string;
+  verificationMethod: string;
+
+  status: CCPARequestStatus;
+  verified: boolean;
+  verifiedAt?: string;
+
+  assignedTo?: string;
+  dueDate: string;
+  completedAt?: string;
+
+  response?: string;
+  dataExportUrl?: string;
+
+  notes?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.3 EEOC/OFCCP Reporting
+export type EEOCReportType = 'eeo1' | 'vets4212' | 'ofccp_aap';
+export type EEOCReportStatus = 'draft' | 'pending_review' | 'submitted' | 'accepted' | 'rejected';
+
+export interface EEOCReport {
+  id: string;
+  organizationId: string;
+
+  reportType: EEOCReportType;
+  reportingYear: number;
+  reportingPeriod: string;
+
+  status: EEOCReportStatus;
+  submittedAt?: string;
+
+  employeeData?: Record<string, any>;
+  applicantData?: Record<string, any>;
+  aggregatedData?: Record<string, any>;
+
+  filingConfirmation?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+
+  generatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.4 Data Retention Policies
+export type RetentionAction = 'delete' | 'anonymize' | 'archive';
+
+export interface DataRetentionPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  dataCategory: string;
+  dataType?: string;
+
+  retentionPeriodDays: number;
+  retentionBasis: string;
+  legalReference?: string;
+
+  actionOnExpiry: RetentionAction;
+  archiveLocation?: string;
+
+  autoEnforce: boolean;
+  lastEnforcedAt?: string;
+  nextEnforcementAt?: string;
+
+  exceptions?: Record<string, any>;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.5 Right to be Forgotten
+export type DeletionRequestType = 'full_deletion' | 'partial_deletion' | 'anonymization';
+export type DeletionRequestStatus = 'pending' | 'verified' | 'processing' | 'completed' | 'rejected';
+
+export interface DeletionRequest {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  requestType: DeletionRequestType;
+  requesterEmail: string;
+  requesterName?: string;
+  regulation: string;
+
+  dataScope: string[];
+  exclusions: string[];
+
+  verified: boolean;
+  verificationToken?: string;
+  verifiedAt?: string;
+
+  status: DeletionRequestStatus;
+  statusHistory?: any[];
+
+  assignedTo?: string;
+  scheduledFor?: string;
+  completedAt?: string;
+
+  deletedItems?: Record<string, any>;
+  retainedItems?: Record<string, any>;
+
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.6 Consent Management
+export type ConsentCategory = 'essential' | 'functional' | 'analytics' | 'marketing';
+
+export interface ConsentPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description: string;
+  category: ConsentCategory;
+  purpose: string;
+
+  legalBasis: string;
+  dataCategories: string[];
+  recipients: string[];
+  crossBorderTransfer: boolean;
+  transferCountries: string[];
+
+  isRequired: boolean;
+  canWithdraw: boolean;
+
+  displayOrder: number;
+  isActive: boolean;
+  version: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserConsent {
+  id: string;
+  organizationId?: string;
+  userId: string;
+  policyId: string;
+  policyName?: string;
+
+  consented: boolean;
+  consentedAt?: string;
+  withdrawnAt?: string;
+
+  source: string;
+  ipAddress?: string;
+  userAgent?: string;
+
+  policyVersion: number;
+
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.7 Data Subject Access Requests (DSAR)
+export type DSARRequestType = 'access' | 'rectification' | 'erasure' | 'restriction' | 'portability' | 'objection';
+export type DSARStatus = 'received' | 'verified' | 'processing' | 'completed' | 'rejected';
+export type DSARPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface DataSubjectRequest {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  requestType: DSARRequestType;
+  regulation: string;
+  requesterEmail: string;
+  requesterName?: string;
+
+  verificationMethod: string;
+  verified: boolean;
+  verifiedAt?: string;
+
+  status: DSARStatus;
+  priority: DSARPriority;
+  statusHistory?: any[];
+
+  receivedAt: string;
+  deadlineAt: string;
+  respondedAt?: string;
+
+  assignedTo?: string;
+  department?: string;
+
+  responseType?: string;
+  responseDetails?: string;
+  exportFileUrl?: string;
+
+  communications?: any[];
+
+  notes?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.8 Audit Trail
+export type ComplianceEventType = 'data_access' | 'data_modification' | 'consent_change' | 'deletion' | 'export';
+export type ComplianceEventCategory = 'gdpr' | 'ccpa' | 'eeoc' | 'general';
+
+export interface ComplianceAuditLog {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  eventType: ComplianceEventType;
+  eventCategory: ComplianceEventCategory;
+  action: string;
+
+  resourceType: string;
+  resourceId: string;
+  resourceName?: string;
+
+  previousValue?: Record<string, any>;
+  newValue?: Record<string, any>;
+  changedFields: string[];
+
+  actorType: 'user' | 'system' | 'api';
+  actorId?: string;
+  actorEmail?: string;
+
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+
+  success: boolean;
+  failureReason?: string;
+
+  tags: string[];
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// 8.3.9 Compliance Dashboards
+export type ComplianceMetricStatus = 'on_track' | 'at_risk' | 'non_compliant';
+
+export interface ComplianceMetric {
+  id: string;
+  organizationId: string;
+
+  metricType: string;
+  category: ComplianceEventCategory;
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+
+  value: number;
+  previousValue?: number;
+  target?: number;
+  unit: string;
+
+  status: ComplianceMetricStatus;
+  threshold?: Record<string, any>;
+
+  breakdown?: Record<string, any>;
+  calculatedAt: string;
+}
+
+export interface ComplianceDashboard {
+  summary: {
+    overallScore: number;
+    gdprCompliance: number;
+    ccpaCompliance: number;
+    eeocCompliance: number;
+  };
+
+  pendingActions: {
+    dsars: number;
+    deletionRequests: number;
+    consentUpdates: number;
+    retentionEnforcements: number;
+  };
+
+  recentActivity: {
+    type: string;
+    description: string;
+    timestamp: string;
+  }[];
+
+  upcomingDeadlines: {
+    type: string;
+    id: string;
+    deadline: string;
+    daysRemaining: number;
+  }[];
+
+  riskAreas: {
+    area: string;
+    risk: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[];
+}
+
+// 8.3.10 Bias Auditing
+export type BiasAuditType = 'hiring_funnel' | 'ai_scoring' | 'job_posting' | 'screening';
+export type BiasRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export interface BiasAuditReport {
+  id: string;
+  organizationId: string;
+
+  auditType: BiasAuditType;
+  auditPeriod: string;
+  startDate: string;
+  endDate: string;
+
+  jobIds: string[];
+  departmentIds: string[];
+  stages: string[];
+
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  overallScore?: number;
+  riskLevel?: BiasRiskLevel;
+
+  demographicCategories: string[];
+
+  findings?: {
+    summary: string;
+    byStage?: {
+      stage: string;
+      score: number;
+      risk: string;
+    }[];
+  };
+
+  disparities?: {
+    category: string;
+    stage: string;
+    metric: string;
+    groupA: { name: string; value: number };
+    groupB: { name: string; value: number };
+    adverseImpactRatio: number;
+    significant: boolean;
+  }[];
+
+  recommendations?: string[];
+  statisticalTests?: Record<string, any>;
+
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  actionsTaken?: any[];
+
+  generatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.11 SOC 2 Readiness
+export type SOC2Category = 'security' | 'availability' | 'processing_integrity' | 'confidentiality' | 'privacy';
+export type SOC2ImplementationStatus = 'not_started' | 'in_progress' | 'implemented' | 'tested';
+export type SOC2TestResult = 'pass' | 'fail' | 'partial';
+
+export interface SOC2Control {
+  id: string;
+  organizationId?: string;
+
+  controlId: string;
+  category: SOC2Category;
+  subcategory?: string;
+  name: string;
+  description: string;
+
+  trustServiceCriteria: string;
+
+  implementationStatus: SOC2ImplementationStatus;
+  implementedBy?: string;
+  implementedAt?: string;
+
+  evidenceRequired: string[];
+  evidenceProvided: any[];
+  evidenceLastUpdated?: string;
+
+  lastTestedAt?: string;
+  testResult?: SOC2TestResult;
+  testNotes?: string;
+  testedBy?: string;
+
+  gaps: any[];
+  remediationPlan?: string;
+  remediationDueDate?: string;
+
+  riskLevel?: string;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SOC2AuditType = 'type1' | 'type2';
+export type SOC2AuditStatus = 'planning' | 'fieldwork' | 'review' | 'completed';
+export type SOC2Opinion = 'unqualified' | 'qualified' | 'adverse' | 'disclaimer';
+
+export interface SOC2Audit {
+  id: string;
+  organizationId: string;
+
+  auditType: SOC2AuditType;
+  auditPeriod?: string;
+  startDate: string;
+  endDate?: string;
+
+  auditorFirm: string;
+  auditorContact?: string;
+  auditorEmail?: string;
+
+  status: SOC2AuditStatus;
+  phase?: string;
+
+  trustCategories: SOC2Category[];
+  systemDescription?: string;
+  excludedControls: string[];
+
+  opinion?: SOC2Opinion;
+  exceptions: any[];
+  recommendations: any[];
+
+  reportDate?: string;
+  reportUrl?: string;
+
+  kickoffDate?: string;
+  fieldworkStartDate?: string;
+  fieldworkEndDate?: string;
+  finalReportDate?: string;
+
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SOC2ReadinessScore {
+  overallScore: number;
+
+  byCategory: {
+    security: number;
+    availability: number;
+    processing_integrity: number;
+    confidentiality: number;
+    privacy: number;
+  };
+
+  controlsStatus: {
+    total: number;
+    implemented: number;
+    inProgress: number;
+    notStarted: number;
+  };
+
+  gapsSummary: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+
+  recommendations: string[];
+  lastUpdated: string;
+}
+
+// Compliance Statistics
+export interface ComplianceStats {
+  gdpr: {
+    activeConsents: number;
+    pendingDSARs: number;
+    avgResponseTime: number;
+    consentRate: number;
+  };
+
+  ccpa: {
+    pendingRequests: number;
+    completedThisMonth: number;
+    avgResponseTime: number;
+  };
+
+  eeoc: {
+    reportsGenerated: number;
+    pendingSubmissions: number;
+    lastSubmission?: string;
+  };
+
+  retention: {
+    activePolicies: number;
+    recordsProcessedThisMonth: number;
+    complianceRate: number;
+  };
+
+  biasAudit: {
+    auditsThisYear: number;
+    avgScore: number;
+    lastAudit?: string;
+  };
+
+  soc2: {
+    readinessScore: number;
+    controlsImplemented: number;
+    gapsRemaining: number;
+    auditStatus: string;
+  };
+}

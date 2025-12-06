@@ -13853,3 +13853,469 @@ model DataProtectionAuditLog {
   @@index([createdAt])
   @@map("data_protection_audit_logs")
 }
+
+// ==========================================
+// Batch 29: Compliance Features (8.3.1-8.3.11)
+// ==========================================
+
+// 8.3.1 GDPR Compliance Suite
+model GDPRConsentRecord {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String
+
+  consentType           String              // data_processing, marketing, third_party, cookies
+  purpose               String
+  legalBasis            String              // consent, contract, legal_obligation, vital_interests
+
+  granted               Boolean
+  grantedAt             DateTime?
+  revokedAt             DateTime?
+  expiresAt             DateTime?
+
+  source                String              // form, api, import
+  ipAddress             String?
+  userAgent             String?
+
+  version               Int                 @default(1)
+  policyVersion         String?
+
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([consentType])
+  @@map("gdpr_consent_records")
+}
+
+// 8.3.2 CCPA Compliance
+model CCPARequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // know, delete, opt_out, opt_in
+  requestSource         String              // web_form, email, phone
+  requesterEmail        String
+  requesterName         String?
+  verificationMethod    String              // email, document, knowledge_based
+
+  status                String              @default("pending")
+  verified              Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  assignedTo            String?
+  dueDate               DateTime
+  completedAt           DateTime?
+
+  response              String?
+  dataExportUrl         String?
+
+  notes                 String?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestType])
+  @@map("ccpa_requests")
+}
+
+// 8.3.3 EEOC/OFCCP Reporting
+model EEOCReport {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  reportType            String              // eeo1, vets4212, ofccp_aap
+  reportingYear         Int
+  reportingPeriod       String              // annual, quarterly
+
+  status                String              @default("draft")
+  submittedAt           DateTime?
+
+  employeeData          Json?
+  applicantData         Json?
+  aggregatedData        Json?
+
+  filingConfirmation    String?
+  reviewedBy            String?
+  reviewNotes           String?
+
+  generatedBy           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, reportType, reportingYear])
+  @@index([organizationId])
+  @@index([status])
+  @@map("eeoc_reports")
+}
+
+// 8.3.4 Data Retention Policies
+model DataRetentionPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  name                  String
+  description           String?
+  dataCategory          String              // candidates, applications, interviews, messages
+  dataType              String?
+
+  retentionPeriodDays   Int
+  retentionBasis        String              // legal_requirement, business_need, consent
+  legalReference        String?
+
+  actionOnExpiry        String              // delete, anonymize, archive
+  archiveLocation       String?
+
+  autoEnforce           Boolean             @default(false)
+  lastEnforcedAt        DateTime?
+  nextEnforcementAt     DateTime?
+
+  exceptions            Json?
+
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([dataCategory])
+  @@map("data_retention_policies")
+}
+
+// 8.3.5 Right to be Forgotten
+model DeletionRequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // full_deletion, partial_deletion, anonymization
+  requesterEmail        String
+  requesterName         String?
+  regulation            String              // gdpr, ccpa, other
+
+  dataScope             String[]
+  exclusions            String[]
+
+  verified              Boolean             @default(false)
+  verificationToken     String?
+  verifiedAt            DateTime?
+
+  status                String              @default("pending")
+  statusHistory         Json[]              @default([])
+
+  assignedTo            String?
+  scheduledFor          DateTime?
+  completedAt           DateTime?
+
+  deletedItems          Json?
+  retainedItems         Json?
+
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+  @@map("deletion_requests")
+}
+
+// 8.3.6 Consent Management
+model ConsentPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  name                  String
+  description           String
+  category              String              // essential, functional, analytics, marketing
+  purpose               String
+
+  legalBasis            String
+  dataCategories        String[]
+  recipients            String[]
+  crossBorderTransfer   Boolean             @default(false)
+  transferCountries     String[]            @default([])
+
+  isRequired            Boolean             @default(false)
+  canWithdraw           Boolean             @default(true)
+
+  displayOrder          Int                 @default(0)
+  isActive              Boolean             @default(true)
+  version               Int                 @default(1)
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  consents              UserConsent[]
+
+  @@index([organizationId])
+  @@index([category])
+  @@map("consent_policies")
+}
+
+model UserConsent {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String
+  policyId              String
+
+  consented             Boolean
+  consentedAt           DateTime?
+  withdrawnAt           DateTime?
+
+  source                String              // banner, form, settings
+  ipAddress             String?
+  userAgent             String?
+
+  policyVersion         Int
+
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  policy                ConsentPolicy       @relation(fields: [policyId], references: [id])
+
+  @@unique([userId, policyId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("user_consents")
+}
+
+// 8.3.7 Data Subject Access Requests (DSAR)
+model DataSubjectRequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // access, rectification, erasure, portability
+  regulation            String              // gdpr, ccpa, lgpd
+  requesterEmail        String
+  requesterName         String?
+
+  verificationMethod    String
+  verified              Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  status                String              @default("received")
+  priority              String              @default("normal")
+  statusHistory         Json[]              @default([])
+
+  receivedAt            DateTime            @default(now())
+  deadlineAt            DateTime
+  respondedAt           DateTime?
+
+  assignedTo            String?
+  department            String?
+
+  responseType          String?
+  responseDetails       String?
+  exportFileUrl         String?
+
+  communications        Json[]              @default([])
+
+  notes                 String?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestType])
+  @@map("data_subject_requests")
+}
+
+// 8.3.8 Audit Trail
+model ComplianceAuditLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  eventType             String              // data_access, data_modification, consent_change
+  eventCategory         String              // gdpr, ccpa, eeoc, general
+  action                String              // create, read, update, delete
+
+  resourceType          String
+  resourceId            String
+  resourceName          String?
+
+  previousValue         Json?
+  newValue              Json?
+  changedFields         String[]            @default([])
+
+  actorType             String              // user, system, api
+  actorId               String?
+  actorEmail            String?
+
+  ipAddress             String?
+  userAgent             String?
+  sessionId             String?
+
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  tags                  String[]            @default([])
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+
+  @@index([organizationId])
+  @@index([eventType])
+  @@index([resourceType])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("compliance_audit_logs")
+}
+
+// 8.3.9 Compliance Dashboards
+model ComplianceMetric {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  metricType            String              // consent_rate, dsar_response_time, retention_compliance
+  category              String              // gdpr, ccpa, eeoc, general
+  period                String              // daily, weekly, monthly
+  periodStart           DateTime
+  periodEnd             DateTime
+
+  value                 Float
+  previousValue         Float?
+  target                Float?
+  unit                  String              // percentage, days, count
+
+  status                String              // on_track, at_risk, non_compliant
+  threshold             Json?
+
+  breakdown             Json?
+  calculatedAt          DateTime            @default(now())
+
+  @@unique([organizationId, metricType, periodStart])
+  @@index([organizationId])
+  @@index([metricType])
+  @@map("compliance_metrics")
+}
+
+// 8.3.10 Bias Auditing
+model BiasAuditReport {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  auditType             String              // hiring_funnel, ai_scoring, job_posting
+  auditPeriod           String              // weekly, monthly, quarterly
+  startDate             DateTime
+  endDate               DateTime
+
+  jobIds                String[]            @default([])
+  departmentIds         String[]            @default([])
+  stages                String[]            @default([])
+
+  status                String              @default("pending")
+  overallScore          Float?
+  riskLevel             String?
+
+  demographicCategories String[]            @default([])
+
+  findings              Json?
+  disparities           Json?
+  recommendations       Json?
+  statisticalTests      Json?
+
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  reviewNotes           String?
+  actionsTaken          Json[]              @default([])
+
+  generatedBy           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([auditType])
+  @@index([status])
+  @@map("bias_audit_reports")
+}
+
+// 8.3.11 SOC 2 Readiness
+model SOC2Control {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  controlId             String              // CC1.1, CC2.2
+  category              String              // security, availability, processing_integrity
+  subcategory           String?
+  name                  String
+  description           String
+
+  trustServiceCriteria  String              // CC, A, PI, C, P
+
+  implementationStatus  String              @default("not_started")
+  implementedBy         String?
+  implementedAt         DateTime?
+
+  evidenceRequired      String[]            @default([])
+  evidenceProvided      Json[]              @default([])
+  evidenceLastUpdated   DateTime?
+
+  lastTestedAt          DateTime?
+  testResult            String?
+  testNotes             String?
+  testedBy              String?
+
+  gaps                  Json[]              @default([])
+  remediationPlan       String?
+  remediationDueDate    DateTime?
+
+  riskLevel             String?
+
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, controlId])
+  @@index([organizationId])
+  @@index([category])
+  @@map("soc2_controls")
+}
+
+model SOC2Audit {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  auditType             String              // type1, type2
+  auditPeriod           String?
+  startDate             DateTime
+  endDate               DateTime?
+
+  auditorFirm           String
+  auditorContact        String?
+  auditorEmail          String?
+
+  status                String              @default("planning")
+  phase                 String?
+
+  trustCategories       String[]
+  systemDescription     String?
+  excludedControls      String[]            @default([])
+
+  opinion               String?
+  exceptions            Json[]              @default([])
+  recommendations       Json[]              @default([])
+
+  reportDate            DateTime?
+  reportUrl             String?
+
+  kickoffDate           DateTime?
+  fieldworkStartDate    DateTime?
+  fieldworkEndDate      DateTime?
+  finalReportDate       DateTime?
+
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("soc2_audits")
+}
