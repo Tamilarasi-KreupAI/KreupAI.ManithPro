@@ -41,6 +41,7 @@ import batch22PredictiveAnalyticsRoutes from './routes/batch22PredictiveAnalytic
 import batch23SmartRecommendationsRoutes from './routes/batch23SmartRecommendations.routes';
 import batch24HiringTeamManagementRoutes from './routes/batch24HiringTeamManagement.routes';
 import batch25CollaborativeEvaluationRoutes from './routes/batch25CollaborativeEvaluation.routes';
+import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunication.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -108,6 +109,7 @@ app.get('/', (req, res) => {
       batch23SmartRecommendations: '/api/recommendations',
       batch24HiringTeamManagement: '/api/hiring-teams',
       batch25CollaborativeEvaluation: '/api/evaluation',
+      batch26RealtimeCommunication: '/api/realtime',
     },
   });
 });
@@ -150,6 +152,7 @@ app.use('/api/predictions', batch22PredictiveAnalyticsRoutes);
 app.use('/api/recommendations', batch23SmartRecommendationsRoutes);
 app.use('/api/hiring-teams', batch24HiringTeamManagementRoutes);
 app.use('/api/evaluation', batch25CollaborativeEvaluationRoutes);
+app.use('/api/realtime', batch26RealtimeCommunicationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

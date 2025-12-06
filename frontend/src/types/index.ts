@@ -11886,3 +11886,312 @@ export interface CollaborativeEvaluationStats {
   hiringBenchmarks: number;
   avgFeedbackTimeMinutes: number;
 }
+
+// ============================================================================
+// BATCH 26: REAL-TIME COMMUNICATION (7.1-7.2)
+// ============================================================================
+
+// 7.1.1-7.1.2 User Presence
+export type PresenceStatus = 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE';
+export type DeviceType = 'DESKTOP' | 'MOBILE' | 'TABLET';
+
+export interface UserPresence {
+  id: string;
+  userId: string;
+  status: PresenceStatus;
+  customStatus?: string;
+  lastSeen: string;
+  currentPage?: string;
+  currentActivity?: string;
+  deviceType?: DeviceType;
+  browserInfo?: string;
+  platform?: string;
+  autoAway: boolean;
+  autoAwayMinutes: number;
+  showPresence: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PresencePreferences {
+  autoAway: boolean;
+  autoAwayMinutes: number;
+  showPresence: boolean;
+}
+
+// 7.1.1 WebSocket Connections
+export interface RealtimeConnection {
+  id: string;
+  userId: string;
+  socketId: string;
+  connectedAt: string;
+  lastPing: string;
+  clientVersion?: string;
+  deviceId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  subscribedChannels?: string[];
+  isActive: boolean;
+  disconnectedAt?: string;
+  disconnectReason?: string;
+}
+
+// 7.1.3 Real-Time Notifications
+export type NotificationType = 'MESSAGE' | 'APPLICATION' | 'INTERVIEW' | 'SYSTEM' | 'MENTION' | 'REMINDER';
+export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export interface NotificationAction {
+  id: string;
+  label: string;
+  action: string;
+  url?: string;
+}
+
+export interface RealtimeNotification {
+  id: string;
+  companyId?: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  icon?: string;
+  imageUrl?: string;
+  entityType?: string;
+  entityId?: string;
+  actionUrl?: string;
+  priority: NotificationPriority;
+  sound: boolean;
+  vibrate: boolean;
+  persistent: boolean;
+  isDelivered: boolean;
+  deliveredAt?: string;
+  isRead: boolean;
+  readAt?: string;
+  isDismissed: boolean;
+  dismissedAt?: string;
+  actions?: NotificationAction[];
+  expiresAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 7.2.1-7.2.2 Conversations
+export type ConversationType = 'DIRECT' | 'GROUP' | 'CHANNEL';
+export type ParticipantRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+
+export interface Conversation {
+  id: string;
+  companyId?: string;
+  type: ConversationType;
+  name?: string;
+  description?: string;
+  avatarUrl?: string;
+  contextType?: string;
+  contextId?: string;
+  isArchived: boolean;
+  isMuted: boolean;
+  allowReactions: boolean;
+  allowAttachments: boolean;
+  isPublic: boolean;
+  maxParticipants?: number;
+  lastMessageId?: string;
+  lastMessageAt?: string;
+  messageCount: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  participants?: ConversationParticipant[];
+  messages?: Message[];
+}
+
+export interface ConversationParticipant {
+  id: string;
+  conversationId: string;
+  userId: string;
+  userName?: string;
+  role: ParticipantRole;
+  isActive: boolean;
+  isMuted: boolean;
+  isPinned: boolean;
+  lastReadMessageId?: string;
+  lastReadAt?: string;
+  unreadCount: number;
+  notifyOnMessage: boolean;
+  notifyOnMention: boolean;
+  joinedAt: string;
+  leftAt?: string;
+  removedBy?: string;
+}
+
+// 7.2.1 Messages
+export type MessageType = 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'SYSTEM';
+export type MessageStatus = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+
+export interface Mention {
+  userId: string;
+  userName?: string;
+  startIndex: number;
+  length: number;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName?: string;
+  type: MessageType;
+  content?: string;
+  richContent?: Record<string, unknown>;
+  replyToId?: string;
+  replyTo?: Message;
+  threadCount: number;
+  mentions?: Mention[];
+  status: MessageStatus;
+  editedAt?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  deliveredTo?: Record<string, string>;
+  readBy?: Record<string, string>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt?: string;
+  attachments?: MessageAttachment[];
+  reactions?: MessageReaction[];
+}
+
+// Message Reactions
+export interface MessageReaction {
+  id: string;
+  messageId: string;
+  userId: string;
+  userName?: string;
+  emoji: string;
+  createdAt: string;
+}
+
+// 7.2.6 Message Attachments
+export type AttachmentType = 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'VIDEO' | 'OTHER';
+
+export interface MessageAttachment {
+  id: string;
+  messageId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+  thumbnailUrl?: string;
+  attachmentType: AttachmentType;
+  isProcessed: boolean;
+  processingError?: string;
+  dimensions?: { width: number; height: number };
+  duration?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 7.2.3 Message Templates
+export type TemplateCategory = 'GREETING' | 'FOLLOWUP' | 'REJECTION' | 'OFFER' | 'CUSTOM';
+
+export interface TemplateVariable {
+  name: string;
+  placeholder: string;
+  defaultValue?: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  companyId?: string;
+  userId?: string;
+  name: string;
+  shortcut?: string;
+  category: TemplateCategory;
+  content: string;
+  richContent?: Record<string, unknown>;
+  variables?: TemplateVariable[];
+  usageCount: number;
+  lastUsedAt?: string;
+  isShared: boolean;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 7.2.4 Scheduled Messages
+export type ScheduledMessageStatus = 'PENDING' | 'SENT' | 'CANCELLED' | 'FAILED';
+
+export interface RecurrenceRule {
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  interval: number;
+  endDate?: string;
+  daysOfWeek?: number[];
+}
+
+export interface ScheduledMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  type: MessageType;
+  content: string;
+  richContent?: Record<string, unknown>;
+  attachmentIds?: string[];
+  scheduledFor: string;
+  timezone: string;
+  status: ScheduledMessageStatus;
+  sentAt?: string;
+  sentMessageId?: string;
+  failureReason?: string;
+  isRecurring: boolean;
+  recurrenceRule?: RecurrenceRule;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 7.1.5 Typing Indicators
+export interface TypingIndicator {
+  id: string;
+  conversationId: string;
+  userId: string;
+  userName?: string;
+  isTyping: boolean;
+  startedAt: string;
+  expiresAt: string;
+}
+
+// 7.2.8 Email Fallback
+export interface EmailFallbackConfig {
+  id: string;
+  userId: string;
+  enabled: boolean;
+  offlineMinutes: number;
+  digestMode: boolean;
+  digestIntervalHours: number;
+  includeContent: boolean;
+  includeSender: boolean;
+  maxEmailsPerDay: number;
+  lastDigestSent?: string;
+  emailsSentToday: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Communication Stats
+export interface CommunicationStats {
+  totalConversations: number;
+  unreadMessages: number;
+  totalMessagesSent: number;
+  pendingScheduled: number;
+  availableTemplates: number;
+}
+
+// Conversation with last message preview
+export interface ConversationPreview extends Conversation {
+  lastMessage?: Message;
+  otherParticipants?: ConversationParticipant[];
+}
+
+// Search results
+export interface MessageSearchResult extends Message {
+  conversation?: Conversation;
+  highlightedContent?: string;
+}

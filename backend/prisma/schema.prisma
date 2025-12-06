@@ -12103,3 +12103,441 @@ model HiringBenchmark {
   @@index([roleCategory])
   @@map("hiring_benchmarks")
 }
+
+// ============================================================================
+// BATCH 26: REAL-TIME COMMUNICATION (7.1-7.2)
+// ============================================================================
+
+// 7.1.1-7.1.2 User Presence System
+model UserPresence {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // Status
+  status                String              @default("OFFLINE") // ONLINE, AWAY, BUSY, OFFLINE
+  customStatus          String?             // User-set status message
+  lastSeen              DateTime            @default(now())
+
+  // Activity
+  currentPage           String?             // Current page/route
+  currentActivity       String?             // What user is doing
+
+  // Device Info
+  deviceType            String?             // DESKTOP, MOBILE, TABLET
+  browserInfo           String?
+  platform              String?
+
+  // Preferences
+  autoAway              Boolean             @default(true)
+  autoAwayMinutes       Int                 @default(5)
+  showPresence          Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("user_presences")
+}
+
+// 7.1.1 WebSocket Connections
+model RealtimeConnection {
+  id                    String              @id @default(uuid())
+  userId                String
+  socketId              String              @unique
+
+  // Connection Details
+  connectedAt           DateTime            @default(now())
+  lastPing              DateTime            @default(now())
+
+  // Client Info
+  clientVersion         String?
+  deviceId              String?
+  ipAddress             String?
+  userAgent             String?
+
+  // Rooms/Channels
+  subscribedChannels    Json?               // List of channels subscribed to
+
+  // Status
+  isActive              Boolean             @default(true)
+  disconnectedAt        DateTime?
+  disconnectReason      String?
+
+  @@index([userId])
+  @@index([socketId])
+  @@index([isActive])
+  @@map("realtime_connections")
+}
+
+// 7.1.3 Real-Time Notifications
+model RealtimeNotification {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  userId                String              // Recipient
+
+  // Notification Content
+  type                  String              // MESSAGE, APPLICATION, INTERVIEW, SYSTEM, etc.
+  title                 String
+  body                  String
+  icon                  String?
+  imageUrl              String?
+
+  // Reference
+  entityType            String?             // What entity this relates to
+  entityId              String?
+  actionUrl             String?             // URL to navigate to
+
+  // Priority & Display
+  priority              String              @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  sound                 Boolean             @default(true)
+  vibrate               Boolean             @default(true)
+  persistent            Boolean             @default(false)
+
+  // Status
+  isDelivered           Boolean             @default(false)
+  deliveredAt           DateTime?
+  isRead                Boolean             @default(false)
+  readAt                DateTime?
+  isDismissed           Boolean             @default(false)
+  dismissedAt           DateTime?
+
+  // Actions
+  actions               Json?               // {id, label, action, url}[]
+
+  // Metadata
+  expiresAt             DateTime?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("realtime_notifications")
+}
+
+// 7.1.4 Dashboard Live Update Subscriptions
+model DashboardSubscription {
+  id                    String              @id @default(uuid())
+  userId                String
+  dashboardId           String
+
+  // Widgets subscribed to
+  widgetIds             Json                // List of widget IDs to receive updates
+
+  // Update Preferences
+  refreshInterval       Int                 @default(30) // seconds
+  autoRefresh           Boolean             @default(true)
+
+  // Status
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, dashboardId])
+  @@index([userId])
+  @@map("dashboard_subscriptions")
+}
+
+// 7.2.1-7.2.2 Conversations (DM and Group)
+model Conversation {
+  id                    String              @id @default(uuid())
+  companyId             String?
+
+  // Type
+  type                  String              @default("DIRECT") // DIRECT, GROUP, CHANNEL
+  name                  String?             // For groups/channels
+  description           String?
+  avatarUrl             String?
+
+  // Context (optional)
+  contextType           String?             // JOB, APPLICATION, INTERVIEW
+  contextId             String?
+
+  // Settings
+  isArchived            Boolean             @default(false)
+  isMuted               Boolean             @default(false)
+  allowReactions        Boolean             @default(true)
+  allowAttachments      Boolean             @default(true)
+
+  // Group Settings
+  isPublic              Boolean             @default(false)
+  maxParticipants       Int?
+
+  // Activity
+  lastMessageId         String?
+  lastMessageAt         DateTime?
+  messageCount          Int                 @default(0)
+
+  // Metadata
+  createdBy             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  participants          ConversationParticipant[]
+  messages              Message[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([contextType, contextId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+// Conversation Participants
+model ConversationParticipant {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  userId                String
+
+  // Role
+  role                  String              @default("MEMBER") // OWNER, ADMIN, MEMBER
+
+  // Status
+  isActive              Boolean             @default(true)
+  isMuted               Boolean             @default(false)
+  isPinned              Boolean             @default(false)
+
+  // Read Status
+  lastReadMessageId     String?
+  lastReadAt            DateTime?
+  unreadCount           Int                 @default(0)
+
+  // Notifications
+  notifyOnMessage       Boolean             @default(true)
+  notifyOnMention       Boolean             @default(true)
+
+  // Metadata
+  joinedAt              DateTime            @default(now())
+  leftAt                DateTime?
+  removedBy             String?
+
+  // Relations
+  conversation          Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+// 7.2.1 Messages
+model Message {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  senderId              String
+
+  // Content
+  type                  String              @default("TEXT") // TEXT, IMAGE, FILE, AUDIO, SYSTEM
+  content               String?             @db.Text
+  richContent           Json?               // For rich text formatting
+
+  // Reply
+  replyToId             String?             // Parent message for threads
+  threadCount           Int                 @default(0)
+
+  // Mentions
+  mentions              Json?               // {userId, startIndex, length}[]
+
+  // Status
+  status                String              @default("SENT") // SENDING, SENT, DELIVERED, READ, FAILED
+  editedAt              DateTime?
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Delivery Tracking (7.1.6)
+  deliveredTo           Json?               // {userId: deliveredAt}
+  readBy                Json?               // {userId: readAt}
+
+  // Metadata
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  conversation          Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attachments           MessageAttachment[]
+  reactions             MessageReaction[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([replyToId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+// 7.2.1 Message Reactions
+model MessageReaction {
+  id                    String              @id @default(uuid())
+  messageId             String
+  userId                String
+
+  // Reaction
+  emoji                 String              // Unicode emoji or custom code
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  message               Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+// 7.2.6 Message Attachments
+model MessageAttachment {
+  id                    String              @id @default(uuid())
+  messageId             String
+
+  // File Info
+  fileName              String
+  fileType              String              // MIME type
+  fileSize              Int                 // bytes
+  fileUrl               String
+  thumbnailUrl          String?
+
+  // Type
+  attachmentType        String              // IMAGE, DOCUMENT, AUDIO, VIDEO, OTHER
+
+  // Processing
+  isProcessed           Boolean             @default(false)
+  processingError       String?
+
+  // Metadata
+  dimensions            Json?               // {width, height} for images/videos
+  duration              Int?                // seconds for audio/video
+  metadata              Json?
+
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  message               Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// 7.2.3 Message Templates
+model MessageTemplate {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  userId                String?             // Personal templates
+
+  // Template Info
+  name                  String
+  shortcut              String?             // e.g., "/thanks" for quick insert
+  category              String              // GREETING, FOLLOWUP, REJECTION, CUSTOM
+
+  // Content
+  content               String              @db.Text
+  richContent           Json?               // For rich text
+  variables             Json?               // {name, placeholder, defaultValue}[]
+
+  // Usage
+  usageCount            Int                 @default(0)
+  lastUsedAt            DateTime?
+
+  // Settings
+  isShared              Boolean             @default(false)
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdBy             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([category])
+  @@index([shortcut])
+  @@map("message_templates")
+}
+
+// 7.2.4 Scheduled Messages
+model ScheduledMessage {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  senderId              String
+
+  // Content
+  type                  String              @default("TEXT")
+  content               String              @db.Text
+  richContent           Json?
+  attachmentIds         Json?               // Pre-uploaded attachment IDs
+
+  // Schedule
+  scheduledFor          DateTime
+  timezone              String              @default("UTC")
+
+  // Status
+  status                String              @default("PENDING") // PENDING, SENT, CANCELLED, FAILED
+  sentAt                DateTime?
+  sentMessageId         String?             // ID of actual message once sent
+  failureReason         String?
+
+  // Recurrence (optional)
+  isRecurring           Boolean             @default(false)
+  recurrenceRule        Json?               // {frequency, interval, endDate, etc.}
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([senderId])
+  @@index([conversationId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("scheduled_messages")
+}
+
+// 7.2.8 Email Fallback Settings
+model EmailFallbackConfig {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // Settings
+  enabled               Boolean             @default(true)
+  offlineMinutes        Int                 @default(15) // Send email if offline for this long
+  digestMode            Boolean             @default(false) // Bundle into digest vs individual
+  digestIntervalHours   Int                 @default(4)
+
+  // Preferences
+  includeContent        Boolean             @default(true)
+  includeSender         Boolean             @default(true)
+  maxEmailsPerDay       Int                 @default(50)
+
+  // Tracking
+  lastDigestSent        DateTime?
+  emailsSentToday       Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("email_fallback_configs")
+}
+
+// 7.1.5 Typing Indicators (Stored briefly)
+model TypingIndicator {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  userId                String
+
+  // Status
+  isTyping              Boolean             @default(true)
+  startedAt             DateTime            @default(now())
+  expiresAt             DateTime            // Auto-expire after ~5 seconds
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([expiresAt])
+  @@map("typing_indicators")
+}

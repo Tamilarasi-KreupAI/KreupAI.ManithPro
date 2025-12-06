@@ -36,3 +36,6 @@ export { default as HiringTeamManagementHub } from './HiringTeamManagementHub';
 
 // Recruiter Components - Batch 25: Collaborative Evaluation
 export { default as CollaborativeEvaluationHub } from './CollaborativeEvaluationHub';
+
+// Recruiter Components - Batch 26: Real-Time Communication
+export { default as RealtimeCommunicationHub } from './RealtimeCommunicationHub';
