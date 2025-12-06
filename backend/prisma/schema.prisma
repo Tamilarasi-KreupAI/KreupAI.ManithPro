@@ -9587,3 +9587,527 @@ model OneWayResponse {
   @@index([questionId])
   @@map("one_way_responses")
 }
+
+// ============================================
+// BATCH 21: SEMANTIC MATCHING ENGINE (5.1.1-5.1.7)
+// ============================================
+
+// 5.1.1 - SKILL VECTOR EMBEDDING
+model SkillEmbedding {
+  id                    String              @id @default(uuid())
+  companyId             String?
+
+  // Skill Info
+  skillName             String
+  normalizedName        String              // Lowercase, trimmed
+  skillCategory         String?             // e.g., "Programming", "Management", "Design"
+  skillType             String              @default("TECHNICAL") // TECHNICAL, SOFT, DOMAIN, TOOL
+
+  // Embedding Vector
+  embeddingModel        String              @default("text-embedding-3-small")
+  embeddingVersion      String              @default("1.0")
+  embeddingVector       Json                // Float array stored as JSON
+  vectorDimension       Int                 @default(1536)
+
+  // Related Skills (pre-computed)
+  relatedSkills         Json?               // Array of { skillId, similarity }
+  synonyms              String[]            @default([])
+  alternateNames        String[]            @default([])
+
+  // Usage Stats
+  usageCount            Int                 @default(0)
+  lastUsedAt            DateTime?
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([skillName, companyId])
+  @@index([normalizedName])
+  @@index([skillCategory])
+  @@index([skillType])
+  @@map("skill_embeddings")
+}
+
+// Skill Similarity Cache
+model SkillSimilarity {
+  id                    String              @id @default(uuid())
+
+  // Skills Being Compared
+  skillAId              String
+  skillAName            String
+  skillBId              String
+  skillBName            String
+
+  // Similarity Scores
+  cosineSimilarity      Float               // 0-1 score from vector similarity
+  contextualSimilarity  Float?              // Adjusted for context
+  combinedScore         Float               // Weighted combination
+
+  // Relationship Type
+  relationshipType      String              @default("SIMILAR") // SIMILAR, PREREQUISITE, ADVANCED, SUBSET, SUPERSET
+
+  // Confidence
+  confidenceScore       Float               @default(0.8)
+  validatedBy           String?             // Manual validation
+  validatedAt           DateTime?
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  expiresAt             DateTime?
+
+  @@unique([skillAId, skillBId])
+  @@index([skillAName])
+  @@index([skillBName])
+  @@index([combinedScore])
+  @@map("skill_similarities")
+}
+
+// 5.1.2 - EXPERIENCE LEVEL INFERENCE
+model ExperienceLevelRule {
+  id                    String              @id @default(uuid())
+  companyId             String?
+
+  // Rule Info
+  ruleName              String
+  ruleDescription       String?
+  ruleType              String              @default("PATTERN") // PATTERN, TITLE, DURATION, KEYWORDS
+
+  // Title Patterns
+  titlePatterns         String[]            @default([]) // e.g., ["Senior*", "*Lead*", "Principal*"]
+  excludePatterns       String[]            @default([])
+
+  // Duration Rules
+  minYearsExperience    Int?
+  maxYearsExperience    Int?
+  minRoleDuration       Int?                // Minimum months in a role
+
+  // Keyword Indicators
+  seniorityKeywords     String[]            @default([]) // Words indicating level
+  responsibilityKeywords String[]           @default([])
+
+  // Output Level
+  inferredLevel         String              // ENTRY, JUNIOR, MID, SENIOR, LEAD, PRINCIPAL, EXECUTIVE
+  levelNumeric          Int                 // 1-10 scale
+  levelConfidence       Float               @default(0.8)
+
+  // Priority (higher = evaluated first)
+  priority              Int                 @default(100)
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([inferredLevel])
+  @@map("experience_level_rules")
+}
+
+// Candidate Experience Level Inference Result
+model CandidateExperienceLevel {
+  id                    String              @id @default(uuid())
+  candidateId           String
+  profileId             String?
+
+  // Inferred Levels
+  overallLevel          String              // ENTRY, JUNIOR, MID, SENIOR, LEAD, PRINCIPAL, EXECUTIVE
+  overallLevelNumeric   Int                 // 1-10 scale
+  technicalLevel        String?
+  technicalLevelNumeric Int?
+  leadershipLevel       String?
+  leadershipLevelNumeric Int?
+  domainLevel           String?
+  domainLevelNumeric    Int?
+
+  // Evidence
+  evidenceFactors       Json                // Array of { factor, weight, contribution }
+  titleProgression      Json?               // Career title history
+  yearsCalculated       Float?
+  roleCount             Int?
+
+  // Confidence
+  confidenceScore       Float               @default(0.7)
+  confidenceFactors     Json?               // What contributed to confidence
+
+  // Manual Override
+  manualOverride        Boolean             @default(false)
+  overriddenBy          String?
+  overriddenAt          DateTime?
+  overrideReason        String?
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId])
+  @@index([overallLevel])
+  @@index([confidenceScore])
+  @@map("candidate_experience_levels")
+}
+
+// 5.1.3 - ROLE SIMILARITY DETECTION
+model RoleMapping {
+  id                    String              @id @default(uuid())
+  companyId             String?
+
+  // Role Info
+  roleTitle             String
+  normalizedTitle       String              // Standardized version
+  roleCategory          String?             // e.g., "Engineering", "Product", "Design"
+  roleFamily            String?             // e.g., "Software Development", "Data Science"
+  roleFunction          String?             // e.g., "Individual Contributor", "Management"
+
+  // Industry Context
+  industry              String?             // e.g., "Tech", "Finance", "Healthcare"
+  industrySpecific      Boolean             @default(false)
+
+  // Embedding
+  titleEmbedding        Json?               // Vector embedding for semantic matching
+  descriptionEmbedding  Json?
+
+  // Related Roles
+  similarRoles          Json?               // Array of { roleId, similarity }
+  equivalentTitles      String[]            @default([]) // Same role, different names
+  seniorVariants        String[]            @default([]) // Senior versions
+  juniorVariants        String[]            @default([]) // Junior versions
+
+  // Typical Requirements
+  typicalSkills         String[]            @default([])
+  typicalExperience     Int?                // Typical years
+  typicalEducation      String?
+
+  // Usage
+  usageCount            Int                 @default(0)
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([normalizedTitle])
+  @@index([roleCategory])
+  @@index([roleFamily])
+  @@index([industry])
+  @@map("role_mappings")
+}
+
+// Role Similarity Score
+model RoleSimilarity {
+  id                    String              @id @default(uuid())
+
+  // Roles Being Compared
+  roleAId               String
+  roleATitle            String
+  roleBId               String
+  roleBTitle            String
+
+  // Similarity Scores
+  titleSimilarity       Float               // Name/title similarity
+  functionSimilarity    Float               // Job function similarity
+  skillOverlap          Float               // Overlap in required skills
+  combinedScore         Float               // Overall similarity
+
+  // Transferability
+  transferabilityScore  Float?              // How easy to transition
+  gapAnalysis           Json?               // Skills needed to transition
+
+  // Cross-Industry
+  crossIndustry         Boolean             @default(false)
+  industryAdjustment    Float               @default(1.0)
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  expiresAt             DateTime?
+
+  @@unique([roleAId, roleBId])
+  @@index([combinedScore])
+  @@map("role_similarities")
+}
+
+// 5.1.4 - SKILL TRANSFERABILITY ANALYSIS
+model SkillTransferability {
+  id                    String              @id @default(uuid())
+
+  // Source and Target
+  sourceSkillId         String
+  sourceSkillName       String
+  targetSkillId         String
+  targetSkillName       String
+
+  // Transferability Scores
+  transferabilityScore  Float               // 0-1 how transferable
+  learningCurve         String              // EASY, MODERATE, STEEP
+  estimatedLearningDays Int?                // Days to become proficient
+
+  // Transfer Context
+  transferContext       String?             // When is transfer applicable
+  contextConditions     Json?               // Conditions for transfer
+
+  // Evidence
+  evidenceType          String              @default("COMPUTED") // COMPUTED, VALIDATED, EXPERT
+  evidenceSource        String?
+  examplesCount         Int                 @default(0)
+
+  // Prerequisites
+  prerequisiteSkills    String[]            @default([])
+  bridgingConcepts      String[]            @default([])
+
+  // Metadata
+  confidenceScore       Float               @default(0.7)
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([sourceSkillId, targetSkillId])
+  @@index([sourceSkillName])
+  @@index([targetSkillName])
+  @@index([transferabilityScore])
+  @@map("skill_transferabilities")
+}
+
+// 5.1.5 - PROJECT RELEVANCE SCORING
+model ProjectRelevanceScore {
+  id                    String              @id @default(uuid())
+
+  // Project Info
+  projectId             String
+  projectTitle          String
+  projectDescription    String?             @db.Text
+  projectSkills         String[]            @default([])
+
+  // Job Info
+  jobId                 String
+  jobTitle              String
+  jobRequirements       String?             @db.Text
+  jobSkills             String[]            @default([])
+
+  // Relevance Scores
+  overallRelevance      Float               // 0-100 score
+  skillMatchScore       Float               // Skills overlap
+  domainMatchScore      Float               // Domain relevance
+  complexityMatchScore  Float?              // Complexity alignment
+  recencyScore          Float?              // How recent the project is
+
+  // Detailed Analysis
+  matchedSkills         String[]            @default([])
+  partialMatchSkills    Json?               // { skill, similarity }
+  missingSkills         String[]            @default([])
+  bonusSkills           String[]            @default([]) // Extra relevant skills
+
+  // Project Quality Factors
+  projectComplexity     String?             // LOW, MEDIUM, HIGH
+  projectImpact         String?             // Individual, Team, Organization
+  projectScale          String?             // Small, Medium, Large
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  expiresAt             DateTime?
+
+  @@unique([projectId, jobId])
+  @@index([projectId])
+  @@index([jobId])
+  @@index([overallRelevance])
+  @@map("project_relevance_scores")
+}
+
+// 5.1.6 - INDUSTRY CROSSOVER INTELLIGENCE
+model IndustryCrossover {
+  id                    String              @id @default(uuid())
+
+  // Industries
+  sourceIndustry        String
+  targetIndustry        String
+
+  // Crossover Analysis
+  crossoverScore        Float               // 0-1 how compatible
+  crossoverDifficulty   String              // EASY, MODERATE, DIFFICULT
+
+  // Role Mappings
+  roleCompatibility     Json?               // { sourceRole: [{ targetRole, compatibility }] }
+  commonRoles           String[]            @default([]) // Roles that exist in both
+
+  // Skill Transfer
+  transferableSkills    String[]            @default([])
+  industrySpecificSkills Json?              // Skills unique to each industry
+  bridgingSkills        String[]            @default([]) // Skills that help transition
+
+  // Success Patterns
+  successFactors        String[]            @default([])
+  commonChallenges      String[]            @default([])
+  typicalTransitionPath String?             @db.Text
+  averageTransitionTime Int?                // Months
+
+  // Evidence
+  transitionExamples    Int                 @default(0)
+  successRate           Float?
+
+  // Metadata
+  calculatedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([sourceIndustry, targetIndustry])
+  @@index([crossoverScore])
+  @@map("industry_crossovers")
+}
+
+// 5.1.7 - HIDDEN TALENT DISCOVERY
+model HiddenTalentProfile {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Candidate Info
+  candidateId           String
+  profileId             String?
+
+  // Discovery Info
+  discoveredForJobId    String?
+  discoveredForRole     String?
+
+  // Why Hidden
+  hiddenReasons         String[]            @default([]) // Why not found by keyword search
+  keywordGaps           String[]            @default([]) // Missing keywords
+  unconventionalPath    Boolean             @default(false)
+  careerPivot           Boolean             @default(false)
+  industryOutsider      Boolean             @default(false)
+
+  // Potential Assessment
+  potentialScore        Float               // 0-100 predicted fit
+  potentialFactors      Json                // What indicates potential
+
+  // Transferable Strengths
+  transferableSkills    Json?               // Skills that transfer to target role
+  relevantExperience    Json?               // Experience that's relevant but different
+  hiddenQualifications  String[]            @default([])
+
+  // Match Analysis
+  traditionalMatchScore Float?              // What keyword search would give
+  semanticMatchScore    Float               // What semantic matching gives
+  scoreLift             Float               // Improvement from semantic matching
+
+  // Recruiter Actions
+  status                String              @default("DISCOVERED") // DISCOVERED, REVIEWED, CONTACTED, CONVERTED, DISMISSED
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  reviewNotes           String?             @db.Text
+  outcomeNotes          String?             @db.Text
+
+  // Metadata
+  discoveredAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, discoveredForJobId])
+  @@index([companyId])
+  @@index([discoveredForJobId])
+  @@index([potentialScore])
+  @@index([status])
+  @@map("hidden_talent_profiles")
+}
+
+// Candidate Match Score (Overall Matching Result)
+model CandidateMatchScore {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Candidate & Job
+  candidateId           String
+  jobId                 String
+
+  // Overall Scores
+  overallMatchScore     Float               // 0-100 final score
+  semanticScore         Float               // From semantic matching
+  keywordScore          Float?              // Traditional keyword match
+  experienceScore       Float?              // Experience level fit
+  skillScore            Float?              // Skills match score
+  projectScore          Float?              // Project relevance
+  cultureFitScore       Float?              // Culture/values alignment
+
+  // Detailed Breakdown
+  scoreBreakdown        Json                // Detailed scoring factors
+  matchedSkills         String[]            @default([])
+  partialMatchSkills    Json?               // Skills with partial match
+  missingSkills         String[]            @default([])
+  bonusQualifications   String[]            @default([])
+
+  // Experience Analysis
+  experienceLevelFit    String?             // UNDER, MATCH, OVER
+  yearsExperienceFit    String?             // Below, Match, Above
+  seniorityFit          Float?              // 0-1 how well seniority matches
+
+  // Risk/Opportunity
+  flightRisk            Float?              // Likelihood to leave quickly
+  growthPotential       Float?              // Potential for growth
+  retentionPrediction   Float?              // Predicted retention
+
+  // Hidden Talent Indicator
+  isHiddenTalent        Boolean             @default(false)
+  hiddenTalentBoost     Float               @default(0)
+
+  // Ranking
+  rankInPool            Int?                // Rank among all candidates for job
+  percentile            Float?              // Percentile in candidate pool
+
+  // Recommendation
+  recommendation        String?             // STRONG_YES, YES, MAYBE, NO, STRONG_NO
+  recommendationReason  String?             @db.Text
+
+  // Metadata
+  matchingVersion       String              @default("1.0")
+  calculatedAt          DateTime            @default(now())
+  expiresAt             DateTime?
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([overallMatchScore])
+  @@index([recommendation])
+  @@map("candidate_match_scores")
+}
+
+// Matching Configuration
+model MatchingConfig {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?             // null = company default
+
+  // Weight Configuration
+  skillWeight           Float               @default(0.35)
+  experienceWeight      Float               @default(0.25)
+  projectWeight         Float               @default(0.15)
+  educationWeight       Float               @default(0.10)
+  cultureFitWeight      Float               @default(0.10)
+  bonusWeight           Float               @default(0.05)
+
+  // Thresholds
+  minimumMatchScore     Float               @default(50)
+  hiddenTalentThreshold Float               @default(60)
+  autoAdvanceThreshold  Float               @default(80)
+  autoRejectThreshold   Float               @default(30)
+
+  // Feature Flags
+  enableSemanticMatching Boolean            @default(true)
+  enableHiddenTalent    Boolean             @default(true)
+  enableIndustryCrossover Boolean           @default(true)
+  enableSkillTransfer   Boolean             @default(true)
+
+  // Bias Controls
+  blindScreeningEnabled Boolean             @default(false)
+  diversityBoostEnabled Boolean             @default(false)
+  diversityBoostAmount  Float               @default(0)
+
+  // Custom Rules
+  mustHaveSkills        String[]            @default([])
+  niceToHaveSkills      String[]            @default([])
+  dealBreakerMissing    String[]            @default([])
+  customRules           Json?               // Custom matching rules
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, jobId])
+  @@index([companyId])
+  @@map("matching_configs")
+}

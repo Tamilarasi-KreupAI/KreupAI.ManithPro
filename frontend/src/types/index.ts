@@ -9228,3 +9228,643 @@ export interface VideoInterviewStats {
     byProvider: Record<string, number>;
   };
 }
+
+// ============================================
+// BATCH 21: SEMANTIC MATCHING ENGINE (5.1.1-5.1.7)
+// ============================================
+
+// 5.1.1 - Skill Types
+export type SkillType = 'TECHNICAL' | 'SOFT' | 'DOMAIN' | 'TOOL';
+export type SkillRelationshipType = 'SIMILAR' | 'PREREQUISITE' | 'ADVANCED' | 'SUBSET' | 'SUPERSET' | 'RELATED' | 'DIFFERENT';
+
+// 5.1.2 - Experience Levels
+export type ExperienceLevelType = 'ENTRY' | 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'PRINCIPAL' | 'EXECUTIVE';
+export type ExperienceRuleType = 'PATTERN' | 'TITLE' | 'DURATION' | 'KEYWORDS';
+
+// 5.1.4 - Learning Curve
+export type LearningCurve = 'EASY' | 'MODERATE' | 'STEEP';
+
+// 5.1.6 - Industry Crossover Difficulty
+export type CrossoverDifficulty = 'EASY' | 'MODERATE' | 'DIFFICULT';
+
+// 5.1.7 - Hidden Talent Status
+export type HiddenTalentStatus = 'DISCOVERED' | 'REVIEWED' | 'CONTACTED' | 'CONVERTED' | 'DISMISSED';
+
+// Match Recommendation
+export type MatchRecommendation = 'STRONG_YES' | 'YES' | 'MAYBE' | 'NO' | 'STRONG_NO';
+
+// Experience Level Fit
+export type ExperienceLevelFit = 'UNDER' | 'MATCH' | 'OVER';
+
+// 5.1.1 - Skill Embedding
+export interface SkillEmbedding {
+  id: string;
+  companyId?: string;
+  skillName: string;
+  normalizedName: string;
+  skillCategory?: string;
+  skillType: SkillType;
+  embeddingModel: string;
+  embeddingVersion: string;
+  vectorDimension: number;
+  relatedSkills?: RelatedSkill[];
+  synonyms: string[];
+  alternateNames: string[];
+  usageCount: number;
+  lastUsedAt?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RelatedSkill {
+  skillId: string;
+  skillName?: string;
+  similarity: number;
+}
+
+// 5.1.1 - Skill Similarity
+export interface SkillSimilarity {
+  id: string;
+  skillAId: string;
+  skillAName: string;
+  skillBId: string;
+  skillBName: string;
+  cosineSimilarity: number;
+  contextualSimilarity?: number;
+  combinedScore: number;
+  relationshipType: SkillRelationshipType;
+  confidenceScore: number;
+  validatedBy?: string;
+  validatedAt?: string;
+  calculatedAt: string;
+  expiresAt?: string;
+}
+
+// 5.1.2 - Experience Level Rule
+export interface ExperienceLevelRule {
+  id: string;
+  companyId?: string;
+  ruleName: string;
+  ruleDescription?: string;
+  ruleType: ExperienceRuleType;
+  titlePatterns: string[];
+  excludePatterns: string[];
+  minYearsExperience?: number;
+  maxYearsExperience?: number;
+  minRoleDuration?: number;
+  seniorityKeywords: string[];
+  responsibilityKeywords: string[];
+  inferredLevel: ExperienceLevelType;
+  levelNumeric: number;
+  levelConfidence: number;
+  priority: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 5.1.2 - Candidate Experience Level
+export interface CandidateExperienceLevel {
+  id: string;
+  candidateId: string;
+  profileId?: string;
+  overallLevel: ExperienceLevelType;
+  overallLevelNumeric: number;
+  technicalLevel?: ExperienceLevelType;
+  technicalLevelNumeric?: number;
+  leadershipLevel?: ExperienceLevelType;
+  leadershipLevelNumeric?: number;
+  domainLevel?: ExperienceLevelType;
+  domainLevelNumeric?: number;
+  evidenceFactors: EvidenceFactor[];
+  titleProgression?: string[];
+  yearsCalculated?: number;
+  roleCount?: number;
+  confidenceScore: number;
+  manualOverride: boolean;
+  overriddenBy?: string;
+  overriddenAt?: string;
+  overrideReason?: string;
+  calculatedAt: string;
+  updatedAt: string;
+}
+
+export interface EvidenceFactor {
+  factor: string;
+  weight: number;
+  contribution: number;
+}
+
+// 5.1.3 - Role Mapping
+export interface RoleMapping {
+  id: string;
+  companyId?: string;
+  roleTitle: string;
+  normalizedTitle: string;
+  roleCategory?: string;
+  roleFamily?: string;
+  roleFunction?: string;
+  industry?: string;
+  industrySpecific: boolean;
+  similarRoles?: RelatedRole[];
+  equivalentTitles: string[];
+  seniorVariants: string[];
+  juniorVariants: string[];
+  typicalSkills: string[];
+  typicalExperience?: number;
+  typicalEducation?: string;
+  usageCount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RelatedRole {
+  roleId: string;
+  roleTitle?: string;
+  similarity: number;
+}
+
+// 5.1.3 - Role Similarity
+export interface RoleSimilarityScore {
+  id: string;
+  roleAId: string;
+  roleATitle: string;
+  roleBId: string;
+  roleBTitle: string;
+  titleSimilarity: number;
+  functionSimilarity: number;
+  skillOverlap: number;
+  combinedScore: number;
+  transferabilityScore?: number;
+  gapAnalysis?: RoleGapAnalysis;
+  crossIndustry: boolean;
+  industryAdjustment: number;
+  calculatedAt: string;
+  expiresAt?: string;
+}
+
+export interface RoleGapAnalysis {
+  skillsToAcquire: string[];
+  experienceGap: number;
+}
+
+// 5.1.4 - Skill Transferability
+export interface SkillTransferabilityScore {
+  id: string;
+  sourceSkillId: string;
+  sourceSkillName: string;
+  targetSkillId: string;
+  targetSkillName: string;
+  transferabilityScore: number;
+  learningCurve: LearningCurve;
+  estimatedLearningDays?: number;
+  transferContext?: string;
+  evidenceType: 'COMPUTED' | 'VALIDATED' | 'EXPERT';
+  evidenceSource?: string;
+  examplesCount: number;
+  prerequisiteSkills: string[];
+  bridgingConcepts: string[];
+  confidenceScore: number;
+  calculatedAt: string;
+  updatedAt: string;
+}
+
+// 5.1.4 - Transferable Skills Analysis
+export interface TransferableSkillsAnalysis {
+  candidateId: string;
+  analysis: SkillTransferAnalysis[];
+  overallTransferability: number;
+  readySkills: number;
+  transferableSkills: number;
+  gapSkills: number;
+}
+
+export interface SkillTransferAnalysis {
+  targetSkill: string;
+  hasDirectMatch: boolean;
+  transferableFrom: string[];
+  transferabilityScore: number;
+  learningCurve: LearningCurve;
+  estimatedDays: number;
+}
+
+// 5.1.5 - Project Relevance Score
+export interface ProjectRelevanceScore {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  projectDescription?: string;
+  projectSkills: string[];
+  jobId: string;
+  jobTitle: string;
+  jobRequirements?: string;
+  jobSkills: string[];
+  overallRelevance: number;
+  skillMatchScore: number;
+  domainMatchScore: number;
+  complexityMatchScore?: number;
+  recencyScore?: number;
+  matchedSkills: string[];
+  partialMatchSkills?: PartialSkillMatch[];
+  missingSkills: string[];
+  bonusSkills: string[];
+  projectComplexity?: 'LOW' | 'MEDIUM' | 'HIGH';
+  projectImpact?: 'Individual' | 'Team' | 'Organization';
+  projectScale?: 'Small' | 'Medium' | 'Large';
+  calculatedAt: string;
+  expiresAt?: string;
+}
+
+export interface PartialSkillMatch {
+  skill: string;
+  similarity: number;
+}
+
+// 5.1.5 - Batch Project Relevance Result
+export interface BatchProjectRelevanceResult {
+  candidateId: string;
+  jobId: string;
+  projectRelevanceScores: ProjectRelevanceSummary[];
+  mostRelevantProject?: ProjectRelevanceSummary;
+  averageRelevance: number;
+}
+
+export interface ProjectRelevanceSummary {
+  projectId: string;
+  projectTitle: string;
+  overallRelevance: number;
+  skillMatchScore: number;
+  matchedSkills: string[];
+  rank: number;
+}
+
+// 5.1.6 - Industry Crossover
+export interface IndustryCrossover {
+  id: string;
+  sourceIndustry: string;
+  targetIndustry: string;
+  crossoverScore: number;
+  crossoverDifficulty: CrossoverDifficulty;
+  roleCompatibility?: Record<string, RoleCompatibility[]>;
+  commonRoles: string[];
+  transferableSkills: string[];
+  industrySpecificSkills?: Record<string, string[]>;
+  bridgingSkills: string[];
+  successFactors: string[];
+  commonChallenges: string[];
+  typicalTransitionPath?: string;
+  averageTransitionTime?: number;
+  transitionExamples: number;
+  successRate?: number;
+  calculatedAt: string;
+  updatedAt: string;
+}
+
+export interface RoleCompatibility {
+  targetRole: string;
+  compatibility: number;
+}
+
+// 5.1.6 - Industry Crossover Analysis
+export interface IndustryCrossoverAnalysis {
+  candidateId: string;
+  currentIndustry: string;
+  targetIndustry: string;
+  crossoverScore: number;
+  readiness: 'LOW' | 'MODERATE' | 'HIGH';
+  transferableSkillsPresent: string[];
+  skillsToAcquire: string[];
+  estimatedTransitionTime: number;
+  recommendations: string[];
+  similarSuccessfulTransitions: number;
+  confidenceScore: number;
+}
+
+// 5.1.7 - Hidden Talent Profile
+export interface HiddenTalentProfile {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  candidateName?: string;
+  profileId?: string;
+  discoveredForJobId?: string;
+  discoveredForRole?: string;
+  hiddenReasons: string[];
+  keywordGaps: string[];
+  unconventionalPath: boolean;
+  careerPivot: boolean;
+  industryOutsider: boolean;
+  potentialScore: number;
+  potentialFactors: Record<string, any>;
+  transferableSkills?: Record<string, any>;
+  relevantExperience?: Record<string, any>;
+  hiddenQualifications: string[];
+  traditionalMatchScore?: number;
+  semanticMatchScore: number;
+  scoreLift: number;
+  status: HiddenTalentStatus;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  outcomeNotes?: string;
+  discoveredAt: string;
+  updatedAt: string;
+}
+
+// 5.1.7 - Hidden Talent Discovery Result
+export interface HiddenTalentDiscoveryResult {
+  jobId: string;
+  jobTitle: string;
+  hiddenTalentFound: number;
+  candidates: HiddenTalentProfile[];
+  averageScoreLift: number;
+  discoveredAt: string;
+}
+
+// Candidate Match Score
+export interface CandidateMatchScore {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  jobId: string;
+  overallMatchScore: number;
+  semanticScore: number;
+  keywordScore?: number;
+  experienceScore?: number;
+  skillScore?: number;
+  projectScore?: number;
+  cultureFitScore?: number;
+  scoreBreakdown: ScoreBreakdown;
+  matchedSkills: string[];
+  partialMatchSkills?: PartialSkillMatch[];
+  missingSkills: string[];
+  bonusQualifications: string[];
+  experienceLevelFit?: ExperienceLevelFit;
+  yearsExperienceFit?: 'Below' | 'Match' | 'Above';
+  seniorityFit?: number;
+  flightRisk?: number;
+  growthPotential?: number;
+  retentionPrediction?: number;
+  isHiddenTalent: boolean;
+  hiddenTalentBoost: number;
+  rankInPool?: number;
+  percentile?: number;
+  recommendation?: MatchRecommendation;
+  recommendationReason?: string;
+  matchingVersion: string;
+  calculatedAt: string;
+  expiresAt?: string;
+}
+
+export interface ScoreBreakdown {
+  skills?: ScoreComponent;
+  experience?: ScoreComponent;
+  projects?: ScoreComponent;
+  education?: ScoreComponent;
+  cultureFit?: ScoreComponent;
+}
+
+export interface ScoreComponent {
+  score: number;
+  weight: number;
+}
+
+// Match Score Summary for Lists
+export interface MatchScoreSummary {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  overallMatchScore: number;
+  recommendation: MatchRecommendation;
+  matchedSkillsCount: number;
+  missingSkillsCount: number;
+  isHiddenTalent: boolean;
+  calculatedAt: string;
+}
+
+// Job Match Scores Result
+export interface JobMatchScoresResult {
+  jobId: string;
+  totalCandidates: number;
+  scores: MatchScoreSummary[];
+  averageScore: number;
+  hiddenTalentCount: number;
+}
+
+// Matching Configuration
+export interface MatchingConfig {
+  id: string;
+  companyId: string;
+  jobId?: string;
+  skillWeight: number;
+  experienceWeight: number;
+  projectWeight: number;
+  educationWeight: number;
+  cultureFitWeight: number;
+  bonusWeight: number;
+  minimumMatchScore: number;
+  hiddenTalentThreshold: number;
+  autoAdvanceThreshold: number;
+  autoRejectThreshold: number;
+  enableSemanticMatching: boolean;
+  enableHiddenTalent: boolean;
+  enableIndustryCrossover: boolean;
+  enableSkillTransfer: boolean;
+  blindScreeningEnabled: boolean;
+  diversityBoostEnabled: boolean;
+  diversityBoostAmount: number;
+  mustHaveSkills: string[];
+  niceToHaveSkills: string[];
+  dealBreakerMissing: string[];
+  customRules?: Record<string, any>;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Semantic Matching Stats
+export interface SemanticMatchingStats {
+  skillEmbeddings: {
+    total: number;
+    active: number;
+    byCategory: Record<string, number>;
+  };
+  roleMappings: {
+    total: number;
+    byCategory: Record<string, number>;
+  };
+  matchScores: {
+    totalCalculated: number;
+    averageScore: number;
+    hiddenTalentDiscovered: number;
+    hiddenTalentConversionRate: number;
+  };
+  industryCrossovers: {
+    total: number;
+    mostCommon: string[];
+  };
+  performance: {
+    averageMatchTime: number;
+    semanticBoostAverage: number;
+    hiddenTalentBoostAverage: number;
+  };
+}
+
+// Semantic Matching Input Types
+export interface CreateSkillEmbeddingInput {
+  skillName: string;
+  skillCategory?: string;
+  skillType?: SkillType;
+  synonyms?: string[];
+  alternateNames?: string[];
+}
+
+export interface CreateExperienceLevelRuleInput {
+  companyId?: string;
+  ruleName: string;
+  ruleDescription?: string;
+  ruleType?: ExperienceRuleType;
+  titlePatterns?: string[];
+  excludePatterns?: string[];
+  minYearsExperience?: number;
+  maxYearsExperience?: number;
+  seniorityKeywords?: string[];
+  inferredLevel: ExperienceLevelType;
+  levelNumeric: number;
+  priority?: number;
+}
+
+export interface InferExperienceLevelInput {
+  titles: string[];
+  yearsExperience: number;
+  roleCount: number;
+  companyHistory?: string[];
+}
+
+export interface CreateRoleMappingInput {
+  companyId?: string;
+  roleTitle: string;
+  roleCategory?: string;
+  roleFamily?: string;
+  roleFunction?: string;
+  industry?: string;
+  equivalentTitles?: string[];
+  seniorVariants?: string[];
+  juniorVariants?: string[];
+  typicalSkills?: string[];
+  typicalExperience?: number;
+}
+
+export interface CalculateSkillSimilarityInput {
+  skillAId: string;
+  skillBId: string;
+  skillAName: string;
+  skillBName: string;
+}
+
+export interface CalculateRoleSimilarityInput {
+  roleAId: string;
+  roleBId: string;
+  roleATitle: string;
+  roleBTitle: string;
+}
+
+export interface CreateSkillTransferabilityInput {
+  sourceSkillId: string;
+  sourceSkillName: string;
+  targetSkillId: string;
+  targetSkillName: string;
+  transferabilityScore?: number;
+  learningCurve?: LearningCurve;
+  estimatedLearningDays?: number;
+  transferContext?: string;
+  prerequisiteSkills?: string[];
+  bridgingConcepts?: string[];
+}
+
+export interface AnalyzeTransferableSkillsInput {
+  targetSkills: string[];
+  candidateSkills: string[];
+}
+
+export interface CalculateProjectRelevanceInput {
+  projectId: string;
+  projectTitle: string;
+  projectDescription?: string;
+  projectSkills: string[];
+  jobId: string;
+  jobTitle: string;
+  jobRequirements?: string;
+  jobSkills: string[];
+}
+
+export interface BatchProjectRelevanceInput {
+  projects: Array<{
+    id: string;
+    title: string;
+    skills: string[];
+  }>;
+  jobId: string;
+  jobSkills: string[];
+}
+
+export interface CreateIndustryCrossoverInput {
+  sourceIndustry: string;
+  targetIndustry: string;
+  crossoverScore?: number;
+  crossoverDifficulty?: CrossoverDifficulty;
+  commonRoles?: string[];
+  transferableSkills?: string[];
+  bridgingSkills?: string[];
+  successFactors?: string[];
+  commonChallenges?: string[];
+}
+
+export interface AnalyzeIndustryCrossoverInput {
+  currentIndustry: string;
+  targetIndustry: string;
+  candidateSkills: string[];
+}
+
+export interface DiscoverHiddenTalentInput {
+  companyId: string;
+  jobTitle: string;
+  jobSkills: string[];
+  limit?: number;
+}
+
+export interface UpdateHiddenTalentStatusInput {
+  status: HiddenTalentStatus;
+  reviewNotes?: string;
+  outcomeNotes?: string;
+}
+
+export interface CalculateMatchScoreInput {
+  companyId: string;
+  candidateData: Record<string, any>;
+  jobData: Record<string, any>;
+  config?: Partial<MatchingConfig>;
+}
+
+export interface UpsertMatchingConfigInput {
+  jobId?: string;
+  skillWeight?: number;
+  experienceWeight?: number;
+  projectWeight?: number;
+  educationWeight?: number;
+  cultureFitWeight?: number;
+  minimumMatchScore?: number;
+  hiddenTalentThreshold?: number;
+  autoAdvanceThreshold?: number;
+  autoRejectThreshold?: number;
+  enableSemanticMatching?: boolean;
+  enableHiddenTalent?: boolean;
+  enableIndustryCrossover?: boolean;
+  enableSkillTransfer?: boolean;
+  mustHaveSkills?: string[];
+  niceToHaveSkills?: string[];
+  dealBreakerMissing?: string[];
+}

@@ -21,3 +21,6 @@ export { default as AIKnowledgeBaseHub } from './AIKnowledgeBaseHub';
 
 // Recruiter Components - Batch 20: Video Interview Platform
 export { default as VideoInterviewHub } from './VideoInterviewHub';
+
+// Recruiter Components - Batch 21: Semantic Matching Engine
+export { default as SemanticMatchingHub } from './SemanticMatchingHub';
