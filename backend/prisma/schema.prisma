@@ -5225,3 +5225,406 @@ model GeneratedInterviewQuestions {
   @@index([interviewRound])
   @@map("generated_interview_questions")
 }
+
+// ============================================
+// BATCH 12: EXTENDED AI CONTENT GENERATION
+// ============================================
+
+// 2.2.7 - Screening Criteria Generator
+model ScreeningCriteria {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  jobId                 String?
+
+  // Input
+  jobTitle              String
+  seniorityLevel        String
+  requiredSkills        Json?
+  department            String?
+
+  // Generated Criteria
+  knockoutQuestions     Json                // Array of knockout questions
+  // [{question, type, expectedAnswer, weight, reasoning}]
+
+  scoringQuestions      Json                // Array of scoring questions
+  // [{question, type, options, weights, maxScore}]
+
+  mustHaveCriteria      Json                // Non-negotiable requirements
+  // [{criterion, importance, autoReject}]
+
+  preferredCriteria     Json?               // Nice-to-have with bonus points
+  // [{criterion, bonusPoints}]
+
+  // Filters
+  experienceFilters     Json?               // Min/max experience
+  educationFilters      Json?               // Education requirements
+  locationFilters       Json?               // Location/remote preferences
+  salaryFilters         Json?               // Salary range expectations
+  availabilityFilters   Json?               // Start date, visa status
+
+  // Scoring Configuration
+  totalPossibleScore    Int
+  passingThreshold      Int
+  autoAdvanceThreshold  Int?                // Score to auto-advance
+
+  // Compliance
+  legalCompliance       Boolean             @default(true)
+  complianceNotes       Json?
+
+  // Usage
+  status                String              @default("DRAFT")
+  timesUsed             Int                 @default(0)
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@map("screening_criteria")
+}
+
+// 2.2.8 - Candidate Summary Generator
+model CandidateSummary {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  candidateId           String
+  jobId                 String?
+  applicationId         String?
+
+  // Candidate Info
+  candidateName         String
+  candidateTitle        String?
+
+  // Generated Content
+  executiveSummary      String              @db.Text
+  strengthsHighlight    Json                // Top 3-5 strengths
+  concernsHighlight     Json?               // Potential concerns
+  uniqueValue           String?             @db.Text // What makes them stand out
+
+  // Fit Analysis
+  roleAlignment         Json                // How they match the role
+  // {score, keyMatches, gaps}
+  experienceRelevance   Json?               // Relevant experience breakdown
+  skillMatch            Json?               // Skill match analysis
+  cultureIndicators     Json?               // Culture fit signals
+
+  // Recommendations
+  interviewFocus        Json?               // Areas to explore in interview
+  redFlags              Json?               // Things to verify
+  negotiationInsights   Json?               // Salary/offer insights
+
+  // Quick Facts
+  yearsExperience       Int?
+  currentCompany        String?
+  educationLevel        String?
+  locationMatch         Boolean?
+  salaryExpectation     String?
+
+  // Quality Metrics
+  confidenceScore       Float?
+  dataCompleteness      Float?              // How much profile data was available
+
+  // Status
+  status                String              @default("GENERATED")
+  reviewedBy            String?
+  reviewNotes           String?             @db.Text
+
+  // Metadata
+  modelVersion          String
+  generatedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([applicationId])
+  @@map("candidate_summaries")
+}
+
+// 2.2.9 - Rejection Email Generator
+model RejectionEmail {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  candidateId           String?
+  applicationId         String?
+
+  // Context
+  candidateName         String
+  jobTitle              String
+  rejectionStage        String              // SCREENING, INTERVIEW, FINAL, OFFER
+  rejectionReason       String?             // Internal reason
+
+  // Generated Content
+  subject               String
+  greeting              String
+  bodyParagraphs        Json                // Array of paragraphs
+  closingParagraph      String              @db.Text
+  signature             String?
+
+  fullEmail             String              @db.Text // Complete formatted email
+
+  // Personalization
+  positiveFeedback      Json?               // Genuine positive points
+  constructiveFeedback  Json?               // Optional constructive feedback
+  futureEncouragement   String?             // Keep in touch message
+
+  // Tone Settings
+  toneLevel             String              @default("PROFESSIONAL") // WARM, PROFESSIONAL, FORMAL
+  includesFeedback      Boolean             @default(false)
+  includesReapplyInfo   Boolean             @default(true)
+
+  // Quality Metrics
+  empathyScore          Float?
+  professionalismScore  Float?
+  clarityScore          Float?
+
+  // Usage
+  status                String              @default("DRAFT")
+  sentAt                DateTime?
+  openedAt              DateTime?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([applicationId])
+  @@map("rejection_emails")
+}
+
+// 2.2.10 - Offer Letter Generator
+model OfferLetter {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  candidateId           String
+  applicationId         String?
+  jobId                 String?
+
+  // Candidate & Role
+  candidateName         String
+  jobTitle              String
+  department            String?
+  reportingTo           String?
+  startDate             DateTime?
+
+  // Compensation
+  baseSalary            Float
+  currency              String              @default("USD")
+  payFrequency          String              @default("ANNUAL") // ANNUAL, MONTHLY, BI_WEEKLY
+  signingBonus          Float?
+  annualBonus           Float?
+  bonusStructure        String?             @db.Text
+
+  // Equity (if applicable)
+  equityGrant           Float?
+  equityType            String?             // RSU, OPTIONS, SHARES
+  vestingSchedule       String?             @db.Text
+  cliffPeriod           Int?                // Months
+
+  // Benefits
+  healthBenefits        Json?               // Health, dental, vision
+  retirementBenefits    Json?               // 401k, pension
+  ptoPolicy             String?
+  otherBenefits         Json?               // Remote work, equipment, etc.
+
+  // Terms
+  employmentType        String              @default("FULL_TIME")
+  workLocation          String?
+  workSchedule          String?
+  probationPeriod       Int?                // Days
+  noticePeriod          Int?                // Days
+
+  // Generated Content
+  openingParagraph      String              @db.Text
+  compensationSection   String              @db.Text
+  benefitsSection       String              @db.Text
+  termsSection          String              @db.Text
+  closingSection        String              @db.Text
+  fullLetter            String              @db.Text
+
+  // Legal
+  contingencies         Json?               // Background check, references
+  legalDisclosures      Json?
+  expirationDate        DateTime?
+
+  // Status
+  status                String              @default("DRAFT")
+  sentAt                DateTime?
+  viewedAt              DateTime?
+  signedAt              DateTime?
+  declinedAt            DateTime?
+  declineReason         String?
+
+  // Metadata
+  templateVersion       String?
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([applicationId])
+  @@map("offer_letters")
+}
+
+// 2.2.11 - Job Ad A/B Testing
+model JobAdVariant {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  jobId                 String
+  testId                String              // Groups variants together
+
+  // Variant Info
+  variantName           String              // A, B, C or descriptive name
+  variantType           String              // TITLE, DESCRIPTION, BENEFITS, FULL
+
+  // Content
+  title                 String?
+  summary               String?             @db.Text
+  description           String?             @db.Text
+  requirements          Json?
+  benefits              Json?
+  fullContent           String?             @db.Text
+
+  // What was changed
+  changesFromControl    Json                // List of changes made
+  changeRationale       String?             @db.Text
+
+  // Performance Metrics
+  impressions           Int                 @default(0)
+  clicks                Int                 @default(0)
+  applications          Int                 @default(0)
+  qualifiedApplications Int                 @default(0)
+
+  // Calculated Metrics
+  clickThroughRate      Float?
+  applicationRate       Float?
+  qualityRate           Float?
+
+  // A/B Test Config
+  trafficPercentage     Float               @default(50) // % of traffic
+  isControl             Boolean             @default(false)
+  isWinner              Boolean?
+
+  // Status
+  status                String              @default("DRAFT") // DRAFT, ACTIVE, PAUSED, COMPLETED
+  startedAt             DateTime?
+  endedAt               DateTime?
+
+  // Metadata
+  modelVersion          String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([testId])
+  @@map("job_ad_variants")
+}
+
+model JobAdTest {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  jobId                 String
+
+  // Test Configuration
+  testName              String
+  testType              String              // TITLE, DESCRIPTION, FULL
+  hypothesis            String?             @db.Text
+
+  // Variants (reference by testId)
+  variantCount          Int                 @default(2)
+  controlVariantId      String?
+
+  // Duration
+  minSampleSize         Int                 @default(100)
+  maxDuration           Int?                // Days
+  actualStartDate       DateTime?
+  actualEndDate         DateTime?
+
+  // Results
+  winningVariantId      String?
+  statisticalSignificance Float?
+  confidenceLevel       Float?              // e.g., 0.95 for 95%
+  liftPercentage        Float?              // % improvement over control
+
+  // Insights
+  keyFindings           Json?               // AI-generated insights
+  recommendations       Json?               // What to do next
+
+  // Status
+  status                String              @default("SETUP") // SETUP, RUNNING, PAUSED, COMPLETED, CANCELLED
+  completedAt           DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@map("job_ad_tests")
+}
+
+// 2.2.12 - Competitor Analysis
+model CompetitorJobAnalysis {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdById           String
+  jobId                 String?             // Our job being compared
+
+  // Target Job
+  ourJobTitle           String
+  ourJobDepartment      String?
+
+  // Competitor Data
+  competitorJobs        Json                // Array of competitor job postings
+  // [{company, title, url, salary, benefits, requirements, scrapedAt}]
+
+  // Analysis Results
+  salaryComparison      Json                // Our salary vs market
+  // {ourRange, marketMin, marketMedian, marketMax, percentile}
+
+  benefitsComparison    Json?               // Benefits comparison
+  // {ourBenefits, commonBenefits, uniqueCompetitorBenefits, ourUniqueBenefits}
+
+  requirementsComparison Json?              // Requirements comparison
+  // {ourRequirements, commonRequirements, competitorOnlyReqs}
+
+  titleComparison       Json?               // Title variations in market
+
+  // Insights
+  competitiveStrengths  Json                // Where we're strong
+  competitiveWeaknesses Json                // Where we're weak
+  marketTrends          Json?               // Industry trends observed
+  recommendations       Json                // Actionable recommendations
+
+  // Scores
+  overallCompetitivenessScore Float         // 0-100
+  salaryCompetitivenessScore Float?
+  benefitsCompetitivenessScore Float?
+  requirementsReasonablenessScore Float?
+
+  // Market Position
+  marketPosition        String              // LEADER, COMPETITIVE, BEHIND, UNKNOWN
+
+  // Data Quality
+  competitorCount       Int
+  dataFreshness         String              // How recent the data is
+  confidenceScore       Float               // Reliability of analysis
+
+  // Metadata
+  modelVersion          String
+  analyzedAt            DateTime            @default(now())
+  expiresAt             DateTime?           // When to refresh
+
+  @@index([companyId])
+  @@index([jobId])
+  @@map("competitor_job_analyses")
+}

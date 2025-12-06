@@ -4422,3 +4422,536 @@ export interface GenerateInterviewQuestionsInput {
   interviewDuration?: number;
   jobId?: string;
 }
+
+// ============================================
+// BATCH 12: EXTENDED AI CONTENT GENERATION
+// ============================================
+
+// Rejection Stage
+export type RejectionStage = 'SCREENING' | 'INTERVIEW' | 'FINAL' | 'OFFER';
+
+// Tone Level
+export type ToneLevel = 'WARM' | 'PROFESSIONAL' | 'FORMAL';
+
+// Offer Status
+export type OfferStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'SIGNED' | 'DECLINED' | 'EXPIRED';
+
+// A/B Test Status
+export type ABTestStatus = 'SETUP' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+
+// Market Position
+export type MarketPosition = 'LEADER' | 'COMPETITIVE' | 'BEHIND' | 'UNKNOWN';
+
+// 2.2.7 - Screening Criteria
+export interface ScreeningCriteria {
+  id: string;
+  companyId: string;
+  createdById: string;
+  jobId?: string;
+
+  // Input
+  jobTitle: string;
+  seniorityLevel: SeniorityLevel;
+  requiredSkills?: string[];
+  department?: string;
+
+  // Generated Criteria
+  knockoutQuestions: KnockoutQuestion[];
+  scoringQuestions: ScoringQuestion[];
+  mustHaveCriteria: MustHaveCriterion[];
+  preferredCriteria?: PreferredCriterion[];
+
+  // Filters
+  experienceFilters?: ExperienceFilter;
+  educationFilters?: EducationFilter;
+  locationFilters?: LocationFilter;
+  salaryFilters?: SalaryFilter;
+  availabilityFilters?: AvailabilityFilter;
+
+  // Scoring Configuration
+  totalPossibleScore: number;
+  passingThreshold: number;
+  autoAdvanceThreshold?: number;
+
+  // Compliance
+  legalCompliance: boolean;
+  complianceNotes?: string[];
+
+  // Usage
+  status: string;
+  timesUsed: number;
+
+  // Metadata
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KnockoutQuestion {
+  question: string;
+  type: 'YES_NO' | 'MULTIPLE_CHOICE';
+  expectedAnswer: string;
+  weight: number;
+  reasoning: string;
+}
+
+export interface ScoringQuestion {
+  question: string;
+  type: 'MULTIPLE_CHOICE' | 'SCALE' | 'TEXT';
+  options: string[];
+  weights: number[];
+  maxScore: number;
+}
+
+export interface MustHaveCriterion {
+  criterion: string;
+  importance: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  autoReject: boolean;
+}
+
+export interface PreferredCriterion {
+  criterion: string;
+  bonusPoints: number;
+}
+
+export interface ExperienceFilter {
+  minYears?: number;
+  maxYears?: number;
+}
+
+export interface EducationFilter {
+  minimumLevel?: EducationLevel;
+  preferredFields?: string[];
+}
+
+export interface LocationFilter {
+  allowedLocations?: string[];
+  remoteAllowed: boolean;
+}
+
+export interface SalaryFilter {
+  minSalary?: number;
+  maxSalary?: number;
+  currency: string;
+}
+
+export interface AvailabilityFilter {
+  maxStartDateDays?: number;
+  visaRequired?: boolean;
+}
+
+// 2.2.8 - Candidate Summary
+export interface CandidateSummary {
+  id: string;
+  companyId: string;
+  createdById: string;
+  candidateId: string;
+  jobId?: string;
+  applicationId?: string;
+
+  // Candidate Info
+  candidateName: string;
+  candidateTitle?: string;
+
+  // Generated Content
+  executiveSummary: string;
+  strengthsHighlight: StrengthItem[];
+  concernsHighlight?: ConcernItem[];
+  uniqueValue?: string;
+
+  // Fit Analysis
+  roleAlignment: RoleAlignment;
+  experienceRelevance?: ExperienceRelevance;
+  skillMatch?: SkillMatch;
+  cultureIndicators?: CultureIndicators;
+
+  // Recommendations
+  interviewFocus?: string[];
+  redFlags?: string[];
+  negotiationInsights?: NegotiationInsights;
+
+  // Quick Facts
+  yearsExperience?: number;
+  currentCompany?: string;
+  educationLevel?: string;
+  locationMatch?: boolean;
+  salaryExpectation?: string;
+
+  // Quality Metrics
+  confidenceScore?: number;
+  dataCompleteness?: number;
+
+  // Status
+  status: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+
+  // Metadata
+  modelVersion: string;
+  generatedAt: string;
+  updatedAt: string;
+}
+
+export interface StrengthItem {
+  strength: string;
+  evidence: string;
+}
+
+export interface ConcernItem {
+  concern: string;
+  mitigation?: string;
+}
+
+export interface RoleAlignment {
+  score: number;
+  keyMatches: string[];
+  gaps: string[];
+}
+
+export interface ExperienceRelevance {
+  totalYears: number;
+  relevantYears: number;
+  highlights: string[];
+}
+
+export interface SkillMatch {
+  matched: string[];
+  partial: string[];
+  missing: string[];
+}
+
+export interface CultureIndicators {
+  workStyle: string;
+  values: string[];
+  redFlags: string[];
+}
+
+export interface NegotiationInsights {
+  likelyPriorities: string[];
+  salaryFlexibility: string;
+}
+
+// 2.2.9 - Rejection Email
+export interface RejectionEmail {
+  id: string;
+  companyId: string;
+  createdById: string;
+  candidateId?: string;
+  applicationId?: string;
+
+  // Context
+  candidateName: string;
+  jobTitle: string;
+  rejectionStage: RejectionStage;
+  rejectionReason?: string;
+
+  // Generated Content
+  subject: string;
+  greeting: string;
+  bodyParagraphs: string[];
+  closingParagraph: string;
+  signature?: string;
+  fullEmail: string;
+
+  // Personalization
+  positiveFeedback?: string[];
+  constructiveFeedback?: string[];
+  futureEncouragement?: string;
+
+  // Tone Settings
+  toneLevel: ToneLevel;
+  includesFeedback: boolean;
+  includesReapplyInfo: boolean;
+
+  // Quality Metrics
+  empathyScore?: number;
+  professionalismScore?: number;
+  clarityScore?: number;
+
+  // Usage
+  status: string;
+  sentAt?: string;
+  openedAt?: string;
+
+  // Metadata
+  modelVersion: string;
+  createdAt: string;
+}
+
+// 2.2.10 - Offer Letter
+export interface OfferLetter {
+  id: string;
+  companyId: string;
+  createdById: string;
+  candidateId: string;
+  applicationId?: string;
+  jobId?: string;
+
+  // Candidate & Role
+  candidateName: string;
+  jobTitle: string;
+  department?: string;
+  reportingTo?: string;
+  startDate?: string;
+
+  // Compensation
+  baseSalary: number;
+  currency: string;
+  payFrequency: string;
+  signingBonus?: number;
+  annualBonus?: number;
+  bonusStructure?: string;
+
+  // Equity
+  equityGrant?: number;
+  equityType?: string;
+  vestingSchedule?: string;
+  cliffPeriod?: number;
+
+  // Benefits
+  healthBenefits?: HealthBenefits;
+  retirementBenefits?: RetirementBenefits;
+  ptoPolicy?: string;
+  otherBenefits?: string[];
+
+  // Terms
+  employmentType: EmploymentType;
+  workLocation?: string;
+  workSchedule?: string;
+  probationPeriod?: number;
+  noticePeriod?: number;
+
+  // Generated Content
+  openingParagraph: string;
+  compensationSection: string;
+  benefitsSection: string;
+  termsSection: string;
+  closingSection: string;
+  fullLetter: string;
+
+  // Legal
+  contingencies?: string[];
+  legalDisclosures?: string[];
+  expirationDate?: string;
+
+  // Status
+  status: OfferStatus;
+  sentAt?: string;
+  viewedAt?: string;
+  signedAt?: string;
+  declinedAt?: string;
+  declineReason?: string;
+
+  // Metadata
+  templateVersion?: string;
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthBenefits {
+  medical: boolean;
+  dental: boolean;
+  vision: boolean;
+}
+
+export interface RetirementBenefits {
+  type: string;
+  matchPercentage?: number;
+}
+
+// 2.2.11 - Job Ad A/B Testing
+export interface JobAdVariant {
+  id: string;
+  companyId: string;
+  createdById: string;
+  jobId: string;
+  testId: string;
+
+  // Variant Info
+  variantName: string;
+  variantType: string;
+
+  // Content
+  title?: string;
+  summary?: string;
+  description?: string;
+  requirements?: string[];
+  benefits?: string[];
+  fullContent?: string;
+
+  // What was changed
+  changesFromControl: VariantChange[];
+  changeRationale?: string;
+
+  // Performance Metrics
+  impressions: number;
+  clicks: number;
+  applications: number;
+  qualifiedApplications: number;
+
+  // Calculated Metrics
+  clickThroughRate?: number;
+  applicationRate?: number;
+  qualityRate?: number;
+
+  // A/B Test Config
+  trafficPercentage: number;
+  isControl: boolean;
+  isWinner?: boolean;
+
+  // Status
+  status: string;
+  startedAt?: string;
+  endedAt?: string;
+
+  // Metadata
+  modelVersion?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VariantChange {
+  field: string;
+  originalValue: string;
+  newValue: string;
+}
+
+export interface JobAdTest {
+  id: string;
+  companyId: string;
+  createdById: string;
+  jobId: string;
+
+  // Test Configuration
+  testName: string;
+  testType: string;
+  hypothesis?: string;
+
+  // Variants
+  variantCount: number;
+  controlVariantId?: string;
+
+  // Duration
+  minSampleSize: number;
+  maxDuration?: number;
+  actualStartDate?: string;
+  actualEndDate?: string;
+
+  // Results
+  winningVariantId?: string;
+  statisticalSignificance?: number;
+  confidenceLevel?: number;
+  liftPercentage?: number;
+
+  // Insights
+  keyFindings?: string[];
+  recommendations?: string[];
+
+  // Status
+  status: ABTestStatus;
+  completedAt?: string;
+
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ABTestResults {
+  test: JobAdTest;
+  variants: JobAdVariant[];
+  analysis: {
+    winner: string;
+    liftPercentage: number;
+    statisticalSignificance: number;
+    recommendation: string;
+  };
+}
+
+// 2.2.12 - Competitor Analysis
+export interface CompetitorJobAnalysis {
+  id: string;
+  companyId: string;
+  createdById: string;
+  jobId?: string;
+
+  // Target Job
+  ourJobTitle: string;
+  ourJobDepartment?: string;
+
+  // Competitor Data
+  competitorJobs: CompetitorJob[];
+
+  // Analysis Results
+  salaryComparison: SalaryComparison;
+  benefitsComparison?: BenefitsComparison;
+  requirementsComparison?: RequirementsComparison;
+  titleComparison?: TitleComparison;
+
+  // Insights
+  competitiveStrengths: CompetitiveInsight[];
+  competitiveWeaknesses: CompetitiveInsight[];
+  marketTrends?: string[];
+  recommendations: string[];
+
+  // Scores
+  overallCompetitivenessScore: number;
+  salaryCompetitivenessScore?: number;
+  benefitsCompetitivenessScore?: number;
+  requirementsReasonablenessScore?: number;
+
+  // Market Position
+  marketPosition: MarketPosition;
+
+  // Data Quality
+  competitorCount: number;
+  dataFreshness: string;
+  confidenceScore: number;
+
+  // Metadata
+  modelVersion: string;
+  analyzedAt: string;
+  expiresAt?: string;
+}
+
+export interface CompetitorJob {
+  company: string;
+  title: string;
+  url?: string;
+  salary?: { min: number; max: number };
+  benefits?: string[];
+  requirements?: string[];
+  scrapedAt: string;
+}
+
+export interface SalaryComparison {
+  ourRange: { min: number; max: number };
+  marketMin: number;
+  marketMedian: number;
+  marketMax: number;
+  percentile: number;
+}
+
+export interface BenefitsComparison {
+  ourBenefits: string[];
+  commonBenefits: string[];
+  uniqueCompetitorBenefits: string[];
+  ourUniqueBenefits: string[];
+}
+
+export interface RequirementsComparison {
+  ourRequirements: string[];
+  commonRequirements: string[];
+  competitorOnlyReqs: string[];
+}
+
+export interface TitleComparison {
+  ourTitle: string;
+  alternatives: string[];
+  recommendation?: string;
+}
+
+export interface CompetitiveInsight {
+  area: string;
+  detail: string;
+}
