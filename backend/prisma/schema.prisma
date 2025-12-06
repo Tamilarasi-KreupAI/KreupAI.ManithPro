@@ -112,6 +112,16 @@ model User {
   interviewPreps         InterviewPrep[]
   salaryNegotiationAdvice SalaryNegotiationAdvice[]
 
+  // Batch 14: Extended AI & NLP
+  careerPathAdvice       CareerPathAdvice[]
+  learningRecommendations LearningRecommendation[]
+  applicationInsights    ApplicationInsight[]
+  portfolioFeedback      PortfolioFeedback[]
+  parsedDocuments        ParsedDocument[]
+  skillExtractions       SkillExtraction[]
+  semanticSearchIndices  SemanticSearchIndex[]
+  entityRecognitions     EntityRecognition[]
+
   @@map("users")
 }
 
@@ -150,6 +160,7 @@ model Job {
   postedBy        User          @relation("PostedJobs", fields: [postedById], references: [id], onDelete: Cascade)
   applications    Application[]
   savedBy         SavedJob[]
+  learningRecommendations LearningRecommendation[]
 
   @@index([status, createdAt])
   @@index([type])
@@ -173,6 +184,7 @@ model Application {
   candidate     User              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   interviews    Interview[]
   messages      Message[]
+  insight       ApplicationInsight?
 
   @@unique([jobId, candidateId]) // One application per job per candidate
   @@index([status])
@@ -5981,4 +5993,487 @@ model SalaryNegotiationAdvice {
   @@index([userId])
   @@index([jobId])
   @@map("salary_negotiation_advice")
+}
+
+// ============================================
+// BATCH 14: EXTENDED AI FOR CANDIDATES & NLP
+// Features 2.3.7-2.4.4
+// ============================================
+
+// 2.3.7 - CAREER PATH ADVISOR
+model CareerPathAdvice {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Current State
+  currentRole           String
+  currentLevel          String              // JUNIOR, MID, SENIOR, LEAD, MANAGER, DIRECTOR, VP, C_LEVEL
+  currentIndustry       String
+  yearsExperience       Int
+  currentSkills         Json                // Array of skills with proficiency
+  currentSalary         Float?
+
+  // Career Goals
+  targetRoles           Json                // Array of target roles
+  targetLevel           String
+  targetIndustry        String?
+  targetTimeframe       String              // 1_YEAR, 2_YEARS, 5_YEARS
+  targetSalary          Float?
+  priorities            Json                // Work-life balance, compensation, growth, impact
+
+  // Analysis Results
+  careerPaths           Json                // Array of possible paths with steps
+  recommendedPath       Json                // Best recommended path
+  milestones            Json                // Key milestones to achieve
+  skillGaps             Json                // Skills needed for target
+  experienceGaps        Json                // Experience needed
+
+  // Transition Analysis
+  transitionDifficulty  String              // EASY, MODERATE, CHALLENGING, DIFFICULT
+  timeToTransition      String              // Estimated time
+  marketDemand          String              // HIGH, MEDIUM, LOW
+  salaryProjection      Json                // Salary at each step
+  riskAssessment        Json                // Risks and mitigations
+
+  // Action Plan
+  immediateActions      Json                // What to do now
+  shortTermActions      Json                // 0-6 months
+  mediumTermActions     Json                // 6-18 months
+  longTermActions       Json                // 18+ months
+  networkingAdvice      Json                // Who to connect with
+
+  // Success Factors
+  successFactors        Json                // What will make or break success
+  industryTrends        Json                // Relevant industry trends
+  alternativePaths      Json                // Backup options
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("career_path_advice")
+}
+
+// 2.3.8 - LEARNING RECOMMENDATIONS
+model LearningRecommendation {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId                 String?
+  job                   Job?                @relation(fields: [jobId], references: [id])
+
+  // Learning Context
+  learningGoal          String              // SKILL_GAP, CAREER_CHANGE, UPSKILL, CERTIFICATION
+  targetSkills          Json                // Skills to learn
+  currentLevel          String              // BEGINNER, INTERMEDIATE, ADVANCED
+  preferredFormat       Json                // VIDEO, READING, HANDS_ON, INSTRUCTOR_LED
+  timeAvailable         String              // HOURS_PER_WEEK
+  budget                Float?              // Learning budget
+
+  // Recommendations
+  courses               Json                // Recommended courses with details
+  certifications        Json                // Recommended certifications
+  books                 Json                // Recommended books
+  tutorials             Json                // Online tutorials
+  projects              Json                // Practice projects
+  communities           Json                // Communities to join
+  mentorship            Json                // Mentorship suggestions
+
+  // Learning Path
+  learningPath          Json                // Structured learning path
+  milestones            Json                // Learning milestones
+  estimatedDuration     String              // How long to complete
+  priorityOrder         Json                // What to learn first
+
+  // Platform Links
+  courseraLinks         Json?               // Coursera courses
+  udemyLinks            Json?               // Udemy courses
+  linkedinLearning      Json?               // LinkedIn Learning
+  pluralsightLinks      Json?               // Pluralsight
+  youtubeLinks          Json?               // Free YouTube resources
+  freeResources         Json                // Free learning resources
+
+  // ROI Analysis
+  skillValueIncrease    Json                // How much skills increase value
+  salaryImpact          Float?              // Expected salary impact
+  marketabilityIncrease String              // How much more marketable
+
+  // Progress Tracking
+  completedItems        Json                @default("[]")
+  currentProgress       Float               @default(0)
+  startedAt             DateTime?
+  completedAt           DateTime?
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@map("learning_recommendations")
+}
+
+// 2.3.9 - APPLICATION STATUS INSIGHTS
+model ApplicationInsight {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId         String
+  application           Application         @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  // Current Status Analysis
+  currentStage          String              // Where they are in process
+  stageDetails          Json                // Details about current stage
+  timeInStage           Int                 // Days in current stage
+  averageTimeAtStage    Int                 // Average for this company/role
+
+  // Comparison Analysis
+  competitorCount       Int?                // Estimated other applicants
+  rankEstimate          String?             // TOP_10, TOP_25, TOP_50, UNKNOWN
+  strengthsVsField      Json                // Where candidate excels
+  weaknessesVsField     Json                // Where candidate lags
+
+  // Prediction
+  advanceProbability    Float               // Chance of advancing
+  hireProbability       Float               // Chance of getting hired
+  predictionFactors     Json                // What affects prediction
+  confidenceLevel       String              // HIGH, MEDIUM, LOW
+
+  // Improvement Suggestions
+  immediateActions      Json                // What to do right now
+  profileImprovements   Json                // Profile changes to make
+  followUpAdvice        Json                // When/how to follow up
+  interviewTips         Json?               // If interview pending
+
+  // Timeline Expectations
+  expectedNextStep      String              // What happens next
+  expectedTimeline      String              // When to expect news
+  typicalProcessLength  Int                 // Days for full process
+  urgencyLevel          String              // HIGH, MEDIUM, LOW
+
+  // Historical Context
+  companyHiringPattern  Json                // How this company typically hires
+  roleCompetitiveness   String              // How competitive this role is
+  seasonalFactors       Json?               // Time of year factors
+
+  // Red Flags & Opportunities
+  redFlags              Json                // Warning signs
+  positiveSignals       Json                // Good signs
+  dealBreakers          Json                // What could disqualify
+
+  // Metadata
+  modelVersion          String
+  generatedAt           DateTime            @default(now())
+  expiresAt             DateTime            // Insights become stale
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([applicationId])
+  @@index([userId])
+  @@map("application_insights")
+}
+
+// 2.3.10 - PORTFOLIO FEEDBACK
+model PortfolioFeedback {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Portfolio Details
+  portfolioUrl          String?
+  portfolioType         String              // GITHUB, PERSONAL_WEBSITE, BEHANCE, DRIBBBLE, OTHER
+  projectCount          Int
+  analyzedProjects      Json                // Projects that were analyzed
+
+  // Overall Assessment
+  overallScore          Float               // 0-100
+  overallGrade          String              // A, B, C, D, F
+  strengthAreas         Json                // What's done well
+  improvementAreas      Json                // What needs work
+  standoutProjects      Json                // Best projects
+
+  // Presentation Analysis
+  visualAppeal          Float               // 0-100
+  navigation            Float               // 0-100
+  mobileResponsive      Boolean
+  loadSpeed             String              // FAST, MEDIUM, SLOW
+  accessibilityScore    Float               // 0-100
+  presentationFeedback  Json                // Specific presentation tips
+
+  // Content Analysis
+  projectDescriptions   Json                // Quality of descriptions
+  technicalDepth        Float               // 0-100
+  problemSolving        Float               // Evidence of problem solving
+  realWorldImpact       Float               // Business/user impact shown
+  contentFeedback       Json                // Content improvement tips
+
+  // Technical Analysis
+  techStackDiversity    Float               // Variety of technologies
+  codeQuality           Float?              // If code is visible
+  documentationQuality  Float?              // README quality
+  testCoverage          Float?              // If visible
+  technicalFeedback     Json                // Technical improvement tips
+
+  // Market Positioning
+  industryRelevance     Float               // Relevant to target industry
+  trendAlignment        Float               // Uses modern technologies
+  uniqueness            Float               // Stands out from crowd
+  marketFeedback        Json                // Market positioning tips
+
+  // Specific Project Feedback
+  projectFeedback       Json                // Feedback per project
+
+  // Action Items
+  quickWins             Json                // Easy fixes
+  mediumEffort          Json                // Medium effort improvements
+  majorOverhauls        Json                // Significant changes needed
+  prioritizedActions    Json                // Ordered action list
+
+  // Metadata
+  modelVersion          String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("portfolio_feedback")
+}
+
+// ============================================
+// 2.4 NLP & CONTENT ANALYSIS
+// ============================================
+
+// 2.4.1 - RESUME/PROFILE PARSER
+model ParsedDocument {
+  id                    String              @id @default(uuid())
+  userId                String?
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Document Info
+  documentType          String              // RESUME, CV, LINKEDIN_EXPORT, PROFILE_EXPORT
+  fileName              String?
+  fileUrl               String?
+  rawText               String?             // Extracted text
+  fileHash              String?             // For deduplication
+
+  // Parsed Sections
+  contactInfo           Json                // Name, email, phone, location
+  summary               String?             // Professional summary
+  workExperience        Json                // Array of work experiences
+  education             Json                // Array of education
+  skills                Json                // Extracted skills with categories
+  certifications        Json                // Certifications
+  projects              Json                // Projects
+  publications          Json?               // Publications if any
+  awards                Json?               // Awards/honors
+  languages             Json?               // Languages spoken
+  volunteerWork         Json?               // Volunteer experience
+  additionalSections    Json?               // Other sections
+
+  // Quality Metrics
+  parseConfidence       Float               // How confident in parsing
+  completenessScore     Float               // How complete the document is
+  formatQuality         String              // EXCELLENT, GOOD, FAIR, POOR
+  issues                Json                // Parsing issues encountered
+
+  // Extracted Entities
+  companies             Json                // Companies mentioned
+  technologies          Json                // Technologies mentioned
+  locations             Json                // Locations mentioned
+  dates                 Json                // Dates extracted
+  urls                  Json                // URLs found
+
+  // Analysis
+  seniorityLevel        String?             // Inferred seniority
+  industryFocus         Json?               // Industries worked in
+  careerProgression     Json?               // Career trajectory analysis
+  keyAchievements       Json?               // Key achievements extracted
+
+  // Status
+  status                String              @default("PARSED") // PARSING, PARSED, FAILED, NEEDS_REVIEW
+  errorMessage          String?
+
+  // Metadata
+  modelVersion          String
+  processingTime        Int?                // Milliseconds to parse
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([fileHash])
+  @@map("parsed_documents")
+}
+
+// 2.4.2 - SKILL EXTRACTION
+model SkillExtraction {
+  id                    String              @id @default(uuid())
+  userId                String?
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Source
+  sourceType            String              // RESUME, JOB_DESCRIPTION, PROFILE, PROJECT, FREE_TEXT
+  sourceId              String?             // ID of source document
+  sourceText            String              // Text that was analyzed
+
+  // Extracted Skills
+  skills                Json                // Array of extracted skills
+  skillCategories       Json                // Skills grouped by category
+  skillLevels           Json                // Inferred proficiency levels
+  skillRelationships    Json                // Related skills graph
+
+  // Technical Skills
+  programmingLanguages  Json
+  frameworks            Json
+  databases             Json
+  cloudPlatforms        Json
+  tools                 Json
+  methodologies         Json
+
+  // Soft Skills
+  softSkills            Json
+  leadershipSkills      Json
+  communicationSkills   Json
+
+  // Domain Skills
+  domainExpertise       Json                // Industry-specific knowledge
+  certificationSkills   Json                // Skills from certifications
+
+  // Skill Insights
+  coreCompetencies      Json                // Primary skills
+  emergingSkills        Json                // Recently acquired
+  legacySkills          Json                // Older/outdated skills
+  rarityScores          Json                // How rare each skill is
+
+  // Market Analysis
+  marketDemand          Json                // Demand for each skill
+  salaryImpact          Json                // Salary impact of skills
+  trendingSkills        Json                // Which skills are trending
+
+  // Confidence
+  overallConfidence     Float
+  perSkillConfidence    Json                // Confidence per skill
+
+  // Metadata
+  modelVersion          String
+  processingTime        Int?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([sourceType, sourceId])
+  @@map("skill_extractions")
+}
+
+// 2.4.3 - SEMANTIC SEARCH INDEX
+model SemanticSearchIndex {
+  id                    String              @id @default(uuid())
+
+  // Entity Reference
+  entityType            String              // CANDIDATE, JOB, PROJECT, COMPANY
+  entityId              String              // ID of the entity
+  userId                String?             // If candidate-related
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Text Content
+  title                 String              // Main title/name
+  content               String              // Full searchable content
+  summary               String?             // Short summary
+  keywords              Json                // Extracted keywords
+
+  // Vector Embeddings (stored as JSON array)
+  embedding             Json                // Vector embedding for semantic search
+  embeddingModel        String              // Model used for embedding
+  embeddingDimension    Int                 // Dimension of embedding vector
+
+  // Categorization
+  category              String?             // Primary category
+  subcategories         Json?               // Subcategories
+  tags                  Json?               // Tags for filtering
+  skills                Json?               // Skills if applicable
+  industries            Json?               // Industries if applicable
+  locations             Json?               // Locations if applicable
+
+  // Metadata for Search
+  seniorityLevel        String?
+  experienceYears       Int?
+  salaryMin             Float?
+  salaryMax             Float?
+  remoteEligible        Boolean?
+
+  // Search Quality
+  contentQuality        Float               // Quality score for ranking
+  freshness             DateTime            // When content was last updated
+  popularity            Float               @default(0) // Click/view score
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, STALE, DELETED
+  lastIndexed           DateTime            @default(now())
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([entityType, entityId])
+  @@index([userId])
+  @@index([entityType])
+  @@index([status])
+  @@map("semantic_search_index")
+}
+
+// 2.4.4 - ENTITY RECOGNITION
+model EntityRecognition {
+  id                    String              @id @default(uuid())
+  userId                String?
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Source
+  sourceType            String              // RESUME, JOB_DESCRIPTION, MESSAGE, PROFILE
+  sourceId              String?
+  sourceText            String
+
+  // Recognized Entities
+  people                Json                // Names of people
+  organizations         Json                // Company names
+  locations             Json                // Cities, countries, addresses
+  dates                 Json                // Dates and time periods
+  money                 Json                // Salaries, budgets
+  percentages           Json                // Percentages
+  quantities            Json                // Numbers and quantities
+
+  // Technology Entities
+  technologies          Json                // Tech stack, tools
+  products              Json                // Product names
+  platforms             Json                // Platforms (AWS, GCP, etc)
+  languages             Json                // Programming languages
+
+  // Professional Entities
+  jobTitles             Json                // Job titles mentioned
+  degrees               Json                // Educational degrees
+  certifications        Json                // Certification names
+  universities          Json                // Universities
+  industries            Json                // Industry references
+
+  // Relationships
+  entityRelationships   Json                // Relationships between entities
+  timeline              Json                // Temporal relationships
+
+  // Confidence Scores
+  perEntityConfidence   Json                // Confidence per entity
+  overallConfidence     Float
+
+  // Normalized Entities
+  normalizedEntities    Json                // Entities mapped to standard forms
+
+  // Metadata
+  modelVersion          String
+  processingTime        Int?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([sourceType, sourceId])
+  @@map("entity_recognitions")
 }

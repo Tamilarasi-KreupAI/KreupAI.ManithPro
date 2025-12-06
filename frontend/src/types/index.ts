@@ -5400,3 +5400,538 @@ export interface RecordNegotiationOutcomeRequest {
   outcome: NegotiationOutcome;
   lessonsLearned?: string[];
 }
+
+// ============================================
+// BATCH 14: EXTENDED AI FOR CANDIDATES & NLP
+// Features 2.3.7-2.4.4
+// ============================================
+
+// 2.3.7 - Career Path Advisor Types
+export type CareerLevel = 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR' | 'VP' | 'C_LEVEL';
+export type TransitionDifficulty = 'EASY' | 'MODERATE' | 'CHALLENGING' | 'DIFFICULT';
+export type Timeframe = '1_YEAR' | '2_YEARS' | '5_YEARS';
+
+export interface CareerPath {
+  pathId: number;
+  name: string;
+  steps: Array<{
+    step: number;
+    role: string;
+    timeline: string;
+  }>;
+  probability: number;
+}
+
+export interface CareerMilestone {
+  milestone: string;
+  priority: Priority;
+  deadline: string;
+}
+
+export interface SkillGapItem {
+  skill: string;
+  currentLevel: number;
+  requiredLevel: number;
+  priority: Priority;
+}
+
+export interface ExperienceGap {
+  experience: string;
+  gap: string;
+  suggestion: string;
+}
+
+export interface CareerPathAdvice {
+  id: string;
+  userId: string;
+  currentRole: string;
+  currentLevel: CareerLevel;
+  currentIndustry: string;
+  yearsExperience: number;
+  currentSkills: Record<string, unknown>[];
+  currentSalary?: number;
+  targetRoles: string[];
+  targetLevel: CareerLevel;
+  targetIndustry?: string;
+  targetTimeframe: Timeframe;
+  targetSalary?: number;
+  priorities: Record<string, unknown>;
+  careerPaths: CareerPath[];
+  recommendedPath: CareerPath & { reason: string; confidence: number };
+  milestones: CareerMilestone[];
+  skillGaps: SkillGapItem[];
+  experienceGaps: ExperienceGap[];
+  transitionDifficulty: TransitionDifficulty;
+  timeToTransition: string;
+  marketDemand: MarketDemand;
+  salaryProjection: Record<string, number>;
+  riskAssessment: {
+    risks: Array<{ risk: string; probability: number; impact: string }>;
+    mitigations: string[];
+  };
+  immediateActions: string[];
+  shortTermActions: string[];
+  mediumTermActions: string[];
+  longTermActions: string[];
+  networkingAdvice: Record<string, unknown>;
+  successFactors: string[];
+  industryTrends: Array<{ trend: string; impact: string }>;
+  alternativePaths: Array<{ path: string; viability: string; reason: string }>;
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CareerPathAdviceRequest {
+  currentRole: string;
+  currentLevel: CareerLevel;
+  currentIndustry: string;
+  yearsExperience: number;
+  currentSkills: Array<{ skill: string; proficiency: number }>;
+  currentSalary?: number;
+  targetRoles: string[];
+  targetLevel: CareerLevel;
+  targetIndustry?: string;
+  targetTimeframe: Timeframe;
+  targetSalary?: number;
+  priorities: Record<string, number>;
+}
+
+// 2.3.8 - Learning Recommendations Types
+export type LearningGoal = 'SKILL_GAP' | 'CAREER_CHANGE' | 'UPSKILL' | 'CERTIFICATION';
+export type LearningFormat = 'VIDEO' | 'READING' | 'HANDS_ON' | 'INSTRUCTOR_LED';
+export type LearningLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+
+export interface Course {
+  id: number;
+  title: string;
+  provider: string;
+  duration: string;
+  rating: number;
+  price: number;
+  skills: string[];
+  relevance: number;
+}
+
+export interface Certification {
+  name: string;
+  provider: string;
+  difficulty: string;
+  prepTime: string;
+  cost: number;
+  salaryImpact: string;
+}
+
+export interface LearningRecommendation {
+  id: string;
+  userId: string;
+  jobId?: string;
+  learningGoal: LearningGoal;
+  targetSkills: string[];
+  currentLevel: LearningLevel;
+  preferredFormat: LearningFormat[];
+  timeAvailable: string;
+  budget?: number;
+  courses: Course[];
+  certifications: Certification[];
+  books: Array<{ title: string; author: string; relevance: number }>;
+  tutorials: Array<{ title: string; platform: string; duration: string; free: boolean }>;
+  projects: Array<{ title: string; skills: string[]; complexity: string; estimatedTime: string }>;
+  communities: Array<{ name: string; platform: string; members: number }>;
+  mentorship: Record<string, unknown>;
+  learningPath: Array<{ phase: number; focus: string; duration: string }>;
+  milestones: Array<{ week: number; milestone: string }>;
+  estimatedDuration: string;
+  priorityOrder: string[];
+  courseraLinks: Array<{ url: string; title: string }>;
+  udemyLinks: Array<{ url: string; title: string }>;
+  linkedinLearning: Array<{ url: string; title: string }>;
+  pluralsightLinks: Array<{ url: string; title: string }>;
+  youtubeLinks: Array<{ url: string; title: string; free: boolean }>;
+  freeResources: Array<{ title: string; url: string; type: string }>;
+  skillValueIncrease: Record<string, { before: number; after: number; marketValue: string }>;
+  salaryImpact?: number;
+  marketabilityIncrease: string;
+  completedItems: string[];
+  currentProgress: number;
+  startedAt?: string;
+  completedAt?: string;
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LearningRecommendationRequest {
+  learningGoal: LearningGoal;
+  targetSkills: string[];
+  currentLevel: LearningLevel;
+  preferredFormat: LearningFormat[];
+  timeAvailable: string;
+  budget?: number;
+  jobId?: string;
+}
+
+// 2.3.9 - Application Insights Types
+export type RankEstimate = 'TOP_10' | 'TOP_25' | 'TOP_50' | 'UNKNOWN';
+export type UrgencyLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface ApplicationInsight {
+  id: string;
+  userId: string;
+  applicationId: string;
+  currentStage: string;
+  stageDetails: Record<string, unknown>;
+  timeInStage: number;
+  averageTimeAtStage: number;
+  competitorCount?: number;
+  rankEstimate?: RankEstimate;
+  strengthsVsField: Array<{ area: string; strength: string; details: string }>;
+  weaknessesVsField: Array<{ area: string; weakness: string; details: string }>;
+  advanceProbability: number;
+  hireProbability: number;
+  predictionFactors: Array<{ factor: string; impact: string; weight: number }>;
+  confidenceLevel: ConfidenceLevel;
+  immediateActions: string[];
+  profileImprovements: string[];
+  followUpAdvice: Record<string, unknown>;
+  interviewTips?: string[];
+  expectedNextStep: string;
+  expectedTimeline: string;
+  typicalProcessLength: number;
+  urgencyLevel: UrgencyLevel;
+  companyHiringPattern: Record<string, unknown>;
+  roleCompetitiveness: string;
+  seasonalFactors?: Array<{ factor: string; impact: string }>;
+  redFlags: string[];
+  positiveSignals: Array<{ signal: string; meaning: string }>;
+  dealBreakers: string[];
+  modelVersion: string;
+  generatedAt: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  application?: {
+    job: { title: string; companyName: string };
+  };
+}
+
+// 2.3.10 - Portfolio Feedback Types
+export type PortfolioType = 'GITHUB' | 'PERSONAL_WEBSITE' | 'BEHANCE' | 'DRIBBBLE' | 'OTHER';
+export type LoadSpeed = 'FAST' | 'MEDIUM' | 'SLOW';
+export type PortfolioGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+
+export interface PortfolioFeedback {
+  id: string;
+  userId: string;
+  portfolioUrl?: string;
+  portfolioType: PortfolioType;
+  projectCount: number;
+  analyzedProjects: Record<string, unknown>[];
+  overallScore: number;
+  overallGrade: string;
+  strengthAreas: Array<{ area: string; score: number; feedback: string }>;
+  improvementAreas: Array<{ area: string; score: number; feedback: string }>;
+  standoutProjects: Array<{ projectName: string; reason: string }>;
+  visualAppeal: number;
+  navigation: number;
+  mobileResponsive: boolean;
+  loadSpeed: LoadSpeed;
+  accessibilityScore: number;
+  presentationFeedback: string[];
+  projectDescriptions: Record<string, unknown>;
+  technicalDepth: number;
+  problemSolving: number;
+  realWorldImpact: number;
+  contentFeedback: string[];
+  techStackDiversity: number;
+  codeQuality?: number;
+  documentationQuality?: number;
+  testCoverage?: number;
+  technicalFeedback: string[];
+  industryRelevance: number;
+  trendAlignment: number;
+  uniqueness: number;
+  marketFeedback: string[];
+  projectFeedback: Array<{
+    project: string;
+    score: number;
+    strengths: string[];
+    improvements: string[];
+  }>;
+  quickWins: Array<{ action: string; effort: string; impact: string }>;
+  mediumEffort: Array<{ action: string; effort: string; impact: string }>;
+  majorOverhauls: Array<{ action: string; effort: string; impact: string }>;
+  prioritizedActions: Array<{ rank: number; action: string; reason: string }>;
+  modelVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PortfolioFeedbackRequest {
+  portfolioUrl?: string;
+  portfolioType: PortfolioType;
+  projects?: Array<{
+    name: string;
+    description: string;
+    url?: string;
+    technologies?: string[];
+  }>;
+}
+
+// ============================================
+// 2.4 NLP & CONTENT ANALYSIS Types
+// ============================================
+
+// 2.4.1 - Resume/Profile Parser Types
+export type DocumentType = 'RESUME' | 'CV' | 'LINKEDIN_EXPORT' | 'PROFILE_EXPORT';
+export type ParseStatus = 'PARSING' | 'PARSED' | 'FAILED' | 'NEEDS_REVIEW';
+export type FormatQuality = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+
+export interface WorkExperience {
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  location?: string;
+  description?: string;
+  achievements?: string[];
+  technologies?: string[];
+}
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field: string;
+  graduationDate: string;
+  gpa?: string;
+}
+
+export interface ParsedDocument {
+  id: string;
+  userId?: string;
+  documentType: DocumentType;
+  fileName?: string;
+  fileUrl?: string;
+  rawText?: string;
+  fileHash?: string;
+  contactInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    github?: string;
+  };
+  summary?: string;
+  workExperience: WorkExperience[];
+  education: Education[];
+  skills: Record<string, string[]>;
+  certifications: Array<{ name: string; issuer: string; date: string }>;
+  projects: Array<{ name: string; description: string; technologies: string[]; url?: string }>;
+  publications?: Record<string, unknown>[];
+  awards?: Array<{ name: string; issuer: string; date: string }>;
+  languages?: Array<{ language: string; proficiency: string }>;
+  volunteerWork?: Record<string, unknown>[];
+  additionalSections?: Record<string, unknown>;
+  parseConfidence: number;
+  completenessScore: number;
+  formatQuality: FormatQuality;
+  issues: Array<{ section: string; issue: string }>;
+  companies: string[];
+  technologies: string[];
+  locations: string[];
+  dates: string[];
+  urls: string[];
+  seniorityLevel?: string;
+  industryFocus?: string[];
+  careerProgression?: Record<string, unknown>;
+  keyAchievements?: string[];
+  status: ParseStatus;
+  errorMessage?: string;
+  modelVersion: string;
+  processingTime?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ParseDocumentRequest {
+  documentType: DocumentType;
+  fileName?: string;
+  fileUrl?: string;
+  rawText?: string;
+}
+
+// 2.4.2 - Skill Extraction Types
+export type SkillSourceType = 'RESUME' | 'JOB_DESCRIPTION' | 'PROFILE' | 'PROJECT' | 'FREE_TEXT';
+export type SkillLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+
+export interface ExtractedSkill {
+  skill: string;
+  confidence: number;
+  mentions: number;
+}
+
+export interface SkillExtraction {
+  id: string;
+  userId?: string;
+  sourceType: SkillSourceType;
+  sourceId?: string;
+  sourceText: string;
+  skills: ExtractedSkill[];
+  skillCategories: Record<string, string[]>;
+  skillLevels: Record<string, SkillLevel>;
+  skillRelationships: {
+    clusters: Array<{ name: string; skills: string[] }>;
+    dependencies: Array<{ skill: string; dependsOn: string[] }>;
+  };
+  programmingLanguages: string[];
+  frameworks: string[];
+  databases: string[];
+  cloudPlatforms: string[];
+  tools: string[];
+  methodologies: string[];
+  softSkills: string[];
+  leadershipSkills: string[];
+  communicationSkills: string[];
+  domainExpertise: string[];
+  certificationSkills: string[];
+  coreCompetencies: string[];
+  emergingSkills: string[];
+  legacySkills: string[];
+  rarityScores: Record<string, number>;
+  marketDemand: Record<string, { demand: string; openRoles: number }>;
+  salaryImpact: Record<string, { baseImpact: number; seniorImpact: number }>;
+  trendingSkills: string[];
+  overallConfidence: number;
+  perSkillConfidence: Record<string, number>;
+  modelVersion: string;
+  processingTime?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExtractSkillsRequest {
+  sourceType: SkillSourceType;
+  sourceId?: string;
+  sourceText: string;
+}
+
+// 2.4.3 - Semantic Search Types
+export type SearchEntityType = 'CANDIDATE' | 'JOB' | 'PROJECT' | 'COMPANY';
+export type SearchStatus = 'ACTIVE' | 'STALE' | 'DELETED';
+
+export interface SemanticSearchIndex {
+  id: string;
+  entityType: SearchEntityType;
+  entityId: string;
+  userId?: string;
+  title: string;
+  content: string;
+  summary?: string;
+  keywords: string[];
+  embeddingModel: string;
+  embeddingDimension: number;
+  category?: string;
+  subcategories?: string[];
+  tags?: string[];
+  skills?: string[];
+  industries?: string[];
+  locations?: string[];
+  seniorityLevel?: string;
+  experienceYears?: number;
+  salaryMin?: number;
+  salaryMax?: number;
+  remoteEligible?: boolean;
+  contentQuality: number;
+  freshness: string;
+  popularity: number;
+  status: SearchStatus;
+  lastIndexed: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IndexForSearchRequest {
+  entityType: SearchEntityType;
+  entityId: string;
+  title: string;
+  content: string;
+  summary?: string;
+  category?: string;
+  skills?: string[];
+  industries?: string[];
+  locations?: string[];
+}
+
+export interface SemanticSearchRequest {
+  query: string;
+  entityType?: SearchEntityType;
+  filters?: {
+    skills?: string[];
+    locations?: string[];
+    seniorityLevel?: string;
+    remoteEligible?: boolean;
+  };
+  limit?: number;
+}
+
+export interface SemanticSearchResult extends Omit<SemanticSearchIndex, 'embedding'> {
+  relevanceScore: number;
+}
+
+export interface SemanticSearchResponse {
+  query: string;
+  results: SemanticSearchResult[];
+  totalResults: number;
+}
+
+// 2.4.4 - Entity Recognition Types
+export type EntitySourceType = 'RESUME' | 'JOB_DESCRIPTION' | 'MESSAGE' | 'PROFILE';
+
+export interface RecognizedEntity {
+  name: string;
+  type?: string;
+  role?: string;
+  confidence: number;
+}
+
+export interface EntityRecognition {
+  id: string;
+  userId?: string;
+  sourceType: EntitySourceType;
+  sourceId?: string;
+  sourceText: string;
+  people: RecognizedEntity[];
+  organizations: Array<RecognizedEntity & { type: string }>;
+  locations: Array<{ location: string; type: string; confidence: number }>;
+  dates: Array<{ date: string; type: string; context: string }>;
+  money: Array<{ amount: number; currency: string; type: string; confidence: number }>;
+  percentages: Array<{ value: number; context: string; confidence: number }>;
+  quantities: Array<{ value: number; unit: string; context: string; confidence: number }>;
+  technologies: Array<{ name: string; category: string; confidence: number }>;
+  products: Array<{ name: string; vendor: string; confidence: number }>;
+  platforms: Array<{ name: string; type: string; confidence: number }>;
+  languages: Array<{ name: string; type: string; confidence: number }>;
+  jobTitles: Array<{ title: string; standardized: string; confidence: number }>;
+  degrees: Array<{ degree: string; level: string; confidence: number }>;
+  certifications: Array<{ name: string; issuer: string; confidence: number }>;
+  universities: Array<{ name: string; type: string; confidence: number }>;
+  industries: Array<{ name: string; confidence: number }>;
+  entityRelationships: Array<{ entity1: string; entity2: string; relationship: string }>;
+  timeline: Array<{ date: string; event: string }>;
+  perEntityConfidence: Record<string, number>;
+  overallConfidence: number;
+  normalizedEntities: Record<string, Record<string, unknown>>;
+  modelVersion: string;
+  processingTime?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecognizeEntitiesRequest {
+  sourceType: EntitySourceType;
+  sourceId?: string;
+  sourceText: string;
+}
