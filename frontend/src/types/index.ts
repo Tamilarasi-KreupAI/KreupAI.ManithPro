@@ -8259,3 +8259,972 @@ export interface CreateEvaluationCriteriaInput {
   poorResponse?: string;
   isTemplate?: boolean;
 }
+
+// ============================================
+// BATCH 20: VIDEO INTERVIEW PLATFORM (4.4.1-4.4.12)
+// ============================================
+
+// 4.4.1 - Video Room Status
+export type VideoRoomStatus = 'SCHEDULED' | 'WAITING' | 'ACTIVE' | 'ENDED' | 'CANCELLED' | 'FAILED';
+
+// 4.4.1 - Video Room Type
+export type VideoRoomType = 'LIVE_INTERVIEW' | 'ONE_WAY' | 'PANEL' | 'GROUP' | 'TECHNICAL';
+
+// 4.4.1 - Video Quality
+export type VideoQualityType = 'LOW' | 'MEDIUM' | 'HIGH' | 'HD' | 'FULL_HD';
+
+// 4.4.1 - Participant Role
+export type VideoParticipantRole = 'HOST' | 'INTERVIEWER' | 'CANDIDATE' | 'OBSERVER' | 'TECHNICAL_SUPPORT';
+
+// 4.4.1 - Participant Status
+export type VideoParticipantStatus = 'INVITED' | 'JOINED' | 'LEFT' | 'DISCONNECTED' | 'REMOVED' | 'NO_SHOW';
+
+// 4.4.2-4.4.4 - Video Provider
+export type VideoProvider = 'NATIVE' | 'ZOOM' | 'TEAMS' | 'GOOGLE_MEET' | 'WEBEX' | 'CUSTOM';
+
+// 4.4.2-4.4.4 - Integration Status
+export type VideoIntegrationStatus = 'PENDING' | 'CONNECTED' | 'EXPIRED' | 'REVOKED' | 'FAILED';
+
+// 4.4.5 - Recording Status
+export type RecordingStatus = 'NOT_STARTED' | 'RECORDING' | 'PAUSED' | 'STOPPED' | 'PROCESSING' | 'READY' | 'FAILED' | 'DELETED';
+
+// 4.4.6 - Transcription Status
+export type TranscriptionStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED' | 'FAILED';
+
+// 4.4.7 - Background Type
+export type BackgroundType = 'NONE' | 'BLUR' | 'IMAGE' | 'VIDEO' | 'CUSTOM';
+
+// 4.4.9 - Whiteboard Status
+export type WhiteboardStatus = 'IDLE' | 'ACTIVE' | 'PAUSED' | 'ENDED';
+
+// 4.4.10 - Code Editor Status
+export type CodeEditorStatus = 'IDLE' | 'ACTIVE' | 'RUNNING' | 'COMPLETED' | 'ERROR';
+
+// 4.4.11 - Timer Status
+export type TimerStatus = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'OVERTIME';
+
+// 4.4.12 - One-Way Interview Status
+export type OneWayInterviewStatus = 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'SUBMITTED' | 'REVIEWING' | 'REVIEWED' | 'EXPIRED' | 'ARCHIVED';
+
+// 4.4.12 - One-Way Response Status
+export type OneWayResponseStatus = 'PENDING' | 'RECORDING' | 'SUBMITTED' | 'PROCESSING' | 'READY' | 'REVIEWED' | 'FAILED';
+
+// 4.4.1 - Video Room
+export interface VideoRoom {
+  id: string;
+  companyId: string;
+  interviewId?: string;
+  applicationId?: string;
+  roomType: VideoRoomType;
+  roomName: string;
+  roomCode: string;
+  description?: string;
+  provider: VideoProvider;
+  externalRoomId?: string;
+  externalRoomUrl?: string;
+  hostUserId: string;
+  scheduledStartAt: string;
+  scheduledEndAt?: string;
+  actualStartAt?: string;
+  actualEndAt?: string;
+  durationMinutes: number;
+  maxParticipants: number;
+  currentParticipantCount: number;
+  status: VideoRoomStatus;
+  waitingRoomEnabled: boolean;
+  recordingEnabled: boolean;
+  transcriptionEnabled: boolean;
+  screenShareEnabled: boolean;
+  chatEnabled: boolean;
+  whiteboardEnabled: boolean;
+  codeEditorEnabled: boolean;
+  breakoutRoomsEnabled: boolean;
+  virtualBackgroundAllowed: boolean;
+  defaultVideoQuality: VideoQualityType;
+  autoAdmitParticipants: boolean;
+  muteOnEntry: boolean;
+  disableVideoOnEntry: boolean;
+  password?: string;
+  accessToken?: string;
+  joinUrl: string;
+  hostJoinUrl?: string;
+  metadata?: Record<string, any>;
+  connectionQuality?: ConnectionQuality;
+  techIssues?: TechIssue[];
+  feedbackScore?: number;
+  feedbackNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  participants?: VideoParticipant[];
+  recordings?: VideoRecording[];
+  transcriptions?: LiveTranscription[];
+}
+
+export interface ConnectionQuality {
+  latency: number;
+  jitter: number;
+  packetLoss: number;
+  bandwidth: number;
+  quality: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+}
+
+export interface TechIssue {
+  type: string;
+  description: string;
+  timestamp: string;
+  resolved: boolean;
+}
+
+// 4.4.1 - Video Participant
+export interface VideoParticipant {
+  id: string;
+  roomId: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  role: VideoParticipantRole;
+  status: VideoParticipantStatus;
+  joinedAt?: string;
+  leftAt?: string;
+  totalTimeSeconds?: number;
+  deviceInfo?: DeviceInfo;
+  networkInfo?: NetworkInfo;
+  videoEnabled: boolean;
+  audioEnabled: boolean;
+  screenSharing: boolean;
+  handRaised: boolean;
+  speakingTime?: number;
+  interactionScore?: number;
+  connectionQuality?: ConnectionQuality;
+  techIssuesReported?: TechIssue[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeviceInfo {
+  browser: string;
+  browserVersion: string;
+  os: string;
+  osVersion: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet';
+  camera?: string;
+  microphone?: string;
+}
+
+export interface NetworkInfo {
+  connectionType: string;
+  effectiveType: string;
+  downlink: number;
+  rtt: number;
+}
+
+// 4.4.2-4.4.4 - Video Integration
+export interface VideoIntegration {
+  id: string;
+  companyId: string;
+  userId: string;
+  provider: VideoProvider;
+  providerAccountId?: string;
+  providerEmail?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiresAt?: string;
+  scopes?: string[];
+  webhookSecret?: string;
+  webhookUrl?: string;
+  status: VideoIntegrationStatus;
+  lastSyncAt?: string;
+  syncErrors?: string[];
+  features: VideoProviderFeatures;
+  settings: VideoProviderSettings;
+  apiKey?: string;
+  apiSecret?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VideoProviderFeatures {
+  supportsRecording: boolean;
+  supportsTranscription: boolean;
+  supportsBreakoutRooms: boolean;
+  supportsPolls: boolean;
+  supportsChat: boolean;
+  supportsScreenShare: boolean;
+  supportsVirtualBackground: boolean;
+  supportsWhiteboard: boolean;
+  maxParticipants: number;
+  maxDurationMinutes: number;
+}
+
+export interface VideoProviderSettings {
+  defaultMeetingDuration: number;
+  autoRecording: boolean;
+  waitingRoomDefault: boolean;
+  muteOnEntryDefault: boolean;
+  allowJoinBeforeHost: boolean;
+  requirePassword: boolean;
+  timezone: string;
+}
+
+// 4.4.2-4.4.4 - External Meeting
+export interface ExternalMeeting {
+  id: string;
+  integrationId: string;
+  roomId?: string;
+  externalMeetingId: string;
+  meetingUuid?: string;
+  topic: string;
+  agenda?: string;
+  startUrl: string;
+  joinUrl: string;
+  password?: string;
+  dialInNumbers?: DialInNumber[];
+  scheduledStartAt: string;
+  scheduledEndAt?: string;
+  durationMinutes: number;
+  hostId: string;
+  hostEmail?: string;
+  settings: ExternalMeetingSettings;
+  status: string;
+  startedAt?: string;
+  endedAt?: string;
+  participantCount?: number;
+  recordingUrls?: string[];
+  transcriptUrl?: string;
+  rawResponse?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DialInNumber {
+  country: string;
+  countryCode: string;
+  number: string;
+  type: 'toll' | 'toll-free';
+}
+
+export interface ExternalMeetingSettings {
+  hostVideo: boolean;
+  participantVideo: boolean;
+  joinBeforeHost: boolean;
+  muteUponEntry: boolean;
+  watermark: boolean;
+  autoRecording: 'none' | 'local' | 'cloud';
+  waitingRoom: boolean;
+  breakoutRooms: boolean;
+}
+
+// 4.4.5 - Video Recording
+export interface VideoRecording {
+  id: string;
+  roomId: string;
+  externalRecordingId?: string;
+  recordingType: 'FULL' | 'AUDIO_ONLY' | 'SCREEN_ONLY' | 'GALLERY' | 'SPEAKER';
+  status: RecordingStatus;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileSizeBytes?: number;
+  format: string;
+  resolution?: string;
+  codec?: string;
+  bitrate?: number;
+  processingProgress?: number;
+  processedAt?: string;
+  expiresAt?: string;
+  storageLocation: 'LOCAL' | 'S3' | 'AZURE' | 'GCP' | 'PROVIDER';
+  storagePath?: string;
+  downloadable: boolean;
+  downloadCount: number;
+  viewCount: number;
+  accessControl: RecordingAccessControl;
+  retentionDays: number;
+  isDeleted: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecordingAccessControl {
+  publicAccess: boolean;
+  allowedUserIds: string[];
+  allowedRoles: string[];
+  requiresPassword: boolean;
+  password?: string;
+  expiresAt?: string;
+}
+
+// 4.4.6 - Live Transcription
+export interface LiveTranscription {
+  id: string;
+  roomId: string;
+  recordingId?: string;
+  transcriptionProvider: 'NATIVE' | 'ASSEMBLY_AI' | 'DEEPGRAM' | 'AWS' | 'GOOGLE' | 'AZURE';
+  language: string;
+  status: TranscriptionStatus;
+  startedAt?: string;
+  completedAt?: string;
+  durationSeconds?: number;
+  fullTranscript?: string;
+  segments: TranscriptionSegment[];
+  wordCount?: number;
+  confidenceScore?: number;
+  speakerDiarization: boolean;
+  speakers?: SpeakerInfo[];
+  keyMoments?: KeyMoment[];
+  topics?: TopicMention[];
+  sentiment?: SentimentAnalysis;
+  fillerWords?: FillerWordAnalysis;
+  exportFormats?: string[];
+  vttUrl?: string;
+  srtUrl?: string;
+  txtUrl?: string;
+  jsonUrl?: string;
+  processingProgress?: number;
+  errorMessage?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TranscriptionSegment {
+  id: string;
+  speakerId?: string;
+  speakerName?: string;
+  startTimeMs: number;
+  endTimeMs: number;
+  text: string;
+  confidence: number;
+  words?: WordTiming[];
+  sentiment?: string;
+  isQuestion?: boolean;
+  isFlagged?: boolean;
+}
+
+export interface WordTiming {
+  word: string;
+  startTimeMs: number;
+  endTimeMs: number;
+  confidence: number;
+}
+
+export interface SpeakerInfo {
+  id: string;
+  name?: string;
+  role?: string;
+  totalSpeakingTimeSeconds: number;
+  wordCount: number;
+  averagePace: number;
+  sentimentBreakdown?: Record<string, number>;
+}
+
+export interface KeyMoment {
+  timestamp: number;
+  type: 'QUESTION' | 'ANSWER' | 'TOPIC_CHANGE' | 'KEY_POINT' | 'ACTION_ITEM';
+  text: string;
+  importance: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface TopicMention {
+  topic: string;
+  count: number;
+  firstMentionMs: number;
+  lastMentionMs: number;
+}
+
+export interface SentimentAnalysis {
+  overall: string;
+  positive: number;
+  negative: number;
+  neutral: number;
+  timeline?: SentimentTimepoint[];
+}
+
+export interface SentimentTimepoint {
+  timestampMs: number;
+  sentiment: string;
+  score: number;
+}
+
+export interface FillerWordAnalysis {
+  totalCount: number;
+  perMinute: number;
+  breakdown: Record<string, number>;
+}
+
+// 4.4.7 - Virtual Background
+export interface VirtualBackground {
+  id: string;
+  companyId: string;
+  userId?: string;
+  backgroundName: string;
+  backgroundType: BackgroundType;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  blurIntensity?: number;
+  isDefault: boolean;
+  isCompanyBranded: boolean;
+  brandColor?: string;
+  brandLogoUrl?: string;
+  category?: string;
+  tags?: string[];
+  usageCount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.4.9 - Whiteboard Session
+export interface WhiteboardSession {
+  id: string;
+  roomId: string;
+  sessionName: string;
+  status: WhiteboardStatus;
+  createdById: string;
+  canvasWidth: number;
+  canvasHeight: number;
+  backgroundColor?: string;
+  currentState?: string;
+  stateHistory?: WhiteboardState[];
+  undoStack?: string[];
+  redoStack?: string[];
+  collaborators: WhiteboardCollaborator[];
+  allowAllEdit: boolean;
+  showCursors: boolean;
+  showNames: boolean;
+  gridEnabled: boolean;
+  snapToGrid: boolean;
+  exportUrls?: Record<string, string>;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhiteboardState {
+  stateId: string;
+  timestamp: string;
+  userId: string;
+  action: string;
+  data: string;
+}
+
+export interface WhiteboardCollaborator {
+  participantId: string;
+  userId: string;
+  displayName: string;
+  canEdit: boolean;
+  cursorPosition?: { x: number; y: number };
+  cursorColor: string;
+  isActive: boolean;
+  lastActiveAt: string;
+}
+
+// 4.4.10 - Code Editor Session
+export interface CodeEditorSession {
+  id: string;
+  roomId: string;
+  sessionName: string;
+  problemTitle?: string;
+  problemDescription?: string;
+  programmingLanguage: string;
+  supportedLanguages: string[];
+  status: CodeEditorStatus;
+  createdById: string;
+  starterCode?: string;
+  currentCode: string;
+  codeHistory: CodeSnapshot[];
+  testCases?: CodeTestCase[];
+  hiddenTestCases?: CodeTestCase[];
+  lastExecutionResult?: ExecutionResult;
+  executionHistory: ExecutionResult[];
+  collaborators: CodeCollaborator[];
+  allowLanguageChange: boolean;
+  allowExecution: boolean;
+  allowAIAssist: boolean;
+  showLineNumbers: boolean;
+  syntaxHighlighting: boolean;
+  autoComplete: boolean;
+  theme: string;
+  fontSize: number;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CodeSnapshot {
+  snapshotId: string;
+  timestamp: string;
+  userId: string;
+  language: string;
+  code: string;
+  cursorPosition?: { line: number; column: number };
+}
+
+export interface CodeTestCase {
+  id: string;
+  input: string;
+  expectedOutput: string;
+  description?: string;
+  isHidden?: boolean;
+}
+
+export interface ExecutionResult {
+  executionId: string;
+  timestamp: string;
+  userId: string;
+  language: string;
+  code: string;
+  status: 'SUCCESS' | 'ERROR' | 'TIMEOUT' | 'MEMORY_LIMIT';
+  output?: string;
+  error?: string;
+  executionTimeMs: number;
+  memoryUsageBytes?: number;
+  testResults?: TestCaseResult[];
+}
+
+export interface TestCaseResult {
+  testCaseId: string;
+  passed: boolean;
+  actualOutput: string;
+  expectedOutput: string;
+  executionTimeMs: number;
+}
+
+export interface CodeCollaborator {
+  participantId: string;
+  userId: string;
+  displayName: string;
+  canEdit: boolean;
+  cursorPosition?: { line: number; column: number };
+  cursorColor: string;
+  isActive: boolean;
+  lastActiveAt: string;
+}
+
+// 4.4.8 - Video Chat Message
+export interface VideoChatMessage {
+  id: string;
+  roomId: string;
+  participantId: string;
+  userId: string;
+  displayName: string;
+  messageType: 'TEXT' | 'FILE' | 'REACTION' | 'SYSTEM' | 'POLL';
+  content: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileMimeType?: string;
+  replyToId?: string;
+  reactions?: MessageReaction[];
+  pollData?: PollData;
+  isEdited: boolean;
+  editedAt?: string;
+  isDeleted: boolean;
+  deletedAt?: string;
+  isPrivate: boolean;
+  recipientIds?: string[];
+  isPinned: boolean;
+  pinnedBy?: string;
+  pinnedAt?: string;
+  readBy: string[];
+  sentAt: string;
+}
+
+export interface MessageReaction {
+  emoji: string;
+  userIds: string[];
+  count: number;
+}
+
+export interface PollData {
+  question: string;
+  options: PollOption[];
+  allowMultiple: boolean;
+  isAnonymous: boolean;
+  endsAt?: string;
+  status: 'ACTIVE' | 'ENDED';
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  voterIds: string[];
+}
+
+// 4.4.11 - Interview Timer
+export interface InterviewTimer {
+  id: string;
+  roomId: string;
+  timerName: string;
+  timerType: 'COUNTDOWN' | 'STOPWATCH' | 'SECTION' | 'BREAK';
+  status: TimerStatus;
+  totalDurationSeconds: number;
+  elapsedSeconds: number;
+  remainingSeconds: number;
+  warningAtSeconds?: number;
+  sections?: TimerSection[];
+  currentSectionIndex?: number;
+  startedBy?: string;
+  pausedBy?: string;
+  startedAt?: string;
+  pausedAt?: string;
+  completedAt?: string;
+  overtimeSeconds?: number;
+  isVisible: boolean;
+  soundEnabled: boolean;
+  autoAdvance: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimerSection {
+  id: string;
+  name: string;
+  durationSeconds: number;
+  order: number;
+  isCompleted: boolean;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+// 4.4.12 - One-Way Interview
+export interface OneWayInterview {
+  id: string;
+  companyId: string;
+  jobId?: string;
+  title: string;
+  description?: string;
+  instructions?: string;
+  welcomeMessage?: string;
+  completionMessage?: string;
+  questions: OneWayQuestion[];
+  settings: OneWaySettings;
+  branding?: OneWayBranding;
+  status: OneWayInterviewStatus;
+  expiresAt?: string;
+  maxAttempts: number;
+  totalInvited: number;
+  totalStarted: number;
+  totalCompleted: number;
+  averageScore?: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  responses?: OneWayResponse[];
+}
+
+export interface OneWayQuestion {
+  id: string;
+  order: number;
+  questionText: string;
+  questionType: 'VIDEO' | 'AUDIO' | 'TEXT' | 'MULTIPLE_CHOICE';
+  thinkTimeSeconds: number;
+  maxResponseSeconds: number;
+  retakesAllowed: number;
+  isRequired: boolean;
+  aiEvaluationEnabled: boolean;
+  evaluationCriteria?: string[];
+  idealResponse?: string;
+  options?: string[];
+  weight: number;
+}
+
+export interface OneWaySettings {
+  allowRetakes: boolean;
+  showQuestionUpfront: boolean;
+  randomizeQuestions: boolean;
+  requireCamera: boolean;
+  requireMicrophone: boolean;
+  allowPause: boolean;
+  allowSkip: boolean;
+  deadlineEnforced: boolean;
+  autoSubmit: boolean;
+  notifyOnComplete: boolean;
+  sendReminderEmails: boolean;
+  reminderDays?: number[];
+}
+
+export interface OneWayBranding {
+  logoUrl?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  welcomeVideoUrl?: string;
+  customCss?: string;
+}
+
+// 4.4.12 - One-Way Response
+export interface OneWayResponse {
+  id: string;
+  interviewId: string;
+  candidateId: string;
+  applicationId?: string;
+  inviteToken: string;
+  status: OneWayResponseStatus;
+  attemptNumber: number;
+  startedAt?: string;
+  submittedAt?: string;
+  totalDurationSeconds?: number;
+  questionResponses: QuestionResponse[];
+  deviceInfo?: DeviceInfo;
+  networkInfo?: NetworkInfo;
+  overallScore?: number;
+  aiScore?: number;
+  reviewerScore?: number;
+  reviewerId?: string;
+  reviewedAt?: string;
+  feedback?: string;
+  rating?: number;
+  recommendation?: string;
+  flags?: ResponseFlag[];
+  viewCount: number;
+  lastViewedAt?: string;
+  lastViewedBy?: string;
+  shareToken?: string;
+  sharedWith?: string[];
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuestionResponse {
+  questionId: string;
+  questionOrder: number;
+  responseType: 'VIDEO' | 'AUDIO' | 'TEXT' | 'MULTIPLE_CHOICE';
+  videoUrl?: string;
+  audioUrl?: string;
+  textResponse?: string;
+  selectedOptions?: string[];
+  thumbnailUrl?: string;
+  durationSeconds?: number;
+  retakeNumber: number;
+  startedAt: string;
+  completedAt?: string;
+  transcription?: string;
+  aiAnalysis?: AIResponseAnalysis;
+  manualScore?: number;
+  manualFeedback?: string;
+}
+
+export interface AIResponseAnalysis {
+  contentScore: number;
+  deliveryScore: number;
+  clarityScore: number;
+  relevanceScore: number;
+  confidenceScore: number;
+  overallScore: number;
+  keyPoints: string[];
+  strengths: string[];
+  improvements: string[];
+  sentiment: string;
+  speechPace: number;
+  fillerWordCount: number;
+  eyeContactScore?: number;
+  bodyLanguageScore?: number;
+}
+
+export interface ResponseFlag {
+  type: 'TECHNICAL_ISSUE' | 'SUSPICIOUS_ACTIVITY' | 'INCOMPLETE' | 'LOW_QUALITY' | 'EXCEPTIONAL';
+  description: string;
+  timestamp: string;
+  flaggedBy?: string;
+}
+
+// Video Interview Input Types
+export interface CreateVideoRoomInput {
+  interviewId?: string;
+  applicationId?: string;
+  roomType: VideoRoomType;
+  roomName: string;
+  description?: string;
+  provider?: VideoProvider;
+  scheduledStartAt: string;
+  scheduledEndAt?: string;
+  durationMinutes: number;
+  maxParticipants?: number;
+  waitingRoomEnabled?: boolean;
+  recordingEnabled?: boolean;
+  transcriptionEnabled?: boolean;
+  screenShareEnabled?: boolean;
+  chatEnabled?: boolean;
+  whiteboardEnabled?: boolean;
+  codeEditorEnabled?: boolean;
+  virtualBackgroundAllowed?: boolean;
+  defaultVideoQuality?: VideoQualityType;
+  autoAdmitParticipants?: boolean;
+  muteOnEntry?: boolean;
+  password?: string;
+}
+
+export interface AddParticipantInput {
+  userId: string;
+  email: string;
+  displayName: string;
+  role: VideoParticipantRole;
+}
+
+export interface CreateVideoIntegrationInput {
+  provider: VideoProvider;
+  providerAccountId?: string;
+  providerEmail?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiresAt?: string;
+  scopes?: string[];
+  apiKey?: string;
+  apiSecret?: string;
+  settings?: VideoProviderSettings;
+}
+
+export interface CreateRecordingInput {
+  recordingType?: 'FULL' | 'AUDIO_ONLY' | 'SCREEN_ONLY' | 'GALLERY' | 'SPEAKER';
+  format?: string;
+  resolution?: string;
+  accessControl?: Partial<RecordingAccessControl>;
+  retentionDays?: number;
+}
+
+export interface CreateTranscriptionInput {
+  recordingId?: string;
+  transcriptionProvider?: 'NATIVE' | 'ASSEMBLY_AI' | 'DEEPGRAM' | 'AWS' | 'GOOGLE' | 'AZURE';
+  language?: string;
+  speakerDiarization?: boolean;
+}
+
+export interface CreateVirtualBackgroundInput {
+  backgroundName: string;
+  backgroundType: BackgroundType;
+  imageUrl?: string;
+  blurIntensity?: number;
+  isCompanyBranded?: boolean;
+  brandColor?: string;
+  brandLogoUrl?: string;
+  category?: string;
+  tags?: string[];
+}
+
+export interface CreateWhiteboardInput {
+  sessionName?: string;
+  canvasWidth?: number;
+  canvasHeight?: number;
+  backgroundColor?: string;
+  allowAllEdit?: boolean;
+  showCursors?: boolean;
+  showNames?: boolean;
+  gridEnabled?: boolean;
+  snapToGrid?: boolean;
+}
+
+export interface CreateCodeEditorInput {
+  sessionName?: string;
+  problemTitle?: string;
+  problemDescription?: string;
+  programmingLanguage: string;
+  supportedLanguages?: string[];
+  starterCode?: string;
+  testCases?: CodeTestCase[];
+  hiddenTestCases?: CodeTestCase[];
+  allowLanguageChange?: boolean;
+  allowExecution?: boolean;
+  allowAIAssist?: boolean;
+  theme?: string;
+  fontSize?: number;
+}
+
+export interface ExecuteCodeInput {
+  language: string;
+  code: string;
+  input?: string;
+  timeoutSeconds?: number;
+}
+
+export interface SendChatMessageInput {
+  messageType?: 'TEXT' | 'FILE' | 'REACTION' | 'POLL';
+  content: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileMimeType?: string;
+  replyToId?: string;
+  isPrivate?: boolean;
+  recipientIds?: string[];
+  pollData?: Omit<PollData, 'status'>;
+}
+
+export interface CreateTimerInput {
+  timerName?: string;
+  timerType: 'COUNTDOWN' | 'STOPWATCH' | 'SECTION' | 'BREAK';
+  totalDurationSeconds: number;
+  warningAtSeconds?: number;
+  sections?: Omit<TimerSection, 'id' | 'isCompleted' | 'startedAt' | 'completedAt'>[];
+  isVisible?: boolean;
+  soundEnabled?: boolean;
+  autoAdvance?: boolean;
+}
+
+export interface CreateOneWayInterviewInput {
+  jobId?: string;
+  title: string;
+  description?: string;
+  instructions?: string;
+  welcomeMessage?: string;
+  completionMessage?: string;
+  questions: Omit<OneWayQuestion, 'id'>[];
+  settings?: Partial<OneWaySettings>;
+  branding?: OneWayBranding;
+  expiresAt?: string;
+  maxAttempts?: number;
+}
+
+export interface InviteCandidateInput {
+  candidateId: string;
+  applicationId?: string;
+  email: string;
+  name: string;
+  deadline?: string;
+  personalMessage?: string;
+}
+
+export interface ReviewOneWayResponseInput {
+  overallScore?: number;
+  reviewerScore?: number;
+  feedback?: string;
+  rating?: number;
+  recommendation?: string;
+  questionScores?: Record<string, { score: number; feedback?: string }>;
+}
+
+// Video Interview Stats
+export interface VideoInterviewStats {
+  rooms: {
+    total: number;
+    scheduled: number;
+    active: number;
+    completed: number;
+    averageDuration: number;
+  };
+  recordings: {
+    total: number;
+    totalStorageBytes: number;
+    averageDuration: number;
+  };
+  oneWayInterviews: {
+    total: number;
+    active: number;
+    totalResponses: number;
+    completionRate: number;
+    averageScore: number;
+  };
+  integrations: {
+    total: number;
+    byProvider: Record<string, number>;
+  };
+}

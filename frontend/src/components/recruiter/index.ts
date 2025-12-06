@@ -18,3 +18,6 @@ export { default as InterviewAnalysisHub } from './InterviewAnalysisHub';
 
 // Recruiter Components - Batch 19: AI Knowledge Base
 export { default as AIKnowledgeBaseHub } from './AIKnowledgeBaseHub';
+
+// Recruiter Components - Batch 20: Video Interview Platform
+export { default as VideoInterviewHub } from './VideoInterviewHub';

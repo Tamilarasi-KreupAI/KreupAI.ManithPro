@@ -8954,3 +8954,636 @@ model CustomEvaluationCriteria {
   @@index([roleTitle])
   @@map("custom_evaluation_criteria")
 }
+
+// ============================================
+// BATCH 20: VIDEO INTERVIEW PLATFORM (4.4.1-4.4.12)
+// ============================================
+
+// 4.4.1 - BUILT-IN VIDEO CONFERENCING
+model VideoRoom {
+  id                    String              @id @default(uuid())
+
+  // Room Info
+  roomName              String
+  roomCode              String              @unique
+  roomType              String              // INTERVIEW, SCREENING, TECHNICAL, PANEL
+
+  // Interview Context
+  interviewId           String?
+  jobId                 String?
+  applicationId         String?
+
+  // Host
+  hostId                String
+  coHostIds             String[]            @default([])
+
+  // Participants
+  maxParticipants       Int                 @default(10)
+  currentParticipants   Int                 @default(0)
+  participantIds        String[]            @default([])
+
+  // Schedule
+  scheduledStartTime    DateTime?
+  scheduledEndTime      DateTime?
+  actualStartTime       DateTime?
+  actualEndTime         DateTime?
+  duration              Int?                // Actual duration in minutes
+
+  // Configuration
+  waitingRoomEnabled    Boolean             @default(true)
+  recordingEnabled      Boolean             @default(false)
+  transcriptionEnabled  Boolean             @default(false)
+  chatEnabled           Boolean             @default(true)
+  screenShareEnabled    Boolean             @default(true)
+  whiteboardEnabled     Boolean             @default(false)
+  codeEditorEnabled     Boolean             @default(false)
+
+  // Security
+  password              String?
+  requireApproval       Boolean             @default(true)
+  allowedDomains        String[]            @default([])
+
+  // Status
+  status                String              @default("SCHEDULED") // SCHEDULED, WAITING, LIVE, ENDED, CANCELLED
+
+  // Media Server
+  serverRegion          String?
+  serverUrl             String?
+  iceServers            Json?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  recordings            VideoRecording[]
+  transcriptions        LiveTranscription[]
+  participants          VideoParticipant[]
+  chatMessages          VideoChatMessage[]
+  whiteboardSessions    WhiteboardSession[]
+  codeEditorSessions    CodeEditorSession[]
+
+  @@index([hostId])
+  @@index([status])
+  @@index([scheduledStartTime])
+  @@map("video_rooms")
+}
+
+// Video Participant
+model VideoParticipant {
+  id                    String              @id @default(uuid())
+  roomId                String
+  room                  VideoRoom           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId                String
+  userEmail             String?
+  userName              String?
+
+  // Role
+  role                  String              @default("PARTICIPANT") // HOST, CO_HOST, INTERVIEWER, CANDIDATE, OBSERVER
+
+  // Status
+  status                String              @default("INVITED") // INVITED, WAITING, JOINED, LEFT, REMOVED
+  joinedAt              DateTime?
+  leftAt                DateTime?
+
+  // Media State
+  audioEnabled          Boolean             @default(true)
+  videoEnabled          Boolean             @default(true)
+  screenSharing         Boolean             @default(false)
+
+  // Virtual Background
+  virtualBackgroundEnabled Boolean          @default(false)
+  virtualBackgroundType String?             // BLUR, IMAGE, VIDEO
+  virtualBackgroundUrl  String?
+
+  // Connection
+  connectionQuality     String?             // EXCELLENT, GOOD, FAIR, POOR
+  deviceInfo            Json?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([userId])
+  @@map("video_participants")
+}
+
+// 4.4.2-4.4.4 - PLATFORM INTEGRATIONS (Zoom, Google Meet, Teams)
+model VideoIntegration {
+  id                    String              @id @default(uuid())
+  userId                String
+  platform              String              // ZOOM, GOOGLE_MEET, MICROSOFT_TEAMS
+
+  // OAuth Tokens
+  accessToken           String              @db.Text
+  refreshToken          String?             @db.Text
+  tokenExpiry           DateTime?
+  scope                 String[]            @default([])
+
+  // Account Info
+  accountEmail          String?
+  accountId             String?
+  accountName           String?
+
+  // Settings
+  isDefault             Boolean             @default(false)
+  autoCreateMeetings    Boolean             @default(true)
+  defaultSettings       Json?               // Platform-specific defaults
+
+  // Status
+  isConnected           Boolean             @default(true)
+  lastSyncAt            DateTime?
+  errorMessage          String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  meetings              ExternalMeeting[]
+
+  @@unique([userId, platform])
+  @@index([platform])
+  @@map("video_integrations")
+}
+
+// External Meeting (Zoom/Meet/Teams)
+model ExternalMeeting {
+  id                    String              @id @default(uuid())
+  integrationId         String
+  integration           VideoIntegration    @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  // Meeting Info
+  platform              String              // ZOOM, GOOGLE_MEET, MICROSOFT_TEAMS
+  externalMeetingId     String
+  meetingUrl            String
+  joinUrl               String
+  hostUrl               String?
+  password              String?
+
+  // Context
+  interviewId           String?
+  jobId                 String?
+  title                 String
+  description           String?
+
+  // Schedule
+  scheduledStartTime    DateTime
+  scheduledEndTime      DateTime?
+  timezone              String?
+
+  // Participants
+  hostEmail             String
+  attendeeEmails        String[]            @default([])
+
+  // Settings
+  waitingRoom           Boolean             @default(true)
+  recordingEnabled      Boolean             @default(false)
+  muteOnEntry           Boolean             @default(true)
+
+  // Status
+  status                String              @default("SCHEDULED") // SCHEDULED, STARTED, ENDED, CANCELLED
+  startedAt             DateTime?
+  endedAt               DateTime?
+
+  // Recording
+  recordingUrl          String?
+  recordingDownloadUrl  String?
+  recordingPassword     String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([integrationId])
+  @@index([platform])
+  @@index([interviewId])
+  @@map("external_meetings")
+}
+
+// 4.4.5 - INTERVIEW RECORDING
+model VideoRecording {
+  id                    String              @id @default(uuid())
+  roomId                String?
+  room                  VideoRoom?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  // Recording Info
+  recordingType         String              // FULL, AUDIO_ONLY, VIDEO_ONLY, SCREEN
+  format                String              @default("MP4") // MP4, WEBM, MP3
+
+  // Storage
+  fileUrl               String?
+  filePath              String?
+  fileSize              Int?                // Size in bytes
+  duration              Int?                // Duration in seconds
+
+  // Processing
+  processingStatus      String              @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  processedAt           DateTime?
+  errorMessage          String?
+
+  // Transcription Link
+  transcriptionId       String?
+
+  // Participants in Recording
+  participantIds        String[]            @default([])
+
+  // Consent
+  consentObtained       Boolean             @default(false)
+  consentTimestamp      DateTime?
+  consentParticipantIds String[]            @default([])
+
+  // Access Control
+  isPublic              Boolean             @default(false)
+  allowedUserIds        String[]            @default([])
+  password              String?
+  expiresAt             DateTime?
+
+  // Analytics
+  viewCount             Int                 @default(0)
+  downloadCount         Int                 @default(0)
+
+  // Metadata
+  startedAt             DateTime?
+  endedAt               DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([processingStatus])
+  @@map("video_recordings")
+}
+
+// 4.4.6 - LIVE TRANSCRIPTION
+model LiveTranscription {
+  id                    String              @id @default(uuid())
+  roomId                String?
+  room                  VideoRoom?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  // Transcription Settings
+  language              String              @default("en-US")
+  isLive                Boolean             @default(true)
+
+  // Content
+  segments              Json                // Array of { speaker, text, startTime, endTime, confidence }
+  fullText              String?             @db.Text
+
+  // Speaker Identification
+  speakerLabels         Json?               // { speakerId: participantInfo }
+  speakerCount          Int                 @default(0)
+
+  // Processing
+  status                String              @default("LIVE") // LIVE, PROCESSING, COMPLETED, FAILED
+  wordCount             Int                 @default(0)
+  averageConfidence     Float?
+
+  // Export
+  exportFormats         String[]            @default([]) // VTT, SRT, TXT, JSON
+  exportUrls            Json?               // { format: url }
+
+  // Timing
+  startedAt             DateTime?
+  endedAt               DateTime?
+  duration              Int?                // Duration in seconds
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([status])
+  @@map("live_transcriptions")
+}
+
+// 4.4.7 - VIRTUAL BACKGROUNDS
+model VirtualBackground {
+  id                    String              @id @default(uuid())
+  userId                String?             // Null for system backgrounds
+
+  // Background Info
+  name                  String
+  type                  String              // BLUR, IMAGE, VIDEO, COLOR
+  category              String?             // PROFESSIONAL, OFFICE, NATURE, ABSTRACT, CUSTOM
+
+  // Media
+  imageUrl              String?
+  thumbnailUrl          String?
+  videoUrl              String?
+  color                 String?             // Hex color for solid backgrounds
+
+  // Properties
+  blurIntensity         Int?                // 1-10 for blur type
+
+  // Status
+  isSystem              Boolean             @default(false)
+  isActive              Boolean             @default(true)
+  isDefault             Boolean             @default(false)
+
+  // Usage
+  usageCount            Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@map("virtual_backgrounds")
+}
+
+// 4.4.8 - SCREEN SHARING (tracked via VideoParticipant)
+// 4.4.9 - COLLABORATIVE WHITEBOARD
+model WhiteboardSession {
+  id                    String              @id @default(uuid())
+  roomId                String?
+  room                  VideoRoom?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  // Session Info
+  name                  String?
+  description           String?
+
+  // Canvas
+  canvasWidth           Int                 @default(1920)
+  canvasHeight          Int                 @default(1080)
+  backgroundColor       String              @default("#FFFFFF")
+
+  // Content
+  elements              Json                // Array of drawing elements
+  currentVersion        Int                 @default(1)
+  versionHistory        Json?               // Array of version snapshots
+
+  // Collaboration
+  activeEditors         String[]            @default([])
+  maxEditors            Int                 @default(10)
+  isLocked              Boolean             @default(false)
+
+  // Tools Available
+  availableTools        String[]            @default([]) // PEN, MARKER, ERASER, SHAPES, TEXT, IMAGE, STICKY
+
+  // Export
+  exportUrl             String?
+  exportFormat          String?             // PNG, SVG, PDF
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, PAUSED, ENDED
+
+  // Timing
+  startedAt             DateTime            @default(now())
+  endedAt               DateTime?
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([status])
+  @@map("whiteboard_sessions")
+}
+
+// 4.4.10 - LIVE CODE EDITOR
+model CodeEditorSession {
+  id                    String              @id @default(uuid())
+  roomId                String?
+  room                  VideoRoom?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  // Session Info
+  title                 String?
+  description           String?
+  problemStatement      String?             @db.Text
+
+  // Code
+  language              String              @default("javascript")
+  initialCode           String?             @db.Text
+  currentCode           String?             @db.Text
+  solutionCode          String?             @db.Text
+
+  // Editor Settings
+  theme                 String              @default("vs-dark")
+  fontSize              Int                 @default(14)
+  tabSize               Int                 @default(2)
+  wordWrap              Boolean             @default(true)
+  lineNumbers           Boolean             @default(true)
+
+  // Collaboration
+  activeEditors         String[]            @default([])
+  cursorPositions       Json?               // { odingSessionId: { line, column } }
+  isReadOnly            Boolean             @default(false)
+  allowedEditors        String[]            @default([]) // Empty = all can edit
+
+  // Execution
+  lastExecutionResult   Json?               // { output, errors, executionTime }
+  executionHistory      Json?               // Array of execution results
+  executionEnabled      Boolean             @default(true)
+
+  // Test Cases
+  testCases             Json?               // Array of { input, expectedOutput, description }
+  testResults           Json?               // Array of { passed, actualOutput, executionTime }
+
+  // Version History
+  versionHistory        Json?               // Array of code snapshots
+  currentVersion        Int                 @default(1)
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, PAUSED, ENDED, SUBMITTED
+
+  // Timing
+  startedAt             DateTime            @default(now())
+  endedAt               DateTime?
+  timeLimit             Int?                // Time limit in minutes
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([language])
+  @@map("code_editor_sessions")
+}
+
+// Video Chat Message
+model VideoChatMessage {
+  id                    String              @id @default(uuid())
+  roomId                String
+  room                  VideoRoom           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId              String
+  senderName            String
+
+  // Message
+  content               String              @db.Text
+  messageType           String              @default("TEXT") // TEXT, FILE, SYSTEM, QUESTION
+
+  // File Attachment
+  fileUrl               String?
+  fileName              String?
+  fileType              String?
+  fileSize              Int?
+
+  // Status
+  isDeleted             Boolean             @default(false)
+  isPinned              Boolean             @default(false)
+
+  // For Q&A
+  isQuestion            Boolean             @default(false)
+  isAnswered            Boolean             @default(false)
+  answeredById          String?
+  answerContent         String?
+
+  // Visibility
+  isPrivate             Boolean             @default(false)
+  recipientId           String?             // For private messages
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([senderId])
+  @@map("video_chat_messages")
+}
+
+// 4.4.11 - INTERVIEW TIMER
+model InterviewTimer {
+  id                    String              @id @default(uuid())
+  roomId                String?
+
+  // Timer Info
+  timerType             String              // COUNTDOWN, SECTION, TOTAL
+  name                  String?
+  description           String?
+
+  // Duration
+  totalDuration         Int                 // Total time in seconds
+  remainingTime         Int                 // Remaining time in seconds
+  elapsedTime           Int                 @default(0) // Elapsed time in seconds
+
+  // Sections (for multi-section timers)
+  sections              Json?               // Array of { name, duration, order }
+  currentSection        Int                 @default(0)
+
+  // Status
+  status                String              @default("STOPPED") // STOPPED, RUNNING, PAUSED, COMPLETED
+  startedAt             DateTime?
+  pausedAt              DateTime?
+  completedAt           DateTime?
+
+  // Alerts
+  alertsEnabled         Boolean             @default(true)
+  alertTimes            Int[]               @default([]) // Alert when X seconds remaining
+  alertsSent            Int[]               @default([])
+
+  // Visibility
+  visibleToAll          Boolean             @default(true)
+  visibleToRoles        String[]            @default([])
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roomId])
+  @@index([status])
+  @@map("interview_timers")
+}
+
+// 4.4.12 - ONE-WAY VIDEO INTERVIEW
+model OneWayInterview {
+  id                    String              @id @default(uuid())
+
+  // Interview Context
+  jobId                 String?
+  applicationId         String?
+  candidateId           String
+  recruiterId           String
+
+  // Interview Info
+  title                 String
+  description           String?             @db.Text
+  instructions          String?             @db.Text
+
+  // Questions
+  questions             Json                // Array of { id, text, thinkTime, answerTime, maxRetakes }
+  questionCount         Int                 @default(0)
+
+  // Settings
+  totalTimeLimit        Int?                // Total time limit in minutes
+  allowRetakes          Boolean             @default(true)
+  maxRetakesPerQuestion Int                 @default(2)
+  showQuestionPreview   Boolean             @default(true)
+  randomizeQuestions    Boolean             @default(false)
+
+  // Deadline
+  deadline              DateTime?
+  remindersSent         Int                 @default(0)
+
+  // Status
+  status                String              @default("PENDING") // PENDING, IN_PROGRESS, SUBMITTED, REVIEWED, EXPIRED
+  startedAt             DateTime?
+  submittedAt           DateTime?
+  reviewedAt            DateTime?
+  expiredAt             DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  responses             OneWayResponse[]
+
+  @@index([candidateId])
+  @@index([recruiterId])
+  @@index([status])
+  @@map("one_way_interviews")
+}
+
+// One-Way Interview Response
+model OneWayResponse {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             OneWayInterview     @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  questionId            String
+  questionIndex         Int
+
+  // Response
+  videoUrl              String?
+  videoPath             String?
+  videoDuration         Int?                // Duration in seconds
+  thumbnailUrl          String?
+
+  // Retakes
+  attemptNumber         Int                 @default(1)
+  previousAttempts      Json?               // Array of previous video URLs
+
+  // Timing
+  thinkTimeUsed         Int?                // Seconds used for thinking
+  answerTimeUsed        Int?                // Seconds used for answering
+  startedAt             DateTime?
+  completedAt           DateTime?
+
+  // Transcription
+  transcription         String?             @db.Text
+  transcriptionStatus   String?             // PENDING, PROCESSING, COMPLETED
+
+  // AI Analysis
+  aiAnalysis            Json?               // Sentiment, keywords, etc.
+  aiScore               Float?
+
+  // Recruiter Review
+  reviewerNotes         String?             @db.Text
+  rating                Int?                // 1-5
+  flagged               Boolean             @default(false)
+  flagReason            String?
+
+  // Status
+  status                String              @default("PENDING") // PENDING, RECORDING, COMPLETED, SKIPPED
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([interviewId])
+  @@index([questionId])
+  @@map("one_way_responses")
+}
