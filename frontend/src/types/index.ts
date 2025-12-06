@@ -7689,3 +7689,573 @@ export interface CreateComparisonInput {
 export interface ShareComparisonInput {
   userIds: string[];
 }
+
+// ============================================
+// BATCH 19: AI KNOWLEDGE BASE (4.3.1-4.3.8)
+// ============================================
+
+// 4.3.1 - Company Knowledge
+export type DocumentType = 'COMPANY_INFO' | 'VALUES' | 'CULTURE' | 'BENEFITS' | 'POLICIES' | 'ONBOARDING' | 'TEAM_INFO';
+export type ContentFormat = 'TEXT' | 'MARKDOWN' | 'HTML' | 'PDF';
+export type KnowledgeCategory = 'ABOUT_US' | 'CULTURE' | 'BENEFITS' | 'POLICIES' | 'TEAM' | 'PROCESS' | 'FAQ';
+
+export interface CompanyKnowledge {
+  id: string;
+  companyName: string;
+  documentType: DocumentType;
+  title: string;
+  description?: string;
+  content: string;
+  contentFormat: ContentFormat;
+  sourceUrl?: string;
+  filePath?: string;
+  extractedTopics: string[];
+  extractedKeywords: string[];
+  extractedEntities?: Record<string, any>;
+  category: KnowledgeCategory;
+  subcategory?: string;
+  tags: string[];
+  isProcessed: boolean;
+  processedAt?: string;
+  embeddingVector?: string;
+  summaryText?: string;
+  version: number;
+  previousVersionId?: string;
+  isPublic: boolean;
+  allowedRoles: string[];
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.2 - Role-Specific Knowledge
+export type SeniorityLevel = 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR' | 'EXECUTIVE';
+
+export interface SkillRequirement {
+  level: string;
+  weight: number;
+}
+
+export interface RoleSpecificKnowledge {
+  id: string;
+  jobId?: string;
+  roleTitle: string;
+  department?: string;
+  seniorityLevel?: SeniorityLevel;
+  teamName?: string;
+  teamSize?: number;
+  teamDescription?: string;
+  reportingTo?: string;
+  directReports?: number;
+  teamDynamics?: string;
+  requiredSkills: Record<string, SkillRequirement>;
+  preferredSkills?: Record<string, SkillRequirement>;
+  technicalStack: string[];
+  toolsUsed: string[];
+  dailyResponsibilities: string[];
+  projectTypes: string[];
+  collaboratesWithTeams: string[];
+  meetingCadence?: string;
+  currentChallenges: string[];
+  growthOpportunities: string[];
+  successMetrics: string[];
+  domainKnowledge: string[];
+  industrySpecifics?: string;
+  complianceRequirements: string[];
+  embeddingVector?: string;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.3 - Interview Playbooks
+export type PlaybookInterviewType = 'PHONE_SCREEN' | 'TECHNICAL' | 'BEHAVIORAL' | 'CULTURE_FIT' | 'FINAL';
+
+export interface PlaybookSection {
+  name: string;
+  duration: number;
+  type: string;
+  questions: string[];
+}
+
+export interface EvaluationCriterion {
+  weight: number;
+  rubric: string;
+}
+
+export interface InterviewPlaybook {
+  id: string;
+  name: string;
+  description?: string;
+  roleTitle?: string;
+  department?: string;
+  seniorityLevel?: SeniorityLevel;
+  interviewType: PlaybookInterviewType;
+  duration: number;
+  sections: PlaybookSection[];
+  questionSequence: string[];
+  requiredQuestions?: string[];
+  optionalQuestions?: string[];
+  followUpBank?: Record<string, string[]>;
+  evaluationCriteria: Record<string, EvaluationCriterion>;
+  scoringGuide?: Record<string, string>;
+  mustPassCriteria: string[];
+  redFlagIndicators: string[];
+  greenFlagIndicators: string[];
+  interviewerTips: string[];
+  openingScript?: string;
+  closingScript?: string;
+  transitionPhrases: string[];
+  timeBreakdown?: Record<string, number>;
+  paceGuidance?: string;
+  notesTakingTemplate?: Record<string, any>;
+  feedbackFormTemplate?: Record<string, any>;
+  timesUsed: number;
+  averageRating?: number;
+  isTemplate: boolean;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.4 - Best Practices Library
+export type PracticeType = 'QUESTION' | 'TECHNIQUE' | 'EVALUATION' | 'FEEDBACK' | 'COMMUNICATION' | 'LOGISTICS';
+
+export interface BestPractice {
+  id: string;
+  practiceType: PracticeType;
+  category: string;
+  subcategory?: string;
+  title: string;
+  description: string;
+  detailedExplanation?: string;
+  exampleScenario?: string;
+  goodExample?: string;
+  badExample?: string;
+  applicableRoles: string[];
+  applicableSeniorityLevels: string[];
+  applicableInterviewTypes: string[];
+  dosList: string[];
+  dontsList: string[];
+  commonMistakes: string[];
+  sourceReference?: string;
+  successRate?: number;
+  usageCount: number;
+  rating: number;
+  ratingsCount: number;
+  feedback?: { userId: string; rating: number; comment: string }[];
+  tags: string[];
+  keywords: string[];
+  isVerified: boolean;
+  verifiedById?: string;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.5 - Competitor Intelligence
+export type MarketPosition = 'LEADER' | 'CHALLENGER' | 'FOLLOWER' | 'NICHE';
+export type IntelligenceType = 'COMPENSATION' | 'BENEFITS' | 'CULTURE' | 'TECH_STACK' | 'HIRING_PRACTICES' | 'TALENT_POOL';
+export type WorkArrangement = 'REMOTE' | 'HYBRID' | 'ONSITE';
+export type HiringVelocity = 'HIGH' | 'MEDIUM' | 'LOW';
+export type RiskLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type DataConfidence = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface SalaryRange {
+  min: number;
+  max: number;
+  median: number;
+}
+
+export interface CompetitorIntelligence {
+  id: string;
+  competitorName: string;
+  competitorWebsite?: string;
+  industry: string;
+  ourCompany?: string;
+  competitorSize?: string;
+  marketPosition?: MarketPosition;
+  intelligenceType: IntelligenceType;
+  salaryRanges?: Record<string, SalaryRange>;
+  bonusStructure?: string;
+  equityOfferings?: string;
+  benefitsOffered: string[];
+  uniquePerks: string[];
+  benefitComparison?: Record<string, any>;
+  cultureHighlights: string[];
+  workArrangement?: WorkArrangement;
+  glassdoorRating?: number;
+  reviewSummary?: string;
+  techStackUsed: string[];
+  recentTechAdoptions: string[];
+  hiringVelocity?: HiringVelocity;
+  openPositionsCount?: number;
+  talentFocusAreas: string[];
+  hiringChallenges: string[];
+  talentPoolOverlap?: number;
+  poachingRisk?: RiskLevel;
+  retentionStrategies: string[];
+  strengthsVsUs: string[];
+  weaknessesVsUs: string[];
+  opportunities: string[];
+  threats: string[];
+  dataSource?: string;
+  dataConfidence: DataConfidence;
+  lastVerified?: string;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.6 - Dynamic FAQ Answers
+export type FAQCategory = 'ROLE' | 'COMPANY' | 'BENEFITS' | 'PROCESS' | 'TEAM' | 'TECHNICAL' | 'CULTURE';
+export type FAQSourceType = 'MANUAL' | 'IMPORTED' | 'AI_GENERATED';
+
+export interface DynamicFAQ {
+  id: string;
+  question: string;
+  questionVariants: string[];
+  questionCategory: FAQCategory;
+  answer: string;
+  shortAnswer?: string;
+  detailedAnswer?: string;
+  applicableRoles: string[];
+  applicableDepartments: string[];
+  applicableJobIds: string[];
+  useAIGeneration: boolean;
+  aiGeneratedAnswer?: string;
+  aiConfidence?: number;
+  sourceType: FAQSourceType;
+  sourceReference?: string;
+  embeddingVector?: string;
+  timesAsked: number;
+  helpfulCount: number;
+  notHelpfulCount: number;
+  relatedFAQIds: string[];
+  relatedTopics: string[];
+  showToCandidates: boolean;
+  showToInterviewers: boolean;
+  isActive: boolean;
+  isVerified: boolean;
+  verifiedById?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.7 - Continuous Learning (AI Feedback)
+export type FeedbackType = 'ASSESSMENT_CORRECTION' | 'SCORING_ADJUSTMENT' | 'QUESTION_QUALITY' | 'ANSWER_EVALUATION' | 'RED_FLAG_ACCURACY';
+export type SourceEntityType = 'INTERVIEW' | 'TRANSCRIPTION' | 'ANSWER_ANALYSIS' | 'SUMMARY' | 'RED_FLAG';
+export type ErrorType = 'FALSE_POSITIVE' | 'FALSE_NEGATIVE' | 'OVERSCORED' | 'UNDERSCORED' | 'MISSED_CONTEXT';
+export type ImpactLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface AIFeedbackLearning {
+  id: string;
+  feedbackType: FeedbackType;
+  sourceEntityType: SourceEntityType;
+  sourceEntityId: string;
+  originalAIOutput: Record<string, any>;
+  aiConfidence?: number;
+  feedbackById: string;
+  feedbackRating: number;
+  isAccurate?: boolean;
+  accuracyPercentage?: number;
+  corrections?: Record<string, any>;
+  correctedFields: string[];
+  correctionNotes?: string;
+  errorType?: ErrorType;
+  impactLevel: ImpactLevel;
+  shouldTrainOn: boolean;
+  trainingWeight: number;
+  isProcessedForTraining: boolean;
+  processedAt?: string;
+  relatedPatterns: string[];
+  suggestedImprovement?: string;
+  wasAddressed: boolean;
+  addressedAt?: string;
+  addressedNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.3.8 - Custom Evaluation Criteria
+export type ScoringType = 'NUMERIC' | 'PASS_FAIL' | 'RUBRIC' | 'COMPETENCY_LEVELS';
+export type CriteriaCategory = 'TECHNICAL' | 'BEHAVIORAL' | 'CULTURAL' | 'COMMUNICATION' | 'LEADERSHIP' | 'PROBLEM_SOLVING';
+
+export interface ScoringRubric {
+  [score: number]: string;
+}
+
+export interface BehavioralIndicators {
+  [level: string]: string[];
+}
+
+export interface CustomEvaluationCriteria {
+  id: string;
+  companyName?: string;
+  department?: string;
+  roleTitle?: string;
+  jobId?: string;
+  criterionName: string;
+  criterionCode: string;
+  description: string;
+  category: CriteriaCategory;
+  weight: number;
+  isMandatory: boolean;
+  isKnockout: boolean;
+  scoringType: ScoringType;
+  minScore: number;
+  maxScore: number;
+  passingScore?: number;
+  scoringRubric?: ScoringRubric;
+  behavioralIndicators?: BehavioralIndicators;
+  positiveIndicators: string[];
+  negativeIndicators: string[];
+  questionSuggestions: string[];
+  aiEvaluationPrompt?: string;
+  aiKeywords: string[];
+  aiIgnoreKeywords: string[];
+  industryBenchmark?: number;
+  internalBenchmark?: number;
+  topPerformerThreshold?: number;
+  idealResponse?: string;
+  acceptableResponse?: string;
+  poorResponse?: string;
+  isActive: boolean;
+  isTemplate: boolean;
+  timesUsed: number;
+  averageScore?: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Knowledge Base Stats
+export interface KnowledgeBaseStats {
+  companyKnowledge: number;
+  roleKnowledge: number;
+  playbooks: number;
+  bestPractices: number;
+  competitorIntel: number;
+  faqs: number;
+  aiFeedback: number;
+  evaluationCriteria: number;
+  total: number;
+}
+
+// Feedback Analytics
+export interface FeedbackAnalytics {
+  totalFeedback: number;
+  processedCount: number;
+  addressedCount: number;
+  pendingProcessing: number;
+  byType: { feedbackType: string; _count: { id: number }; _avg: { feedbackRating: number } }[];
+  byEntityType: { sourceEntityType: string; _count: { id: number } }[];
+  averageAccuracy: number;
+}
+
+// Input Types for Batch 19
+
+export interface CreateCompanyKnowledgeInput {
+  companyName: string;
+  documentType: DocumentType;
+  title: string;
+  description?: string;
+  content: string;
+  contentFormat?: ContentFormat;
+  sourceUrl?: string;
+  filePath?: string;
+  category: KnowledgeCategory;
+  subcategory?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  allowedRoles?: string[];
+}
+
+export interface CreateRoleKnowledgeInput {
+  jobId?: string;
+  roleTitle: string;
+  department?: string;
+  seniorityLevel?: SeniorityLevel;
+  teamName?: string;
+  teamSize?: number;
+  teamDescription?: string;
+  reportingTo?: string;
+  directReports?: number;
+  teamDynamics?: string;
+  requiredSkills: Record<string, SkillRequirement>;
+  preferredSkills?: Record<string, SkillRequirement>;
+  technicalStack?: string[];
+  toolsUsed?: string[];
+  dailyResponsibilities?: string[];
+  projectTypes?: string[];
+  collaboratesWithTeams?: string[];
+  meetingCadence?: string;
+  currentChallenges?: string[];
+  growthOpportunities?: string[];
+  successMetrics?: string[];
+  domainKnowledge?: string[];
+  industrySpecifics?: string;
+  complianceRequirements?: string[];
+}
+
+export interface CreatePlaybookInput {
+  name: string;
+  description?: string;
+  roleTitle?: string;
+  department?: string;
+  seniorityLevel?: SeniorityLevel;
+  interviewType: PlaybookInterviewType;
+  duration?: number;
+  sections?: PlaybookSection[];
+  questionSequence?: string[];
+  requiredQuestions?: string[];
+  optionalQuestions?: string[];
+  followUpBank?: Record<string, string[]>;
+  evaluationCriteria?: Record<string, EvaluationCriterion>;
+  scoringGuide?: Record<string, string>;
+  mustPassCriteria?: string[];
+  redFlagIndicators?: string[];
+  greenFlagIndicators?: string[];
+  interviewerTips?: string[];
+  openingScript?: string;
+  closingScript?: string;
+  transitionPhrases?: string[];
+  timeBreakdown?: Record<string, number>;
+  paceGuidance?: string;
+  notesTakingTemplate?: Record<string, any>;
+  feedbackFormTemplate?: Record<string, any>;
+  isTemplate?: boolean;
+}
+
+export interface CreateBestPracticeInput {
+  practiceType: PracticeType;
+  category: string;
+  subcategory?: string;
+  title: string;
+  description: string;
+  detailedExplanation?: string;
+  exampleScenario?: string;
+  goodExample?: string;
+  badExample?: string;
+  applicableRoles?: string[];
+  applicableSeniorityLevels?: string[];
+  applicableInterviewTypes?: string[];
+  dosList?: string[];
+  dontsList?: string[];
+  commonMistakes?: string[];
+  sourceReference?: string;
+  tags?: string[];
+  keywords?: string[];
+}
+
+export interface CreateCompetitorIntelInput {
+  competitorName: string;
+  competitorWebsite?: string;
+  industry: string;
+  ourCompany?: string;
+  competitorSize?: string;
+  marketPosition?: MarketPosition;
+  intelligenceType: IntelligenceType;
+  salaryRanges?: Record<string, SalaryRange>;
+  bonusStructure?: string;
+  equityOfferings?: string;
+  benefitsOffered?: string[];
+  uniquePerks?: string[];
+  benefitComparison?: Record<string, any>;
+  cultureHighlights?: string[];
+  workArrangement?: WorkArrangement;
+  glassdoorRating?: number;
+  reviewSummary?: string;
+  techStackUsed?: string[];
+  recentTechAdoptions?: string[];
+  hiringVelocity?: HiringVelocity;
+  openPositionsCount?: number;
+  talentFocusAreas?: string[];
+  hiringChallenges?: string[];
+  talentPoolOverlap?: number;
+  poachingRisk?: RiskLevel;
+  retentionStrategies?: string[];
+  strengthsVsUs?: string[];
+  weaknessesVsUs?: string[];
+  opportunities?: string[];
+  threats?: string[];
+  dataSource?: string;
+  dataConfidence?: DataConfidence;
+}
+
+export interface CreateFAQInput {
+  question: string;
+  questionVariants?: string[];
+  questionCategory: FAQCategory;
+  answer: string;
+  shortAnswer?: string;
+  detailedAnswer?: string;
+  applicableRoles?: string[];
+  applicableDepartments?: string[];
+  applicableJobIds?: string[];
+  useAIGeneration?: boolean;
+  sourceType?: FAQSourceType;
+  sourceReference?: string;
+  relatedFAQIds?: string[];
+  relatedTopics?: string[];
+  showToCandidates?: boolean;
+  showToInterviewers?: boolean;
+}
+
+export interface SubmitAIFeedbackInput {
+  feedbackType: FeedbackType;
+  sourceEntityType: SourceEntityType;
+  sourceEntityId: string;
+  originalAIOutput: Record<string, any>;
+  aiConfidence?: number;
+  feedbackRating: number;
+  isAccurate?: boolean;
+  accuracyPercentage?: number;
+  corrections?: Record<string, any>;
+  correctedFields?: string[];
+  correctionNotes?: string;
+  errorType?: ErrorType;
+  impactLevel?: ImpactLevel;
+  shouldTrainOn?: boolean;
+  relatedPatterns?: string[];
+  suggestedImprovement?: string;
+}
+
+export interface CreateEvaluationCriteriaInput {
+  companyName?: string;
+  department?: string;
+  roleTitle?: string;
+  jobId?: string;
+  criterionName: string;
+  criterionCode: string;
+  description: string;
+  category: CriteriaCategory;
+  weight?: number;
+  isMandatory?: boolean;
+  isKnockout?: boolean;
+  scoringType?: ScoringType;
+  minScore?: number;
+  maxScore?: number;
+  passingScore?: number;
+  scoringRubric?: ScoringRubric;
+  behavioralIndicators?: BehavioralIndicators;
+  positiveIndicators?: string[];
+  negativeIndicators?: string[];
+  questionSuggestions?: string[];
+  aiEvaluationPrompt?: string;
+  aiKeywords?: string[];
+  aiIgnoreKeywords?: string[];
+  industryBenchmark?: number;
+  internalBenchmark?: number;
+  topPerformerThreshold?: number;
+  idealResponse?: string;
+  acceptableResponse?: string;
+  poorResponse?: string;
+  isTemplate?: boolean;
+}

@@ -15,3 +15,6 @@ export { default as AIScreeningHub } from './AIScreeningHub';
 
 // Recruiter Components - Batch 18: AI Interview Analysis
 export { default as InterviewAnalysisHub } from './InterviewAnalysisHub';
+
+// Recruiter Components - Batch 19: AI Knowledge Base
+export { default as AIKnowledgeBaseHub } from './AIKnowledgeBaseHub';

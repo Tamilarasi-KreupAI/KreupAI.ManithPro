@@ -8460,3 +8460,497 @@ model CandidateComparison {
   @@index([createdById])
   @@map("candidate_comparisons")
 }
+
+// ============================================
+// BATCH 19: AI KNOWLEDGE BASE (4.3.1-4.3.8)
+// ============================================
+
+// 4.3.1 - COMPANY KNOWLEDGE IMPORT
+model CompanyKnowledge {
+  id                    String              @id @default(uuid())
+  companyName           String
+
+  // Document Upload
+  documentType          String              // COMPANY_INFO, VALUES, CULTURE, BENEFITS, POLICIES, ONBOARDING, TEAM_INFO
+  title                 String
+  description           String?             @db.Text
+
+  // Content
+  content               String              @db.Text
+  contentFormat         String              @default("TEXT") // TEXT, MARKDOWN, HTML, PDF
+  sourceUrl             String?
+  filePath              String?
+
+  // Extracted Information
+  extractedTopics       String[]            @default([])
+  extractedKeywords     String[]            @default([])
+  extractedEntities     Json?               // Named entities extracted
+
+  // Categorization
+  category              String              // ABOUT_US, CULTURE, BENEFITS, POLICIES, TEAM, PROCESS, FAQ
+  subcategory           String?
+  tags                  String[]            @default([])
+
+  // AI Processing
+  isProcessed           Boolean             @default(false)
+  processedAt           DateTime?
+  embeddingVector       String?             @db.Text // Vector embedding for semantic search
+  summaryText           String?             @db.Text
+
+  // Versioning
+  version               Int                 @default(1)
+  previousVersionId     String?
+
+  // Access Control
+  isPublic              Boolean             @default(false) // Can candidates see this?
+  allowedRoles          String[]            @default([])
+
+  // Status
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyName])
+  @@index([documentType])
+  @@index([category])
+  @@map("company_knowledge")
+}
+
+// 4.3.2 - ROLE-SPECIFIC KNOWLEDGE
+model RoleSpecificKnowledge {
+  id                    String              @id @default(uuid())
+
+  // Role Context
+  jobId                 String?
+  roleTitle             String
+  department            String?
+  seniorityLevel        String?             // ENTRY, MID, SENIOR, LEAD, MANAGER, DIRECTOR, EXECUTIVE
+
+  // Team Information
+  teamName              String?
+  teamSize              Int?
+  teamDescription       String?             @db.Text
+  reportingTo           String?             // Role title of manager
+  directReports         Int?
+  teamDynamics          String?             @db.Text
+
+  // Technical Requirements
+  requiredSkills        Json                // { skill: { level: required, weight: importance } }
+  preferredSkills       Json?
+  technicalStack        String[]            @default([])
+  toolsUsed             String[]            @default([])
+
+  // Day-to-Day
+  dailyResponsibilities String[]            @default([])
+  projectTypes          String[]            @default([])
+  collaboratesWithTeams String[]            @default([])
+  meetingCadence        String?
+
+  // Challenges
+  currentChallenges     String[]            @default([])
+  growthOpportunities   String[]            @default([])
+  successMetrics        String[]            @default([])
+
+  // Must-Know Information
+  domainKnowledge       String[]            @default([])
+  industrySpecifics     String?             @db.Text
+  complianceRequirements String[]           @default([])
+
+  // AI Embeddings
+  embeddingVector       String?             @db.Text
+
+  // Status
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([jobId])
+  @@index([roleTitle])
+  @@index([department])
+  @@map("role_specific_knowledge")
+}
+
+// 4.3.3 - INTERVIEW PLAYBOOKS
+model InterviewPlaybook {
+  id                    String              @id @default(uuid())
+
+  // Playbook Info
+  name                  String
+  description           String?             @db.Text
+
+  // Context
+  roleTitle             String?
+  department            String?
+  seniorityLevel        String?             // ENTRY, MID, SENIOR, LEAD, MANAGER
+  interviewType         String              // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, CULTURE_FIT, FINAL
+
+  // Structure
+  duration              Int                 @default(60) // Minutes
+  sections              Json                // Array of { name, duration, type, questions }
+
+  // Questions
+  questionSequence      Json                // Ordered list of question IDs or inline questions
+  requiredQuestions     Json?               // Must-ask questions
+  optionalQuestions     Json?               // Nice-to-ask questions
+  followUpBank          Json?               // Follow-up questions by topic
+
+  // Evaluation
+  evaluationCriteria    Json                // { criterion: { weight, rubric } }
+  scoringGuide          Json?               // How to score each criterion
+  mustPassCriteria      String[]            @default([])
+  redFlagIndicators     String[]            @default([])
+  greenFlagIndicators   String[]            @default([])
+
+  // Tips
+  interviewerTips       String[]            @default([])
+  openingScript         String?             @db.Text
+  closingScript         String?             @db.Text
+  transitionPhrases     String[]            @default([])
+
+  // Time Management
+  timeBreakdown         Json?               // { section: minutes }
+  paceGuidance          String?
+
+  // Templates
+  notesTakingTemplate   Json?
+  feedbackFormTemplate  Json?
+
+  // Usage Stats
+  timesUsed             Int                 @default(0)
+  averageRating         Float?
+
+  // Status
+  isTemplate            Boolean             @default(false) // Can be used as base for others
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([roleTitle])
+  @@index([interviewType])
+  @@index([seniorityLevel])
+  @@map("interview_playbooks")
+}
+
+// 4.3.4 - BEST PRACTICES LIBRARY
+model BestPractice {
+  id                    String              @id @default(uuid())
+
+  // Category
+  practiceType          String              // QUESTION, TECHNIQUE, EVALUATION, FEEDBACK, COMMUNICATION, LOGISTICS
+  category              String
+  subcategory           String?
+
+  // Content
+  title                 String
+  description           String              @db.Text
+  detailedExplanation   String?             @db.Text
+
+  // Example
+  exampleScenario       String?             @db.Text
+  goodExample           String?             @db.Text
+  badExample            String?             @db.Text
+
+  // Applicability
+  applicableRoles       String[]            @default([])
+  applicableSeniorityLevels String[]        @default([])
+  applicableInterviewTypes String[]         @default([])
+
+  // Tips
+  dosList               String[]            @default([])
+  dontsList             String[]            @default([])
+  commonMistakes        String[]            @default([])
+
+  // Evidence
+  sourceReference       String?
+  successRate           Float?              // If tracked
+  usageCount            Int                 @default(0)
+
+  // Rating
+  rating                Float               @default(0)
+  ratingsCount          Int                 @default(0)
+  feedback              Json?               // Array of feedback entries
+
+  // Tags
+  tags                  String[]            @default([])
+  keywords              String[]            @default([])
+
+  // Status
+  isVerified            Boolean             @default(false)
+  verifiedById          String?
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([practiceType])
+  @@index([category])
+  @@map("best_practices")
+}
+
+// 4.3.5 - COMPETITOR INTELLIGENCE
+model CompetitorIntelligence {
+  id                    String              @id @default(uuid())
+
+  // Competitor Info
+  competitorName        String
+  competitorWebsite     String?
+  industry              String
+
+  // Company Comparison
+  ourCompany            String?             // Company for comparison context
+  competitorSize        String?             // Estimated employee count
+  marketPosition        String?             // LEADER, CHALLENGER, FOLLOWER, NICHE
+
+  // Intelligence Type
+  intelligenceType      String              // COMPENSATION, BENEFITS, CULTURE, TECH_STACK, HIRING_PRACTICES, TALENT_POOL
+
+  // Compensation Intelligence
+  salaryRanges          Json?               // { role: { min, max, median } }
+  bonusStructure        String?
+  equityOfferings       String?
+
+  // Benefits Intelligence
+  benefitsOffered       String[]            @default([])
+  uniquePerks           String[]            @default([])
+  benefitComparison     Json?               // Side-by-side comparison
+
+  // Culture Intelligence
+  cultureHighlights     String[]            @default([])
+  workArrangement       String?             // REMOTE, HYBRID, ONSITE
+  glassdoorRating       Float?
+  reviewSummary         String?             @db.Text
+
+  // Tech Stack
+  techStackUsed         String[]            @default([])
+  recentTechAdoptions   String[]            @default([])
+
+  // Hiring Intelligence
+  hiringVelocity        String?             // HIGH, MEDIUM, LOW
+  openPositionsCount    Int?
+  talentFocusAreas      String[]            @default([])
+  hiringChallenges      String[]            @default([])
+
+  // Talent Pool
+  talentPoolOverlap     Float?              // % of talent they compete for
+  poachingRisk          String?             // HIGH, MEDIUM, LOW
+  retentionStrategies   String[]            @default([])
+
+  // Key Insights
+  strengthsVsUs         String[]            @default([])
+  weaknessesVsUs        String[]            @default([])
+  opportunities         String[]            @default([])
+  threats               String[]            @default([])
+
+  // Data Source
+  dataSource            String?
+  dataConfidence        String              @default("MEDIUM") // LOW, MEDIUM, HIGH
+  lastVerified          DateTime?
+
+  // Status
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([competitorName])
+  @@index([industry])
+  @@index([intelligenceType])
+  @@map("competitor_intelligence")
+}
+
+// 4.3.6 - DYNAMIC FAQ ANSWERS
+model DynamicFAQ {
+  id                    String              @id @default(uuid())
+
+  // Question
+  question              String              @db.Text
+  questionVariants      String[]            @default([]) // Alternative phrasings
+  questionCategory      String              // ROLE, COMPANY, BENEFITS, PROCESS, TEAM, TECHNICAL, CULTURE
+
+  // Answer
+  answer                String              @db.Text
+  shortAnswer           String?             // Brief version
+  detailedAnswer        String?             @db.Text // Extended version
+
+  // Context
+  applicableRoles       String[]            @default([]) // Empty means all roles
+  applicableDepartments String[]            @default([])
+  applicableJobIds      String[]            @default([])
+
+  // AI Configuration
+  useAIGeneration       Boolean             @default(false) // Should AI generate/enhance answer
+  aiGeneratedAnswer     String?             @db.Text
+  aiConfidence          Float?
+
+  // Source
+  sourceType            String              @default("MANUAL") // MANUAL, IMPORTED, AI_GENERATED
+  sourceReference       String?
+
+  // Embedding for semantic match
+  embeddingVector       String?             @db.Text
+
+  // Usage Stats
+  timesAsked            Int                 @default(0)
+  helpfulCount          Int                 @default(0)
+  notHelpfulCount       Int                 @default(0)
+
+  // Related
+  relatedFAQIds         String[]            @default([])
+  relatedTopics         String[]            @default([])
+
+  // Visibility
+  showToCandidates      Boolean             @default(true)
+  showToInterviewers    Boolean             @default(true)
+
+  // Status
+  isActive              Boolean             @default(true)
+  isVerified            Boolean             @default(false)
+  verifiedById          String?
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([questionCategory])
+  @@index([isActive])
+  @@map("dynamic_faqs")
+}
+
+// 4.3.7 - CONTINUOUS LEARNING (AI FEEDBACK)
+model AIFeedbackLearning {
+  id                    String              @id @default(uuid())
+
+  // Context
+  feedbackType          String              // ASSESSMENT_CORRECTION, SCORING_ADJUSTMENT, QUESTION_QUALITY, ANSWER_EVALUATION, RED_FLAG_ACCURACY
+
+  // Source
+  sourceEntityType      String              // INTERVIEW, TRANSCRIPTION, ANSWER_ANALYSIS, SUMMARY, RED_FLAG
+  sourceEntityId        String
+
+  // AI Output Being Evaluated
+  originalAIOutput      Json                // What the AI produced
+  aiConfidence          Float?              // AI's confidence in original output
+
+  // Recruiter Feedback
+  feedbackById          String
+  feedbackRating        Int                 // 1-5 scale
+  isAccurate            Boolean?
+  accuracyPercentage    Float?              // 0-100
+
+  // Corrections
+  corrections           Json?               // What should have been output
+  correctedFields       String[]            @default([])
+  correctionNotes       String?             @db.Text
+
+  // Categorization
+  errorType             String?             // FALSE_POSITIVE, FALSE_NEGATIVE, OVERSCORED, UNDERSCORED, MISSED_CONTEXT
+  impactLevel           String              @default("MEDIUM") // LOW, MEDIUM, HIGH
+
+  // Training Signal
+  shouldTrainOn         Boolean             @default(true)
+  trainingWeight        Float               @default(1.0)
+  isProcessedForTraining Boolean            @default(false)
+  processedAt           DateTime?
+
+  // Patterns
+  relatedPatterns       String[]            @default([])
+  suggestedImprovement  String?             @db.Text
+
+  // Follow-up
+  wasAddressed          Boolean             @default(false)
+  addressedAt           DateTime?
+  addressedNotes        String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([feedbackType])
+  @@index([sourceEntityType, sourceEntityId])
+  @@index([feedbackById])
+  @@map("ai_feedback_learning")
+}
+
+// 4.3.8 - CUSTOM EVALUATION CRITERIA
+model CustomEvaluationCriteria {
+  id                    String              @id @default(uuid())
+
+  // Scope
+  companyName           String?
+  department            String?
+  roleTitle             String?
+  jobId                 String?
+
+  // Criterion Info
+  criterionName         String
+  criterionCode         String              // Short code for reference
+  description           String              @db.Text
+  category              String              // TECHNICAL, BEHAVIORAL, CULTURAL, COMMUNICATION, LEADERSHIP, PROBLEM_SOLVING
+
+  // Importance
+  weight                Float               @default(1.0) // Importance weight
+  isMandatory           Boolean             @default(false)
+  isKnockout            Boolean             @default(false) // Failing this disqualifies candidate
+
+  // Scoring
+  scoringType           String              @default("NUMERIC") // NUMERIC, PASS_FAIL, RUBRIC, COMPETENCY_LEVELS
+  minScore              Float               @default(0)
+  maxScore              Float               @default(5)
+  passingScore          Float?
+
+  // Rubric
+  scoringRubric         Json?               // { 1: "description", 2: "description", ... }
+  behavioralIndicators  Json?               // { level: ["indicators"] }
+
+  // What to Look For
+  positiveIndicators    String[]            @default([])
+  negativeIndicators    String[]            @default([])
+  questionSuggestions   String[]            @default([]) // Questions that help assess this
+
+  // AI Guidance
+  aiEvaluationPrompt    String?             @db.Text // Custom prompt for AI evaluation
+  aiKeywords            String[]            @default([]) // Keywords AI should look for
+  aiIgnoreKeywords      String[]            @default([]) // Keywords AI should ignore
+
+  // Comparison
+  industryBenchmark     Float?
+  internalBenchmark     Float?
+  topPerformerThreshold Float?
+
+  // Examples
+  idealResponse         String?             @db.Text
+  acceptableResponse    String?             @db.Text
+  poorResponse          String?             @db.Text
+
+  // Status
+  isActive              Boolean             @default(true)
+  isTemplate            Boolean             @default(false)
+
+  // Usage
+  timesUsed             Int                 @default(0)
+  averageScore          Float?
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyName])
+  @@index([category])
+  @@index([roleTitle])
+  @@map("custom_evaluation_criteria")
+}
