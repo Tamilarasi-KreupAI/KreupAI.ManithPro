@@ -34,6 +34,7 @@ import SalaryInsights from './pages/SalaryInsights';
 import SmartRecommendations from './pages/SmartRecommendations';
 import RecruiterRecommendations from './pages/RecruiterRecommendations';
 import EnhancedProfile from './pages/EnhancedProfile';
+import ProfileBuilder from './pages/ProfileBuilder';
 import EnhancedCompanyProfile from './pages/EnhancedCompanyProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUserManagement from './pages/AdminUserManagement';
@@ -119,6 +120,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <EnhancedProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/builder"
+                  element={
+                    <ProtectedRoute>
+                      <ProfileBuilder />
                     </ProtectedRoute>
                   }
                 />

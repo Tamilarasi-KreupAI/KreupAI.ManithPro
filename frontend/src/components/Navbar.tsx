@@ -7,9 +7,11 @@ const Navbar: React.FC = () => {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+  const closeProfileDropdown = () => setProfileDropdownOpen(false);
 
   // Handle scroll effect
   useEffect(() => {
@@ -19,6 +21,22 @@ const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownOpen && !(event.target as Element).closest('.profile-dropdown-container')) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [profileDropdownOpen]);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setProfileDropdownOpen(false);
+  }, [location.pathname]);
 
   const isHome = location.pathname === '/';
 
@@ -77,11 +95,89 @@ const Navbar: React.FC = () => {
                   Messages
                 </Link>
                 <NotificationDropdown />
-                <Link to="/profile" className="flex items-center gap-2 pl-4 border-l border-slate-200">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm ring-2 ring-white">
-                    {user.firstName?.charAt(0) || 'U'}
-                  </div>
-                </Link>
+                <div className="relative pl-4 border-l border-slate-200 profile-dropdown-container">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-2 focus:outline-none"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm ring-2 ring-white">
+                      {user.firstName?.charAt(0) || 'U'}
+                    </div>
+                    <svg className={`w-4 h-4 text-slate-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-slate-100">
+                        <p className="font-medium text-slate-800">{user.firstName} {user.lastName}</p>
+                        <p className="text-sm text-slate-500">{user.email}</p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={closeProfileDropdown}
+                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <div className="flex items-center gap-3">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          View Profile
+                        </div>
+                      </Link>
+                      <Link
+                        to="/profile/builder"
+                        onClick={closeProfileDropdown}
+                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <div className="flex items-center gap-3">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Profile Builder
+                        </div>
+                      </Link>
+                      <Link
+                        to="/profile/enhanced"
+                        onClick={closeProfileDropdown}
+                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <div className="flex items-center gap-3">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          Enhanced Profile
+                        </div>
+                      </Link>
+                      <div className="border-t border-slate-100 mt-2 pt-2">
+                        <Link
+                          to="/resumes"
+                          onClick={closeProfileDropdown}
+                          className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Manage Resumes
+                          </div>
+                        </Link>
+                        <Link
+                          to="/achievements"
+                          onClick={closeProfileDropdown}
+                          className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                            Achievements
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -136,6 +232,27 @@ const Navbar: React.FC = () => {
                   className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/profile/builder"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                >
+                  Profile Builder
+                </Link>
+                <Link
+                  to="/resumes"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                >
+                  Manage Resumes
+                </Link>
+                <Link
+                  to="/achievements"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                >
+                  Achievements
                 </Link>
               </>
             ) : (
