@@ -4481,3 +4481,426 @@ model ReliabilityScore {
   @@index([overallReliabilityScore])
   @@map("reliability_scores")
 }
+
+// ============================================
+// BATCH 10: EXTENDED SCORING & CALIBRATION (2.1.8 - 2.1.12)
+// ============================================
+
+// 2.1.8 - Salary Expectation Alignment
+model SalaryAlignment {
+  id                    String              @id @default(uuid())
+  userId                String
+  profileId             String
+  jobId                 String?             // If analyzing for specific job
+
+  // Candidate Expectations
+  expectedSalaryMin     Float?
+  expectedSalaryMax     Float?
+  expectedSalaryCurrency String             @default("USD")
+  salaryFlexibility     String              // FIRM, SOMEWHAT_FLEXIBLE, VERY_FLEXIBLE
+  prioritizesEquity     Boolean             @default(false)
+  bonusExpectations     Float?              // Expected bonus %
+  benefitsPriority      String[]            @default([]) // "health", "401k", "remote", etc.
+
+  // Market Data Analysis
+  marketSalaryMin       Float
+  marketSalaryMax       Float
+  marketSalaryMedian    Float
+  marketSalaryCurrency  String              @default("USD")
+  marketPercentile      Float               // Where candidate expectation falls in market
+  marketDataSource      String              // e.g., "Glassdoor", "LinkedIn", "Internal"
+  marketDataDate        DateTime            @default(now())
+
+  // Job Budget (if job specified)
+  jobBudgetMin          Float?
+  jobBudgetMax          Float?
+  budgetFlexibility     String?             // STRICT, FLEXIBLE, VERY_FLEXIBLE
+
+  // Alignment Analysis
+  alignmentScore        Float               // 0-100
+  alignmentCategory     String              // WELL_ALIGNED, SLIGHTLY_HIGH, SIGNIFICANTLY_HIGH, BELOW_MARKET, NEGOTIABLE
+  gapAnalysis           Json?               // {gap: amount, percentage, direction}
+
+  // Total Compensation Analysis
+  baseSalaryAlignment   Float               // 0-100
+  bonusAlignment        Float?              // 0-100
+  equityAlignment       Float?              // 0-100
+  benefitsValue         Float?              // Estimated benefits value
+  totalCompAlignment    Float               // 0-100
+
+  // Location Adjustments
+  locationAdjustment    Float?              // Cost of living adjustment
+  adjustedExpectation   Float?              // After location adjustment
+
+  // Negotiation Insights
+  negotiationRoom       Float?              // Estimated negotiation range
+  suggestedOffer        Float?              // AI-suggested offer
+  counterOfferLikely    Boolean             @default(false)
+
+  // AI Recommendations
+  recommendations       String[]            @default([])
+  negotiationTips       String[]            @default([])
+  alignmentSummary      String?
+
+  // Scoring Metadata
+  scoringVersion        String              @default("1.0")
+  lastAnalyzedAt        DateTime            @default(now())
+  confidence            Float               @default(0.75)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([profileId, jobId])
+  @@index([userId])
+  @@index([alignmentScore])
+  @@map("salary_alignments")
+}
+
+// 2.1.9 - Location Compatibility
+model LocationCompatibility {
+  id                    String              @id @default(uuid())
+  userId                String
+  profileId             String
+  jobId                 String?             // If analyzing for specific job
+
+  // Candidate Location
+  currentCity           String?
+  currentState          String?
+  currentCountry        String
+  currentTimezone       String?
+
+  // Work Preferences
+  remotePreference      String              // FULL_REMOTE, HYBRID, IN_OFFICE, FLEXIBLE
+  hybridDaysInOffice    Int?                // If hybrid, preferred days
+  relocationWilling     Boolean             @default(false)
+  relocationLocations   String[]            @default([]) // Cities willing to relocate to
+  relocationTimeframe   String?             // IMMEDIATE, 1_3_MONTHS, 3_6_MONTHS, 6_PLUS_MONTHS
+  relocationAssistance  Boolean             @default(false) // Needs relocation support
+
+  // Travel Preferences
+  travelWillingness     String              // NONE, MINIMAL, MODERATE, FREQUENT, EXTENSIVE
+  maxTravelPercent      Int?                // % of time willing to travel
+  internationalTravel   Boolean             @default(false)
+
+  // Job Requirements (if job specified)
+  jobLocationType       String?             // REMOTE, HYBRID, ONSITE
+  jobCity               String?
+  jobState              String?
+  jobCountry            String?
+  jobTimezone           String?
+  jobTravelRequired     String?
+
+  // Compatibility Analysis
+  overallCompatibility  Float               // 0-100
+  compatibilityLevel    String              // EXCELLENT, GOOD, MODERATE, CHALLENGING, INCOMPATIBLE
+
+  // Component Scores
+  locationMatch         Float               // 0-100
+  remoteCompatibility   Float               // 0-100
+  timezoneOverlap       Float               // 0-100
+  travelCompatibility   Float               // 0-100
+  relocationFeasibility Float?              // 0-100 if relocation needed
+
+  // Distance Analysis
+  distanceToOffice      Float?              // In miles/km
+  commuteTime           Int?                // In minutes
+  commuteMethod         String?             // DRIVE, PUBLIC_TRANSIT, WALK, BIKE
+
+  // Timezone Analysis
+  timezoneOffset        Int?                // Hours difference
+  overlapHours          Int?                // Working hours overlap
+  meetingFriendly       Boolean             @default(true)
+
+  // Cost of Living
+  candidateCOL          Float?              // Cost of living index
+  jobLocationCOL        Float?              // Cost of living index
+  salaryAdjustment      Float?              // Suggested adjustment %
+
+  // Visa/Work Authorization
+  workAuthorization     String?             // CITIZEN, PERMANENT_RESIDENT, VISA, REQUIRES_SPONSORSHIP
+  visaType              String?
+  visaExpiry            DateTime?
+  sponsorshipNeeded     Boolean             @default(false)
+
+  // AI Analysis
+  compatibilityFactors  Json?               // {factor: {score, impact}}
+  challenges            String[]            @default([])
+  mitigations           String[]            @default([])
+  recommendations       String[]            @default([])
+  compatibilitySummary  String?
+
+  // Scoring Metadata
+  scoringVersion        String              @default("1.0")
+  lastAnalyzedAt        DateTime            @default(now())
+  confidence            Float               @default(0.8)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([profileId, jobId])
+  @@index([userId])
+  @@index([overallCompatibility])
+  @@map("location_compatibilities")
+}
+
+// 2.1.10 - Diversity & Inclusion Metrics
+model DIMetrics {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  jobId                 String?
+  analysisType          String              // CANDIDATE_POOL, JOB_POSTING, HIRING_PROCESS, PIPELINE
+
+  // Bias Detection in Job Postings
+  genderNeutralityScore Float?              // 0-100
+  ageNeutralityScore    Float?              // 0-100
+  accessibilityScore    Float?              // 0-100
+  inclusivityScore      Float?              // 0-100
+  flaggedTerms          Json?               // Array of {term, issue, suggestion}
+
+  // Pipeline Diversity Metrics
+  pipelineDiversity     Json?               // {stage: {total, demographics}}
+  sourceChannelDiversity Json?              // {channel: demographics}
+  conversionByDemographic Json?             // {demographic: conversionRates}
+
+  // Scoring Fairness
+  scoringBiasAnalysis   Json?               // Analysis of score distributions
+  demographicScoreGaps  Json?               // Score differences by demographic
+  statParityScore       Float?              // Statistical parity measure
+  equalOpportunityScore Float?              // Equal opportunity measure
+
+  // Representation Analysis
+  industryBenchmarks    Json?               // Industry diversity benchmarks
+  companyComparison     Json?               // How company compares
+  underrepresentedGaps  Json?               // Gaps in representation
+
+  // Recommendations
+  biasAlerts            String[]            @default([])
+  improvementActions    Json?               // {area: actions}
+  priorityFixes         String[]            @default([])
+
+  // Compliance
+  eeocCompliant         Boolean             @default(true)
+  gdprCompliant         Boolean             @default(true)
+  localCompliance       Json?               // Region-specific compliance
+
+  // Overall Score
+  overallDIScore        Float               // 0-100
+  diGrade               String              // A, B, C, D, F
+
+  // Audit Trail
+  analyzedBy            String?             // System or admin user
+  reviewedBy            String?
+  reviewNotes           String?
+
+  // Timestamps
+  analysisDate          DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([overallDIScore])
+  @@map("di_metrics")
+}
+
+// 2.1.11 - Explainable AI Scores
+model ScoreExplanation {
+  id                    String              @id @default(uuid())
+  userId                String?             // For candidate-specific explanations
+  profileId             String?
+  jobId                 String?             // For job-specific explanations
+
+  // Score Reference
+  scoreType             String              // PROFILE_SCORE, JOB_FIT, CULTURE_FIT, etc.
+  scoreId               String              // ID of the score being explained
+  scoreValue            Float               // The score value
+
+  // High-Level Explanation
+  summary               String              // One-paragraph summary
+  headline              String              // One-line headline
+  confidenceLevel       String              // HIGH, MEDIUM, LOW
+
+  // Component Breakdown
+  components            Json                // Array of {name, weight, score, contribution, explanation}
+  topContributors       Json                // Top positive factors
+  topDetractors         Json                // Top negative factors
+
+  // Factor Analysis
+  factors               Json                // Detailed factor breakdown
+  factorWeights         Json                // How each factor was weighted
+  factorSources         Json                // Data sources for each factor
+
+  // Comparison Context
+  percentileRank        Float?              // Where this score ranks
+  similarProfiles       Json?               // Comparison to similar candidates
+  benchmarkComparison   Json?               // Industry/role benchmarks
+
+  // What-If Analysis
+  improvementSuggestions Json?              // {action: potentialImpact}
+  sensitivityAnalysis   Json?               // How score changes with factors
+
+  // Visual Aids
+  visualizations        Json?               // Data for charts/graphs
+  highlights            String[]            @default([]) // Key points to highlight
+
+  // Transparency
+  algorithmVersion      String              // Which algorithm was used
+  dataPoints            Int                 // Number of data points used
+  dataQuality           String              // HIGH, MEDIUM, LOW
+  limitations           String[]            @default([]) // Known limitations
+
+  // User Feedback
+  helpfulRating         Int?                // 1-5 rating
+  feedbackText          String?
+  feedbackDate          DateTime?
+
+  // Timestamps
+  generatedAt           DateTime            @default(now())
+  expiresAt             DateTime?           // When explanation becomes stale
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([scoreType, scoreId])
+  @@map("score_explanations")
+}
+
+// 2.1.12 - Score Calibration Tools
+model ScoreCalibration {
+  id                    String              @id @default(uuid())
+  companyId             String
+  createdBy             String              // Recruiter/Admin who created
+
+  // Calibration Scope
+  calibrationName       String
+  description           String?
+  scope                 String              // COMPANY_WIDE, DEPARTMENT, JOB_FAMILY, SPECIFIC_JOB
+  jobFamilies           String[]            @default([])
+  departments           String[]            @default([])
+  jobIds                String[]            @default([])
+
+  // Weight Adjustments
+  profileScoreWeights   Json?               // {component: weight}
+  jobFitWeights         Json?               // {component: weight}
+  cultureFitWeights     Json?               // {component: weight}
+  technicalWeights      Json?               // {component: weight}
+
+  // Threshold Adjustments
+  minimumThresholds     Json?               // {scoreType: minValue}
+  knockoutCriteria      Json?               // {criteria: threshold}
+  bonusCriteria         Json?               // {criteria: bonus}
+
+  // Custom Scoring Rules
+  customRules           Json?               // Array of {condition, action, weight}
+  skillPriorities       Json?               // {skill: priority}
+  experienceWeighting   Json?               // {years: weight}
+
+  // Industry/Role Benchmarks
+  benchmarkSource       String?             // Where benchmarks come from
+  benchmarkData         Json?               // Benchmark values
+
+  // Validation
+  validationStatus      String              @default("DRAFT") // DRAFT, TESTING, VALIDATED, ACTIVE, ARCHIVED
+  testResults           Json?               // Results from testing
+  validatedBy           String?
+  validatedAt           DateTime?
+
+  // Performance Tracking
+  candidatesScored      Int                 @default(0)
+  hireCorrelation       Float?              // Correlation with successful hires
+  retentionCorrelation  Float?              // Correlation with retention
+  performanceCorrelation Float?             // Correlation with performance
+
+  // A/B Testing
+  isABTest              Boolean             @default(false)
+  controlCalibrationId  String?             // ID of control calibration
+  testStartDate         DateTime?
+  testEndDate           DateTime?
+  testResults2          Json?               // A/B test results
+
+  // Audit
+  version               Int                 @default(1)
+  previousVersionId     String?
+  changeLog             Json?               // History of changes
+
+  // Status
+  isActive              Boolean             @default(false)
+  activatedAt           DateTime?
+  deactivatedAt         DateTime?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("score_calibrations")
+}
+
+// Market Salary Data (for salary alignment)
+model MarketSalaryData {
+  id                    String              @id @default(uuid())
+
+  // Job Classification
+  jobTitle              String
+  normalizedTitle       String              // Standardized title
+  jobFamily             String?
+  seniorityLevel        String              // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+
+  // Location
+  country               String
+  state                 String?
+  city                  String?
+  region                String?             // e.g., "Bay Area", "Midwest"
+
+  // Industry
+  industry              String?
+  companySize           String?             // STARTUP, SMALL, MEDIUM, LARGE, ENTERPRISE
+
+  // Salary Data
+  currency              String              @default("USD")
+  baseSalaryMin         Float
+  baseSalaryMax         Float
+  baseSalaryMedian      Float
+  baseSalaryMean        Float?
+
+  // Total Compensation
+  totalCompMin          Float?
+  totalCompMax          Float?
+  totalCompMedian       Float?
+
+  // Components
+  bonusMin              Float?
+  bonusMax              Float?
+  bonusMedian           Float?
+  equityMin             Float?
+  equityMax             Float?
+  equityMedian          Float?
+
+  // Statistics
+  sampleSize            Int?
+  percentile25          Float?
+  percentile75          Float?
+  percentile90          Float?
+
+  // Source
+  dataSource            String              // e.g., "BLS", "Glassdoor", "Levels.fyi"
+  dataDate              DateTime
+  confidenceScore       Float?              // 0-1
+
+  // Skills Premium
+  skillsPremiums        Json?               // {skill: premiumPercent}
+
+  // Trends
+  yoyGrowth             Float?              // Year-over-year growth %
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([normalizedTitle, country])
+  @@index([jobFamily, seniorityLevel])
+  @@map("market_salary_data")
+}

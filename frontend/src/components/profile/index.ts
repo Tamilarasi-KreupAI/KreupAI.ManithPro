@@ -28,3 +28,6 @@ export { default as AIScoringHub } from './AIScoringHub';
 
 // Profile Builder Components - Batch 9
 export { default as AdvancedScoringHub } from './AdvancedScoringHub';
+
+// Profile Builder Components - Batch 10
+export { default as ExtendedScoringHub } from './ExtendedScoringHub';

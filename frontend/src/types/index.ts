@@ -3559,3 +3559,381 @@ export interface CandidateScoringDashboard {
   yellowFlags: string[];
   redFlags: string[];
 }
+
+// ============================================
+// BATCH 10: EXTENDED SCORING & CALIBRATION (2.1.8 - 2.1.12)
+// ============================================
+
+// 2.1.8 - Salary Alignment
+export type SalaryFlexibility = 'FIRM' | 'SOMEWHAT_FLEXIBLE' | 'VERY_FLEXIBLE';
+export type AlignmentCategory = 'WELL_ALIGNED' | 'SLIGHTLY_HIGH' | 'SIGNIFICANTLY_HIGH' | 'BELOW_MARKET' | 'NEGOTIABLE';
+export type BudgetFlexibility = 'STRICT' | 'FLEXIBLE' | 'VERY_FLEXIBLE';
+
+export interface SalaryAlignment {
+  id: string;
+  userId: string;
+  profileId: string;
+  jobId?: string;
+  expectedSalaryMin?: number;
+  expectedSalaryMax?: number;
+  expectedSalaryCurrency: string;
+  salaryFlexibility: SalaryFlexibility;
+  prioritizesEquity: boolean;
+  bonusExpectations?: number;
+  benefitsPriority: string[];
+  marketSalaryMin: number;
+  marketSalaryMax: number;
+  marketSalaryMedian: number;
+  marketSalaryCurrency: string;
+  marketPercentile: number;
+  marketDataSource: string;
+  marketDataDate: string;
+  jobBudgetMin?: number;
+  jobBudgetMax?: number;
+  budgetFlexibility?: BudgetFlexibility;
+  alignmentScore: number;
+  alignmentCategory: AlignmentCategory;
+  gapAnalysis?: {
+    gap: number;
+    percentage: number;
+    direction: string;
+    details?: string;
+  };
+  baseSalaryAlignment: number;
+  bonusAlignment?: number;
+  equityAlignment?: number;
+  benefitsValue?: number;
+  totalCompAlignment: number;
+  locationAdjustment?: number;
+  adjustedExpectation?: number;
+  negotiationRoom?: number;
+  suggestedOffer?: number;
+  counterOfferLikely: boolean;
+  recommendations: string[];
+  negotiationTips: string[];
+  alignmentSummary?: string;
+  scoringVersion: string;
+  lastAnalyzedAt: string;
+  confidence: number;
+}
+
+export interface MarketSalaryData {
+  jobTitle: string;
+  normalizedTitle: string;
+  location: string;
+  seniorityLevel: string;
+  industry?: string;
+  currency: string;
+  baseSalary: {
+    min: number;
+    max: number;
+    median: number;
+    mean?: number;
+    percentile25?: number;
+    percentile75?: number;
+    percentile90?: number;
+  };
+  totalCompensation?: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  bonus?: {
+    min: number;
+    max: number;
+    median: number;
+    typicalPercent?: number;
+  };
+  equity?: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  sampleSize?: number;
+  dataSource: string;
+  dataDate: string;
+  yoyGrowth?: number;
+  skillsPremiums?: Record<string, number>;
+}
+
+// 2.1.9 - Location Compatibility
+export type RemotePreferenceType = 'FULL_REMOTE' | 'HYBRID' | 'IN_OFFICE' | 'FLEXIBLE';
+export type TravelWillingness = 'NONE' | 'MINIMAL' | 'MODERATE' | 'FREQUENT' | 'EXTENSIVE';
+export type RelocationTimeframe = 'IMMEDIATE' | '1_3_MONTHS' | '3_6_MONTHS' | '6_PLUS_MONTHS';
+export type LocationCompatibilityLevel = 'EXCELLENT' | 'GOOD' | 'MODERATE' | 'CHALLENGING' | 'INCOMPATIBLE';
+export type WorkAuthorization = 'CITIZEN' | 'PERMANENT_RESIDENT' | 'VISA' | 'REQUIRES_SPONSORSHIP';
+
+export interface LocationCompatibility {
+  id: string;
+  userId: string;
+  profileId: string;
+  jobId?: string;
+  currentCity?: string;
+  currentState?: string;
+  currentCountry: string;
+  currentTimezone?: string;
+  remotePreference: RemotePreferenceType;
+  hybridDaysInOffice?: number;
+  relocationWilling: boolean;
+  relocationLocations: string[];
+  relocationTimeframe?: RelocationTimeframe;
+  relocationAssistance: boolean;
+  travelWillingness: TravelWillingness;
+  maxTravelPercent?: number;
+  internationalTravel: boolean;
+  jobLocationType?: string;
+  jobCity?: string;
+  jobState?: string;
+  jobCountry?: string;
+  jobTimezone?: string;
+  jobTravelRequired?: string;
+  overallCompatibility: number;
+  compatibilityLevel: LocationCompatibilityLevel;
+  locationMatch: number;
+  remoteCompatibility: number;
+  timezoneOverlap: number;
+  travelCompatibility: number;
+  relocationFeasibility?: number;
+  distanceToOffice?: number;
+  commuteTime?: number;
+  commuteMethod?: string;
+  timezoneOffset?: number;
+  overlapHours?: number;
+  meetingFriendly: boolean;
+  candidateCOL?: number;
+  jobLocationCOL?: number;
+  salaryAdjustment?: number;
+  workAuthorization?: WorkAuthorization;
+  visaType?: string;
+  visaExpiry?: string;
+  sponsorshipNeeded: boolean;
+  compatibilityFactors?: Record<string, { score: number; impact: string; note?: string }>;
+  challenges: string[];
+  mitigations: string[];
+  recommendations: string[];
+  compatibilitySummary?: string;
+  scoringVersion: string;
+  lastAnalyzedAt: string;
+  confidence: number;
+}
+
+// 2.1.10 - Diversity & Inclusion Metrics
+export type DIAnalysisType = 'CANDIDATE_POOL' | 'JOB_POSTING' | 'HIRING_PROCESS' | 'PIPELINE';
+export type DIGrade = 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D' | 'F';
+
+export interface DIMetrics {
+  id: string;
+  companyId?: string;
+  jobId?: string;
+  analysisType: DIAnalysisType;
+  genderNeutralityScore?: number;
+  ageNeutralityScore?: number;
+  accessibilityScore?: number;
+  inclusivityScore?: number;
+  flaggedTerms?: Array<{
+    term: string;
+    issue: string;
+    suggestion: string;
+  }>;
+  pipelineDiversity?: Record<string, unknown>;
+  sourceChannelDiversity?: Record<string, unknown>;
+  conversionByDemographic?: Record<string, unknown>;
+  scoringBiasAnalysis?: Record<string, unknown>;
+  demographicScoreGaps?: Record<string, { gap: number; significant: boolean }>;
+  statParityScore?: number;
+  equalOpportunityScore?: number;
+  industryBenchmarks?: Record<string, unknown>;
+  companyComparison?: Record<string, unknown>;
+  underrepresentedGaps?: Record<string, { gap: number; trending: string }>;
+  biasAlerts: string[];
+  improvementActions?: Record<string, string[]>;
+  priorityFixes: string[];
+  eeocCompliant: boolean;
+  gdprCompliant: boolean;
+  localCompliance?: Record<string, boolean>;
+  overallDIScore: number;
+  diGrade: DIGrade;
+  analyzedBy?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  analysisDate: string;
+}
+
+export interface JobPostingBiasAnalysis {
+  title: string;
+  overallScore: number;
+  genderNeutrality: {
+    score: number;
+    flaggedTerms: Array<{ term: string; suggestion: string; reason: string }>;
+  };
+  ageNeutrality: {
+    score: number;
+    flaggedTerms: Array<{ term: string; suggestion: string; reason: string }>;
+  };
+  accessibilityInclusion: {
+    score: number;
+    suggestions: string[];
+  };
+  culturalInclusion: {
+    score: number;
+    suggestions: string[];
+  };
+  recommendations: string[];
+}
+
+// 2.1.11 - Explainable AI Scores
+export type ConfidenceLevelType = 'HIGH' | 'MEDIUM' | 'LOW';
+export type DataQuality = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface ScoreExplanation {
+  id: string;
+  userId?: string;
+  scoreType: string;
+  scoreId: string;
+  scoreValue: number;
+  summary: string;
+  headline: string;
+  confidenceLevel: ConfidenceLevelType;
+  components: Array<{
+    name: string;
+    weight: number;
+    score: number;
+    contribution: number;
+    explanation: string;
+  }>;
+  topContributors: Array<{
+    factor: string;
+    impact: string;
+    reason: string;
+  }>;
+  topDetractors: Array<{
+    factor: string;
+    impact: string;
+    reason: string;
+  }>;
+  factors: Record<string, { weight: number; rawScore: number; normalizedScore: number; dataPoints?: number }>;
+  factorWeights: Record<string, unknown>;
+  factorSources: Record<string, string>;
+  percentileRank?: number;
+  similarProfiles?: {
+    count: number;
+    averageScore: number;
+    medianScore: number;
+    yourRank: string;
+  };
+  benchmarkComparison?: {
+    roleAverage: number;
+    industryAverage: number;
+    topPerformers: number;
+    yourPosition: string;
+  };
+  improvementSuggestions?: Array<{
+    action: string;
+    potentialImpact: string;
+    effort: string;
+  }>;
+  sensitivityAnalysis?: Record<string, string>;
+  visualizations?: {
+    radarChart?: Record<string, number>;
+    trendLine?: Record<string, number>;
+    distribution?: { yourScore: number; distribution: string; mean: number; stdDev: number };
+  };
+  highlights: string[];
+  algorithmVersion: string;
+  dataPoints: number;
+  dataQuality: DataQuality;
+  limitations: string[];
+  helpfulRating?: number;
+  feedbackText?: string;
+  feedbackDate?: string;
+  generatedAt: string;
+  expiresAt?: string;
+}
+
+// 2.1.12 - Score Calibration
+export type CalibrationScope = 'COMPANY_WIDE' | 'DEPARTMENT' | 'JOB_FAMILY' | 'SPECIFIC_JOB';
+export type CalibrationStatus = 'DRAFT' | 'TESTING' | 'VALIDATED' | 'ACTIVE' | 'ARCHIVED';
+
+export interface ScoreCalibration {
+  id: string;
+  companyId: string;
+  createdBy: string;
+  calibrationName: string;
+  description?: string;
+  scope: CalibrationScope;
+  jobFamilies: string[];
+  departments: string[];
+  jobIds: string[];
+  profileScoreWeights?: Record<string, number>;
+  jobFitWeights?: Record<string, number>;
+  cultureFitWeights?: Record<string, number>;
+  technicalWeights?: Record<string, number>;
+  minimumThresholds?: Record<string, number>;
+  knockoutCriteria?: Record<string, unknown>;
+  bonusCriteria?: Record<string, unknown>;
+  customRules?: unknown[];
+  skillPriorities?: Record<string, number>;
+  experienceWeighting?: Record<string, number>;
+  benchmarkSource?: string;
+  benchmarkData?: Record<string, unknown>;
+  validationStatus: CalibrationStatus;
+  testResults?: Record<string, unknown>;
+  validatedBy?: string;
+  validatedAt?: string;
+  candidatesScored: number;
+  hireCorrelation?: number;
+  retentionCorrelation?: number;
+  performanceCorrelation?: number;
+  isABTest: boolean;
+  controlCalibrationId?: string;
+  testStartDate?: string;
+  testEndDate?: string;
+  version: number;
+  previousVersionId?: string;
+  changeLog?: Record<string, unknown>;
+  isActive: boolean;
+  activatedAt?: string;
+  deactivatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalibrationTestResults {
+  calibrationId: string;
+  sampleSize: number;
+  results: {
+    avgScoreChange: number;
+    candidatesAffected: number;
+    scoresIncreased: number;
+    scoresDecreased: number;
+    thresholdImpact: {
+      wouldPass: number;
+      wouldFail: number;
+      noChange: number;
+    };
+  };
+  comparison: {
+    currentCalibration: { avgScore: number; passRate: number };
+    newCalibration: { avgScore: number; passRate: number };
+  };
+  recommendations: string[];
+}
+
+export interface CalibrationPerformance {
+  calibrationId: string;
+  period: string;
+  metrics: {
+    candidatesScored: number;
+    averageScore: number;
+    hireRate: number;
+    offerAcceptRate: number;
+  };
+  correlations: {
+    hireSuccess: { correlation: number; significance: string };
+    retention: { correlation: number; significance: string };
+    performance: { correlation: number; significance: string };
+  };
+  scoreDistribution: Record<string, number>;
+  hiringOutcomes: Record<string, { avgScore: number; successRate: number }>;
+  recommendations: string[];
+}

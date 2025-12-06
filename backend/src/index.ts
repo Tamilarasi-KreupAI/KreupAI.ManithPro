@@ -25,6 +25,7 @@ import assessmentsRoutes from './routes/assessments.routes';
 import batch7AssessmentsRoutes from './routes/batch7Assessments.routes';
 import batch8ScoringRoutes from './routes/batch8Scoring.routes';
 import batch9AdvancedScoringRoutes from './routes/batch9AdvancedScoring.routes';
+import batch10ExtendedScoringRoutes from './routes/batch10ExtendedScoring.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -76,6 +77,7 @@ app.get('/', (req, res) => {
       batch7Assessments: '/api/batch7-assessments',
       batch8Scoring: '/api/batch8-scoring',
       batch9AdvancedScoring: '/api/batch9-advanced-scoring',
+      batch10ExtendedScoring: '/api/batch10-extended-scoring',
     },
   });
 });
@@ -102,6 +104,7 @@ app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/batch7-assessments', batch7AssessmentsRoutes);
 app.use('/api/batch8-scoring', batch8ScoringRoutes);
 app.use('/api/batch9-advanced-scoring', batch9AdvancedScoringRoutes);
+app.use('/api/batch10-extended-scoring', batch10ExtendedScoringRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
