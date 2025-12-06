@@ -3105,3 +3105,457 @@ export interface JobFitScore {
   job?: Partial<Job>;
   user?: Partial<User>;
 }
+
+// ============================================
+// BATCH 9: ADVANCED CANDIDATE SCORING (2.1.3 - 2.1.7)
+// ============================================
+
+// 2.1.3 - Culture Fit Analysis
+export type CultureFitLevel = 'STRONG_FIT' | 'GOOD_FIT' | 'MODERATE_FIT' | 'POTENTIAL_MISMATCH' | 'POOR_FIT';
+export type CollaborationStyle = 'HIGHLY_COLLABORATIVE' | 'BALANCED' | 'INDEPENDENT';
+export type CommunicationStyleType = 'FORMAL' | 'CASUAL' | 'ASYNC_FIRST' | 'MEETING_HEAVY';
+export type DecisionMakingStyle = 'AUTONOMOUS' | 'CONSULTATIVE' | 'CONSENSUS';
+export type FeedbackPreference = 'DIRECT' | 'SUPPORTIVE' | 'STRUCTURED';
+export type RemotePreference = 'FULL_REMOTE' | 'HYBRID' | 'IN_OFFICE' | 'FLEXIBLE';
+export type WorkHoursFlexibility = 'STRICT_SCHEDULE' | 'FLEXIBLE' | 'RESULTS_ONLY';
+export type ToleranceLevel = 'LOW' | 'MODERATE' | 'HIGH';
+export type TeamSizePreference = 'SMALL' | 'MEDIUM' | 'LARGE' | 'FLEXIBLE';
+export type LeadershipStyleType = 'DIRECTIVE' | 'COACHING' | 'DELEGATING' | 'SUPPORTIVE';
+export type ConflictResolutionStyle = 'AVOIDANT' | 'ACCOMMODATING' | 'COMPETITIVE' | 'COLLABORATIVE' | 'COMPROMISING';
+export type TeamRoleArchetype = 'DRIVER' | 'ANALYST' | 'COLLABORATOR' | 'VISIONARY';
+export type CompanySize = 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+export type RiskToleranceLevel = 'LOW' | 'MODERATE' | 'HIGH';
+
+export interface CultureFitAnalysis {
+  id: string;
+  userId: string;
+  profileId: string;
+  companyId?: string;
+  jobId?: string;
+  overallCultureScore: number;
+  fitLevel: CultureFitLevel;
+  workStyleAlignment: number;
+  collaborationStyle: CollaborationStyle;
+  communicationStyle: CommunicationStyleType;
+  decisionMaking: DecisionMakingStyle;
+  feedbackPreference: FeedbackPreference;
+  remotePreference: RemotePreference;
+  workHoursFlexibility: WorkHoursFlexibility;
+  meetingTolerance: ToleranceLevel;
+  focusTimeNeeds: ToleranceLevel;
+  valuesAlignment: number;
+  topValues: string[];
+  matchedValues?: Array<{
+    value: string;
+    weight: number;
+    alignment: number;
+  }>;
+  conflictingValues: string[];
+  teamSizePreference: TeamSizePreference;
+  leadershipStyle: LeadershipStyleType;
+  conflictResolution: ConflictResolutionStyle;
+  teamRoleArchetype: TeamRoleArchetype;
+  primaryMotivators: string[];
+  careerPriorities?: Record<string, number>;
+  workLifeBalance: number;
+  preferredCompanySize: CompanySize;
+  preferredIndustries: string[];
+  startupReadiness: number;
+  corporateReadiness: number;
+  changeAdaptability: number;
+  ambiguityTolerance: number;
+  riskTolerance: RiskToleranceLevel;
+  strengthFactors?: Array<{
+    factor: string;
+    description: string;
+    impact: string;
+  }>;
+  concernFactors?: Array<{
+    factor: string;
+    description: string;
+    recommendation: string;
+  }>;
+  recommendations: string[];
+  fitSummary?: string;
+  assessmentResponses?: Record<string, unknown>;
+  inferredFromProfile?: Record<string, unknown>;
+  behavioralSignals?: Record<string, unknown>;
+  scoringVersion: string;
+  lastAnalyzedAt: string;
+  confidence: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 2.1.4 - Growth Potential Score
+export type GrowthTier = 'HIGH_POTENTIAL' | 'STRONG_GROWTH' | 'STEADY_GROWTH' | 'LIMITED_GROWTH';
+export type CareerMomentum = 'ACCELERATING' | 'STEADY' | 'PLATEAUED' | 'DECLINING';
+export type TechAdoptionSpeed = 'EARLY_ADOPTER' | 'EARLY_MAJORITY' | 'LATE_MAJORITY' | 'LAGGARD';
+export type SkillShape = 'T_SHAPED' | 'I_SHAPED' | 'GENERALIST' | 'SPECIALIST';
+export type EducationRecency = 'RECENT' | 'ONGOING' | 'ESTABLISHED' | 'DATED';
+
+export interface GrowthPotentialScore {
+  id: string;
+  userId: string;
+  profileId: string;
+  overallGrowthScore: number;
+  growthTier: GrowthTier;
+  learningAgility: number;
+  skillAcquisitionRate: number;
+  knowledgeRetention: number;
+  adaptabilityScore: number;
+  careerProgressionRate: number;
+  promotionHistory?: Array<{
+    fromRole: string;
+    toRole: string;
+    timespan: string;
+    company: string;
+  }>;
+  roleComplexityGrowth: number;
+  responsibilityExpansion: number;
+  careerMomentum: CareerMomentum;
+  skillGrowthVelocity: number;
+  techAdoptionSpeed: TechAdoptionSpeed;
+  breadthVsDepth: SkillShape;
+  emergingSkills: string[];
+  continuousLearning: number;
+  recentCertifications: number;
+  educationRecency: EducationRecency;
+  learningInvestment: number;
+  leadershipPotential: number;
+  managementExperience?: {
+    directReports?: number;
+    teams?: number;
+    projects?: number;
+  };
+  mentorshipActivities: number;
+  initiativeTaking: number;
+  innovationScore: number;
+  impactEvidence?: Array<{
+    project: string;
+    impact: string;
+    metrics?: Record<string, unknown>;
+  }>;
+  problemSolvingAbility: number;
+  creativeThinking: number;
+  achievementDensity: number;
+  recognitionFrequency: number;
+  overachievementSignals?: Array<{
+    signal: string;
+    frequency: number;
+  }>;
+  predictedGrowthPath?: {
+    '1yr': { role: string; probability: number };
+    '3yr': { role: string; probability: number };
+    '5yr': { role: string; probability: number };
+  };
+  suggestedRoles: string[];
+  developmentAreas: string[];
+  ceilingEstimate?: string;
+  growthDrivers?: Array<{
+    factor: string;
+    impact: string;
+  }>;
+  growthLimiters?: Array<{
+    factor: string;
+    impact: string;
+  }>;
+  recommendations: string[];
+  potentialSummary?: string;
+  linkedinActivity?: Record<string, unknown>;
+  githubActivity?: Record<string, unknown>;
+  learningPlatformData?: Record<string, unknown>;
+  scoringVersion: string;
+  lastScoredAt: string;
+  confidence: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 2.1.5 - Technical Depth Score
+export type TechnicalTier = 'EXPERT' | 'SENIOR' | 'MID_LEVEL' | 'JUNIOR' | 'ENTRY';
+export type CodeComplexityLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH';
+
+export interface TechnicalDepthScore {
+  id: string;
+  userId: string;
+  profileId: string;
+  overallTechnicalScore: number;
+  technicalTier: TechnicalTier;
+  codeQualityScore: number;
+  codeComplexityHandled: CodeComplexityLevel;
+  codingPatterns?: string[];
+  bestPracticesScore: number;
+  testingPractices: number;
+  githubScore?: number;
+  totalContributions?: number;
+  consistencyScore?: number;
+  repositoryQuality?: number;
+  openSourceImpact?: {
+    projects?: number;
+    contributions?: number;
+    maintainer?: boolean;
+    stars?: number;
+  };
+  languageProficiency?: Record<string, {
+    loc?: number;
+    projects?: number;
+    score: number;
+  }>;
+  stackOverflowScore?: number;
+  reputation?: number;
+  answerQuality?: number;
+  topTags: string[];
+  acceptedAnswerRate?: number;
+  helpfulnessScore?: number;
+  projectComplexityScore: number;
+  architectureExperience?: Record<string, {
+    count: number;
+    examples?: string[];
+  }>;
+  systemDesignCapability: number;
+  scalabilityExperience?: {
+    maxUsers?: string;
+    maxRPS?: string;
+    databases?: string[];
+  };
+  primaryStack: string[];
+  stackDepth?: Record<string, string>;
+  stackBreadth: number;
+  modernTechAdoption: number;
+  domainExpertise?: Record<string, {
+    level: string;
+    years: number;
+    evidence?: string[];
+  }>;
+  specializations: string[];
+  industryExperience?: string[];
+  algorithmProficiency?: number;
+  dataStructureSkills?: number;
+  debuggingAbility: number;
+  optimizationSkills?: number;
+  technicalLeadership: number;
+  architectureDecisions?: Array<{
+    decision: string;
+    impact: string;
+  }>;
+  mentorshipEvidence?: {
+    juniorsMentored?: number;
+    codeReviews?: number;
+  };
+  codeReviewActivity?: number;
+  relevantCertifications?: Record<string, {
+    issuer: string;
+    date: string;
+    level?: string;
+  }>;
+  certificationScore: number;
+  technicalStrengths: string[];
+  technicalGaps: string[];
+  recommendations: string[];
+  technicalSummary?: string;
+  marketPercentile?: number;
+  similarProfiles?: number;
+  analyzedRepos?: Record<string, unknown>;
+  analyzedProjects?: Record<string, unknown>;
+  lastGithubSync?: string;
+  lastStackOverflowSync?: string;
+  scoringVersion: string;
+  lastScoredAt: string;
+  confidence: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 2.1.6 - Communication Score
+export type CommunicationTier = 'EXCEPTIONAL' | 'STRONG' | 'PROFICIENT' | 'DEVELOPING' | 'NEEDS_WORK';
+export type VocabularyLevel = 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+
+export interface CommunicationScore {
+  id: string;
+  userId: string;
+  profileId: string;
+  overallCommScore: number;
+  communicationTier: CommunicationTier;
+  writtenScore: number;
+  writingClarity: number;
+  writingConciseness: number;
+  grammarAccuracy: number;
+  professionalTone: number;
+  structureOrganization: number;
+  writingSamples?: Array<{
+    source: string;
+    type: string;
+    score: number;
+    analysis?: string;
+  }>;
+  vocabularyLevel: VocabularyLevel;
+  technicalWriting: number;
+  persuasiveWriting: number;
+  verbalScore?: number;
+  articulationClarity?: number;
+  responseStructure?: number;
+  activeListening?: number;
+  questionHandling?: number;
+  interviewCommunication?: {
+    averageScore?: number;
+    interviews?: number;
+    feedback?: string[];
+  };
+  presentationSkills?: number;
+  explanationAbility: number;
+  technicalExplanation: number;
+  emailProfessionalism?: number;
+  responsiveness: number;
+  followUpQuality?: number;
+  negotiationSkills?: number;
+  languageProficiencies?: Record<string, {
+    level: string;
+    certified?: boolean;
+  }>;
+  primaryLanguage: string;
+  crossCulturalAwareness?: number;
+  collaborationComm: number;
+  feedbackDelivery?: number;
+  feedbackReception?: number;
+  conflictCommunication?: number;
+  profileWritingQuality: number;
+  projectDescriptions: number;
+  experienceArticulation: number;
+  publicSpeaking?: number;
+  contentCreation?: number;
+  socialMediaProfessionalism?: number;
+  communicationStrengths: string[];
+  communicationGaps: string[];
+  developmentAreas: string[];
+  recommendations: string[];
+  commSummary?: string;
+  analyzedDocuments?: Record<string, unknown>;
+  interviewTranscripts?: Record<string, unknown>;
+  emailSamples?: number;
+  scoringVersion: string;
+  lastScoredAt: string;
+  confidence: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 2.1.7 - Reliability Score
+export type ReliabilityTier = 'HIGHLY_RELIABLE' | 'RELIABLE' | 'MODERATELY_RELIABLE' | 'NEEDS_MONITORING' | 'UNRELIABLE';
+export type JobHoppingRisk = 'LOW' | 'MODERATE' | 'HIGH';
+export type EmployerRelationship = 'EXCELLENT' | 'GOOD' | 'MIXED' | 'CONCERNING';
+export type BackgroundCheckStatus = 'PASSED' | 'PENDING' | 'ISSUES' | 'NOT_STARTED';
+export type ReliabilityTrend = 'IMPROVING' | 'STABLE' | 'DECLINING';
+export type ConfidenceLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH';
+
+export interface ReliabilityScore {
+  id: string;
+  userId: string;
+  profileId: string;
+  overallReliabilityScore: number;
+  reliabilityTier: ReliabilityTier;
+  applicationCompletion: number;
+  profileCompleteness: number;
+  documentSubmission: number;
+  deadlineAdherence: number;
+  responseRate: number;
+  averageResponseTime: number;
+  responseTimeConsistency: number;
+  responseQuality: number;
+  interviewAttendance: number;
+  punctualityScore: number;
+  rescheduleRate: number;
+  noShowCount: number;
+  lastMinuteCancellations: number;
+  engagementConsistency: number;
+  followThroughRate: number;
+  processAdherence: number;
+  loginConsistency?: number;
+  profileUpdateFrequency?: number;
+  applicationActivity?: {
+    applied?: number;
+    withdrawn?: number;
+    ghosted?: number;
+    completed?: number;
+  };
+  applicationHistory?: {
+    totalApplications?: number;
+    completionRate?: number;
+    averageEngagementDays?: number;
+  };
+  withdrawalPatterns?: {
+    reason?: string;
+    advance_notice?: boolean;
+  };
+  ghostingIncidents: number;
+  longTermCommitment: number;
+  jobHoppingRisk: JobHoppingRisk;
+  averageTenure?: number;
+  careerStability: number;
+  referenceAvailability?: number;
+  referenceQuality?: number;
+  employerRelationships?: EmployerRelationship;
+  verificationCompliance: number;
+  documentAuthenticity?: number;
+  backgroundCheckStatus?: BackgroundCheckStatus;
+  reliabilityRisks?: Array<{
+    risk: string;
+    severity: string;
+    evidence?: string;
+  }>;
+  redFlags: string[];
+  greenFlags: string[];
+  reliabilityDrivers?: Array<{
+    factor: string;
+    impact: string;
+  }>;
+  concernAreas: string[];
+  recommendations: string[];
+  reliabilitySummary?: string;
+  reliabilityTrend: ReliabilityTrend;
+  trendData?: Record<string, number>;
+  dataPoints: number;
+  confidenceLevel: ConfidenceLevel;
+  scoringVersion: string;
+  lastScoredAt: string;
+  confidence: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Advanced Scoring Dashboard
+export interface AdvancedScoresSummary {
+  userId: string;
+  lastUpdated: string;
+  scores: {
+    cultureFit: { score: number; tier: string; confidence: number };
+    growthPotential: { score: number; tier: string; confidence: number };
+    technicalDepth: { score: number; tier: string; confidence: number };
+    communication: { score: number; tier: string; confidence: number };
+    reliability: { score: number; tier: string; confidence: number };
+  };
+  overallAdvancedScore: number;
+  marketPercentile: number;
+  insights: string[];
+  topStrengths: string[];
+  developmentAreas: string[];
+}
+
+export interface CandidateScoringDashboard {
+  candidateId: string;
+  candidateName: string;
+  lastUpdated: string;
+  scores: {
+    cultureFit: { score: number; tier: string };
+    growthPotential: { score: number; tier: string };
+    technicalDepth: { score: number; tier: string };
+    communication: { score: number; tier: string };
+    reliability: { score: number; tier: string };
+  };
+  overallScore: number;
+  recommendation: string;
+  interviewFocus: string[];
+  greenFlags: string[];
+  yellowFlags: string[];
+  redFlags: string[];
+}

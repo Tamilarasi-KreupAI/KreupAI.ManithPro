@@ -24,6 +24,7 @@ import extendedVerificationRoutes from './routes/extendedVerification.routes';
 import assessmentsRoutes from './routes/assessments.routes';
 import batch7AssessmentsRoutes from './routes/batch7Assessments.routes';
 import batch8ScoringRoutes from './routes/batch8Scoring.routes';
+import batch9AdvancedScoringRoutes from './routes/batch9AdvancedScoring.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -74,6 +75,7 @@ app.get('/', (req, res) => {
       assessments: '/api/assessments',
       batch7Assessments: '/api/batch7-assessments',
       batch8Scoring: '/api/batch8-scoring',
+      batch9AdvancedScoring: '/api/batch9-advanced-scoring',
     },
   });
 });
@@ -99,6 +101,7 @@ app.use('/api/extended-verification', extendedVerificationRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/batch7-assessments', batch7AssessmentsRoutes);
 app.use('/api/batch8-scoring', batch8ScoringRoutes);
+app.use('/api/batch9-advanced-scoring', batch9AdvancedScoringRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

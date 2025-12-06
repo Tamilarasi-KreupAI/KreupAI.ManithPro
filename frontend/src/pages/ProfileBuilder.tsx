@@ -16,8 +16,9 @@ import Batch4IntegrationsHub from '../components/profile/Batch4IntegrationsHub';
 import VerificationHub from '../components/profile/VerificationHub';
 import AdvancedAssessmentsHub from '../components/profile/AdvancedAssessmentsHub';
 import AIScoringHub from '../components/profile/AIScoringHub';
+import AdvancedScoringHub from '../components/profile/AdvancedScoringHub';
 
-type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations' | 'more-integrations' | 'developer-integrations' | 'verification' | 'assessments' | 'ai-scoring';
+type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations' | 'more-integrations' | 'developer-integrations' | 'verification' | 'assessments' | 'ai-scoring' | 'advanced-scoring';
 
 const ProfileBuilder: React.FC = () => {
   const { user } = useAuth();
@@ -67,6 +68,7 @@ const ProfileBuilder: React.FC = () => {
     { id: 'verification' as ProfileSection, label: 'Verification', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
     { id: 'assessments' as ProfileSection, label: 'Assessments', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
     { id: 'ai-scoring' as ProfileSection, label: 'AI Scoring', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+    { id: 'advanced-scoring' as ProfileSection, label: 'Advanced Scores', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
     { id: 'versions' as ProfileSection, label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
   ];
 
@@ -385,6 +387,10 @@ const ProfileBuilder: React.FC = () => {
 
             {activeSection === 'ai-scoring' && (
               <AIScoringHub />
+            )}
+
+            {activeSection === 'advanced-scoring' && (
+              <AdvancedScoringHub />
             )}
 
             {activeSection === 'versions' && (
