@@ -14,6 +14,9 @@ import messageRoutes from './routes/message.routes';
 import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
 import candidateProfileRoutes from './routes/candidateProfile.routes';
+import achievementsRoutes from './routes/achievements.routes';
+import profileVersioningRoutes from './routes/profileVersioning.routes';
+import integrationsRoutes from './routes/integrations.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -54,6 +57,9 @@ app.get('/', (req, res) => {
       notifications: '/api/notifications',
       admin: '/api/admin',
       candidateProfile: '/api/candidate-profile',
+      achievements: '/api/achievements',
+      profileVersions: '/api/profile-versions',
+      integrations: '/api/integrations',
     },
   });
 });
@@ -69,6 +75,9 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/candidate-profile', candidateProfileRoutes);
+app.use('/api/achievements', achievementsRoutes);
+app.use('/api/profile-versions', profileVersioningRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

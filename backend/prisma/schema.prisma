@@ -654,6 +654,9 @@ model CandidateProfile {
   skills                CandidateSkill[]
   projects              Project[]
   achievements          Achievement[]
+  versions              ProfileVersion[]
+  githubProfile         GithubProfile?
+  linkedInProfile       LinkedInProfile?
 
   @@index([userId])
   @@index([completenessScore])
@@ -1013,4 +1016,295 @@ model Achievement {
   @@index([type])
   @@index([isCompleted])
   @@map("achievements")
+}
+
+// ============================================
+// PROFILE VERSIONING (Feature 1.1.8)
+// ============================================
+
+model ProfileVersion {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Version Information
+  versionNumber         Int
+  versionLabel          String?             // Optional label like "After promotion"
+
+  // Snapshot of profile data at this version
+  profileSnapshot       Json                // Full profile data as JSON
+
+  // Changes from previous version
+  changes               Json?               // Array of {field, oldValue, newValue}
+  changeSummary         String?             // AI-generated summary of changes
+
+  // Metadata
+  createdBy             String?             // "user", "system", "import"
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, versionNumber])
+  @@index([profileId])
+  @@index([createdAt])
+  @@map("profile_versions")
+}
+
+// ============================================
+// EXTERNAL PLATFORM INTEGRATIONS (Features 1.2.x)
+// ============================================
+
+enum IntegrationStatus {
+  PENDING
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  EXPIRED
+}
+
+// 1.2.1 - GitHub Integration
+model GithubProfile {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // GitHub Account Info
+  githubId              String              @unique
+  username              String
+  displayName           String?
+  avatarUrl             String?
+  profileUrl            String
+  bio                   String?
+  company               String?
+  location              String?
+  blog                  String?
+  email                 String?
+
+  // Statistics
+  publicRepos           Int                 @default(0)
+  privateRepos          Int                 @default(0)
+  totalStars            Int                 @default(0)
+  followers             Int                 @default(0)
+  following             Int                 @default(0)
+  gists                 Int                 @default(0)
+
+  // Contribution Data
+  totalContributions    Int                 @default(0)
+  contributionsLastYear Int                 @default(0)
+  longestStreak         Int                 @default(0)
+  currentStreak         Int                 @default(0)
+
+  // Languages & Skills
+  topLanguages          Json?               // Array of {name, percentage, bytes}
+  pinnedRepos           Json?               // Array of pinned repository data
+
+  // Activity
+  recentActivity        Json?               // Recent commits, PRs, issues
+  contributionGraph     Json?               // Contribution data for heatmap
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?             // Encrypted OAuth token
+  refreshToken          String?             // Encrypted refresh token
+  tokenExpiresAt        DateTime?
+  scopes                String[]            @default([])
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  repositories          GithubRepository[]
+
+  @@index([profileId])
+  @@index([username])
+  @@index([status])
+  @@map("github_profiles")
+}
+
+model GithubRepository {
+  id                    String              @id @default(uuid())
+  githubProfileId       String
+
+  // Repository Info
+  repoId                String              // GitHub repo ID
+  name                  String
+  fullName              String
+  description           String?
+  language              String?
+  languages             Json?               // All languages with bytes
+
+  // URLs
+  htmlUrl               String
+  cloneUrl              String?
+  homepage              String?
+
+  // Stats
+  stars                 Int                 @default(0)
+  forks                 Int                 @default(0)
+  watchers              Int                 @default(0)
+  openIssues            Int                 @default(0)
+  size                  Int                 @default(0)
+
+  // Features
+  hasWiki               Boolean             @default(false)
+  hasPages              Boolean             @default(false)
+  hasProjects           Boolean             @default(false)
+  hasDiscussions        Boolean             @default(false)
+
+  // Topics & Categories
+  topics                String[]            @default([])
+  isForked              Boolean             @default(false)
+  isFork                Boolean             @default(false)
+  isArchived            Boolean             @default(false)
+  isPrivate             Boolean             @default(false)
+
+  // Candidate's Contribution
+  contributionCount     Int                 @default(0)
+  lastContributionAt    DateTime?
+  role                  String?             // "owner", "maintainer", "contributor"
+
+  // Display Settings
+  isShowcased           Boolean             @default(false)
+  isPinned              Boolean             @default(false)
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime
+  updatedAt             DateTime
+  pushedAt              DateTime?
+
+  // Relations
+  githubProfile         GithubProfile       @relation(fields: [githubProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([githubProfileId, repoId])
+  @@index([githubProfileId])
+  @@index([language])
+  @@index([stars])
+  @@index([isShowcased])
+  @@map("github_repositories")
+}
+
+// 1.2.2 - LinkedIn Integration
+model LinkedInProfile {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // LinkedIn Account Info
+  linkedInId            String              @unique
+  vanityName            String?             // Custom URL name
+  profileUrl            String
+
+  // Basic Info
+  firstName             String?
+  lastName              String?
+  headline              String?
+  summary               String?
+  profilePicture        String?
+  backgroundImage       String?
+
+  // Location
+  location              String?
+  country               String?
+
+  // Current Position
+  currentCompany        String?
+  currentTitle          String?
+  industry              String?
+
+  // Network Stats
+  connections           Int                 @default(0)
+  followersCount        Int                 @default(0)
+
+  // Imported Data
+  positions             Json?               // Array of work experiences
+  education             Json?               // Array of education entries
+  certifications        Json?               // Array of certifications
+  skills                Json?               // Array of skills with endorsement count
+  recommendations       Json?               // Array of received recommendations
+  honors                Json?               // Awards and honors
+  publications          Json?               // Publications
+  patents               Json?               // Patents
+  courses               Json?               // Courses taken
+  projects              Json?               // LinkedIn projects
+  volunteerExperiences  Json?               // Volunteer work
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?             // Encrypted OAuth token
+  refreshToken          String?
+  tokenExpiresAt        DateTime?
+  scopes                String[]            @default([])
+
+  // Sync Settings
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Import Settings
+  importWorkHistory     Boolean             @default(true)
+  importEducation       Boolean             @default(true)
+  importSkills          Boolean             @default(true)
+  importCertifications  Boolean             @default(true)
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([linkedInId])
+  @@index([status])
+  @@map("linkedin_profiles")
+}
+
+// ============================================
+// ACHIEVEMENT DEFINITIONS (Feature 1.1.6)
+// ============================================
+
+model AchievementDefinition {
+  id                    String              @id @default(uuid())
+
+  // Achievement Info
+  name                  String              @unique
+  title                 String
+  description           String
+
+  // Category & Type
+  category              String              // "profile", "activity", "skill", "social", "milestone"
+  type                  String              // "one_time", "progressive", "repeatable"
+
+  // Requirements
+  criteria              Json                // Criteria for earning the achievement
+  targetValue           Int                 @default(1)
+
+  // Rewards
+  points                Int                 @default(10)
+  badgeIcon             String?
+  badgeColor            String?
+  tier                  String?             // "bronze", "silver", "gold", "platinum"
+
+  // Display
+  isPublic              Boolean             @default(true)
+  isActive              Boolean             @default(true)
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("achievement_definitions")
 }

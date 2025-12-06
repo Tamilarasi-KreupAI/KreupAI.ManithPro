@@ -8,8 +8,11 @@ import ExperienceTimeline from '../components/profile/ExperienceTimeline';
 import EducationHub from '../components/profile/EducationHub';
 import SkillsMatrix from '../components/profile/SkillsMatrix';
 import ProjectPortfolio from '../components/profile/ProjectPortfolio';
+import AchievementBadges from '../components/profile/AchievementBadges';
+import ProfileVersionHistory from '../components/profile/ProfileVersionHistory';
+import IntegrationsHub from '../components/profile/IntegrationsHub';
 
-type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects';
+type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations';
 
 const ProfileBuilder: React.FC = () => {
   const { user } = useAuth();
@@ -52,6 +55,9 @@ const ProfileBuilder: React.FC = () => {
     { id: 'education' as ProfileSection, label: 'Education', icon: 'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z' },
     { id: 'skills' as ProfileSection, label: 'Skills', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
     { id: 'projects' as ProfileSection, label: 'Projects', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+    { id: 'achievements' as ProfileSection, label: 'Achievements', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
+    { id: 'integrations' as ProfileSection, label: 'Integrations', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
+    { id: 'versions' as ProfileSection, label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
   ];
 
   if (loading) {
@@ -341,6 +347,18 @@ const ProfileBuilder: React.FC = () => {
 
             {activeSection === 'projects' && (
               <ProjectPortfolio onUpdate={loadProfile} />
+            )}
+
+            {activeSection === 'achievements' && (
+              <AchievementBadges />
+            )}
+
+            {activeSection === 'integrations' && (
+              <IntegrationsHub />
+            )}
+
+            {activeSection === 'versions' && (
+              <ProfileVersionHistory />
             )}
           </div>
         </div>

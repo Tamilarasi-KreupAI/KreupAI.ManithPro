@@ -592,3 +592,283 @@ export interface PortfolioSummary {
     technologies: string[];
   };
 }
+
+// ============================================
+// BATCH 2: ACHIEVEMENTS, VERSIONING, INTEGRATIONS
+// ============================================
+
+// Integration Status
+export type IntegrationStatus = 'PENDING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR' | 'EXPIRED';
+
+// 1.1.6 - Achievement Badges System
+export interface AchievementDefinition {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  category: 'profile' | 'activity' | 'skill' | 'social' | 'milestone';
+  type: 'one_time' | 'progressive' | 'repeatable';
+  criteria: Record<string, any>;
+  targetValue: number;
+  points: number;
+  badgeIcon?: string;
+  badgeColor?: string;
+  tier?: 'bronze' | 'silver' | 'gold' | 'platinum';
+  isPublic: boolean;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Achievement {
+  id: string;
+  profileId: string;
+  title: string;
+  description?: string;
+  type: string;
+  category: string;
+  badgeIcon?: string;
+  badgeColor?: string;
+  points: number;
+  currentProgress: number;
+  targetProgress: number;
+  isCompleted: boolean;
+  earnedAt?: string;
+  createdAt: string;
+}
+
+export interface AchievementStats {
+  totalPoints: number;
+  maxPossiblePoints: number;
+  progressPercentage: number;
+  earnedCount: number;
+  totalAvailable: number;
+  byCategory: Record<string, { total: number; earned: number; points: number }>;
+  tierDistribution: {
+    platinum: number;
+    gold: number;
+    silver: number;
+    bronze: number;
+  };
+  recentAchievements: Achievement[];
+}
+
+export interface AchievementLeaderboardEntry {
+  userId: string;
+  name: string;
+  headline?: string;
+  totalPoints: number;
+  achievementCount: number;
+}
+
+// 1.1.8 - Profile Versioning
+export interface ProfileVersion {
+  id: string;
+  profileId: string;
+  versionNumber: number;
+  versionLabel?: string;
+  profileSnapshot: Record<string, any>;
+  changes?: {
+    field: string;
+    oldValue: any;
+    newValue: any;
+    type: 'add' | 'update' | 'remove';
+  }[];
+  changeSummary?: string;
+  createdBy?: 'user' | 'system' | 'import';
+  createdAt: string;
+  isFirst?: boolean;
+  isLatest?: boolean;
+  changeCount?: number;
+}
+
+export interface VersionComparison {
+  version1: {
+    id: string;
+    versionNumber: number;
+    versionLabel?: string;
+    createdAt: string;
+  };
+  version2: {
+    id: string;
+    versionNumber: number;
+    versionLabel?: string;
+    createdAt: string;
+  };
+  changes: ProfileVersion['changes'];
+  summary: string;
+}
+
+// 1.2.1 - GitHub Integration
+export interface GithubProfile {
+  id: string;
+  profileId: string;
+  githubId: string;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  profileUrl: string;
+  bio?: string;
+  company?: string;
+  location?: string;
+  blog?: string;
+  email?: string;
+  publicRepos: number;
+  privateRepos: number;
+  totalStars: number;
+  followers: number;
+  following: number;
+  gists: number;
+  totalContributions: number;
+  contributionsLastYear: number;
+  longestStreak: number;
+  currentStreak: number;
+  topLanguages?: { name: string; percentage: number; bytes: number }[];
+  pinnedRepos?: GithubRepository[];
+  recentActivity?: any[];
+  contributionGraph?: any;
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  connectedAt: string;
+  updatedAt: string;
+  repositories?: GithubRepository[];
+}
+
+export interface GithubRepository {
+  id: string;
+  githubProfileId: string;
+  repoId: string;
+  name: string;
+  fullName: string;
+  description?: string;
+  language?: string;
+  languages?: { name: string; bytes: number }[];
+  htmlUrl: string;
+  cloneUrl?: string;
+  homepage?: string;
+  stars: number;
+  forks: number;
+  watchers: number;
+  openIssues: number;
+  size: number;
+  hasWiki: boolean;
+  hasPages: boolean;
+  hasProjects: boolean;
+  hasDiscussions: boolean;
+  topics: string[];
+  isForked: boolean;
+  isFork: boolean;
+  isArchived: boolean;
+  isPrivate: boolean;
+  contributionCount: number;
+  lastContributionAt?: string;
+  role?: 'owner' | 'maintainer' | 'contributor';
+  isShowcased: boolean;
+  isPinned: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  pushedAt?: string;
+}
+
+// 1.2.2 - LinkedIn Integration
+export interface LinkedInProfile {
+  id: string;
+  profileId: string;
+  linkedInId: string;
+  vanityName?: string;
+  profileUrl: string;
+  firstName?: string;
+  lastName?: string;
+  headline?: string;
+  summary?: string;
+  profilePicture?: string;
+  backgroundImage?: string;
+  location?: string;
+  country?: string;
+  currentCompany?: string;
+  currentTitle?: string;
+  industry?: string;
+  connections: number;
+  followersCount: number;
+  positions?: LinkedInPosition[];
+  education?: LinkedInEducation[];
+  certifications?: LinkedInCertification[];
+  skills?: LinkedInSkill[];
+  recommendations?: any[];
+  honors?: any[];
+  publications?: any[];
+  patents?: any[];
+  courses?: any[];
+  projects?: any[];
+  volunteerExperiences?: any[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  importWorkHistory: boolean;
+  importEducation: boolean;
+  importSkills: boolean;
+  importCertifications: boolean;
+  isVerified: boolean;
+  verifiedAt?: string;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface LinkedInPosition {
+  title: string;
+  company: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  isCurrent?: boolean;
+  description?: string;
+}
+
+export interface LinkedInEducation {
+  school: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate?: string;
+}
+
+export interface LinkedInCertification {
+  name: string;
+  issuingOrganization: string;
+  issueDate?: string;
+  expirationDate?: string;
+  credentialId?: string;
+  credentialUrl?: string;
+}
+
+export interface LinkedInSkill {
+  name: string;
+  endorsements: number;
+}
+
+// Integration Status Response
+export interface IntegrationStatusResponse {
+  github: {
+    connected: boolean;
+    id?: string;
+    username?: string;
+    status?: IntegrationStatus;
+    lastSyncAt?: string;
+    syncError?: string;
+  };
+  linkedin: {
+    connected: boolean;
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    status?: IntegrationStatus;
+    lastSyncAt?: string;
+    syncError?: string;
+    isVerified?: boolean;
+  };
+}
