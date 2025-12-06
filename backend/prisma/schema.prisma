@@ -678,6 +678,8 @@ model CandidateProfile {
   educationVerifications EducationVerification[]
   backgroundChecks      BackgroundCheck[]
   verifiedBadges        VerifiedBadge[]
+  // Batch 7: Advanced Assessments & External Integrations
+  externalAssessments   ExternalAssessment[]
 
   @@index([userId])
   @@index([completenessScore])
@@ -3034,4 +3036,615 @@ model QuizAttempt {
   @@index([userId])
   @@index([status])
   @@map("quiz_attempts")
+}
+
+// ============================================
+// BATCH 7: ADVANCED ASSESSMENTS (Features 1.4.3-1.4.7)
+// ============================================
+
+enum LiveCodingSessionStatus {
+  SCHEDULED
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ProjectSubmissionStatus {
+  ASSIGNED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  REVIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ExternalAssessmentProvider {
+  HACKERRANK
+  CODESIGNAL
+  LEETCODE
+  CODILITY
+  TESTGORILLA
+  TOGGL_HIRE
+  OTHER
+}
+
+enum SoftSkillCategory {
+  PERSONALITY
+  SITUATIONAL_JUDGMENT
+  EMOTIONAL_INTELLIGENCE
+  LEADERSHIP
+  TEAMWORK
+  COMMUNICATION
+  PROBLEM_SOLVING
+  ADAPTABILITY
+}
+
+enum LanguageTestType {
+  SPEAKING
+  WRITING
+  READING
+  LISTENING
+  COMPREHENSIVE
+}
+
+// 1.4.3 - Live Coding Environment
+model LiveCodingSession {
+  id                    String              @id @default(uuid())
+
+  // Session Info
+  title                 String
+  description           String?
+
+  // Participants
+  candidateId           String
+  interviewerId         String
+  additionalInterviewers String[]           @default([])
+
+  // Scheduling
+  scheduledAt           DateTime
+  duration              Int                 @default(60) // minutes
+  timezone              String              @default("UTC")
+  status                LiveCodingSessionStatus @default(SCHEDULED)
+
+  // Session Configuration
+  language              String              @default("javascript")
+  supportedLanguages    String[]            @default(["javascript", "python", "java"])
+  template              String?             // Starter code
+  problem               String?             // Problem statement
+  testCases             Json?               // Test cases for auto-checking
+
+  // Meeting Integration
+  meetingUrl            String?             // Zoom/Meet/Teams URL
+  meetingProvider       String?             // "zoom", "meet", "teams", "custom"
+  roomId                String?             @unique // For collaborative coding room
+
+  // Real-time Collaboration
+  currentCode           String?             // Latest code state
+  codeHistory           Json?               // Array of code snapshots with timestamps
+  chatHistory           Json?               // Array of chat messages
+  annotations           Json?               // Code annotations/comments
+
+  // Recording
+  isRecorded            Boolean             @default(false)
+  recordingUrl          String?
+  recordingConsent      Boolean             @default(false)
+
+  // Session Events
+  startedAt             DateTime?
+  endedAt               DateTime?
+  actualDuration        Int?                // Actual minutes
+
+  // Evaluation
+  interviewerNotes      String?
+  technicalScore        Int?                // 1-5
+  communicationScore    Int?                // 1-5
+  problemSolvingScore   Int?                // 1-5
+  overallScore          Int?                // 1-5
+  recommendation        String?             // "strong_yes", "yes", "maybe", "no", "strong_no"
+  feedback              String?
+
+  // Job Link
+  jobId                 String?
+  applicationId         String?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([candidateId])
+  @@index([interviewerId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("live_coding_sessions")
+}
+
+// 1.4.4 - Take-Home Project System
+model TakeHomeProject {
+  id                    String              @id @default(uuid())
+
+  // Project Definition
+  title                 String
+  slug                  String              @unique
+  description           String              // Full project description (markdown)
+  briefDescription      String?             // Short summary
+
+  // Requirements
+  requirements          String[]            @default([])
+  technicalRequirements String[]            @default([]) // Tech stack requirements
+  deliverables          String[]            @default([]) // What to submit
+  evaluationCriteria    Json?               // {criterion: weight} for scoring
+
+  // Difficulty & Category
+  difficulty            QuizDifficulty      @default(INTERMEDIATE)
+  category              String              // "frontend", "backend", "fullstack", "mobile", "data"
+  subcategory           String?
+  tags                  String[]            @default([])
+  estimatedHours        Int                 @default(8) // Estimated completion time
+
+  // Time Limits
+  deadlineDays          Int                 @default(7) // Days to complete
+  allowExtension        Boolean             @default(true)
+  maxExtensionDays      Int                 @default(3)
+
+  // Submission Settings
+  maxSubmissions        Int                 @default(1)
+  allowResubmission     Boolean             @default(false)
+  submissionFormat      String[]            @default(["github", "zip"]) // Accepted formats
+
+  // Resources
+  starterRepoUrl        String?             // GitHub template repo
+  resourceLinks         String[]            @default([])
+  supportContact        String?             // Email for questions
+
+  // Status
+  status                ChallengeStatus     @default(DRAFT)
+  publishedAt           DateTime?
+
+  // Statistics
+  totalAssignments      Int                 @default(0)
+  totalSubmissions      Int                 @default(0)
+  avgCompletionHours    Float?
+  avgScore              Float?
+
+  // Creator
+  createdById           String?
+  createdByName         String?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  submissions           ProjectSubmission[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([status])
+  @@map("take_home_projects")
+}
+
+model ProjectSubmission {
+  id                    String              @id @default(uuid())
+  projectId             String
+  candidateId           String
+
+  // Assignment Info
+  assignedAt            DateTime            @default(now())
+  assignedBy            String?             // Recruiter who assigned
+  deadline              DateTime
+  extendedDeadline      DateTime?
+  extensionReason       String?
+
+  // Submission Details
+  status                ProjectSubmissionStatus @default(ASSIGNED)
+  submissionNumber      Int                 @default(1)
+
+  // Submission Content
+  githubUrl             String?
+  zipFileUrl            String?
+  livePreviewUrl        String?
+  submissionNotes       String?
+  technologiesUsed      String[]            @default([])
+
+  // Time Tracking
+  startedAt             DateTime?
+  submittedAt           DateTime?
+  timeSpentHours        Float?              // Self-reported
+
+  // Review
+  reviewerId            String?
+  reviewerName          String?
+  reviewStartedAt       DateTime?
+  reviewCompletedAt     DateTime?
+
+  // Evaluation Scores
+  overallScore          Float?              // 0-100
+  codeQualityScore      Float?              // 0-100
+  functionalityScore    Float?              // 0-100
+  designScore           Float?              // 0-100
+  documentationScore    Float?              // 0-100
+  creativityScore       Float?              // 0-100
+  criteriaScores        Json?               // {criterion: score} based on project criteria
+
+  // Feedback
+  reviewFeedback        String?             // Detailed feedback
+  strengths             String[]            @default([])
+  improvements          String[]            @default([])
+  recommendation        String?             // "strong_yes", "yes", "maybe", "no"
+
+  // Plagiarism Check
+  plagiarismChecked     Boolean             @default(false)
+  plagiarismScore       Float?              // Similarity percentage
+  plagiarismReport      String?
+
+  // Job Link
+  jobId                 String?
+  applicationId         String?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  project               TakeHomeProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([candidateId])
+  @@index([status])
+  @@map("project_submissions")
+}
+
+// 1.4.5 - HackerRank/CodeSignal Integration
+model ExternalAssessment {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Provider Info
+  provider              ExternalAssessmentProvider
+  providerUserId        String?             // User ID on external platform
+  providerUsername      String?             // Username on platform
+
+  // Assessment Details
+  assessmentId          String              // External assessment ID
+  assessmentName        String
+  assessmentType        String?             // "coding", "sql", "frontend", "general"
+  assessmentUrl         String?             // Link to assessment/certificate
+
+  // Scores
+  score                 Float?              // Percentage or points
+  maxScore              Float?
+  percentile            Float?              // Percentile ranking
+  rank                  Int?                // Global/regional rank
+  level                 String?             // Platform-specific level (e.g., "Gold", "5 stars")
+
+  // Skill Breakdown
+  skillScores           Json?               // {skill: score}
+  badges                String[]            @default([])
+  certifications        String[]            @default([])
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  verificationMethod    String?             // "api", "screenshot", "certificate"
+  verificationData      Json?               // API response or verification details
+
+  // Assessment Dates
+  takenAt               DateTime?
+  expiresAt             DateTime?           // Some assessments expire
+  lastSyncedAt          DateTime?
+
+  // Import Status
+  importedAt            DateTime            @default(now())
+  importSource          String?             // "oauth", "manual", "api"
+  rawData               Json?               // Raw API response
+
+  // Display Settings
+  showOnProfile         Boolean             @default(true)
+  featuredScore         Boolean             @default(false)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, provider, assessmentId])
+  @@index([profileId])
+  @@index([provider])
+  @@map("external_assessments")
+}
+
+// 1.4.6 - Soft Skills Assessment
+model SoftSkillsAssessment {
+  id                    String              @id @default(uuid())
+
+  // Assessment Info
+  title                 String
+  slug                  String              @unique
+  description           String?
+  instructions          String?
+  category              SoftSkillCategory
+  subcategory           String?
+
+  // Assessment Configuration
+  questionCount         Int                 @default(0)
+  timeLimitMinutes      Int?                // null = no limit
+  isAdaptive            Boolean             @default(false) // Adaptive questioning
+
+  // Scoring
+  scoringMethod         String              @default("standard") // "standard", "ipsative", "normative"
+  resultType            String              @default("profile") // "profile", "score", "category"
+
+  // Status
+  status                ChallengeStatus     @default(DRAFT)
+  publishedAt           DateTime?
+
+  // Statistics
+  totalAttempts         Int                 @default(0)
+  avgCompletionMinutes  Float?
+
+  // Creator
+  createdById           String?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  questions             SoftSkillQuestion[]
+  attempts              SoftSkillAttempt[]
+
+  @@index([category])
+  @@index([status])
+  @@map("soft_skills_assessments")
+}
+
+model SoftSkillQuestion {
+  id                    String              @id @default(uuid())
+  assessmentId          String
+
+  // Question Info
+  questionNumber        Int
+  questionType          String              @default("likert") // "likert", "forced_choice", "scenario", "ranking"
+  questionText          String
+  scenario              String?             // For situational judgment questions
+
+  // Options
+  options               Json                // Array of {id, text, dimension?, weight?}
+  dimensions            String[]            @default([]) // Personality dimensions measured
+
+  // For ranking questions
+  itemsToRank           String[]            @default([])
+
+  // Scoring
+  scoringKey            Json?               // How to score each response
+  weight                Float               @default(1)
+
+  // Display
+  displayOrder          Int                 @default(0)
+  isRequired            Boolean             @default(true)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  assessment            SoftSkillsAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@map("soft_skill_questions")
+}
+
+model SoftSkillAttempt {
+  id                    String              @id @default(uuid())
+  assessmentId          String
+  userId                String
+
+  // Attempt Info
+  status                ChallengeSubmissionStatus @default(NOT_STARTED)
+  startedAt             DateTime            @default(now())
+  completedAt           DateTime?
+  timeSpentMinutes      Int?
+
+  // Responses
+  responses             Json                // Array of {questionId, response, timestamp}
+
+  // Results
+  dimensionScores       Json?               // {dimension: score}
+  traitProfile          Json?               // Personality/skill profile
+  overallProfile        String?             // Summary profile type
+
+  // Interpretation
+  interpretation        String?             // AI-generated interpretation
+  strengths             String[]            @default([])
+  developmentAreas      String[]            @default([])
+  recommendations       String[]            @default([])
+
+  // Validity Indicators
+  consistencyScore      Float?              // Response consistency check
+  socialDesirabilityScore Float?            // Detecting impression management
+  isValid               Boolean             @default(true)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  assessment            SoftSkillsAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([userId])
+  @@map("soft_skill_attempts")
+}
+
+// 1.4.7 - Language Proficiency Tests
+model LanguageProficiencyTest {
+  id                    String              @id @default(uuid())
+
+  // Test Info
+  title                 String
+  slug                  String              @unique
+  description           String?
+  language              String              // "english", "spanish", "mandarin", etc.
+  testType              LanguageTestType    @default(COMPREHENSIVE)
+
+  // Test Configuration
+  sections              Json                // Array of {type, questionCount, timeLimit}
+  totalQuestions        Int                 @default(0)
+  totalTimeMinutes      Int                 @default(60)
+
+  // Scoring
+  scoringScale          String              @default("cefr") // "cefr", "ielts", "toefl", "custom"
+  maxScore              Float               @default(100)
+  levelThresholds       Json?               // {level: minScore} e.g., {"A1": 0, "A2": 20, ...}
+
+  // Features
+  hasSpeaking           Boolean             @default(false)
+  hasWriting            Boolean             @default(false)
+  hasListening          Boolean             @default(false)
+  hasReading            Boolean             @default(true)
+  hasGrammar            Boolean             @default(true)
+  hasVocabulary         Boolean             @default(true)
+
+  // AI Features
+  aiSpeakingEvaluation  Boolean             @default(false)
+  aiWritingEvaluation   Boolean             @default(false)
+
+  // Status
+  status                ChallengeStatus     @default(DRAFT)
+  publishedAt           DateTime?
+
+  // Statistics
+  totalAttempts         Int                 @default(0)
+  avgScore              Float?
+
+  // Creator
+  createdById           String?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  questions             LanguageQuestion[]
+  attempts              LanguageTestAttempt[]
+
+  @@index([language])
+  @@index([testType])
+  @@index([status])
+  @@map("language_proficiency_tests")
+}
+
+model LanguageQuestion {
+  id                    String              @id @default(uuid())
+  testId                String
+
+  // Question Info
+  questionNumber        Int
+  section               String              // "reading", "listening", "grammar", "vocabulary", "writing", "speaking"
+  questionType          String              // "multiple_choice", "fill_blank", "essay", "speaking_prompt", "listening_comp"
+  difficulty            QuizDifficulty      @default(INTERMEDIATE)
+
+  // Content
+  questionText          String
+  contextText           String?             // Reading passage or context
+  audioUrl              String?             // For listening questions
+  imageUrl              String?             // Supporting image
+
+  // Options (for multiple choice)
+  options               Json?               // Array of {id, text, isCorrect}
+
+  // For open-ended
+  rubric                Json?               // Scoring rubric for essays/speaking
+  sampleAnswer          String?             // Model answer
+  minWords              Int?                // Minimum word count
+  maxWords              Int?                // Maximum word count
+  speakingTimeSeconds   Int?                // Time limit for speaking
+
+  // Scoring
+  points                Int                 @default(1)
+  correctAnswer         String?             // For auto-graded questions
+
+  // Display
+  displayOrder          Int                 @default(0)
+  timeLimit             Int?                // Question-specific time limit
+
+  // Statistics
+  correctCount          Int                 @default(0)
+  attemptCount          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  test                  LanguageProficiencyTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@index([section])
+  @@map("language_questions")
+}
+
+model LanguageTestAttempt {
+  id                    String              @id @default(uuid())
+  testId                String
+  userId                String
+
+  // Attempt Info
+  status                ChallengeSubmissionStatus @default(NOT_STARTED)
+  startedAt             DateTime            @default(now())
+  completedAt           DateTime?
+  timeSpentMinutes      Int?
+
+  // Section Completion
+  sectionsCompleted     Json?               // {section: completed}
+  currentSection        String?
+
+  // Responses
+  responses             Json                // Array of {questionId, response, audioUrl?, timeSpent}
+
+  // Section Scores
+  readingScore          Float?
+  listeningScore        Float?
+  grammarScore          Float?
+  vocabularyScore       Float?
+  writingScore          Float?
+  speakingScore         Float?
+
+  // Overall Results
+  totalScore            Float?
+  percentile            Float?
+  level                 String?             // CEFR level or equivalent
+
+  // AI Evaluations
+  writingFeedback       Json?               // {score, feedback, suggestions}
+  speakingFeedback      Json?               // {pronunciation, fluency, vocabulary, grammar, feedback}
+  aiEvaluatedAt         DateTime?
+
+  // Human Review (if needed)
+  reviewerId            String?
+  reviewedAt            DateTime?
+  reviewerFeedback      String?
+  finalScore            Float?              // After human review
+
+  // Certificate
+  certificateUrl        String?
+  certificateIssuedAt   DateTime?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  test                  LanguageProficiencyTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@index([userId])
+  @@index([status])
+  @@map("language_test_attempts")
 }

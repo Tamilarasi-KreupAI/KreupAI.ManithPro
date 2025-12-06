@@ -2466,3 +2466,317 @@ export interface BadgeTypeConfig {
   icon: string;
   color: string;
 }
+
+// ============================================
+// BATCH 7: ADVANCED ASSESSMENTS (1.4.3-1.4.7)
+// ============================================
+
+// 1.4.3 - Live Coding Environment
+export type LiveCodingSessionStatus =
+  | 'SCHEDULED'
+  | 'WAITING'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW';
+
+export interface LiveCodingSession {
+  id: string;
+  candidateId: string;
+  interviewerId: string;
+  applicationId?: string;
+  title: string;
+  description?: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: LiveCodingSessionStatus;
+  programmingLanguage: string;
+  problemStatement: string;
+  starterCode?: string;
+  testCases?: Array<{
+    input: string;
+    expectedOutput: string;
+    isHidden?: boolean;
+  }>;
+  hints?: string[];
+  difficultyLevel: string;
+  roomUrl?: string;
+  startedAt?: string;
+  endedAt?: string;
+  candidateCode?: string;
+  codeSnapshots?: Array<{
+    code: string;
+    language: string;
+    timestamp: string;
+  }>;
+  executionResults?: Record<string, unknown>;
+  score?: number;
+  feedback?: string;
+  codeQualityScore?: number;
+  problemSolvingScore?: number;
+  communicationScore?: number;
+  technicalKnowledgeScore?: number;
+  recommendation?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.4.4 - Take-Home Project System
+export type ProjectSubmissionStatus =
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'REVIEWED'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'EXPIRED';
+
+export interface TakeHomeProject {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  category: string;
+  difficultyLevel: string;
+  estimatedHours: number;
+  deadlineHours: number;
+  requirements: string;
+  evaluationCriteria?: string;
+  starterRepoUrl?: string;
+  techStack: string[];
+  skills: string[];
+  allowedExtensions: string[];
+  maxSubmissionSize: number;
+  rubric?: Record<string, {
+    criteria: string;
+    maxScore: number;
+    description?: string;
+  }>;
+  createdById?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectSubmission {
+  id: string;
+  projectId: string;
+  candidateId: string;
+  applicationId?: string;
+  assignedById?: string;
+  status: ProjectSubmissionStatus;
+  deadline: string;
+  startedAt?: string;
+  submittedAt?: string;
+  repositoryUrl?: string;
+  liveUrl?: string;
+  submissionNotes?: string;
+  submittedFiles: string[];
+  reviewerId?: string;
+  reviewedAt?: string;
+  overallScore?: number;
+  criteriaScores?: Record<string, number>;
+  feedback?: string;
+  strengths?: string[];
+  improvements?: string[];
+  recommendation?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  project?: TakeHomeProject;
+}
+
+// 1.4.5 - External Assessment Integration
+export type ExternalAssessmentProvider =
+  | 'HACKERRANK'
+  | 'CODESIGNAL'
+  | 'LEETCODE'
+  | 'CODILITY'
+  | 'TESTGORILLA'
+  | 'TOGGL_HIRE'
+  | 'OTHER';
+
+export interface ExternalAssessment {
+  id: string;
+  profileId: string;
+  provider: ExternalAssessmentProvider;
+  externalAssessmentId: string;
+  assessmentName: string;
+  assessmentUrl?: string;
+  score?: number;
+  maxScore?: number;
+  percentile?: number;
+  completedAt: string;
+  skills: string[];
+  certificateUrl?: string;
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.4.6 - Soft Skills Assessment
+export type SoftSkillCategory =
+  | 'PERSONALITY'
+  | 'SITUATIONAL_JUDGMENT'
+  | 'EMOTIONAL_INTELLIGENCE'
+  | 'LEADERSHIP'
+  | 'TEAMWORK'
+  | 'COMMUNICATION'
+  | 'PROBLEM_SOLVING'
+  | 'ADAPTABILITY';
+
+export interface SoftSkillsAssessment {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  category: SoftSkillCategory;
+  estimatedMinutes: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  questions?: SoftSkillQuestion[];
+  _count?: {
+    questions: number;
+  };
+}
+
+export interface SoftSkillQuestion {
+  id: string;
+  assessmentId: string;
+  questionText: string;
+  questionType: string;
+  options?: Array<{
+    value: string;
+    label: string;
+  }>;
+  scenario?: string;
+  order: number;
+  scoringRubric?: Record<string, number>;
+  traits?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SoftSkillAttempt {
+  id: string;
+  assessmentId: string;
+  candidateId: string;
+  applicationId?: string;
+  startedAt: string;
+  completedAt?: string;
+  answers: Array<{
+    questionId: string;
+    answer: string;
+    responseTime?: number;
+  }>;
+  overallScore?: number;
+  traitScores?: Record<string, number>;
+  insights?: string[];
+  createdAt: string;
+  updatedAt: string;
+  assessment?: Partial<SoftSkillsAssessment>;
+}
+
+// 1.4.7 - Language Proficiency Tests
+export type LanguageTestType =
+  | 'SPEAKING'
+  | 'WRITING'
+  | 'READING'
+  | 'LISTENING'
+  | 'COMPREHENSIVE';
+
+export interface LanguageProficiencyTest {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  language: string;
+  testType: LanguageTestType;
+  difficultyLevel: string;
+  estimatedMinutes: number;
+  passingScore?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  questions?: LanguageQuestion[];
+  _count?: {
+    questions: number;
+  };
+}
+
+export interface LanguageQuestion {
+  id: string;
+  testId: string;
+  questionText: string;
+  questionType: string;
+  options?: Array<{
+    value: string;
+    label: string;
+  }>;
+  correctAnswer?: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  passage?: string;
+  order: number;
+  points: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LanguageTestAttempt {
+  id: string;
+  testId: string;
+  candidateId: string;
+  applicationId?: string;
+  startedAt: string;
+  completedAt?: string;
+  answers: Array<{
+    questionId: string;
+    answer: string;
+    responseTime?: number;
+  }>;
+  score?: number;
+  sectionScores?: Record<string, {
+    correct: number;
+    total: number;
+  }>;
+  cefrLevel?: string;
+  correctAnswers?: number;
+  totalQuestions?: number;
+  createdAt: string;
+  updatedAt: string;
+  test?: Partial<LanguageProficiencyTest>;
+}
+
+// Batch 7 Combined Statistics
+export interface Batch7AssessmentStats {
+  liveCoding: {
+    total: number;
+    completed: number;
+    averageScore: number;
+  };
+  takeHomeProjects: {
+    total: number;
+    submitted: number;
+    averageScore: number;
+  };
+  externalAssessments: {
+    total: number;
+    byProvider: Record<string, number>;
+    averagePercentile: number;
+  };
+  softSkills: {
+    total: number;
+    averageScore: number;
+  };
+  languageTests: {
+    total: number;
+    averageScore: number;
+    highestCEFR: string | null;
+  };
+}
