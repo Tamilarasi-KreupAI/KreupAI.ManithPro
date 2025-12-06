@@ -22,3 +22,6 @@ export { default as VerificationHub } from './VerificationHub';
 
 // Profile Builder Components - Batch 7
 export { default as AdvancedAssessmentsHub } from './AdvancedAssessmentsHub';
+
+// Profile Builder Components - Batch 8
+export { default as AIScoringHub } from './AIScoringHub';

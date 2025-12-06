@@ -3648,3 +3648,387 @@ model LanguageTestAttempt {
   @@index([status])
   @@map("language_test_attempts")
 }
+
+// ============================================
+// BATCH 8: DOMAIN ASSESSMENTS, ANALYTICS & AI SCORING (1.4.8-2.1.2)
+// ============================================
+
+// Domain categories for assessments
+enum DomainCategory {
+  FINANCE
+  HEALTHCARE
+  LEGAL
+  TECHNOLOGY
+  MARKETING
+  SALES
+  HR
+  OPERATIONS
+  ENGINEERING
+  DATA_SCIENCE
+  CYBERSECURITY
+  COMPLIANCE
+  OTHER
+}
+
+// 1.4.8 - Domain-Specific Assessments
+model DomainAssessment {
+  id                    String              @id @default(uuid())
+  title                 String
+  slug                  String              @unique
+  description           String?
+  domain                DomainCategory
+  subDomain             String?             // e.g., "Investment Banking" under FINANCE
+
+  // Assessment Configuration
+  difficultyLevel       String              // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+  estimatedMinutes      Int                 @default(30)
+  passingScore          Float               @default(70)
+  totalPoints           Int                 @default(100)
+
+  // Question Configuration
+  questionCount         Int                 @default(30)
+  randomizeQuestions    Boolean             @default(true)
+  showCorrectAnswers    Boolean             @default(false) // After completion
+
+  // Timing
+  timeLimit             Int?                // Minutes, null = no limit
+  allowPause            Boolean             @default(false)
+
+  // Certification
+  providesCertificate   Boolean             @default(true)
+  certificateValidDays  Int?                // null = never expires
+
+  // Metadata
+  tags                  String[]            @default([])
+  prerequisites         String[]            @default([]) // Required skill IDs or assessment IDs
+  targetRoles           String[]            @default([]) // Job titles this applies to
+
+  // Version tracking
+  version               Int                 @default(1)
+  isActive              Boolean             @default(true)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  questions             DomainQuestion[]
+  attempts              DomainAssessmentAttempt[]
+
+  @@index([domain])
+  @@index([isActive])
+  @@map("domain_assessments")
+}
+
+// Questions for domain assessments
+model DomainQuestion {
+  id                    String              @id @default(uuid())
+  assessmentId          String
+
+  // Question Content
+  questionText          String
+  questionType          String              // MULTIPLE_CHOICE, MULTI_SELECT, TRUE_FALSE, CASE_STUDY, SCENARIO, SHORT_ANSWER
+
+  // Options for choice questions
+  options               Json?               // Array of {id, text, isCorrect}
+  correctAnswer         String?             // For short answer
+
+  // Case study/Scenario
+  caseStudy             String?             // Long-form case description
+  exhibits              Json?               // Supporting documents, charts, data
+
+  // Scoring
+  points                Int                 @default(1)
+  partialCreditAllowed  Boolean             @default(false)
+
+  // Explanation
+  explanation           String?             // Shown after answer
+  references            String[]            @default([]) // External reference links
+
+  // Metadata
+  difficulty            String              // EASY, MEDIUM, HARD
+  topic                 String?             // Specific topic within domain
+  skills                String[]            @default([])
+  order                 Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  assessment            DomainAssessment    @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([topic])
+  @@map("domain_questions")
+}
+
+// Attempts at domain assessments
+model DomainAssessmentAttempt {
+  id                    String              @id @default(uuid())
+  assessmentId          String
+  userId                String
+  applicationId         String?             // If tied to a job application
+
+  // Attempt State
+  status                String              @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, TIMED_OUT, ABANDONED
+  startedAt             DateTime            @default(now())
+  completedAt           DateTime?
+
+  // Time Tracking
+  timeSpentSeconds      Int                 @default(0)
+  pausedAt              DateTime?
+  totalPauseSeconds     Int                 @default(0)
+
+  // Progress
+  currentQuestionIndex  Int                 @default(0)
+  questionsAnswered     Int                 @default(0)
+
+  // Answers
+  answers               Json                // Array of {questionId, answer, timeSpent, flagged}
+  flaggedQuestions      String[]            @default([])
+
+  // Results
+  rawScore              Float?
+  percentageScore       Float?
+  passed                Boolean?
+
+  // Topic Breakdown
+  topicScores           Json?               // {topic: {correct, total, percentage}}
+  skillScores           Json?               // {skill: {correct, total, percentage}}
+
+  // Ranking
+  percentile            Float?              // Compared to other attempts
+  ranking               Int?                // Position out of total attempts
+
+  // Certificate
+  certificateId         String?
+  certificateUrl        String?
+  certificateExpiresAt  DateTime?
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  assessment            DomainAssessment    @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([userId])
+  @@index([status])
+  @@map("domain_assessment_attempts")
+}
+
+// 1.4.9 - Assessment Analytics
+model AssessmentAnalytics {
+  id                    String              @id @default(uuid())
+  userId                String
+  profileId             String?
+
+  // Aggregated Stats
+  totalAssessmentsTaken Int                 @default(0)
+  totalAssessmentsPassed Int                @default(0)
+  overallAverageScore   Float?
+
+  // By Assessment Type
+  codingChallenges      Json?               // {taken, passed, avgScore, bestScore, recentScores}
+  technicalQuizzes      Json?
+  domainAssessments     Json?
+  softSkillsTests       Json?
+  languageTests         Json?
+
+  // Skill Performance
+  skillPerformance      Json?               // {skill: {assessments, avgScore, trend, lastAssessed}}
+
+  // Time Analytics
+  averageCompletionTime Int?                // In minutes
+  fastestCompletion     Int?
+  totalTimeSpent        Int?                // Total minutes across all assessments
+
+  // Trend Analysis
+  scoreHistory          Json?               // Array of {date, assessmentType, score}
+  monthlyProgress       Json?               // {month: {taken, passed, avgScore}}
+
+  // Comparative Analytics
+  percentileRankings    Json?               // {assessmentType: percentile}
+  industryComparison    Json?               // How user compares to industry
+
+  // Strengths & Weaknesses
+  topStrengths          String[]            @default([])
+  areasForImprovement   String[]            @default([])
+
+  // Recommendations
+  recommendedAssessments String[]           @default([])
+  suggestedLearning     Json?               // {skill: courseRecommendations}
+
+  // Timestamps
+  lastAssessmentAt      DateTime?
+  lastAnalyzedAt        DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId])
+  @@index([profileId])
+  @@map("assessment_analytics")
+}
+
+// 1.4.10 - Skill Decay Tracking
+model SkillDecayTracker {
+  id                    String              @id @default(uuid())
+  userId                String
+  skillName             String
+
+  // Assessment History
+  lastAssessedAt        DateTime
+  lastScore             Float
+  peakScore             Float
+  assessmentCount       Int                 @default(1)
+
+  // Decay Calculation
+  decayRate             Float?              // Estimated decay per month
+  currentEstimatedScore Float?              // Projected current score
+  confidenceLevel       Float?              // How confident we are in the estimate
+
+  // Refresh Schedule
+  refreshDueAt          DateTime?           // When reassessment is recommended
+  refreshPriority       String?             // HIGH, MEDIUM, LOW
+
+  // Skill Category
+  skillCategory         String?             // TECHNICAL, SOFT_SKILL, DOMAIN, LANGUAGE
+  relatedAssessments    String[]            @default([])
+
+  // Notification
+  reminderSent          Boolean             @default(false)
+  reminderSentAt        DateTime?
+
+  // Score History
+  scoreHistory          Json?               // Array of {date, score, assessmentId}
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, skillName])
+  @@index([userId])
+  @@index([refreshDueAt])
+  @@map("skill_decay_trackers")
+}
+
+// 2.1.1 - AI Profile Scorer
+model AIProfileScore {
+  id                    String              @id @default(uuid())
+  profileId             String
+  userId                String
+
+  // Overall Score
+  overallScore          Float               // 0-100
+  scoreGrade            String              // A+, A, B+, B, C+, C, D, F
+
+  // Component Scores (all 0-100)
+  profileCompleteness   Float
+  experienceDepth       Float
+  skillsVerification    Float
+  educationStrength     Float
+  projectQuality        Float
+  assessmentPerformance Float
+  verificationScore     Float
+  engagementScore       Float               // Platform activity
+
+  // Weighted Breakdown
+  componentWeights      Json                // {component: weight}
+  componentDetails      Json                // {component: {score, factors, improvements}}
+
+  // AI Analysis
+  strengths             String[]            @default([])
+  weaknesses            String[]            @default([])
+  recommendations       Json?               // Array of {area, suggestion, impact}
+
+  // Career Level Estimation
+  estimatedLevel        String?             // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  yearsOfExperience     Int?                // AI-estimated
+
+  // Industry Fit
+  topIndustries         Json?               // Array of {industry, fitScore, reasons}
+  topRoles              Json?               // Array of {role, fitScore, matchingSkills}
+
+  // Market Position
+  marketPercentile      Float?              // Where candidate stands in market
+  salaryEstimate        Json?               // {min, max, median, currency}
+
+  // Comparison
+  similarProfiles       Int?                // Count of similar profiles
+  standoutFactors       String[]            @default([])
+
+  // Scoring Metadata
+  scoringVersion        String              @default("1.0")
+  scoringAlgorithm      String              @default("default")
+  lastScoredAt          DateTime            @default(now())
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([profileId])
+  @@index([userId])
+  @@index([overallScore])
+  @@map("ai_profile_scores")
+}
+
+// 2.1.2 - Job-Fit Score
+model JobFitScore {
+  id                    String              @id @default(uuid())
+  userId                String
+  profileId             String?
+  jobId                 String
+  applicationId         String?
+
+  // Overall Fit Score
+  overallFitScore       Float               // 0-100
+  fitCategory           String              // EXCELLENT_FIT, GOOD_FIT, MODERATE_FIT, LOW_FIT, POOR_FIT
+
+  // Component Scores (all 0-100)
+  skillsMatch           Float
+  experienceMatch       Float
+  educationMatch        Float
+  locationMatch         Float
+  salaryMatch           Float
+  senioritylMatch       Float
+  industryMatch         Float
+  cultureMatch          Float?              // If culture data available
+
+  // Detailed Breakdown
+  matchedSkills         Json                // Array of {skill, requiredLevel, candidateLevel, match}
+  missingSkills         String[]            @default([])
+  bonusSkills           String[]            @default([]) // Skills beyond requirements
+
+  // Experience Analysis
+  experienceAnalysis    Json?               // {required, candidate, analysis}
+  relevantExperience    Json?               // Specific relevant roles
+
+  // Requirements Matching
+  requirementMatches    Json                // {requirement: {met, details, score}}
+  knockoutFlags         String[]            @default([]) // Any dealbreakers
+
+  // AI Recommendations
+  candidateSummary      String?             // AI-generated summary for recruiters
+  interviewFocus        String[]            @default([]) // Areas to probe in interview
+  concernFlags          String[]            @default([]) // Potential concerns
+
+  // Comparative Ranking
+  rankAmongApplicants   Int?
+  percentileAmongApplicants Float?
+  similarCandidates     Int?
+
+  // Scoring Metadata
+  scoringVersion        String              @default("1.0")
+  calculatedAt          DateTime            @default(now())
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, jobId])
+  @@index([jobId])
+  @@index([overallFitScore])
+  @@map("job_fit_scores")
+}

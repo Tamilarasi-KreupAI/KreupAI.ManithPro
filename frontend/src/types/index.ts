@@ -2780,3 +2780,328 @@ export interface Batch7AssessmentStats {
     highestCEFR: string | null;
   };
 }
+
+// ============================================
+// BATCH 8: DOMAIN ASSESSMENTS, ANALYTICS & AI SCORING (1.4.8-2.1.2)
+// ============================================
+
+// 1.4.8 - Domain-Specific Assessments
+export type DomainCategory =
+  | 'FINANCE'
+  | 'HEALTHCARE'
+  | 'LEGAL'
+  | 'TECHNOLOGY'
+  | 'MARKETING'
+  | 'SALES'
+  | 'HR'
+  | 'OPERATIONS'
+  | 'ENGINEERING'
+  | 'DATA_SCIENCE'
+  | 'CYBERSECURITY'
+  | 'COMPLIANCE'
+  | 'OTHER';
+
+export interface DomainAssessment {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  domain: DomainCategory;
+  subDomain?: string;
+  difficultyLevel: string;
+  estimatedMinutes: number;
+  passingScore: number;
+  totalPoints: number;
+  questionCount: number;
+  randomizeQuestions: boolean;
+  showCorrectAnswers: boolean;
+  timeLimit?: number;
+  allowPause: boolean;
+  providesCertificate: boolean;
+  certificateValidDays?: number;
+  tags: string[];
+  prerequisites: string[];
+  targetRoles: string[];
+  version: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  questions?: DomainQuestion[];
+  _count?: {
+    questions: number;
+    attempts: number;
+  };
+}
+
+export interface DomainQuestion {
+  id: string;
+  assessmentId: string;
+  questionText: string;
+  questionType: string;
+  options?: Array<{
+    id: string;
+    text: string;
+    isCorrect?: boolean;
+  }>;
+  correctAnswer?: string;
+  caseStudy?: string;
+  exhibits?: Record<string, unknown>;
+  points: number;
+  partialCreditAllowed: boolean;
+  explanation?: string;
+  references: string[];
+  difficulty: string;
+  topic?: string;
+  skills: string[];
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DomainAssessmentAttempt {
+  id: string;
+  assessmentId: string;
+  userId: string;
+  applicationId?: string;
+  status: string;
+  startedAt: string;
+  completedAt?: string;
+  timeSpentSeconds: number;
+  pausedAt?: string;
+  totalPauseSeconds: number;
+  currentQuestionIndex: number;
+  questionsAnswered: number;
+  answers: Array<{
+    questionId: string;
+    answer: string;
+    timeSpent?: number;
+    flagged?: boolean;
+  }>;
+  flaggedQuestions: string[];
+  rawScore?: number;
+  percentageScore?: number;
+  passed?: boolean;
+  topicScores?: Record<string, { correct: number; total: number; percentage?: number }>;
+  skillScores?: Record<string, { correct: number; total: number; percentage?: number }>;
+  percentile?: number;
+  ranking?: number;
+  certificateId?: string;
+  certificateUrl?: string;
+  certificateExpiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  assessment?: Partial<DomainAssessment>;
+}
+
+// 1.4.9 - Assessment Analytics
+export interface AssessmentAnalyticsData {
+  id: string;
+  userId: string;
+  profileId?: string;
+  totalAssessmentsTaken: number;
+  totalAssessmentsPassed: number;
+  overallAverageScore?: number;
+  codingChallenges?: {
+    taken: number;
+    passed?: number;
+    avgScore?: number;
+    bestScore?: number;
+    recentScores?: number[];
+  };
+  technicalQuizzes?: {
+    taken: number;
+    passed?: number;
+    avgScore?: number;
+  };
+  domainAssessments?: {
+    taken: number;
+    passed?: number;
+    avgScore?: number;
+  };
+  softSkillsTests?: {
+    taken: number;
+    avgScore?: number;
+  };
+  languageTests?: {
+    taken: number;
+    avgScore?: number;
+  };
+  skillPerformance?: Record<string, {
+    assessments: number;
+    avgScore: number;
+    trend?: 'UP' | 'DOWN' | 'STABLE';
+    lastAssessed?: string;
+  }>;
+  averageCompletionTime?: number;
+  fastestCompletion?: number;
+  totalTimeSpent?: number;
+  scoreHistory?: Array<{
+    date: string;
+    type: string;
+    score: number;
+  }>;
+  monthlyProgress?: Record<string, {
+    taken: number;
+    passed: number;
+    avgScore: number;
+  }>;
+  percentileRankings?: Record<string, number>;
+  industryComparison?: Record<string, unknown>;
+  topStrengths: string[];
+  areasForImprovement: string[];
+  recommendedAssessments: string[];
+  suggestedLearning?: Record<string, string[]>;
+  lastAssessmentAt?: string;
+  lastAnalyzedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.4.10 - Skill Decay Tracking
+export interface SkillDecayTracker {
+  id: string;
+  userId: string;
+  skillName: string;
+  lastAssessedAt: string;
+  lastScore: number;
+  peakScore: number;
+  assessmentCount: number;
+  decayRate?: number;
+  currentEstimatedScore?: number;
+  confidenceLevel?: number;
+  refreshDueAt?: string;
+  refreshPriority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  skillCategory?: string;
+  relatedAssessments: string[];
+  reminderSent: boolean;
+  reminderSentAt?: string;
+  scoreHistory?: Array<{
+    date: string;
+    score: number;
+    assessmentId: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SkillDecaySummary {
+  totalTracked: number;
+  needsRefresh: number;
+  upcomingRefresh: number;
+  byCategory: Record<string, number>;
+  urgentSkills: Array<{
+    skill: string;
+    lastAssessed: string;
+    estimatedScore?: number;
+    priority?: string;
+  }>;
+}
+
+// 2.1.1 - AI Profile Scorer
+export interface AIProfileScore {
+  id: string;
+  profileId: string;
+  userId: string;
+  overallScore: number;
+  scoreGrade: string;
+  profileCompleteness: number;
+  experienceDepth: number;
+  skillsVerification: number;
+  educationStrength: number;
+  projectQuality: number;
+  assessmentPerformance: number;
+  verificationScore: number;
+  engagementScore: number;
+  componentWeights: Record<string, number>;
+  componentDetails: Record<string, {
+    score: number;
+    factors?: string[];
+    improvements?: string[];
+  }>;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations?: Array<{
+    area: string;
+    suggestion: string;
+    impact: string;
+  }>;
+  estimatedLevel?: string;
+  yearsOfExperience?: number;
+  topIndustries?: Array<{
+    industry: string;
+    fitScore: number;
+    reasons: string[];
+  }>;
+  topRoles?: Array<{
+    role: string;
+    fitScore: number;
+    matchingSkills: string[];
+  }>;
+  marketPercentile?: number;
+  salaryEstimate?: {
+    min: number;
+    max: number;
+    median: number;
+    currency: string;
+  };
+  similarProfiles?: number;
+  standoutFactors: string[];
+  scoringVersion: string;
+  scoringAlgorithm: string;
+  lastScoredAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 2.1.2 - Job-Fit Score
+export type FitCategory = 'EXCELLENT_FIT' | 'GOOD_FIT' | 'MODERATE_FIT' | 'LOW_FIT' | 'POOR_FIT';
+
+export interface JobFitScore {
+  id: string;
+  userId: string;
+  profileId?: string;
+  jobId: string;
+  applicationId?: string;
+  overallFitScore: number;
+  fitCategory: FitCategory;
+  skillsMatch: number;
+  experienceMatch: number;
+  educationMatch: number;
+  locationMatch: number;
+  salaryMatch: number;
+  senioritylMatch: number;
+  industryMatch: number;
+  cultureMatch?: number;
+  matchedSkills: Array<{
+    skill: string;
+    requiredLevel?: number;
+    candidateLevel?: number;
+    match: boolean;
+  }>;
+  missingSkills: string[];
+  bonusSkills: string[];
+  experienceAnalysis?: {
+    required: string;
+    candidate: string;
+    analysis: string;
+  };
+  relevantExperience?: Record<string, unknown>;
+  requirementMatches: Record<string, {
+    met: boolean;
+    details?: string;
+    score?: number;
+  }>;
+  knockoutFlags: string[];
+  candidateSummary?: string;
+  interviewFocus: string[];
+  concernFlags: string[];
+  rankAmongApplicants?: number;
+  percentileAmongApplicants?: number;
+  similarCandidates?: number;
+  scoringVersion: string;
+  calculatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  job?: Partial<Job>;
+  user?: Partial<User>;
+}
