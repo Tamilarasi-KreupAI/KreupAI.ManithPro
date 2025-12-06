@@ -10111,3 +10111,536 @@ model MatchingConfig {
   @@index([companyId])
   @@map("matching_configs")
 }
+
+// ============================================================================
+// BATCH 22: PREDICTIVE ANALYTICS (5.2.1 - 5.2.8)
+// ============================================================================
+
+// 5.2.1 Hiring Success Prediction
+model HiringSuccessPrediction {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  candidateId           String
+  jobId                 String
+
+  // Prediction Results
+  successProbability    Float               // 0-1 probability of successful hire
+  confidenceLevel       Float               // 0-1 confidence in prediction
+  predictionGrade       String              // A, B, C, D, F
+
+  // Success Factors
+  skillMatchScore       Float
+  experienceMatchScore  Float
+  cultureFitScore       Float
+  motivationScore       Float
+  stabilityScore        Float               // Job stability indicator
+
+  // Risk Factors
+  overallRiskLevel      String              // LOW, MEDIUM, HIGH, VERY_HIGH
+  riskFactors           Json                // Array of risk factors
+  mitigationSuggestions String[]            @default([])
+
+  // Historical Comparison
+  similarHiresCount     Int                 @default(0)
+  similarHiresSuccessRate Float?
+  benchmarkComparison   Json?               // How this compares to successful hires
+
+  // Factors Breakdown
+  positiveSignals       Json                // Positive indicators
+  negativeSignals       Json                // Warning signs
+  neutralFactors        Json?               // Neutral observations
+
+  // Model Info
+  modelVersion          String              @default("1.0")
+  featureImportance     Json?               // Which factors mattered most
+  predictionBasis       String?             @db.Text // Explanation of prediction
+
+  // Outcome Tracking
+  actualOutcome         String?             // SUCCESS, PARTIAL_SUCCESS, FAILURE, UNKNOWN
+  outcomeRecordedAt     DateTime?
+  outcomeNotes          String?             @db.Text
+
+  // Metadata
+  predictedAt           DateTime            @default(now())
+  expiresAt             DateTime?
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([successProbability])
+  @@index([predictionGrade])
+  @@map("hiring_success_predictions")
+}
+
+// 5.2.2 Time-to-Hire Forecast
+model TimeToHireForecast {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String
+
+  // Prediction
+  predictedDays         Int                 // Days to fill position
+  confidenceInterval    Json                // { low: days, high: days }
+  confidenceLevel       Float               // 0-1
+
+  // Breakdown by Stage
+  sourcingDays          Int?
+  screeningDays         Int?
+  interviewingDays      Int?
+  offerDays             Int?
+  closingDays           Int?
+
+  // Factors
+  roleComplexity        String              // SIMPLE, MODERATE, COMPLEX, HIGHLY_COMPLEX
+  marketCompetition     String              // LOW, MODERATE, HIGH, EXTREME
+  compensationCompetitiveness String        // BELOW_MARKET, AT_MARKET, ABOVE_MARKET
+  locationDifficulty    String              // EASY, MODERATE, HARD, VERY_HARD
+
+  // Historical Data
+  historicalAverage     Int?                // Historical avg for similar roles
+  industryBenchmark     Int?                // Industry average
+  companyBenchmark      Int?                // Company average
+
+  // Bottleneck Predictions
+  predictedBottlenecks  Json                // Array of potential bottlenecks
+  bottleneckRisk        String              // LOW, MEDIUM, HIGH
+
+  // Recommendations
+  speedUpSuggestions    String[]            @default([])
+  resourceRecommendations Json?
+
+  // Actual Tracking
+  actualDays            Int?
+  hiredAt               DateTime?
+  variance              Int?                // Difference from prediction
+
+  // Metadata
+  forecastedAt          DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([jobId])
+  @@index([companyId])
+  @@index([predictedDays])
+  @@map("time_to_hire_forecasts")
+}
+
+// 5.2.3 Offer Acceptance Prediction
+model OfferAcceptancePrediction {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  candidateId           String
+  jobId                 String
+  offerId               String?
+
+  // Prediction
+  acceptanceProbability Float               // 0-1
+  confidenceLevel       Float
+  predictionGrade       String              // A, B, C, D, F
+
+  // Key Factors
+  compensationFit       Float               // How well comp matches expectations
+  roleFit               Float               // Role alignment
+  locationFit           Float               // Location preference match
+  cultureFit            Float               // Culture alignment
+  growthOpportunityFit  Float               // Career growth match
+  workLifeBalanceFit    Float               // WLB preferences match
+
+  // Risk Analysis
+  competingOfferRisk    Float               // Likelihood of competing offers
+  counterofferRisk      Float               // Risk of counteroffer acceptance
+  timingRisk            Float               // Risk related to timing
+
+  // Candidate Signals
+  engagementLevel       String              // LOW, MODERATE, HIGH, VERY_HIGH
+  responseTimeTrend     String              // FASTER, STABLE, SLOWER
+  questionTopics        String[]            @default([]) // What they ask about
+
+  // Market Comparison
+  marketRateComparison  String              // BELOW, AT, ABOVE
+  competitorAnalysis    Json?               // Known competitor offers
+
+  // Recommendations
+  improvementSuggestions Json               // How to improve acceptance chance
+  negotiationGuidance   String?             @db.Text
+  optimalOfferRange     Json?               // { min, target, max }
+
+  // Outcome Tracking
+  actualDecision        String?             // ACCEPTED, REJECTED, NEGOTIATED, WITHDRAWN
+  decisionDate          DateTime?
+  rejectionReason       String?             @db.Text
+
+  // Metadata
+  predictedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([acceptanceProbability])
+  @@map("offer_acceptance_predictions")
+}
+
+// 5.2.4 Retention Risk Score
+model RetentionRiskScore {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  candidateId           String
+  jobId                 String
+
+  // Retention Prediction
+  retentionProbability6Mo  Float            // Probability of staying 6 months
+  retentionProbability1Yr  Float            // 1 year
+  retentionProbability2Yr  Float            // 2 years
+  predictedTenure       Int                 // Months predicted to stay
+
+  // Risk Level
+  overallRiskLevel      String              // LOW, MODERATE, HIGH, VERY_HIGH
+  riskScore             Float               // 0-100
+
+  // Risk Factors
+  jobHoppingIndicator   Float               // Historical job changes
+  tenureConsistency     Float               // Consistency in previous tenures
+  careerProgressionFit  Float               // Does role fit career path
+  compensationSatisfaction Float            // Predicted comp satisfaction
+  growthOpportunityMatch Float              // Growth expectations match
+
+  // Warning Signs
+  redFlags              Json                // Array of concerns
+  yellowFlags           Json                // Minor concerns
+  positiveIndicators    Json                // Good signs
+
+  // Comparison
+  industryBenchmark     Float?              // Industry avg retention
+  companyBenchmark      Float?              // Company avg retention
+  roleBenchmark         Float?              // Similar role retention
+
+  // Mitigation
+  retentionStrategies   Json                // Recommended retention strategies
+  onboardingFocus       String[]            @default([]) // What to emphasize
+  earlyWarningTriggers  Json?               // What to watch for
+
+  // Metadata
+  scoredAt              DateTime            @default(now())
+  modelVersion          String              @default("1.0")
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([overallRiskLevel])
+  @@map("retention_risk_scores")
+}
+
+// 5.2.5 Performance Prediction
+model PerformancePrediction {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  candidateId           String
+  jobId                 String
+
+  // Performance Prediction
+  predictedPerformance  String              // EXCEPTIONAL, STRONG, MEETS_EXPECTATIONS, DEVELOPING, CONCERN
+  performanceScore      Float               // 0-100
+  confidenceLevel       Float               // 0-1
+
+  // Performance Dimensions
+  technicalPerformance  Float               // Technical skills projection
+  collaborationScore    Float               // Teamwork projection
+  leadershipPotential   Float               // Leadership capability
+  adaptabilityScore     Float               // Ability to adapt
+  innovationScore       Float               // Creative problem solving
+  executionScore        Float               // Getting things done
+
+  // Ramp-Up Prediction
+  expectedRampUpMonths  Int                 // Time to full productivity
+  rampUpConfidence      Float
+  earlyWins             String[]            @default([]) // Where they'll excel early
+
+  // Growth Trajectory
+  promotionReadiness    Int?                // Months to promotion readiness
+  growthPotentialLevel  String              // LIMITED, MODERATE, HIGH, EXCEPTIONAL
+  careerCeiling         String?             // Predicted highest level
+
+  // Risk Areas
+  performanceRisks      Json                // Potential problem areas
+  developmentNeeds      Json                // Skills to develop
+  supportRequirements   Json                // What support they'll need
+
+  // Comparison
+  topPerformerSimilarity Float?             // Similarity to top performers
+  peerGroupPercentile   Float?              // Expected percentile in peer group
+
+  // Evidence
+  predictionFactors     Json                // What factors influenced prediction
+  historicalDataPoints  Json?               // Historical data used
+
+  // Metadata
+  predictedAt           DateTime            @default(now())
+  modelVersion          String              @default("1.0")
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([candidateId, jobId])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([predictedPerformance])
+  @@map("performance_predictions")
+}
+
+// 5.2.6 Market Availability Analysis
+model MarketAvailabilityAnalysis {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?
+
+  // Target Role
+  roleTitle             String
+  requiredSkills        String[]            @default([])
+  location              String
+  experienceLevel       String              // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  industry              String?
+
+  // Availability Metrics
+  availabilityScore     Float               // 0-100 (higher = easier to find)
+  difficultyLevel       String              // VERY_EASY, EASY, MODERATE, HARD, VERY_HARD
+  estimatedCandidatePool Int                // Estimated available candidates
+
+  // Supply/Demand
+  talentSupply          String              // ABUNDANT, ADEQUATE, LIMITED, SCARCE
+  hiringDemand          String              // LOW, MODERATE, HIGH, EXTREME
+  supplyDemandRatio     Float               // > 1 = more supply
+
+  // Competition
+  competitorActivity    String              // LOW, MODERATE, HIGH, INTENSE
+  competingOpenings     Int?                // Similar jobs in market
+  marketShare           Float?              // Company's hiring share
+
+  // Salary Intelligence
+  marketSalaryMin       Float?
+  marketSalaryMax       Float?
+  marketSalaryMedian    Float?
+  salaryTrend           String              // DECREASING, STABLE, INCREASING, RAPIDLY_INCREASING
+
+  // Geographic Analysis
+  locationPremium       Float?              // Location salary premium
+  remoteAvailability    Float?              // % willing to work remote
+  relocationWillingness Float?              // % willing to relocate
+
+  // Skill Scarcity
+  scarcestSkills        Json                // Most hard to find skills
+  commonSkills          Json                // Easily found skills
+  skillPremiums         Json?               // Premium for specific skills
+
+  // Recommendations
+  sourcingRecommendations Json              // Where to find talent
+  compensationGuidance  Json                // Comp recommendations
+  timelineExpectation   Int                 // Expected days to hire
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+  dataFreshness         DateTime            // When underlying data was collected
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([availabilityScore])
+  @@index([difficultyLevel])
+  @@map("market_availability_analyses")
+}
+
+// 5.2.7 Salary Trend Prediction
+model SalaryTrendPrediction {
+  id                    String              @id @default(uuid())
+  companyId             String
+
+  // Target
+  roleTitle             String
+  location              String
+  experienceLevel       String
+  industry              String?
+
+  // Current State
+  currentMedian         Float
+  currentMin            Float
+  currentMax            Float
+  currentPercentile25   Float?
+  currentPercentile75   Float?
+
+  // Predictions
+  prediction3Mo         Json                // { median, min, max, changePercent }
+  prediction6Mo         Json
+  prediction1Yr         Json
+  prediction2Yr         Json?
+
+  // Trend Analysis
+  trendDirection        String              // DECLINING, STABLE, GROWING, SURGING
+  annualGrowthRate      Float               // Expected annual % change
+  volatility            String              // LOW, MODERATE, HIGH
+
+  // Influencing Factors
+  demandImpact          Float               // Impact of demand changes
+  supplyImpact          Float               // Impact of supply changes
+  economicImpact        Float               // Economic factors impact
+  technologyImpact      Float               // Tech changes impact
+  regulatoryImpact      Float?              // Regulatory changes
+
+  // Market Context
+  industryComparison    Json                // How this role compares
+  locationComparison    Json                // Geographic comparison
+  experienceProgression Json                // Salary by experience level
+
+  // Recommendations
+  competitiveRange      Json                // { low, target, high }
+  budgetGuidance        String?             @db.Text
+  timingRecommendation  String?             // Best time to hire
+
+  // Metadata
+  predictedAt           DateTime            @default(now())
+  modelVersion          String              @default("1.0")
+  dataSource            String?
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([roleTitle])
+  @@index([location])
+  @@map("salary_trend_predictions")
+}
+
+// 5.2.8 Pipeline Health Prediction
+model PipelineHealthPrediction {
+  id                    String              @id @default(uuid())
+  companyId             String
+  jobId                 String?             // null = overall pipeline
+
+  // Current State
+  currentCandidates     Int                 // Total in pipeline
+  byStage               Json                // Candidates per stage
+  stageConversions      Json                // Conversion rates by stage
+
+  // Health Score
+  overallHealthScore    Float               // 0-100
+  healthGrade           String              // A, B, C, D, F
+  healthTrend           String              // IMPROVING, STABLE, DECLINING
+
+  // Predictions
+  predictedHires        Int                 // Expected hires from current pipeline
+  predictedDropouts     Int                 // Expected dropouts
+  fillProbability       Float               // Probability of filling role
+  timeToFill            Int?                // Predicted days
+
+  // Bottleneck Analysis
+  bottleneckStages      Json                // Stages with issues
+  stageRisks            Json                // Risk by stage
+  conversionConcerns    Json                // Problematic conversions
+
+  // Gap Analysis
+  candidateGap          Int                 // Needed candidates
+  qualityGap            Float               // Quality score gap
+  diversityGap          Json?               // Diversity metrics gap
+
+  // Velocity Metrics
+  averageTimeInStage    Json                // Avg time per stage
+  velocityTrend         String              // FASTER, STABLE, SLOWER
+  stalledCandidates     Int                 // Candidates stuck
+
+  // Recommendations
+  urgentActions         Json                // Immediate actions needed
+  sourcingNeeds         Json                // Sourcing recommendations
+  processImprovements   Json                // Process optimization
+
+  // Forecast
+  weeklyForecast        Json                // Next 4 weeks prediction
+  hireByDateProbability Json                // P(hire by date) for key dates
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+  nextUpdateAt          DateTime?
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([overallHealthScore])
+  @@map("pipeline_health_predictions")
+}
+
+// Prediction Model Configuration
+model PredictionModelConfig {
+  id                    String              @id @default(uuid())
+  companyId             String
+  modelType             String              // HIRING_SUCCESS, TIME_TO_HIRE, OFFER_ACCEPTANCE, etc.
+
+  // Model Settings
+  modelVersion          String              @default("1.0")
+  isEnabled             Boolean             @default(true)
+  confidenceThreshold   Float               @default(0.7)
+
+  // Feature Weights
+  featureWeights        Json                // Weight configuration
+  enabledFeatures       String[]            @default([])
+  disabledFeatures      String[]            @default([])
+
+  // Calibration
+  calibrationDate       DateTime?
+  calibrationData       Json?
+  accuracyMetrics       Json?               // Historical accuracy
+
+  // Thresholds
+  actionThresholds      Json                // When to trigger actions
+  alertThresholds       Json                // When to send alerts
+
+  // Custom Rules
+  customRules           Json?               // Company-specific rules
+  exclusions            Json?               // What to exclude
+
+  // Metadata
+  createdById           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([companyId, modelType])
+  @@index([companyId])
+  @@map("prediction_model_configs")
+}
+
+// Prediction Audit Log
+model PredictionAuditLog {
+  id                    String              @id @default(uuid())
+  companyId             String
+  predictionType        String              // Which prediction type
+  predictionId          String              // ID of the prediction record
+
+  // Prediction Details
+  targetCandidateId     String?
+  targetJobId           String?
+  predictedValue        Json                // What was predicted
+  confidenceLevel       Float
+
+  // Outcome (for accuracy tracking)
+  actualOutcome         Json?               // What actually happened
+  outcomeRecordedAt     DateTime?
+  wasAccurate           Boolean?
+  accuracyScore         Float?              // 0-1 how accurate
+
+  // Context
+  modelVersion          String
+  inputFeatures         Json?               // Features used
+  featureImportance     Json?               // Feature contributions
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([predictionType])
+  @@index([predictionId])
+  @@index([targetJobId])
+  @@index([createdAt])
+  @@map("prediction_audit_logs")
+}

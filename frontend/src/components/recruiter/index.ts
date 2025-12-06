@@ -24,3 +24,6 @@ export { default as VideoInterviewHub } from './VideoInterviewHub';
 
 // Recruiter Components - Batch 21: Semantic Matching Engine
 export { default as SemanticMatchingHub } from './SemanticMatchingHub';
+
+// Recruiter Components - Batch 22: Predictive Analytics
+export { default as PredictiveAnalyticsHub } from './PredictiveAnalyticsHub';

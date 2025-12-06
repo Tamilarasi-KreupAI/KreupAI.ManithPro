@@ -9868,3 +9868,589 @@ export interface UpsertMatchingConfigInput {
   niceToHaveSkills?: string[];
   dealBreakerMissing?: string[];
 }
+
+// ============================================================================
+// BATCH 22: PREDICTIVE ANALYTICS TYPES (5.2.1 - 5.2.8)
+// ============================================================================
+
+// Enums and Type Aliases
+export type PredictionGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH';
+export type HealthTrend = 'IMPROVING' | 'STABLE' | 'DECLINING';
+export type VelocityTrend = 'FASTER' | 'STABLE' | 'SLOWER';
+export type TrendDirection = 'DECLINING' | 'STABLE' | 'GROWING' | 'SURGING';
+export type Volatility = 'LOW' | 'MODERATE' | 'HIGH';
+export type RoleComplexity = 'SIMPLE' | 'MODERATE' | 'COMPLEX' | 'HIGHLY_COMPLEX';
+export type MarketCompetition = 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME';
+export type CompensationCompetitiveness = 'BELOW_MARKET' | 'AT_MARKET' | 'ABOVE_MARKET';
+export type LocationDifficulty = 'EASY' | 'MODERATE' | 'HARD' | 'VERY_HARD';
+export type TalentSupply = 'ABUNDANT' | 'ADEQUATE' | 'LIMITED' | 'SCARCE';
+export type HiringDemand = 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME';
+export type SalaryTrend = 'DECREASING' | 'STABLE' | 'INCREASING' | 'RAPIDLY_INCREASING';
+export type DifficultyLevel = 'VERY_EASY' | 'EASY' | 'MODERATE' | 'HARD' | 'VERY_HARD';
+export type CompetitorActivity = 'LOW' | 'MODERATE' | 'HIGH' | 'INTENSE';
+export type EngagementLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH';
+export type ResponseTimeTrend = 'FASTER' | 'STABLE' | 'SLOWER';
+export type MarketRateComparison = 'BELOW' | 'AT' | 'ABOVE';
+export type OfferDecision = 'ACCEPTED' | 'REJECTED' | 'NEGOTIATED' | 'WITHDRAWN';
+export type HiringOutcome = 'SUCCESS' | 'PARTIAL_SUCCESS' | 'FAILURE' | 'UNKNOWN';
+export type PredictedPerformance = 'EXCEPTIONAL' | 'STRONG' | 'MEETS_EXPECTATIONS' | 'DEVELOPING' | 'CONCERN';
+export type GrowthPotentialLevel = 'LIMITED' | 'MODERATE' | 'HIGH' | 'EXCEPTIONAL';
+export type PredictionModelType = 'HIRING_SUCCESS' | 'TIME_TO_HIRE' | 'OFFER_ACCEPTANCE' | 'RETENTION_RISK' | 'PERFORMANCE' | 'MARKET_AVAILABILITY' | 'SALARY_TRENDS' | 'PIPELINE_HEALTH';
+
+// 5.2.1 Hiring Success Prediction
+export interface HiringSuccessPrediction {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  jobId: string;
+  successProbability: number;
+  confidenceLevel: number;
+  predictionGrade: PredictionGrade;
+  skillMatchScore: number;
+  experienceMatchScore: number;
+  cultureFitScore: number;
+  motivationScore: number;
+  stabilityScore: number;
+  overallRiskLevel: RiskLevel;
+  riskFactors: RiskFactor[];
+  mitigationSuggestions: string[];
+  similarHiresCount: number;
+  similarHiresSuccessRate?: number;
+  benchmarkComparison?: Record<string, any>;
+  positiveSignals: Signal[];
+  negativeSignals: Signal[];
+  neutralFactors?: Record<string, any>;
+  modelVersion: string;
+  featureImportance?: Record<string, number>;
+  predictionBasis?: string;
+  actualOutcome?: HiringOutcome;
+  outcomeRecordedAt?: string;
+  outcomeNotes?: string;
+  predictedAt: string;
+  expiresAt?: string;
+  updatedAt: string;
+}
+
+export interface RiskFactor {
+  factor: string;
+  severity: 'low' | 'medium' | 'high';
+  description?: string;
+}
+
+export interface Signal {
+  signal: string;
+  weight: number;
+  description?: string;
+}
+
+// 5.2.2 Time-to-Hire Forecast
+export interface TimeToHireForecast {
+  id: string;
+  companyId: string;
+  jobId: string;
+  predictedDays: number;
+  confidenceInterval: ConfidenceInterval;
+  confidenceLevel: number;
+  sourcingDays?: number;
+  screeningDays?: number;
+  interviewingDays?: number;
+  offerDays?: number;
+  closingDays?: number;
+  roleComplexity: RoleComplexity;
+  marketCompetition: MarketCompetition;
+  compensationCompetitiveness: CompensationCompetitiveness;
+  locationDifficulty: LocationDifficulty;
+  historicalAverage?: number;
+  industryBenchmark?: number;
+  companyBenchmark?: number;
+  predictedBottlenecks: Bottleneck[];
+  bottleneckRisk: 'LOW' | 'MEDIUM' | 'HIGH';
+  speedUpSuggestions: string[];
+  resourceRecommendations?: Record<string, any>;
+  actualDays?: number;
+  hiredAt?: string;
+  variance?: number;
+  forecastedAt: string;
+  updatedAt: string;
+}
+
+export interface ConfidenceInterval {
+  low: number;
+  high: number;
+}
+
+export interface Bottleneck {
+  stage: string;
+  risk: 'low' | 'medium' | 'high';
+  reason: string;
+}
+
+// 5.2.3 Offer Acceptance Prediction
+export interface OfferAcceptancePrediction {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  jobId: string;
+  offerId?: string;
+  acceptanceProbability: number;
+  confidenceLevel: number;
+  predictionGrade: PredictionGrade;
+  compensationFit: number;
+  roleFit: number;
+  locationFit: number;
+  cultureFit: number;
+  growthOpportunityFit: number;
+  workLifeBalanceFit: number;
+  competingOfferRisk: number;
+  counterofferRisk: number;
+  timingRisk: number;
+  engagementLevel: EngagementLevel;
+  responseTimeTrend: ResponseTimeTrend;
+  questionTopics: string[];
+  marketRateComparison: MarketRateComparison;
+  competitorAnalysis?: Record<string, any>;
+  improvementSuggestions: ImprovementSuggestion[];
+  negotiationGuidance?: string;
+  optimalOfferRange?: OfferRange;
+  actualDecision?: OfferDecision;
+  decisionDate?: string;
+  rejectionReason?: string;
+  predictedAt: string;
+  updatedAt: string;
+}
+
+export interface ImprovementSuggestion {
+  suggestion: string;
+  impact: 'low' | 'medium' | 'high';
+  effort?: 'low' | 'medium' | 'high';
+}
+
+export interface OfferRange {
+  min: number;
+  target: number;
+  max: number;
+}
+
+// 5.2.4 Retention Risk Score
+export interface RetentionRiskScore {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  jobId: string;
+  retentionProbability6Mo: number;
+  retentionProbability1Yr: number;
+  retentionProbability2Yr: number;
+  predictedTenure: number;
+  overallRiskLevel: RiskLevel;
+  riskScore: number;
+  jobHoppingIndicator: number;
+  tenureConsistency: number;
+  careerProgressionFit: number;
+  compensationSatisfaction: number;
+  growthOpportunityMatch: number;
+  redFlags: Flag[];
+  yellowFlags: Flag[];
+  positiveIndicators: Indicator[];
+  industryBenchmark?: number;
+  companyBenchmark?: number;
+  roleBenchmark?: number;
+  retentionStrategies: RetentionStrategy[];
+  onboardingFocus: string[];
+  earlyWarningTriggers?: Record<string, any>;
+  scoredAt: string;
+  modelVersion: string;
+  updatedAt: string;
+}
+
+export interface Flag {
+  flag: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface Indicator {
+  indicator: string;
+  weight: number;
+}
+
+export interface RetentionStrategy {
+  strategy: string;
+  priority: 'low' | 'medium' | 'high';
+  timeline?: string;
+}
+
+// 5.2.5 Performance Prediction
+export interface PerformancePrediction {
+  id: string;
+  companyId: string;
+  candidateId: string;
+  jobId: string;
+  predictedPerformance: PredictedPerformance;
+  performanceScore: number;
+  confidenceLevel: number;
+  technicalPerformance: number;
+  collaborationScore: number;
+  leadershipPotential: number;
+  adaptabilityScore: number;
+  innovationScore: number;
+  executionScore: number;
+  expectedRampUpMonths: number;
+  rampUpConfidence: number;
+  earlyWins: string[];
+  promotionReadiness?: number;
+  growthPotentialLevel: GrowthPotentialLevel;
+  careerCeiling?: string;
+  performanceRisks: PerformanceRisk[];
+  developmentNeeds: DevelopmentNeed[];
+  supportRequirements: SupportRequirement[];
+  topPerformerSimilarity?: number;
+  peerGroupPercentile?: number;
+  predictionFactors: Record<string, any>;
+  historicalDataPoints?: Record<string, any>;
+  predictedAt: string;
+  modelVersion: string;
+  updatedAt: string;
+}
+
+export interface PerformanceRisk {
+  risk: string;
+  likelihood: 'low' | 'medium' | 'high';
+  impact?: 'low' | 'medium' | 'high';
+}
+
+export interface DevelopmentNeed {
+  area: string;
+  priority: 'low' | 'medium' | 'high';
+  suggestedActions?: string[];
+}
+
+export interface SupportRequirement {
+  requirement: string;
+  duration: string;
+  type?: string;
+}
+
+// 5.2.6 Market Availability Analysis
+export interface MarketAvailabilityAnalysis {
+  id: string;
+  companyId: string;
+  jobId?: string;
+  roleTitle: string;
+  requiredSkills: string[];
+  location: string;
+  experienceLevel: string;
+  industry?: string;
+  availabilityScore: number;
+  difficultyLevel: DifficultyLevel;
+  estimatedCandidatePool: number;
+  talentSupply: TalentSupply;
+  hiringDemand: HiringDemand;
+  supplyDemandRatio: number;
+  competitorActivity: CompetitorActivity;
+  competingOpenings?: number;
+  marketShare?: number;
+  marketSalaryMin?: number;
+  marketSalaryMax?: number;
+  marketSalaryMedian?: number;
+  salaryTrend: SalaryTrend;
+  locationPremium?: number;
+  remoteAvailability?: number;
+  relocationWillingness?: number;
+  scarcestSkills: SkillScarcity[];
+  commonSkills: SkillAvailability[];
+  skillPremiums?: Record<string, number>;
+  sourcingRecommendations: SourcingRecommendation[];
+  compensationGuidance: CompensationGuidance;
+  timelineExpectation: number;
+  analyzedAt: string;
+  dataFreshness: string;
+  updatedAt: string;
+}
+
+export interface SkillScarcity {
+  skill: string;
+  scarcity: 'low' | 'medium' | 'high';
+}
+
+export interface SkillAvailability {
+  skill: string;
+  availability: 'low' | 'medium' | 'high';
+}
+
+export interface SourcingRecommendation {
+  channel: string;
+  effectiveness: 'low' | 'medium' | 'high';
+  cost?: 'low' | 'medium' | 'high';
+}
+
+export interface CompensationGuidance {
+  recommendation: string;
+  suggestedRange: OfferRange;
+}
+
+// 5.2.7 Salary Trend Prediction
+export interface SalaryTrendPrediction {
+  id: string;
+  companyId: string;
+  roleTitle: string;
+  location: string;
+  experienceLevel: string;
+  industry?: string;
+  currentMedian: number;
+  currentMin: number;
+  currentMax: number;
+  currentPercentile25?: number;
+  currentPercentile75?: number;
+  prediction3Mo: SalaryPrediction;
+  prediction6Mo: SalaryPrediction;
+  prediction1Yr: SalaryPrediction;
+  prediction2Yr?: SalaryPrediction;
+  trendDirection: TrendDirection;
+  annualGrowthRate: number;
+  volatility: Volatility;
+  demandImpact: number;
+  supplyImpact: number;
+  economicImpact: number;
+  technologyImpact: number;
+  regulatoryImpact?: number;
+  industryComparison: Record<string, string>;
+  locationComparison: Record<string, string>;
+  experienceProgression: Record<string, number>;
+  competitiveRange: OfferRange;
+  budgetGuidance?: string;
+  timingRecommendation?: string;
+  predictedAt: string;
+  modelVersion: string;
+  dataSource?: string;
+  updatedAt: string;
+}
+
+export interface SalaryPrediction {
+  median: number;
+  min: number;
+  max: number;
+  changePercent: number;
+}
+
+// 5.2.8 Pipeline Health Prediction
+export interface PipelineHealthPrediction {
+  id: string;
+  companyId: string;
+  jobId?: string;
+  currentCandidates: number;
+  byStage: Record<string, number>;
+  stageConversions: Record<string, number>;
+  overallHealthScore: number;
+  healthGrade: PredictionGrade;
+  healthTrend: HealthTrend;
+  predictedHires: number;
+  predictedDropouts: number;
+  fillProbability: number;
+  timeToFill?: number;
+  bottleneckStages: StageBottleneck[];
+  stageRisks: Record<string, string>;
+  conversionConcerns: ConversionConcern[];
+  candidateGap: number;
+  qualityGap: number;
+  diversityGap?: Record<string, any>;
+  averageTimeInStage: Record<string, number>;
+  velocityTrend: VelocityTrend;
+  stalledCandidates: number;
+  urgentActions: UrgentAction[];
+  sourcingNeeds: SourcingNeed[];
+  processImprovements: ProcessImprovement[];
+  weeklyForecast: WeeklyForecast[];
+  hireByDateProbability: Record<string, number>;
+  analyzedAt: string;
+  nextUpdateAt?: string;
+  updatedAt: string;
+}
+
+export interface StageBottleneck {
+  stage: string;
+  severity: 'low' | 'medium' | 'high';
+  cause: string;
+}
+
+export interface ConversionConcern {
+  fromStage: string;
+  toStage: string;
+  issue: string;
+}
+
+export interface UrgentAction {
+  action: string;
+  priority: 'low' | 'medium' | 'high';
+  impact: string;
+}
+
+export interface SourcingNeed {
+  need: string;
+  channel: string;
+  quantity?: number;
+}
+
+export interface ProcessImprovement {
+  improvement: string;
+  effort: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+}
+
+export interface WeeklyForecast {
+  week: number;
+  expectedHires: number;
+  expectedDropouts: number;
+}
+
+// Prediction Model Configuration
+export interface PredictionModelConfig {
+  id: string;
+  companyId: string;
+  modelType: PredictionModelType;
+  modelVersion: string;
+  isEnabled: boolean;
+  confidenceThreshold: number;
+  featureWeights: Record<string, number>;
+  enabledFeatures: string[];
+  disabledFeatures: string[];
+  calibrationDate?: string;
+  calibrationData?: Record<string, any>;
+  accuracyMetrics?: Record<string, any>;
+  actionThresholds: ActionThresholds;
+  alertThresholds: AlertThresholds;
+  customRules?: Record<string, any>;
+  exclusions?: Record<string, any>;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActionThresholds {
+  autoAdvance: number;
+  autoReject: number;
+  requireReview: number;
+}
+
+export interface AlertThresholds {
+  highRisk: number;
+  lowConfidence: number;
+}
+
+// Prediction Audit Log
+export interface PredictionAuditLog {
+  id: string;
+  companyId: string;
+  predictionType: PredictionModelType;
+  predictionId: string;
+  targetCandidateId?: string;
+  targetJobId?: string;
+  predictedValue: Record<string, any>;
+  confidenceLevel: number;
+  actualOutcome?: Record<string, any>;
+  outcomeRecordedAt?: string;
+  wasAccurate?: boolean;
+  accuracyScore?: number;
+  modelVersion: string;
+  inputFeatures?: Record<string, any>;
+  featureImportance?: Record<string, number>;
+  createdAt: string;
+}
+
+// Stats Interface
+export interface PredictiveAnalyticsStats {
+  totalPredictions: {
+    hiringSuccess: number;
+    timeToHire: number;
+    offerAcceptance: number;
+    retentionRisk: number;
+    performance: number;
+    marketAvailability: number;
+    salaryTrends: number;
+    pipelineHealth: number;
+  };
+  averages: {
+    hiringSuccessProbability: number;
+    offerAcceptanceProbability: number;
+    pipelineHealthScore: number;
+  };
+}
+
+export interface PredictionAccuracyStats {
+  totalPredictions: number;
+  accuratePredictions: number;
+  accuracyRate: number;
+  averageAccuracy: number;
+  byType: Record<string, {
+    total: number;
+    accurate: number;
+    avgScore: number;
+  }>;
+}
+
+// Input Types for API calls
+export interface PredictHiringSuccessInput {
+  candidateId: string;
+  jobId: string;
+  skillMatchScore?: number;
+  experienceMatchScore?: number;
+  cultureFitScore?: number;
+  motivationScore?: number;
+  stabilityScore?: number;
+}
+
+export interface ForecastTimeToHireInput {
+  jobId: string;
+  roleComplexity?: RoleComplexity;
+  marketCompetition?: MarketCompetition;
+  compensationCompetitiveness?: CompensationCompetitiveness;
+  locationDifficulty?: LocationDifficulty;
+}
+
+export interface PredictOfferAcceptanceInput {
+  candidateId: string;
+  jobId: string;
+  offerId?: string;
+  compensationFit?: number;
+  roleFit?: number;
+  locationFit?: number;
+  cultureFit?: number;
+}
+
+export interface CalculateRetentionRiskInput {
+  candidateId: string;
+  jobId: string;
+  jobHoppingIndicator?: number;
+  tenureConsistency?: number;
+  careerProgressionFit?: number;
+}
+
+export interface PredictPerformanceInput {
+  candidateId: string;
+  jobId: string;
+  technicalPerformance?: number;
+  collaborationScore?: number;
+  leadershipPotential?: number;
+}
+
+export interface AnalyzeMarketAvailabilityInput {
+  roleTitle: string;
+  location: string;
+  experienceLevel: string;
+  requiredSkills?: string[];
+  industry?: string;
+  jobId?: string;
+}
+
+export interface PredictSalaryTrendsInput {
+  roleTitle: string;
+  location: string;
+  experienceLevel: string;
+  industry?: string;
+  currentMedian?: number;
+}
+
+export interface AnalyzePipelineHealthInput {
+  jobId?: string;
+  currentCandidates?: number;
+  byStage?: Record<string, number>;
+}
