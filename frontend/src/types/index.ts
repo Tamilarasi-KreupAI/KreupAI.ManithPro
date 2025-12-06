@@ -2132,3 +2132,337 @@ export interface RequestCertificationVerificationPayload {
   issueDate: string;
   expirationDate?: string;
 }
+
+// ============================================
+// BATCH 6: EXTENDED VERIFICATION & SKILL ASSESSMENTS (Features 1.3.6-1.4.2)
+// ============================================
+
+// Background Check Types
+export type BackgroundCheckStatus = 'NOT_STARTED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type BackgroundCheckType = 'BASIC' | 'STANDARD' | 'COMPREHENSIVE' | 'CUSTOM';
+
+// Challenge Types
+export type ChallengeStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type ChallengeSubmissionStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'GRADING' | 'COMPLETED' | 'EXPIRED';
+export type QuizDifficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+
+// 1.3.6 - Education Verification
+export interface EducationVerification {
+  id: string;
+  profileId: string;
+  educationId: string;
+  institutionName: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate?: string;
+  grade?: string;
+  verificationProvider?: string;
+  requestId?: string;
+  requestStatus: VerificationRequestStatus;
+  requestSentAt?: string;
+  requestExpiresAt?: string;
+  isVerified: boolean;
+  verifiedAt?: string;
+  verificationMethod?: string;
+  verifiedInstitution?: string;
+  verifiedDegree?: string;
+  verifiedFieldOfStudy?: string;
+  verifiedStartDate?: string;
+  verifiedEndDate?: string;
+  verifiedGraduationDate?: string;
+  verifiedGrade?: string;
+  verifiedHonors?: string;
+  degreeConferred?: boolean;
+  institutionMatch?: 'exact' | 'partial' | 'mismatch';
+  degreeMatch?: 'exact' | 'partial' | 'mismatch';
+  dateMatch?: 'exact' | 'approximate' | 'mismatch';
+  overallMatch?: 'verified' | 'partial' | 'unverified' | 'mismatch';
+  matchScore?: number;
+  verificationError?: string;
+  verificationAttempts: number;
+  needsManualReview: boolean;
+  transcriptUrl?: string;
+  diplomaUrl?: string;
+  additionalDocs: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.7 - Background Check
+export interface BackgroundCheck {
+  id: string;
+  profileId: string;
+  provider: string;
+  providerCheckId?: string;
+  checkType: BackgroundCheckType;
+  packageName?: string;
+  includedChecks: string[];
+  requestId?: string;
+  status: BackgroundCheckStatus;
+  requestedAt?: string;
+  requestedBy?: string;
+  consentGiven: boolean;
+  consentGivenAt?: string;
+  consentDocument?: string;
+  completedChecks: number;
+  totalChecks: number;
+  currentStep?: string;
+  overallResult?: 'clear' | 'consider' | 'alert' | 'pending';
+  completedAt?: string;
+  reportUrl?: string;
+  checkResults?: Array<{
+    checkType: string;
+    status: string;
+    completedAt?: string;
+  }>;
+  adjudicationStatus?: 'pending' | 'approved' | 'declined' | 'escalated';
+  adjudicatedAt?: string;
+  adjudicatedBy?: string;
+  adjudicationNotes?: string;
+  validUntil?: string;
+  canBeShared: boolean;
+  errorMessage?: string;
+  errorCode?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.3.9 - Verified Badge
+export interface VerifiedBadge {
+  id: string;
+  profileId: string;
+  badgeType: string;
+  badgeName: string;
+  badgeDescription?: string;
+  badgeIcon?: string;
+  badgeColor?: string;
+  verificationSource: string;
+  verificationId?: string;
+  verificationType?: string;
+  isActive: boolean;
+  earnedAt: string;
+  expiresAt?: string;
+  showOnProfile: boolean;
+  displayOrder: number;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 1.4.1 - Coding Challenges
+export interface CodingChallenge {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  shortDescription?: string;
+  difficulty: QuizDifficulty;
+  category: string;
+  subcategory?: string;
+  tags: string[];
+  supportedLanguages: string[];
+  defaultLanguage: string;
+  problemStatement: string;
+  constraints: string[];
+  hints: string[];
+  examples: Array<{
+    input: string;
+    output: string;
+    explanation?: string;
+  }>;
+  sampleTestCases: Array<{
+    id: string;
+    input: string;
+    expectedOutput: string;
+  }>;
+  starterCode: Record<string, string>;
+  timeLimitMinutes: number;
+  maxAttempts?: number;
+  pointsValue: number;
+  autoGrade: boolean;
+  partialCredit: boolean;
+  status: ChallengeStatus;
+  publishedAt?: string;
+  totalAttempts: number;
+  totalCompletions: number;
+  avgCompletionTime?: number;
+  avgScore?: number;
+  successRate?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChallengeSubmission {
+  id: string;
+  challengeId: string;
+  userId: string;
+  attemptNumber: number;
+  language: string;
+  code: string;
+  status: ChallengeSubmissionStatus;
+  startedAt: string;
+  submittedAt?: string;
+  completedAt?: string;
+  timeSpentSeconds?: number;
+  testCasesPassed: number;
+  totalTestCases: number;
+  score?: number;
+  executionTime?: number;
+  memoryUsed?: number;
+  testResults?: Array<{
+    testCaseId: string;
+    passed: boolean;
+    output?: string;
+    expectedOutput?: string;
+    error?: string;
+    executionTime?: number;
+  }>;
+  codeQualityScore?: number;
+  complexity?: string;
+  linesOfCode?: number;
+  autoFeedback?: string;
+  reviewerFeedback?: string;
+  createdAt: string;
+  updatedAt: string;
+  challenge?: Partial<CodingChallenge>;
+}
+
+// 1.4.2 - Technical Quizzes
+export interface TechnicalQuiz {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  instructions?: string;
+  category: string;
+  subcategory?: string;
+  difficulty: QuizDifficulty;
+  tags: string[];
+  questionCount: number;
+  passingScore: number;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  timeLimitMinutes?: number;
+  showTimer: boolean;
+  maxAttempts?: number;
+  cooldownMinutes?: number;
+  showCorrectAnswers: boolean;
+  showExplanations: boolean;
+  showScoreImmediately: boolean;
+  status: ChallengeStatus;
+  publishedAt?: string;
+  totalAttempts: number;
+  totalCompletions: number;
+  avgScore?: number;
+  avgTimeSeconds?: number;
+  createdAt: string;
+  updatedAt: string;
+  questions?: QuizQuestion[];
+}
+
+export interface QuizQuestion {
+  id: string;
+  quizId: string;
+  questionNumber: number;
+  questionType: 'multiple_choice' | 'multiple_select' | 'true_false' | 'fill_blank' | 'code_output';
+  questionText: string;
+  questionCode?: string;
+  options: Array<{
+    id: string;
+    text: string;
+    isCorrect?: boolean;
+  }>;
+  correctAnswers: string[];
+  expectedAnswer?: string;
+  acceptedVariations: string[];
+  caseSensitive: boolean;
+  explanation?: string;
+  references: string[];
+  points: number;
+  difficulty: QuizDifficulty;
+  tags: string[];
+  skill?: string;
+  displayOrder: number;
+  correctCount: number;
+  incorrectCount: number;
+  skipCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuizAttempt {
+  id: string;
+  quizId: string;
+  userId: string;
+  attemptNumber: number;
+  status: ChallengeSubmissionStatus;
+  startedAt: string;
+  submittedAt?: string;
+  timeSpentSeconds?: number;
+  score?: number;
+  pointsEarned: number;
+  totalPoints: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  skippedQuestions: number;
+  totalQuestions: number;
+  passed?: boolean;
+  passingScore?: number;
+  answers: Array<{
+    questionId: string;
+    selectedOptions: string[];
+    answerText?: string;
+    isCorrect: boolean;
+    points: number;
+  }>;
+  skillBreakdown?: Record<string, {
+    correct: number;
+    total: number;
+    percentage?: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  quiz?: Partial<TechnicalQuiz>;
+}
+
+// Assessment Statistics
+export interface AssessmentStats {
+  challenges: {
+    completed: number;
+    averageScore: number;
+  };
+  quizzes: {
+    completed: number;
+    averageScore: number;
+  };
+}
+
+// Extended Verification Status
+export interface ExtendedVerificationStatus {
+  educationVerifications: {
+    total: number;
+    verified: number;
+    pending: number;
+  };
+  backgroundChecks: {
+    total: number;
+    completed: number;
+    pending: number;
+    latestResult?: string;
+  };
+  badges: {
+    total: number;
+    active: number;
+    displayed: number;
+  };
+}
+
+// Badge Type Configuration
+export interface BadgeTypeConfig {
+  type: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
