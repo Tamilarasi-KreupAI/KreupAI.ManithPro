@@ -51,3 +51,6 @@ export { default as ComplianceHub } from './ComplianceHub';
 
 // Recruiter Components - Batch 30: Recruitment Analytics
 export { default as RecruitmentAnalyticsHub } from './RecruitmentAnalyticsHub';
+
+// Recruiter Components - Batch 31: Executive Dashboards
+export { default as ExecutiveDashboardsHub } from './ExecutiveDashboardsHub';

@@ -14910,3 +14910,426 @@ model SLATracking {
   @@index([periodStart, periodEnd])
   @@map("sla_tracking")
 }
+
+// ==========================================
+// Batch 31: Executive Dashboards (9.2.1-9.2.8)
+// ==========================================
+
+// 9.2.1 Executive Summary Dashboard
+model ExecutiveDashboard {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  layout          Json     // Dashboard layout configuration
+  widgets         Json[]   // Array of widget configurations
+  filters         Json?    // Default filters
+
+  isDefault       Boolean  @default(false)
+  isShared        Boolean  @default(false)
+  createdBy       String
+  lastViewedAt    DateTime?
+  viewCount       Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([createdBy])
+  @@map("executive_dashboards")
+}
+
+// 9.2.2 Trend Analysis
+model TrendAnalysis {
+  id              String   @id @default(uuid())
+  organizationId  String
+  metricName      String
+  metricCategory  String   // hiring, cost, quality, time, diversity
+
+  periodType      String   // daily, weekly, monthly, quarterly, yearly
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  dataPoints      Json[]   // Array of { date, value }
+  trend           String   // increasing, decreasing, stable, seasonal
+  trendStrength   Float?   // -1 to 1
+  forecast        Json[]   // Forecasted values
+
+  // Statistical analysis
+  avgValue        Float
+  minValue        Float
+  maxValue        Float
+  stdDeviation    Float?
+  yoyChange       Float?   // Year-over-year change %
+  momChange       Float?   // Month-over-month change %
+
+  seasonalPattern String?  // Q1-high, summer-low, etc.
+  anomalies       Json[]   @default([])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([metricName])
+  @@index([periodStart, periodEnd])
+  @@map("trend_analyses")
+}
+
+// 9.2.3 Benchmark Comparisons
+model IndustryBenchmark {
+  id              String   @id @default(uuid())
+  industry        String
+  companySize     String   // small, medium, large, enterprise
+  region          String   // US, EU, APAC, Global
+  metricName      String
+  metricCategory  String
+
+  year            Int
+  quarter         Int?
+
+  p10Value        Float    // 10th percentile
+  p25Value        Float    // 25th percentile
+  p50Value        Float    // Median
+  p75Value        Float    // 75th percentile
+  p90Value        Float    // 90th percentile
+  avgValue        Float
+
+  source          String?
+  sampleSize      Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([industry])
+  @@index([metricName])
+  @@map("industry_benchmarks")
+}
+
+model BenchmarkComparison {
+  id              String   @id @default(uuid())
+  organizationId  String
+  benchmarkId     String
+
+  comparisonDate  DateTime
+  metricName      String
+  metricCategory  String
+
+  orgValue        Float
+  benchmarkValue  Float
+  percentile      Float    // Where org stands
+  gap             Float    // Difference from median
+
+  status          String   // above_average, average, below_average, top_quartile
+  recommendation  String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([metricName])
+  @@map("benchmark_comparisons")
+}
+
+// 9.2.4 Custom Dashboard Builder
+model DashboardWidget {
+  id              String   @id @default(uuid())
+  organizationId  String
+  dashboardId     String?
+  name            String
+  description     String?
+
+  widgetType      String   // chart, metric, table, funnel, gauge, list
+  chartType       String?  // line, bar, pie, donut, area, scatter
+  dataSource      String   // API endpoint or data source name
+  query           Json?    // Query parameters
+
+  // Visual configuration
+  width           Int      @default(1)   // Grid units
+  height          Int      @default(1)
+  position        Json?    // { x, y }
+  colors          Json?    // Color scheme
+  showLegend      Boolean  @default(true)
+  showLabels      Boolean  @default(true)
+
+  // Refresh settings
+  refreshInterval Int?     // Seconds
+  lastRefreshed   DateTime?
+
+  isTemplate      Boolean  @default(false)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([dashboardId])
+  @@map("dashboard_widgets")
+}
+
+// 9.2.5 Scheduled Reports
+model ScheduledReport {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  reportType      String   // executive_summary, hiring_metrics, diversity, etc.
+  templateId      String?
+  format          String   // pdf, excel, csv, ppt
+
+  schedule        String   // cron expression
+  timezone        String   @default("UTC")
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+
+  recipients      String[] // Email addresses
+  ccRecipients    String[] @default([])
+  includeComments Boolean  @default(false)
+
+  filters         Json?    // Report filters
+  dateRange       String   // last_week, last_month, custom
+  customDateStart DateTime?
+  customDateEnd   DateTime?
+
+  isActive        Boolean  @default(true)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([nextRunAt])
+  @@map("scheduled_reports")
+}
+
+model ReportExecution {
+  id              String   @id @default(uuid())
+  scheduledReportId String
+  organizationId  String
+
+  executionTime   DateTime
+  status          String   // pending, running, completed, failed
+  duration        Int?     // Seconds
+
+  fileUrl         String?
+  fileSize        Int?
+  pageCount       Int?
+
+  recipientsSent  String[]
+  deliveryStatus  Json?    // Per-recipient status
+
+  errorMessage    String?
+  retryCount      Int      @default(0)
+
+  createdAt       DateTime @default(now())
+
+  @@index([scheduledReportId])
+  @@index([executionTime])
+  @@map("report_executions")
+}
+
+// 9.2.6 BI Tool Export
+model BIExportConfig {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  toolType        String   // tableau, looker, powerbi, google_datastudio
+  connectionType  String   // direct, api, file_export
+
+  // Connection details (encrypted)
+  serverUrl       String?
+  apiKey          String?
+  credentials     Json?    // Encrypted credentials
+
+  // Data configuration
+  dataSources     String[] // Which data to export
+  refreshSchedule String?  // Cron expression
+  lastExportAt    DateTime?
+
+  // Status
+  connectionStatus String  @default("pending") // pending, connected, error
+  lastConnectionTest DateTime?
+  errorMessage    String?
+
+  isActive        Boolean  @default(true)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([toolType])
+  @@map("bi_export_configs")
+}
+
+model BIExportLog {
+  id              String   @id @default(uuid())
+  configId        String
+  organizationId  String
+
+  exportTime      DateTime
+  status          String   // started, completed, failed
+  exportType      String   // full, incremental
+
+  recordsExported Int?
+  duration        Int?     // Seconds
+  fileSize        Int?
+
+  errorMessage    String?
+  metadata        Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([configId])
+  @@index([exportTime])
+  @@map("bi_export_logs")
+}
+
+// 9.2.7 Goal Tracking
+model HiringGoal {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  goalType        String   // hiring_count, time_to_hire, cost_per_hire, diversity, quality
+  targetValue     Float
+  currentValue    Float    @default(0)
+  unit            String   // count, days, dollars, percentage
+
+  departmentId    String?
+  jobId           String?
+  recruiterId     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  status          String   @default("on_track") // on_track, at_risk, behind, exceeded, completed
+  progress        Float    @default(0) // 0-100
+
+  milestones      Json[]   @default([])
+  notifications   Json?    // Notification settings
+
+  createdBy       String
+  ownerId         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([periodEnd])
+  @@map("hiring_goals")
+}
+
+model GoalProgress {
+  id              String   @id @default(uuid())
+  goalId          String
+  organizationId  String
+
+  recordDate      DateTime
+  value           Float
+  cumulativeValue Float
+
+  milestone       String?
+  note            String?
+  updatedBy       String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([goalId])
+  @@index([recordDate])
+  @@map("goal_progress")
+}
+
+// 9.2.8 Department/Team Views
+model DepartmentView {
+  id              String   @id @default(uuid())
+  organizationId  String
+  departmentId    String
+  departmentName  String
+
+  // Snapshot data
+  snapshotDate    DateTime
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Hiring metrics
+  openPositions   Int      @default(0)
+  activeApplicants Int     @default(0)
+  hiredThisPeriod Int      @default(0)
+  targetHires     Int?
+
+  // Time metrics
+  avgTimeToFill   Float?
+  avgTimeToHire   Float?
+
+  // Cost metrics
+  avgCostPerHire  Float?
+  totalHiringBudget Float?
+  budgetUsed      Float?
+
+  // Quality metrics
+  avgQualityScore Float?
+  offerAcceptRate Float?
+  retention90Days Float?
+
+  // Diversity
+  diversityScore  Float?
+
+  // Pipeline
+  pipelineHealth  Json?    // Breakdown by stage
+
+  headcount       Int?
+  attritionRate   Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([snapshotDate])
+  @@map("department_views")
+}
+
+model TeamHiringMetrics {
+  id              String   @id @default(uuid())
+  organizationId  String
+  teamId          String
+  teamName        String
+  managerId       String?
+  managerName     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Activity
+  positionsOpened Int      @default(0)
+  positionsFilled Int      @default(0)
+  positionsClosed Int      @default(0)
+
+  // Performance
+  avgTimeToFill   Float?
+  avgCostPerHire  Float?
+  avgQualityScore Float?
+  fillRate        Float?
+
+  // Efficiency
+  interviewsPerHire Float?
+  offerAcceptRate Float?
+
+  // Satisfaction
+  hiringManagerSatisfaction Float?
+  candidateExperience Float?
+
+  trend           String?  // improving, stable, declining
+  ranking         Int?     // Among teams
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([teamId])
+  @@index([periodStart, periodEnd])
+  @@map("team_hiring_metrics")
+}

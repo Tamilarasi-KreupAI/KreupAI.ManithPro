@@ -14909,3 +14909,352 @@ export interface RecruitmentStats {
     managerSatisfaction: number;
   };
 }
+
+// ==========================================
+// Batch 31: Executive Dashboards Types (9.2.1-9.2.8)
+// ==========================================
+
+// 9.2.1 Executive Dashboard
+export interface ExecutiveDashboard {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  layout: { columns: number; rows: number };
+  widgets: DashboardWidgetConfig[];
+  filters?: Record<string, unknown>;
+  isDefault: boolean;
+  isShared: boolean;
+  createdBy: string;
+  lastViewedAt?: string;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DashboardWidgetConfig {
+  id: string;
+  type: string;
+  name: string;
+  position: { x: number; y: number };
+  value?: number | string;
+}
+
+export interface ExecutiveSummary {
+  period: string;
+  kpis: Array<{
+    name: string;
+    value: number;
+    target: number;
+    status: string;
+    trend: string;
+    unit?: string;
+  }>;
+  highlights: Array<{
+    type: string;
+    message: string;
+  }>;
+  departmentOverview: Array<{
+    name: string;
+    hires: number;
+    target: number;
+    progress: number;
+  }>;
+}
+
+// 9.2.2 Trend Analysis
+export interface TrendAnalysis {
+  id: string;
+  organizationId: string;
+  metricName: string;
+  metricCategory: string;
+  periodType: string;
+  periodStart: string;
+  periodEnd: string;
+  dataPoints: Array<{ date: string; value: number }>;
+  trend: string;
+  trendStrength?: number;
+  forecast: Array<{ date: string; value: number }>;
+  avgValue: number;
+  minValue: number;
+  maxValue: number;
+  stdDeviation?: number;
+  yoyChange?: number;
+  momChange?: number;
+  seasonalPattern?: string;
+  anomalies: Array<Record<string, unknown>>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ForecastResult {
+  metricName: string;
+  currentValue: number;
+  forecastedValues: Array<{
+    period: string;
+    value: number;
+    confidence: number;
+  }>;
+  assumptions: string[];
+  modelAccuracy: number;
+}
+
+// 9.2.3 Benchmark Comparisons
+export interface IndustryBenchmark {
+  id: string;
+  industry: string;
+  companySize: string;
+  region: string;
+  metricName: string;
+  metricCategory: string;
+  year: number;
+  quarter?: number;
+  p10Value: number;
+  p25Value: number;
+  p50Value: number;
+  p75Value: number;
+  p90Value: number;
+  avgValue: number;
+  source?: string;
+  sampleSize?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BenchmarkComparison {
+  id: string;
+  organizationId: string;
+  benchmarkId: string;
+  comparisonDate: string;
+  metricName: string;
+  metricCategory: string;
+  orgValue: number;
+  benchmarkValue: number;
+  percentile: number;
+  gap: number;
+  status: string;
+  recommendation?: string;
+  createdAt: string;
+}
+
+// 9.2.4 Dashboard Widget
+export interface DashboardWidget {
+  id: string;
+  organizationId: string;
+  dashboardId?: string;
+  name: string;
+  description?: string;
+  widgetType: string;
+  chartType?: string;
+  dataSource: string;
+  query?: Record<string, unknown>;
+  width: number;
+  height: number;
+  position?: { x: number; y: number };
+  colors?: Record<string, string>;
+  showLegend: boolean;
+  showLabels: boolean;
+  refreshInterval?: number;
+  lastRefreshed?: string;
+  isTemplate: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WidgetTemplate {
+  id: string;
+  name: string;
+  widgetType: string;
+  chartType?: string;
+  description: string;
+}
+
+// 9.2.5 Scheduled Reports
+export interface ScheduledReport {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  reportType: string;
+  templateId?: string;
+  format: 'pdf' | 'excel' | 'csv' | 'ppt';
+  schedule: string;
+  timezone: string;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  recipients: string[];
+  ccRecipients: string[];
+  includeComments: boolean;
+  filters?: Record<string, unknown>;
+  dateRange: string;
+  customDateStart?: string;
+  customDateEnd?: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportExecution {
+  id: string;
+  scheduledReportId: string;
+  organizationId: string;
+  executionTime: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  duration?: number;
+  fileUrl?: string;
+  fileSize?: number;
+  pageCount?: number;
+  recipientsSent: string[];
+  deliveryStatus?: Record<string, unknown>;
+  errorMessage?: string;
+  retryCount: number;
+  createdAt: string;
+}
+
+// 9.2.6 BI Export
+export interface BIExportConfig {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  toolType: 'tableau' | 'looker' | 'powerbi' | 'google_datastudio';
+  connectionType: 'direct' | 'api' | 'file_export';
+  serverUrl?: string;
+  apiKey?: string;
+  credentials?: Record<string, unknown>;
+  dataSources: string[];
+  refreshSchedule?: string;
+  lastExportAt?: string;
+  connectionStatus: 'pending' | 'connected' | 'error';
+  lastConnectionTest?: string;
+  errorMessage?: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BIExportLog {
+  id: string;
+  configId: string;
+  organizationId: string;
+  exportTime: string;
+  status: 'started' | 'completed' | 'failed';
+  exportType: 'full' | 'incremental';
+  recordsExported?: number;
+  duration?: number;
+  fileSize?: number;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 9.2.7 Goal Tracking
+export interface HiringGoal {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  goalType: 'hiring_count' | 'time_to_hire' | 'cost_per_hire' | 'diversity' | 'quality';
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  departmentId?: string;
+  jobId?: string;
+  recruiterId?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: 'on_track' | 'at_risk' | 'behind' | 'exceeded' | 'completed';
+  progress: number;
+  milestones: Array<{
+    name: string;
+    date: string;
+    target: number;
+    actual?: number | null;
+  }>;
+  notifications?: Record<string, unknown>;
+  createdBy: string;
+  ownerId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalProgress {
+  id: string;
+  goalId: string;
+  organizationId: string;
+  recordDate: string;
+  value: number;
+  cumulativeValue: number;
+  milestone?: string;
+  note?: string;
+  updatedBy?: string;
+  createdAt: string;
+}
+
+// 9.2.8 Department/Team Views
+export interface DepartmentView {
+  id: string;
+  organizationId: string;
+  departmentId: string;
+  departmentName: string;
+  snapshotDate: string;
+  periodStart: string;
+  periodEnd: string;
+  openPositions: number;
+  activeApplicants: number;
+  hiredThisPeriod: number;
+  targetHires?: number;
+  avgTimeToFill?: number;
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  totalHiringBudget?: number;
+  budgetUsed?: number;
+  avgQualityScore?: number;
+  offerAcceptRate?: number;
+  retention90Days?: number;
+  diversityScore?: number;
+  pipelineHealth?: Record<string, number>;
+  headcount?: number;
+  attritionRate?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamHiringMetrics {
+  id: string;
+  organizationId: string;
+  teamId: string;
+  teamName: string;
+  managerId?: string;
+  managerName?: string;
+  periodStart: string;
+  periodEnd: string;
+  positionsOpened: number;
+  positionsFilled: number;
+  positionsClosed: number;
+  avgTimeToFill?: number;
+  avgCostPerHire?: number;
+  avgQualityScore?: number;
+  fillRate?: number;
+  interviewsPerHire?: number;
+  offerAcceptRate?: number;
+  hiringManagerSatisfaction?: number;
+  candidateExperience?: number;
+  trend?: string;
+  ranking?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentComparison {
+  departments: string[];
+  metrics: Array<{
+    metric: string;
+    values: Record<string, number>;
+  }>;
+}
