@@ -1220,6 +1220,400 @@ export interface BlogPublication {
   followerCount: number;
 }
 
+// ============================================
+// BATCH 4: KAGGLE, CODING PLATFORMS, COURSES, ACADEMIC, PORTFOLIO LINKS
+// ============================================
+
+// 1.2.8 - Kaggle Integration
+export type KaggleTier = 'Grandmaster' | 'Master' | 'Expert' | 'Contributor' | 'Novice';
+
+export interface KaggleProfile {
+  id: string;
+  profileId: string;
+  kaggleId: string;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  profileUrl: string;
+  bio?: string;
+  location?: string;
+  occupation?: string;
+  organization?: string;
+  tier?: KaggleTier;
+  competitionTier?: string;
+  datasetTier?: string;
+  notebookTier?: string;
+  discussionTier?: string;
+  competitionRanking?: number;
+  datasetRanking?: number;
+  notebookRanking?: number;
+  discussionRanking?: number;
+  competitionCount: number;
+  datasetCount: number;
+  notebookCount: number;
+  discussionCount: number;
+  totalMedals: number;
+  goldMedals: number;
+  silverMedals: number;
+  bronzeMedals: number;
+  achievements?: any[];
+  topCompetitions?: KaggleCompetition[];
+  featuredNotebooks?: KaggleNotebook[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface KaggleCompetition {
+  id: string;
+  name: string;
+  url: string;
+  rank: number;
+  totalTeams: number;
+  medal?: 'gold' | 'silver' | 'bronze';
+  date: string;
+}
+
+export interface KaggleNotebook {
+  id: string;
+  title: string;
+  url: string;
+  votes: number;
+  comments: number;
+  views: number;
+  language: string;
+}
+
+// 1.2.9 - LeetCode/HackerRank Integration
+export type CodingPlatformType = 'leetcode' | 'hackerrank' | 'codeforces' | 'codechef';
+
+export interface CodingPlatformProfile {
+  id: string;
+  profileId: string;
+  platform: CodingPlatformType;
+  platformUserId: string;
+  username: string;
+  displayName?: string;
+  profileUrl: string;
+  avatarUrl?: string;
+  bio?: string;
+  location?: string;
+  globalRank?: number;
+  countryRank?: number;
+  rating?: number;
+  maxRating?: number;
+  percentile?: number;
+  totalSolved: number;
+  easySolved: number;
+  mediumSolved: number;
+  hardSolved: number;
+  acceptanceRate?: number;
+  totalSubmissions: number;
+  contestsAttended: number;
+  badges?: CodingBadge[];
+  totalBadges: number;
+  currentStreak: number;
+  maxStreak: number;
+  totalActiveDays: number;
+  languageStats?: LanguageStat[];
+  topSkills?: CodingSkill[];
+  recentSubmissions?: Submission[];
+  contestHistory?: Contest[];
+  hackerRankCertificates?: Certificate[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface CodingBadge {
+  name: string;
+  icon?: string;
+  description?: string;
+  earnedAt?: string;
+}
+
+export interface LanguageStat {
+  language: string;
+  problemsSolved: number;
+  percentage: number;
+}
+
+export interface CodingSkill {
+  skill: string;
+  problemsSolved: number;
+  beats: number;
+}
+
+export interface Submission {
+  id: string;
+  problemTitle: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  language: string;
+  runtime: string;
+  memory: string;
+  submittedAt: string;
+}
+
+export interface Contest {
+  id: string;
+  name: string;
+  rank: number;
+  totalParticipants: number;
+  rating?: number;
+  ratingChange?: number;
+  date: string;
+}
+
+export interface Certificate {
+  id: string;
+  name: string;
+  skill: string;
+  level?: string;
+  url: string;
+  earnedAt: string;
+}
+
+// 1.2.10 - Online Courses
+export type OnlineCoursePlatform = 'coursera' | 'udemy' | 'edx' | 'pluralsight' | 'linkedin_learning';
+
+export interface OnlineCourseProfile {
+  id: string;
+  profileId: string;
+  platform: OnlineCoursePlatform;
+  platformUserId?: string;
+  username?: string;
+  displayName?: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+  totalCourses: number;
+  completedCourses: number;
+  totalHours?: number;
+  certificationsEarned: number;
+  specializations?: Specialization[];
+  courses?: OnlineCourse[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface Specialization {
+  id: string;
+  name: string;
+  provider: string;
+  completedAt: string;
+  certificateUrl?: string;
+}
+
+export interface OnlineCourse {
+  id: string;
+  courseProfileId: string;
+  courseId: string;
+  title: string;
+  description?: string;
+  provider?: string;
+  platformCourseUrl?: string;
+  thumbnailUrl?: string;
+  category?: string;
+  subcategory?: string;
+  duration?: string;
+  durationHours?: number;
+  startDate?: string;
+  completionDate?: string;
+  progress?: number;
+  isCompleted: boolean;
+  grade?: string;
+  gradeNumeric?: number;
+  hasCertificate: boolean;
+  certificateId?: string;
+  certificateUrl?: string;
+  certificateImageUrl?: string;
+  skills: string[];
+  topics: string[];
+  verificationStatus: VerificationStatus;
+  isShowcased: boolean;
+  displayOrder: number;
+}
+
+// 1.2.11 - Academic Profiles
+export type AcademicPlatform = 'google_scholar' | 'researchgate' | 'orcid' | 'academia';
+
+export interface AcademicProfile {
+  id: string;
+  profileId: string;
+  platform: AcademicPlatform;
+  platformUserId: string;
+  profileUrl: string;
+  avatarUrl?: string;
+  displayName?: string;
+  affiliation?: string;
+  department?: string;
+  position?: string;
+  email?: string;
+  website?: string;
+  bio?: string;
+  totalPublications: number;
+  totalCitations: number;
+  hIndex?: number;
+  i10Index?: number;
+  citationsLastYear?: number;
+  researchInterests: string[];
+  keywords: string[];
+  coAuthors?: CoAuthor[];
+  featuredPublications?: Publication[];
+  publications?: Publication[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface CoAuthor {
+  name: string;
+  affiliation?: string;
+  collaborations: number;
+  profileUrl?: string;
+}
+
+export interface Publication {
+  id: string;
+  academicProfileId: string;
+  publicationId: string;
+  title: string;
+  abstract?: string;
+  publicationType?: 'journal' | 'conference' | 'preprint' | 'book' | 'thesis';
+  venue?: string;
+  publisher?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  year?: number;
+  doi?: string;
+  arxivId?: string;
+  pubmedId?: string;
+  url?: string;
+  pdfUrl?: string;
+  authors: string[];
+  authorPosition?: number;
+  citations: number;
+  citationsLastYear?: number;
+  keywords: string[];
+  topics: string[];
+  verificationStatus: VerificationStatus;
+  isFeatured: boolean;
+  isShowcased: boolean;
+  displayOrder: number;
+  publishedAt?: string;
+}
+
+// 1.2.12 - Custom Portfolio Links
+export type PortfolioLinkType = 'portfolio' | 'project' | 'blog' | 'social' | 'video' | 'document' | 'other';
+
+export interface CustomPortfolioLink {
+  id: string;
+  profileId: string;
+  title: string;
+  url: string;
+  description?: string;
+  linkType?: PortfolioLinkType;
+  platform?: string;
+  siteName?: string;
+  favicon?: string;
+  thumbnailUrl?: string;
+  previewImage?: string;
+  metaDescription?: string;
+  metaKeywords: string[];
+  embedUrl?: string;
+  duration?: string;
+  viewCount?: number;
+  tags: string[];
+  category?: string;
+  isPublic: boolean;
+  isFeatured: boolean;
+  showPreview: boolean;
+  displayOrder: number;
+  isVerified: boolean;
+  verifiedAt?: string;
+  lastCheckedAt?: string;
+  isAccessible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Batch 4 Integrations Status Response
+export interface Batch4IntegrationsStatus {
+  kaggle: {
+    connected: boolean;
+    id?: string;
+    username?: string;
+    tier?: string;
+    status?: IntegrationStatus;
+  };
+  codingPlatforms: {
+    leetcode?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      totalSolved?: number;
+    };
+    hackerrank?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      totalSolved?: number;
+    };
+    codeforces?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      rating?: number;
+    };
+  };
+  onlineCourses: {
+    coursera?: {
+      connected: boolean;
+      id?: string;
+      completedCourses?: number;
+    };
+    udemy?: {
+      connected: boolean;
+      id?: string;
+      completedCourses?: number;
+    };
+  };
+  academic: {
+    googleScholar?: {
+      connected: boolean;
+      id?: string;
+      totalPublications?: number;
+      citations?: number;
+    };
+    researchgate?: {
+      connected: boolean;
+      id?: string;
+      totalPublications?: number;
+    };
+  };
+  portfolioLinks: {
+    count: number;
+    featuredCount: number;
+  };
+}
+
 // Extended Integration Status Response (with all integrations)
 export interface AllIntegrationsStatusResponse extends IntegrationStatusResponse {
   stackoverflow: {

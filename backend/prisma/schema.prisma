@@ -662,6 +662,11 @@ model CandidateProfile {
   gitlabProfile         GitLabProfile?
   designPortfolios      DesignPortfolio[]
   blogPlatforms         BlogPlatform[]
+  kaggleProfile         KaggleProfile?
+  codingPlatforms       CodingPlatformProfile[]
+  onlineCourseProfiles  OnlineCourseProfile[]
+  academicProfiles      AcademicProfile[]
+  customPortfolioLinks  CustomPortfolioLink[]
 
   @@index([userId])
   @@index([completenessScore])
@@ -1623,4 +1628,440 @@ model BlogPlatform {
   @@index([profileId])
   @@index([platform])
   @@map("blog_platforms")
+}
+
+// ============================================
+// BATCH 4: ADDITIONAL INTEGRATIONS (Features 1.2.8-1.2.12)
+// ============================================
+
+// 1.2.8 - Kaggle Integration
+model KaggleProfile {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // Kaggle Account Info
+  kaggleId              String              @unique
+  username              String
+  displayName           String?
+  avatarUrl             String?
+  profileUrl            String
+  bio                   String?
+  location              String?
+  occupation            String?
+  organization          String?
+
+  // Tier & Ranking
+  tier                  String?             // "Grandmaster", "Master", "Expert", "Contributor", "Novice"
+  competitionTier       String?
+  datasetTier           String?
+  notebookTier          String?
+  discussionTier        String?
+
+  // Rankings
+  competitionRanking    Int?
+  datasetRanking        Int?
+  notebookRanking       Int?
+  discussionRanking     Int?
+
+  // Statistics
+  competitionCount      Int                 @default(0)
+  datasetCount          Int                 @default(0)
+  notebookCount         Int                 @default(0)
+  discussionCount       Int                 @default(0)
+  totalMedals           Int                 @default(0)
+  goldMedals            Int                 @default(0)
+  silverMedals          Int                 @default(0)
+  bronzeMedals          Int                 @default(0)
+
+  // Achievements
+  achievements          Json?               // Array of achievements
+
+  // Top Competitions
+  topCompetitions       Json?               // Array of best competition results
+
+  // Top Notebooks
+  featuredNotebooks     Json?               // Array of popular notebooks
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  tokenExpiresAt        DateTime?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+  showOnProfile         Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([username])
+  @@map("kaggle_profiles")
+}
+
+// 1.2.9 - LeetCode/HackerRank Integration
+model CodingPlatformProfile {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Platform Info
+  platform              String              // "leetcode", "hackerrank", "codeforces", "codechef"
+  platformUserId        String
+  username              String
+  displayName           String?
+  profileUrl            String
+  avatarUrl             String?
+  bio                   String?
+  location              String?
+
+  // Ranking & Rating
+  globalRank            Int?
+  countryRank           Int?
+  rating                Int?
+  maxRating             Int?
+  percentile            Float?
+
+  // Problem Solving Stats
+  totalSolved           Int                 @default(0)
+  easySolved            Int                 @default(0)
+  mediumSolved          Int                 @default(0)
+  hardSolved            Int                 @default(0)
+  acceptanceRate        Float?
+  totalSubmissions      Int                 @default(0)
+  contestsAttended      Int                 @default(0)
+
+  // Badges & Achievements
+  badges                Json?               // Array of badges/achievements
+  totalBadges           Int                 @default(0)
+
+  // Streaks
+  currentStreak         Int                 @default(0)
+  maxStreak             Int                 @default(0)
+  totalActiveDays       Int                 @default(0)
+
+  // Languages Used
+  languageStats         Json?               // Array of {language, problemsSolved, percentage}
+
+  // Skills/Topics
+  topSkills             Json?               // Array of {skill, problemsSolved, beats}
+
+  // Recent Submissions
+  recentSubmissions     Json?               // Array of recent accepted solutions
+
+  // Contest History
+  contestHistory        Json?               // Array of contest results
+
+  // HackerRank Specific
+  hackerRankCertificates Json?              // Array of certificates earned
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  apiKey                String?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+  showOnProfile         Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@index([platform])
+  @@map("coding_platform_profiles")
+}
+
+// 1.2.10 - Coursera/Udemy/Online Learning Certifications
+model OnlineCourseProfile {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Platform Info
+  platform              String              // "coursera", "udemy", "edx", "pluralsight", "linkedin_learning"
+  platformUserId        String?
+  username              String?
+  displayName           String?
+  profileUrl            String?
+  avatarUrl             String?
+
+  // Statistics
+  totalCourses          Int                 @default(0)
+  completedCourses      Int                 @default(0)
+  totalHours            Float?              // Learning hours
+  certificationsEarned  Int                 @default(0)
+
+  // Specializations
+  specializations       Json?               // Array of completed specializations
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  apiKey                String?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+  showOnProfile         Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  courses               OnlineCourse[]
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@index([platform])
+  @@map("online_course_profiles")
+}
+
+model OnlineCourse {
+  id                    String              @id @default(uuid())
+  courseProfileId       String
+
+  // Course Info
+  courseId              String
+  title                 String
+  description           String?
+  provider              String?             // Institution or instructor
+  platformCourseUrl     String?
+  thumbnailUrl          String?
+  category              String?
+  subcategory           String?
+
+  // Duration & Dates
+  duration              String?             // e.g., "40 hours"
+  durationHours         Float?
+  startDate             DateTime?
+  completionDate        DateTime?
+  enrolledAt            DateTime?
+
+  // Progress & Grades
+  progress              Float?              // 0-100
+  isCompleted           Boolean             @default(false)
+  grade                 String?             // e.g., "95%", "Pass with Distinction"
+  gradeNumeric          Float?
+
+  // Certificate
+  hasCertificate        Boolean             @default(false)
+  certificateId         String?
+  certificateUrl        String?
+  certificateImageUrl   String?
+
+  // Skills & Topics
+  skills                String[]            @default([])
+  topics                String[]            @default([])
+
+  // Verification
+  verificationStatus    VerificationStatus  @default(PENDING)
+  verifiedAt            DateTime?
+  verificationUrl       String?
+
+  // Display Settings
+  isShowcased           Boolean             @default(false)
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  courseProfile         OnlineCourseProfile @relation(fields: [courseProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([courseProfileId, courseId])
+  @@index([courseProfileId])
+  @@index([isCompleted])
+  @@map("online_courses")
+}
+
+// 1.2.11 - Google Scholar/Research Gate Integration
+model AcademicProfile {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Platform Info
+  platform              String              // "google_scholar", "researchgate", "orcid", "academia"
+  platformUserId        String
+  profileUrl            String
+  avatarUrl             String?
+
+  // Basic Info
+  displayName           String?
+  affiliation           String?             // University/Institution
+  department            String?
+  position              String?             // Professor, Researcher, etc.
+  email                 String?
+  website               String?
+  bio                   String?
+
+  // Statistics
+  totalPublications     Int                 @default(0)
+  totalCitations        Int                 @default(0)
+  hIndex                Int?                // H-index
+  i10Index              Int?                // i10-index
+  citationsLastYear     Int?
+
+  // Research Interests
+  researchInterests     String[]            @default([])
+  keywords              String[]            @default([])
+
+  // Co-authors
+  coAuthors             Json?               // Array of frequent co-authors
+
+  // Publications
+  featuredPublications  Json?               // Array of top cited publications
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+  showOnProfile         Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  publications          Publication[]
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@index([platform])
+  @@map("academic_profiles")
+}
+
+model Publication {
+  id                    String              @id @default(uuid())
+  academicProfileId     String
+
+  // Publication Info
+  publicationId         String              // External ID
+  title                 String
+  abstract              String?
+  publicationType       String?             // "journal", "conference", "preprint", "book", "thesis"
+  venue                 String?             // Journal/Conference name
+  publisher             String?
+  volume                String?
+  issue                 String?
+  pages                 String?
+  year                  Int?
+  doi                   String?
+  arxivId               String?
+  pubmedId              String?
+
+  // URLs
+  url                   String?
+  pdfUrl                String?
+
+  // Authors
+  authors               String[]            @default([])
+  authorPosition        Int?                // Position in author list
+
+  // Citations
+  citations             Int                 @default(0)
+  citationsLastYear     Int?
+
+  // Tags
+  keywords              String[]            @default([])
+  topics                String[]            @default([])
+
+  // Verification
+  verificationStatus    VerificationStatus  @default(PENDING)
+  verifiedAt            DateTime?
+
+  // Display Settings
+  isFeatured            Boolean             @default(false)
+  isShowcased           Boolean             @default(false)
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  publishedAt           DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  academicProfile       AcademicProfile     @relation(fields: [academicProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([academicProfileId, publicationId])
+  @@index([academicProfileId])
+  @@index([year])
+  @@index([citations])
+  @@map("publications")
+}
+
+// 1.2.12 - Custom Portfolio Links
+model CustomPortfolioLink {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Link Info
+  title                 String
+  url                   String
+  description           String?
+
+  // Link Type
+  linkType              String?             // "portfolio", "project", "blog", "social", "video", "document", "other"
+  platform              String?             // Detected platform (YouTube, Vimeo, etc.)
+
+  // Metadata (auto-extracted)
+  siteName              String?
+  favicon               String?
+  thumbnailUrl          String?
+  previewImage          String?
+  metaDescription       String?
+  metaKeywords          String[]            @default([])
+
+  // Media Info (for video/audio links)
+  embedUrl              String?
+  duration              String?
+  viewCount             Int?
+
+  // Custom Tags
+  tags                  String[]            @default([])
+  category              String?
+
+  // Display Settings
+  isPublic              Boolean             @default(true)
+  isFeatured            Boolean             @default(false)
+  showPreview           Boolean             @default(true)
+  displayOrder          Int                 @default(0)
+
+  // Verification
+  isVerified            Boolean             @default(false)
+  verifiedAt            DateTime?
+  lastCheckedAt         DateTime?
+  isAccessible          Boolean             @default(true)
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([linkType])
+  @@index([isFeatured])
+  @@map("custom_portfolio_links")
 }

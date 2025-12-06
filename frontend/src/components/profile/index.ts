@@ -13,3 +13,6 @@ export { default as IntegrationsHub } from './IntegrationsHub';
 
 // Profile Builder Components - Batch 3
 export { default as AdditionalIntegrationsHub } from './AdditionalIntegrationsHub';
+
+// Profile Builder Components - Batch 4
+export { default as Batch4IntegrationsHub } from './Batch4IntegrationsHub';
