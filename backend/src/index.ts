@@ -45,6 +45,7 @@ import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunic
 import batch27AuthenticationAccessRoutes from './routes/batch27AuthenticationAccess.routes';
 import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes';
 import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
+import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -116,6 +117,7 @@ app.get('/', (req, res) => {
       batch27AuthenticationAccess: '/api/security',
       batch28DataProtection: '/api/data-protection',
       batch29Compliance: '/api/compliance',
+      batch30RecruitmentAnalytics: '/api/recruitment-analytics',
     },
   });
 });
@@ -162,6 +164,7 @@ app.use('/api/realtime', batch26RealtimeCommunicationRoutes);
 app.use('/api/security', batch27AuthenticationAccessRoutes);
 app.use('/api/data-protection', batch28DataProtectionRoutes);
 app.use('/api/compliance', batch29ComplianceRoutes);
+app.use('/api/recruitment-analytics', batch30RecruitmentAnalyticsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

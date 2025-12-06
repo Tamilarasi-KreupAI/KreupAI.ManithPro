@@ -14116,3 +14116,796 @@ export interface ComplianceStats {
     auditStatus: string;
   };
 }
+
+// ==========================================
+// Batch 30: Recruitment Analytics Types (9.1.1-9.1.12)
+// ==========================================
+
+// 9.1.1 Funnel Analytics
+export interface FunnelAnalytics {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
+  sourced: number;
+  applied: number;
+  screened: number;
+  interviewed: number;
+  offered: number;
+  hired: number;
+
+  sourceToApply?: number;
+  applyToScreen?: number;
+  screenToInterview?: number;
+  interviewToOffer?: number;
+  offerToHire?: number;
+  overallConversion?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FunnelTrends {
+  periods: string[];
+  sourced: number[];
+  applied: number[];
+  screened: number[];
+  interviewed: number[];
+  offered: number[];
+  hired: number[];
+  conversionRates: number[];
+}
+
+// 9.1.2 Time-to-Hire
+export interface TimeToHireMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  hireDate: string;
+  jobOpenDate: string;
+  firstApplyDate?: string;
+  firstScreenDate?: string;
+  firstInterviewDate?: string;
+  offerDate?: string;
+  offerAcceptDate?: string;
+
+  timeToFill: number;
+  timeToHire: number;
+  timeToScreen?: number;
+  timeToInterview?: number;
+  timeToOffer?: number;
+  timeToAccept?: number;
+
+  jobType?: string;
+  seniorityLevel?: string;
+  department?: string;
+  location?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface TimeToHireAverages {
+  overall: {
+    avgTimeToFill: number;
+    avgTimeToHire: number;
+    avgTimeToScreen: number;
+    avgTimeToInterview: number;
+    avgTimeToOffer: number;
+    avgTimeToAccept: number;
+  };
+  byDepartment: Array<{ department: string; avgTimeToHire: number }>;
+  bySeniority: Array<{ level: string; avgTimeToHire: number }>;
+  trend: string;
+}
+
+// 9.1.3 Cost-per-Hire
+export interface CostPerHireMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  hireDate: string;
+
+  recruiterTime: number;
+  hiringManagerTime: number;
+  interviewerTime: number;
+  adminTime: number;
+  internalCostTotal: number;
+
+  jobBoardFees: number;
+  agencyFees: number;
+  advertisingCost: number;
+  backgroundCheckCost: number;
+  assessmentCost: number;
+  relocationCost: number;
+  signingBonus: number;
+  travelCost: number;
+  externalCostTotal: number;
+
+  totalCost: number;
+  costPerHire: number;
+  currency: string;
+  source?: string;
+  department?: string;
+  seniorityLevel?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface CostBreakdown {
+  averageCostPerHire: number;
+  medianCostPerHire: number;
+  totalHiringCost: number;
+  totalHires: number;
+  byCategory: {
+    internalCosts: number;
+    externalCosts: number;
+  };
+  bySource: Array<{ source: string; avgCost: number; hires: number }>;
+  byDepartment: Array<{ department: string; avgCost: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.4 Source Effectiveness
+export interface SourceEffectiveness {
+  id: string;
+  organizationId: string;
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  sourceName: string;
+  sourceCategory: string;
+
+  candidatesSourced: number;
+  applicants: number;
+  screened: number;
+  interviewed: number;
+  offers: number;
+  hires: number;
+
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  avgQualityScore?: number;
+  retentionRate?: number;
+
+  totalSpend: number;
+  costPerApplicant?: number;
+  costPerHire?: number;
+  roi?: number;
+
+  isActive: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SourceROI {
+  topSources: Array<{ name: string; roi: number; hires: number }>;
+  recommendations: Array<{ action: string; source: string; reason: string }>;
+}
+
+// 9.1.5 Recruiter Performance
+export interface RecruiterPerformance {
+  id: string;
+  organizationId: string;
+  recruiterId: string;
+  recruiterName: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  jobsHandled: number;
+  candidatesSourced: number;
+  screensCompleted: number;
+  interviewsScheduled: number;
+  offersExtended: number;
+  hiresCompleted: number;
+
+  avgTimeToFill?: number;
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  fillRate?: number;
+
+  offerAcceptRate?: number;
+  candidateSatisfaction?: number;
+  hiringManagerSatisfaction?: number;
+  qualityOfHireScore?: number;
+
+  activePipeline: number;
+  pipelineVelocity?: number;
+
+  rank?: number;
+  tier?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecruiterLeaderboard {
+  period: string;
+  rankings: Array<{
+    rank: number;
+    name: string;
+    hires: number;
+    score: number;
+  }>;
+  teamAverage: {
+    hires: number;
+    avgTimeToHire: number;
+    fillRate: number;
+  };
+}
+
+export interface RecruiterGoals {
+  recruiterId: string;
+  period: string;
+  goals: Array<{
+    metric: string;
+    target: number;
+    actual: number;
+    progress: number;
+  }>;
+  overallProgress: number;
+}
+
+// 9.1.6 Offer Acceptance
+export interface OfferAcceptanceMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  offerDate: string;
+  responseDate?: string;
+  status: 'accepted' | 'declined' | 'pending' | 'expired' | 'withdrawn';
+
+  offeredSalary?: number;
+  expectedSalary?: number;
+  salarySatisfaction?: number;
+  currency: string;
+
+  declineReason?: string;
+  declineDetails?: string;
+  competitorName?: string;
+  competitorOffer?: number;
+
+  daysToDecision?: number;
+  negotiationRounds: number;
+
+  department?: string;
+  seniorityLevel?: string;
+  jobType?: string;
+  location?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface OfferAcceptanceRates {
+  overall: {
+    totalOffers: number;
+    accepted: number;
+    declined: number;
+    pending: number;
+    acceptanceRate: number;
+    avgDaysToDecision: number;
+  };
+  byDepartment: Array<{ department: string; rate: number; total: number }>;
+  declineReasons: Array<{ reason: string; count: number; percentage: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.7 Pipeline Velocity
+export interface PipelineVelocity {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  inSourced: number;
+  inScreening: number;
+  inInterview: number;
+  inOffer: number;
+  hired: number;
+  rejected: number;
+  withdrawn: number;
+
+  sourcedToScreening?: number;
+  screeningToInterview?: number;
+  interviewToOffer?: number;
+  offerToHire?: number;
+  totalVelocity?: number;
+
+  candidatesEntered: number;
+  candidatesExited: number;
+  netPipelineChange: number;
+
+  bottleneckStage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VelocityTrends {
+  periods: string[];
+  totalVelocity: number[];
+  stageVelocity: {
+    sourcedToScreening: number[];
+    screeningToInterview: number[];
+    interviewToOffer: number[];
+    offerToHire: number[];
+  };
+  improvement: number;
+}
+
+export interface BottleneckAnalysis {
+  currentBottleneck: {
+    stage: string;
+    avgDays: number;
+    targetDays: number;
+    impact: string;
+    candidatesStuck: number;
+  };
+  recommendations: Array<{
+    action: string;
+    priority: string;
+    expectedImprovement: string;
+  }>;
+  historicalBottlenecks: Array<{
+    period: string;
+    stage: string;
+    resolved: boolean;
+  }>;
+}
+
+// 9.1.8 Quality of Hire
+export interface QualityOfHireMetric {
+  id: string;
+  organizationId: string;
+  hireId: string;
+  candidateId: string;
+  jobId: string;
+  recruiterId?: string;
+  hiringManagerId?: string;
+
+  hireDate: string;
+  assessmentDate?: string;
+
+  performanceScore30?: number;
+  performanceScore60?: number;
+  performanceScore90?: number;
+  annualPerformance?: number;
+
+  isRetained: boolean;
+  retainedAt30Days: boolean;
+  retainedAt90Days?: boolean;
+  retainedAt1Year?: boolean;
+  separationDate?: string;
+  separationReason?: string;
+
+  managerSatisfaction?: number;
+  meetingExpectations?: string;
+  wouldRehire?: boolean;
+  promotionTimeline?: string;
+
+  culturalFitScore?: number;
+  teamIntegration?: number;
+
+  timeToProductivity?: number;
+  trainingCompleted: boolean;
+
+  overallQualityScore?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QualityScoreSummary {
+  overall: {
+    avgQualityScore: number;
+    avgPerformance90: number;
+    retentionRate90Days: number;
+    retentionRate1Year: number;
+    avgTimeToProductivity: number;
+    managerSatisfactionAvg: number;
+  };
+  bySource: Array<{ source: string; avgQuality: number; retention: number }>;
+  byRecruiter: Array<{ name: string; avgQuality: number; hires: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.9 Diversity Analytics
+export interface DiversityAnalyticsData {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  totalApplicants: number;
+
+  genderDistribution: {
+    male: number;
+    female: number;
+    nonBinary: number;
+    undisclosed: number;
+  };
+
+  ethnicityDistribution: {
+    white: number;
+    black: number;
+    hispanic: number;
+    asian: number;
+    other: number;
+    undisclosed: number;
+  };
+
+  ageDistribution: Record<string, number>;
+
+  veteranStatus: {
+    yes: number;
+    no: number;
+    undisclosed: number;
+  };
+
+  disabilityStatus: {
+    yes: number;
+    no: number;
+    undisclosed: number;
+  };
+
+  hiresTotal: number;
+  hiresDiversity?: Record<string, number>;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiversityGoals {
+  goals: Array<{
+    metric: string;
+    target: number;
+    actual: number;
+    status: string;
+  }>;
+  initiatives: Array<{
+    name: string;
+    status: string;
+    impact: string;
+  }>;
+}
+
+export interface DiversityConversionRates {
+  byGender: Array<{
+    group: string;
+    applyRate: number;
+    screenRate: number;
+    interviewRate: number;
+    offerRate: number;
+    hireRate: number;
+  }>;
+  byEthnicity: Array<{
+    group: string;
+    applyRate: number;
+    hireRate: number;
+  }>;
+  disparityFlags: Array<{
+    stage: string;
+    group: string;
+    disparity: string;
+    severity: string;
+  }>;
+}
+
+// 9.1.10 Interview-to-Offer Ratio
+export interface InterviewOfferRatio {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  hiringManagerId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  phoneScreens: number;
+  technicalInterviews: number;
+  onsiteInterviews: number;
+  finalInterviews: number;
+  totalInterviews: number;
+
+  uniqueCandidatesInterviewed: number;
+  passedScreening: number;
+  passedTechnical: number;
+  passedOnsite: number;
+
+  offersExtended: number;
+  offersAccepted: number;
+  hires: number;
+
+  interviewsPerHire?: number;
+  screenPassRate?: number;
+  technicalPassRate?: number;
+  onsitePassRate?: number;
+  offerRate?: number;
+  acceptanceRate?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewEfficiency {
+  currentInterviewsPerHire: number;
+  targetInterviewsPerHire: number;
+  industryBenchmark: number;
+  byRole: Array<{
+    role: string;
+    interviewsPerHire: number;
+    target: number;
+  }>;
+  passRatesByStage: Record<string, { rate: number; benchmark: number }>;
+  recommendations: Array<{
+    action: string;
+    impact: string;
+  }>;
+}
+
+// 9.1.11 Drop-off Analysis
+export interface DropOffAnalysisData {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  stageDropOffs: Record<string, { count: number; rate: number }>;
+  withdrawalReasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  rejectionReasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  avgDaysBeforeDropOff: Record<string, number>;
+
+  reEngaged: number;
+  reEngagementRate?: number;
+
+  worstStage?: string;
+  worstDropRate?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DropOffRecommendations {
+  criticalIssues: Array<{
+    stage: string;
+    issue: string;
+    rootCauses: string[];
+    recommendations: string[];
+    expectedImprovement: string;
+  }>;
+  quickWins: Array<{
+    action: string;
+    impact: string;
+  }>;
+}
+
+// 9.1.12 SLA Tracking
+export interface RecruitmentSLA {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+
+  slaType: 'response_time' | 'stage_duration' | 'feedback' | 'overall';
+  targetMetric: string;
+  targetValue: number;
+  targetUnit: 'hours' | 'days' | 'business_days';
+
+  priority: 'high' | 'medium' | 'low';
+  applicableJobs: string[];
+  applicableDepartments: string[];
+
+  escalationEnabled: boolean;
+  escalationThreshold?: number;
+  escalationRecipients: string[];
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SLATracking {
+  id: string;
+  organizationId: string;
+  slaId: string;
+  jobId?: string;
+  candidateId?: string;
+  recruiterId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  totalMeasured: number;
+  metSLA: number;
+  missedSLA: number;
+  complianceRate?: number;
+
+  avgActualTime?: number;
+  minTime?: number;
+  maxTime?: number;
+  medianTime?: number;
+  p90Time?: number;
+
+  breachDetails: Array<Record<string, unknown>>;
+  escalationsTriggered: number;
+
+  previousPeriodCompliance?: number;
+  trend?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SLABreaches {
+  totalBreaches: number;
+  bySLA: Array<{
+    slaId: string;
+    name: string;
+    breaches: number;
+    rate: number;
+  }>;
+  recentBreaches: Array<{
+    id: string;
+    slaId: string;
+    candidateId: string;
+    jobId: string;
+    targetHours: number;
+    actualHours: number;
+    breach: number;
+    recruiterId: string;
+    timestamp: string;
+  }>;
+  byRecruiter: Array<{
+    recruiterId: string;
+    name: string;
+    breaches: number;
+    rate: number;
+  }>;
+}
+
+// Recruitment Analytics Dashboard
+export interface RecruitmentAnalyticsDashboard {
+  summary: {
+    totalHires: number;
+    openPositions: number;
+    activeCandidates: number;
+    avgTimeToHire: number;
+    avgCostPerHire: number;
+    offerAcceptanceRate: number;
+    diversityScore: number;
+  };
+  funnelSnapshot: {
+    sourced: number;
+    applied: number;
+    screened: number;
+    interviewed: number;
+    offered: number;
+    hired: number;
+  };
+  trends: {
+    hiresOverTime: number[];
+    timeToHireTrend: number[];
+    costPerHireTrend: number[];
+  };
+  topSources: Array<{
+    name: string;
+    hires: number;
+    percentage: number;
+  }>;
+  topRecruiters: Array<{
+    name: string;
+    hires: number;
+    avgTime: number;
+  }>;
+  slaCompliance: {
+    overall: number;
+    byType: Record<string, number>;
+  };
+  alerts: Array<{
+    type: string;
+    message: string;
+    priority: string;
+  }>;
+}
+
+export interface RecruitmentStats {
+  period: {
+    start: string;
+    end: string;
+  };
+  hiring: {
+    totalHires: number;
+    targetHires: number;
+    progress: number;
+    avgTimeToHire: number;
+    avgCostPerHire: number;
+  };
+  pipeline: {
+    totalCandidates: number;
+    activeInPipeline: number;
+    hiredThisPeriod: number;
+    rejectedThisPeriod: number;
+    withdrawnThisPeriod: number;
+  };
+  efficiency: {
+    funnelConversion: number;
+    interviewsPerHire: number;
+    offerAcceptanceRate: number;
+    slaCompliance: number;
+  };
+  diversity: {
+    femaleHires: number;
+    minorityHires: number;
+    veteranHires: number;
+  };
+  quality: {
+    avgQualityScore: number;
+    retention90Days: number;
+    managerSatisfaction: number;
+  };
+}

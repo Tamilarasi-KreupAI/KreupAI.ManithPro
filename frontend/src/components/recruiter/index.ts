@@ -48,3 +48,6 @@ export { default as DataProtectionHub } from './DataProtectionHub';
 
 // Recruiter Components - Batch 29: Compliance Features
 export { default as ComplianceHub } from './ComplianceHub';
+
+// Recruiter Components - Batch 30: Recruitment Analytics
+export { default as RecruitmentAnalyticsHub } from './RecruitmentAnalyticsHub';
