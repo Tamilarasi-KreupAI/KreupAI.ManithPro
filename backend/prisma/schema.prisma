@@ -152,6 +152,12 @@ model User {
   screeningResponses     ScreeningResponse[]
   questionFlows          QuestionFlow[]
 
+  // Batch 18: AI Interview Analysis
+  interviewSummaries     InterviewSummary[]       @relation("SummaryCandidate")
+  generatedSummaries     InterviewSummary[]       @relation("SummaryReviewer")
+  candidateComparisons   CandidateComparison[]    @relation("ComparisonCandidate")
+  createdComparisons     CandidateComparison[]    @relation("ComparisonCreator")
+
   @@map("users")
 }
 
@@ -7551,6 +7557,17 @@ model AIScreeningInterview {
   // Relations
   responses             ScreeningResponse[]
 
+  // Batch 18: AI Interview Analysis Relations
+  transcriptions        InterviewTranscription[]
+  answerAnalyses        AnswerAnalysis[]
+  topicDetections       TopicDetection[]
+  sentimentAnalyses     SentimentAnalysis[]
+  communicationScores   CommunicationScore[]
+  technicalVerifications TechnicalVerification[]
+  redFlagAlerts         RedFlagAlert[]
+  summaries             InterviewSummary[]
+  highlights            InterviewHighlight[]
+
   // Metadata
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
@@ -7885,4 +7902,561 @@ model CandidateAccessibilityPrefs {
   updatedAt             DateTime            @updatedAt
 
   @@map("candidate_accessibility_prefs")
+}
+
+// ============================================
+// BATCH 18: AI INTERVIEW ANALYSIS (4.2.x)
+// ============================================
+
+// 4.2.1 - SPEECH-TO-TEXT TRANSCRIPTION
+model InterviewTranscription {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  responseId            String?             // Optional link to specific response
+
+  // Source
+  sourceType            String              // VIDEO, AUDIO, PHONE
+  sourceUrl             String?             // URL to source media
+  duration              Int?                // Duration in seconds
+
+  // Transcription
+  rawTranscript         String              @db.Text
+  formattedTranscript   String?             @db.Text // With timestamps, speaker labels
+  language              String              @default("en")
+  detectedLanguage      String?
+
+  // Processing
+  transcriptionEngine   String              @default("WHISPER") // WHISPER, GOOGLE, AWS, AZURE
+  confidence            Float?              // Overall confidence score
+  wordCount             Int                 @default(0)
+
+  // Timestamps
+  timestamps            Json?               // Array of { word, start, end, confidence }
+  speakerLabels         Json?               // Speaker diarization { speaker, segments }
+
+  // Quality
+  audioQuality          String?             // EXCELLENT, GOOD, FAIR, POOR
+  noiseLevel            Float?              // 0-1 background noise detection
+  clarityScore          Float?              // 0-1 speech clarity
+
+  // Status
+  status                String              @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMessage          String?
+  processingTime        Int?                // Milliseconds
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  answerAnalyses        AnswerAnalysis[]
+  topicDetections       TopicDetection[]
+  sentimentAnalyses     SentimentAnalysis[]
+
+  @@index([interviewId])
+  @@index([status])
+  @@map("interview_transcriptions")
+}
+
+// 4.2.2 - ANSWER QUALITY SCORING
+model AnswerAnalysis {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  transcriptionId       String?
+  transcription         InterviewTranscription? @relation(fields: [transcriptionId], references: [id], onDelete: SetNull)
+  responseId            String?             // Link to ScreeningResponse
+  questionId            String?
+
+  // Question Context
+  questionText          String?             @db.Text
+  questionType          String?             // BEHAVIORAL, TECHNICAL, SITUATIONAL, etc.
+  expectedKeywords      String[]            @default([])
+
+  // Answer Content
+  answerText            String              @db.Text
+  answerLength          Int                 @default(0) // Word count
+
+  // Quality Scores (0-100)
+  overallScore          Float               @default(0)
+  relevanceScore        Float               @default(0)  // How relevant to the question
+  completenessScore     Float               @default(0)  // How complete the answer is
+  depthScore            Float               @default(0)  // Depth of explanation
+  clarityScore          Float               @default(0)  // Clarity of expression
+  structureScore        Float               @default(0)  // Answer organization (STAR method, etc.)
+  specificityScore      Float               @default(0)  // Use of specific examples
+
+  // AI Insights
+  strengths             String[]            @default([])
+  weaknesses            String[]            @default([])
+  keyPoints             String[]            @default([])
+  missingElements       String[]            @default([])
+  suggestions           String[]            @default([])
+
+  // Scoring Details
+  scoringCriteria       Json?               // Detailed breakdown
+  aiReasoning           String?             @db.Text // Why the AI scored this way
+  confidenceLevel       Float               @default(0)
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+  modelVersion          String?
+
+  @@index([interviewId])
+  @@index([overallScore])
+  @@map("answer_analyses")
+}
+
+// 4.2.3 - KEYWORD & TOPIC DETECTION
+model TopicDetection {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  transcriptionId       String?
+  transcription         InterviewTranscription? @relation(fields: [transcriptionId], references: [id], onDelete: SetNull)
+
+  // Topics Detected
+  topics                Json                // Array of { topic, relevance, frequency, context }
+  primaryTopics         String[]            @default([]) // Main topics discussed
+  secondaryTopics       String[]            @default([]) // Supporting topics
+
+  // Keywords
+  keywords              Json                // Array of { keyword, count, importance, contextSamples }
+  technicalKeywords     String[]            @default([])
+  softSkillKeywords     String[]            @default([])
+  industryKeywords      String[]            @default([])
+
+  // Named Entities
+  namedEntities         Json?               // { companies: [], technologies: [], people: [], locations: [] }
+
+  // Topic Categories
+  technicalTopics       Json?               // Technical areas covered
+  behavioralTopics      Json?               // Soft skills and behaviors discussed
+  experienceTopics      Json?               // Past experience topics
+
+  // Coverage Analysis
+  expectedTopics        String[]            @default([]) // Topics expected based on role
+  coveredExpected       String[]            @default([]) // Expected topics that were covered
+  missedTopics          String[]            @default([]) // Expected topics not mentioned
+  unexpectedTopics      String[]            @default([]) // Interesting topics not expected
+
+  // Scores
+  topicCoverageScore    Float               @default(0) // 0-100
+  topicDepthScore       Float               @default(0) // 0-100
+  relevanceScore        Float               @default(0) // 0-100
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+
+  @@index([interviewId])
+  @@map("topic_detections")
+}
+
+// 4.2.4 - SENTIMENT & CONFIDENCE ANALYSIS
+model SentimentAnalysis {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  transcriptionId       String?
+  transcription         InterviewTranscription? @relation(fields: [transcriptionId], references: [id], onDelete: SetNull)
+  responseId            String?
+
+  // Overall Sentiment
+  overallSentiment      String              @default("NEUTRAL") // VERY_POSITIVE, POSITIVE, NEUTRAL, NEGATIVE, VERY_NEGATIVE
+  sentimentScore        Float               @default(0) // -1 to 1
+  sentimentConfidence   Float               @default(0) // 0-1
+
+  // Emotion Detection
+  emotions              Json?               // { joy, enthusiasm, confidence, nervousness, frustration, etc. }
+  dominantEmotion       String?
+  emotionalVariation    Float               @default(0) // How much emotions change
+
+  // Confidence Indicators
+  confidenceLevel       String              @default("MODERATE") // HIGH, MODERATE, LOW, UNCERTAIN
+  confidenceScore       Float               @default(0) // 0-100
+  hesitationMarkers     Int                 @default(0) // Count of "um", "uh", pauses
+  fillerWords           Json?               // { word: count }
+
+  // Enthusiasm
+  enthusiasmScore       Float               @default(0) // 0-100
+  passionIndicators     String[]            @default([])
+
+  // Authenticity
+  authenticityScore     Float               @default(0) // 0-100
+  consistencyScore      Float               @default(0) // How consistent sentiment is
+
+  // Timeline Analysis
+  sentimentTimeline     Json?               // Array of { timestamp, sentiment, confidence }
+  sentimentTrend        String?             // IMPROVING, STABLE, DECLINING
+
+  // Per-Question Analysis
+  questionSentiments    Json?               // Array of { questionId, sentiment, confidence, emotion }
+
+  // Voice Analysis (if audio available)
+  voiceEnergy           Float?              // 0-100
+  speechPace            String?             // SLOW, NORMAL, FAST
+  toneVariation         Float?              // 0-100
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+
+  @@index([interviewId])
+  @@index([overallSentiment])
+  @@map("sentiment_analyses")
+}
+
+// 4.2.5 - COMMUNICATION SKILLS SCORE
+model CommunicationScore {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  // Overall Score
+  overallScore          Float               @default(0) // 0-100
+
+  // Verbal Communication (Text/Speech)
+  clarityScore          Float               @default(0)  // Clear expression
+  articulationScore     Float               @default(0)  // Well-articulated points
+  vocabularyScore       Float               @default(0)  // Appropriate vocabulary usage
+  grammarScore          Float               @default(0)  // Grammar correctness
+  coherenceScore        Float               @default(0)  // Logical flow
+
+  // Structure
+  structureScore        Float               @default(0)  // Answer organization
+  conciseness           Float               @default(0)  // Being concise vs verbose
+  relevance             Float               @default(0)  // Staying on topic
+
+  // Interpersonal
+  professionalismScore  Float               @default(0)  // Professional tone
+  engagementScore       Float               @default(0)  // Engagement level
+  listeningIndicators   Float               @default(0)  // Response to follow-ups
+
+  // Technical Communication (if applicable)
+  technicalClarity      Float?              // Explaining technical concepts
+  useOfExamples         Float               @default(0)  // Supporting with examples
+
+  // Areas Assessment
+  strengths             String[]            @default([])
+  areasForImprovement   String[]            @default([])
+
+  // Detailed Feedback
+  feedback              Json?               // Structured feedback per area
+  recommendations       String[]            @default([])
+
+  // Benchmark Comparison
+  percentile            Float?              // Compared to other candidates
+  benchmarkRole         String?             // Role used for benchmarking
+
+  // Metadata
+  analyzedAt            DateTime            @default(now())
+
+  @@unique([interviewId])
+  @@map("communication_scores")
+}
+
+// 4.2.6 - TECHNICAL ACCURACY CHECKER
+model TechnicalVerification {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  responseId            String?
+
+  // Claim
+  claimText             String              @db.Text
+  claimType             String              // TECHNICAL_FACT, EXPERIENCE, METRIC, CREDENTIAL
+  claimContext          String?             @db.Text
+
+  // Verification
+  verificationStatus    String              @default("PENDING") // VERIFIED, PARTIALLY_VERIFIED, UNVERIFIABLE, INACCURATE, PENDING
+  accuracyScore         Float               @default(0) // 0-100
+  confidenceLevel       Float               @default(0) // 0-1
+
+  // Evidence
+  supportingEvidence    Json?               // Sources that support the claim
+  contradictingEvidence Json?               // Sources that contradict
+  relatedInformation    Json?               // Additional context
+
+  // Technical Assessment
+  technicalDepth        String?             // SURFACE, INTERMEDIATE, DEEP, EXPERT
+  isCurrent             Boolean             @default(true) // Is the information current?
+  relevanceToRole       Float               @default(0) // 0-100
+
+  // Issues Found
+  potentialIssues       String[]            @default([])
+  exaggerationRisk      Float               @default(0) // 0-100
+  inconsistencies       Json?               // Any inconsistencies found
+
+  // Recommendations
+  followUpQuestions     String[]            @default([]) // Suggested follow-up questions
+  verificationNotes     String?             @db.Text
+
+  // Knowledge Base Reference
+  knowledgeBaseMatches  Json?               // Matches from company knowledge base
+
+  // Metadata
+  verifiedAt            DateTime            @default(now())
+  verifiedBy            String?             // AI model or manual reviewer
+
+  @@index([interviewId])
+  @@index([verificationStatus])
+  @@map("technical_verifications")
+}
+
+// 4.2.7 - RED FLAG DETECTION
+model RedFlagAlert {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  responseId            String?
+
+  // Flag Details
+  flagType              String              // INCONSISTENCY, EVASION, NEGATIVE_ATTITUDE, CONCERNING_RESPONSE, SKILL_GAP, CULTURAL_MISMATCH
+  severity              String              @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  title                 String
+  description           String              @db.Text
+
+  // Context
+  triggerText           String?             @db.Text // What triggered the flag
+  questionContext       String?             // Which question/topic
+  timestamp             String?             // When in the interview
+
+  // Analysis
+  confidence            Float               @default(0) // 0-1 confidence in the flag
+  evidence              Json?               // Supporting evidence
+  patterns              String[]            @default([]) // Related patterns detected
+
+  // Categories
+  categories            String[]            @default([]) // INTEGRITY, COMPETENCE, FIT, ATTITUDE, CONSISTENCY
+
+  // Impact Assessment
+  impactArea            String?             // What this might impact
+  riskLevel             String              @default("MEDIUM") // Assessment of risk
+
+  // Recommendations
+  suggestedActions      String[]            @default([])
+  followUpQuestions     String[]            @default([])
+  additionalContext     String?             @db.Text
+
+  // Review
+  isReviewed            Boolean             @default(false)
+  reviewedById          String?
+  reviewedAt            DateTime?
+  reviewNotes           String?             @db.Text
+  isFalsePositive       Boolean             @default(false)
+  disposition           String?             // CONFIRMED, DISMISSED, NEEDS_FOLLOW_UP
+
+  // Metadata
+  detectedAt            DateTime            @default(now())
+
+  @@index([interviewId])
+  @@index([severity])
+  @@index([flagType])
+  @@map("red_flag_alerts")
+}
+
+// 4.2.8 - SUMMARY GENERATION
+model InterviewSummary {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  // Candidate Reference
+  candidateId           String
+  candidate             User                @relation("SummaryCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+
+  // Summary Content
+  executiveSummary      String              @db.Text // Brief 2-3 sentence summary
+  detailedSummary       String              @db.Text // Full summary
+  bulletPoints          String[]            @default([]) // Key takeaways
+
+  // Scores Overview
+  overallScore          Float               @default(0)
+  scoreBreakdown        Json?               // { technical, communication, cultural, etc. }
+  ranking               String?             // Strong, Average, Below Average
+
+  // Strengths & Weaknesses
+  topStrengths          String[]            @default([])
+  areasOfConcern        String[]            @default([])
+  uniqueQualities       String[]            @default([])
+
+  // Skills Assessment
+  technicalSkills       Json?               // { skill: level }
+  softSkills            Json?               // { skill: level }
+  skillGaps             String[]            @default([])
+
+  // Cultural Fit
+  culturalFitScore      Float?
+  culturalFitNotes      String[]            @default([])
+
+  // Experience Highlights
+  relevantExperience    String[]            @default([])
+  notableAchievements   String[]            @default([])
+  experienceGaps        String[]            @default([])
+
+  // Recommendations
+  hiringRecommendation  String              @default("NEEDS_REVIEW") // STRONG_YES, YES, MAYBE, NO, STRONG_NO
+  recommendationReason  String?             @db.Text
+  nextSteps             String[]            @default([])
+  suggestedInterviewers String[]            @default([]) // Suggested people for next round
+
+  // Questions for Follow-up
+  followUpQuestions     String[]            @default([])
+  areasToProbe          String[]            @default([])
+
+  // Comparison Notes
+  comparedToCriteria    Json?               // How they match job requirements
+  standoutFactors       String[]            @default([])
+
+  // Review
+  reviewedById          String?
+  reviewer              User?               @relation("SummaryReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt            DateTime?
+  reviewNotes           String?             @db.Text
+  isApproved            Boolean             @default(false)
+
+  // Version Control
+  version               Int                 @default(1)
+  previousVersionId     String?
+
+  // Metadata
+  generatedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([interviewId])
+  @@index([candidateId])
+  @@index([hiringRecommendation])
+  @@map("interview_summaries")
+}
+
+// 4.2.9 - HIGHLIGHT EXTRACTION
+model InterviewHighlight {
+  id                    String              @id @default(uuid())
+  interviewId           String
+  interview             AIScreeningInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  responseId            String?
+
+  // Timing
+  startTime             Int?                // Start time in seconds
+  endTime               Int?                // End time in seconds
+  duration              Int?                // Duration in seconds
+
+  // Content
+  highlightType         String              // STRENGTH, CONCERN, NOTABLE_ANSWER, TECHNICAL_DEPTH, GREAT_EXAMPLE, ENTHUSIASM, RED_FLAG
+  title                 String
+  description           String?             @db.Text
+  transcript            String?             @db.Text // Transcribed content
+
+  // Context
+  questionAsked         String?             @db.Text
+  topic                 String?
+
+  // Importance
+  importance            String              @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  relevanceScore        Float               @default(0) // 0-100
+
+  // Tags
+  tags                  String[]            @default([])
+  categories            String[]            @default([])
+
+  // AI Analysis
+  aiInsight             String?             @db.Text
+  sentiment             String?
+  keyTakeaway           String?
+
+  // Media Reference
+  mediaUrl              String?             // Link to video/audio clip
+  thumbnailUrl          String?
+
+  // Sharing
+  isShareable           Boolean             @default(true)
+  sharedWith            String[]            @default([]) // User IDs shared with
+
+  // Bookmarking
+  isBookmarked          Boolean             @default(false)
+  bookmarkedById        String?
+  bookmarkNotes         String?
+
+  // Metadata
+  extractedAt           DateTime            @default(now())
+
+  @@index([interviewId])
+  @@index([highlightType])
+  @@index([importance])
+  @@map("interview_highlights")
+}
+
+// 4.2.10 - COMPARATIVE ANALYSIS
+model CandidateComparison {
+  id                    String              @id @default(uuid())
+
+  // Job Context
+  jobId                 String
+  comparisonName        String?             // Name for this comparison set
+
+  // Candidates Being Compared
+  candidateIds          String[]            @default([])
+  interviewIds          String[]            @default([])
+
+  // Primary Candidate (if comparing one vs others)
+  primaryCandidateId    String?
+  primaryCandidate      User?               @relation("ComparisonCandidate", fields: [primaryCandidateId], references: [id], onDelete: SetNull)
+
+  // Creator
+  createdById           String
+  createdBy             User                @relation("ComparisonCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Comparison Criteria
+  criteria              String[]            @default([]) // Skills, experience, etc.
+  weights               Json?               // { criterion: weight }
+
+  // Rankings
+  overallRanking        Json                // Array of { candidateId, rank, score }
+  categoryRankings      Json?               // { category: [{ candidateId, rank, score }] }
+
+  // Comparative Scores
+  scores                Json                // { candidateId: { overall, technical, communication, etc. } }
+  normalizedScores      Json?               // Scores normalized to same scale
+
+  // Analysis
+  strengthsComparison   Json?               // { candidateId: [strengths] }
+  weaknessesComparison  Json?               // { candidateId: [weaknesses] }
+  uniqueStrengths       Json?               // What makes each candidate unique
+
+  // Skills Matrix
+  skillsMatrix          Json?               // { skill: { candidateId: level } }
+  skillGapsAnalysis     Json?               // Who has what gaps
+
+  // Cultural Fit Comparison
+  culturalFitScores     Json?               // { candidateId: score }
+
+  // Experience Comparison
+  experienceComparison  Json?               // Years, relevance, etc.
+  qualificationMatch    Json?               // How well each matches requirements
+
+  // Recommendations
+  topRecommendation     String?             // Recommended candidateId
+  recommendationReason  String?             @db.Text
+  orderOfPreference     String[]            @default([]) // Ordered list of candidateIds
+
+  // Insights
+  keyDifferentiators    Json?               // What sets candidates apart
+  tieBreakers           String[]            @default([]) // Factors that differentiate similar candidates
+  concerns              Json?               // { candidateId: [concerns] }
+
+  // Status
+  status                String              @default("DRAFT") // DRAFT, COMPLETED, SHARED
+  isActive              Boolean             @default(true)
+
+  // Sharing
+  sharedWith            String[]            @default([])
+  sharedAt              DateTime?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([jobId])
+  @@index([createdById])
+  @@map("candidate_comparisons")
 }

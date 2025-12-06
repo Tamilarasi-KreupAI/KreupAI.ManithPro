@@ -12,3 +12,6 @@ export { default as RemindersNotificationsHub } from './RemindersNotificationsHu
 
 // Recruiter Components - Batch 17: AI Screening Interviews
 export { default as AIScreeningHub } from './AIScreeningHub';
+
+// Recruiter Components - Batch 18: AI Interview Analysis
+export { default as InterviewAnalysisHub } from './InterviewAnalysisHub';

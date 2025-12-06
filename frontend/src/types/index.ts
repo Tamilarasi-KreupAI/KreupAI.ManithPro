@@ -7228,3 +7228,464 @@ export interface SubmitChatResponseInput {
   message: string;
   responseType?: ResponseType;
 }
+
+// ============================================
+// BATCH 18: AI INTERVIEW ANALYSIS (4.2.1-4.2.10)
+// ============================================
+
+// Enums for Interview Analysis
+export type TranscriptionStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type TranscriptionEngine = 'WHISPER' | 'GOOGLE' | 'AWS' | 'AZURE';
+export type AudioQuality = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+export type SentimentType = 'VERY_POSITIVE' | 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'VERY_NEGATIVE';
+export type ConfidenceLevelType = 'HIGH' | 'MODERATE' | 'LOW' | 'UNCERTAIN';
+export type SentimentTrend = 'IMPROVING' | 'STABLE' | 'DECLINING';
+export type SpeechPace = 'SLOW' | 'NORMAL' | 'FAST';
+export type VerificationStatus = 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'UNVERIFIABLE' | 'INACCURATE' | 'PENDING';
+export type TechnicalDepth = 'SURFACE' | 'INTERMEDIATE' | 'DEEP' | 'EXPERT';
+export type ClaimType = 'TECHNICAL_FACT' | 'EXPERIENCE' | 'METRIC' | 'CREDENTIAL';
+export type RedFlagType = 'INCONSISTENCY' | 'EVASION' | 'NEGATIVE_ATTITUDE' | 'CONCERNING_RESPONSE' | 'SKILL_GAP' | 'CULTURAL_MISMATCH';
+export type RedFlagSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type RedFlagDisposition = 'CONFIRMED' | 'DISMISSED' | 'NEEDS_FOLLOW_UP';
+export type HiringRecommendation = 'STRONG_YES' | 'YES' | 'MAYBE' | 'NO' | 'STRONG_NO' | 'NEEDS_REVIEW';
+export type HighlightType = 'STRENGTH' | 'CONCERN' | 'NOTABLE_ANSWER' | 'TECHNICAL_DEPTH' | 'GREAT_EXAMPLE' | 'ENTHUSIASM' | 'RED_FLAG';
+export type HighlightImportance = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type ComparisonStatus = 'DRAFT' | 'COMPLETED' | 'SHARED';
+
+// 4.2.1 - Interview Transcription
+export interface InterviewTranscription {
+  id: string;
+  interviewId: string;
+  responseId?: string;
+  sourceType: string;
+  sourceUrl?: string;
+  duration?: number;
+  rawTranscript: string;
+  formattedTranscript?: string;
+  language: string;
+  detectedLanguage?: string;
+  transcriptionEngine: TranscriptionEngine;
+  confidence?: number;
+  wordCount: number;
+  timestamps?: Array<{ word: string; start: number; end: number; confidence: number }>;
+  speakerLabels?: Record<string, any>;
+  audioQuality?: AudioQuality;
+  noiseLevel?: number;
+  clarityScore?: number;
+  status: TranscriptionStatus;
+  errorMessage?: string;
+  processingTime?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 4.2.2 - Answer Analysis
+export interface AnswerAnalysis {
+  id: string;
+  interviewId: string;
+  transcriptionId?: string;
+  responseId?: string;
+  questionId?: string;
+  questionText?: string;
+  questionType?: string;
+  expectedKeywords: string[];
+  answerText: string;
+  answerLength: number;
+  overallScore: number;
+  relevanceScore: number;
+  completenessScore: number;
+  depthScore: number;
+  clarityScore: number;
+  structureScore: number;
+  specificityScore: number;
+  strengths: string[];
+  weaknesses: string[];
+  keyPoints: string[];
+  missingElements: string[];
+  suggestions: string[];
+  scoringCriteria?: Record<string, any>;
+  aiReasoning?: string;
+  confidenceLevel: number;
+  analyzedAt: string;
+  modelVersion?: string;
+}
+
+// 4.2.3 - Topic Detection
+export interface TopicDetection {
+  id: string;
+  interviewId: string;
+  transcriptionId?: string;
+  topics: Array<{ topic: string; relevance: number; frequency: number; context: string[] }>;
+  primaryTopics: string[];
+  secondaryTopics: string[];
+  keywords: Array<{ keyword: string; count: number; importance: number; contextSamples?: string[] }>;
+  technicalKeywords: string[];
+  softSkillKeywords: string[];
+  industryKeywords: string[];
+  namedEntities?: {
+    companies: string[];
+    technologies: string[];
+    people: string[];
+    locations: string[];
+  };
+  technicalTopics?: Record<string, any>;
+  behavioralTopics?: Record<string, any>;
+  experienceTopics?: Record<string, any>;
+  expectedTopics: string[];
+  coveredExpected: string[];
+  missedTopics: string[];
+  unexpectedTopics: string[];
+  topicCoverageScore: number;
+  topicDepthScore: number;
+  relevanceScore: number;
+  analyzedAt: string;
+}
+
+// 4.2.4 - Sentiment Analysis
+export interface SentimentAnalysis {
+  id: string;
+  interviewId: string;
+  transcriptionId?: string;
+  responseId?: string;
+  overallSentiment: SentimentType;
+  sentimentScore: number;
+  sentimentConfidence: number;
+  emotions?: Record<string, number>;
+  dominantEmotion?: string;
+  emotionalVariation: number;
+  confidenceLevel: ConfidenceLevelType;
+  confidenceScore: number;
+  hesitationMarkers: number;
+  fillerWords?: Record<string, number>;
+  enthusiasmScore: number;
+  passionIndicators: string[];
+  authenticityScore: number;
+  consistencyScore: number;
+  sentimentTimeline?: Array<{ timestamp: string; sentiment: string; confidence: number }>;
+  sentimentTrend?: SentimentTrend;
+  questionSentiments?: Array<{ questionId: string; sentiment: string; confidence: number; emotion: string }>;
+  voiceEnergy?: number;
+  speechPace?: SpeechPace;
+  toneVariation?: number;
+  analyzedAt: string;
+}
+
+// 4.2.5 - Communication Score
+export interface CommunicationScore {
+  id: string;
+  interviewId: string;
+  overallScore: number;
+  clarityScore: number;
+  articulationScore: number;
+  vocabularyScore: number;
+  grammarScore: number;
+  coherenceScore: number;
+  structureScore: number;
+  conciseness: number;
+  relevance: number;
+  professionalismScore: number;
+  engagementScore: number;
+  listeningIndicators: number;
+  technicalClarity?: number;
+  useOfExamples: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  feedback?: Record<string, string>;
+  recommendations: string[];
+  percentile?: number;
+  benchmarkRole?: string;
+  analyzedAt: string;
+}
+
+// 4.2.6 - Technical Verification
+export interface TechnicalVerification {
+  id: string;
+  interviewId: string;
+  responseId?: string;
+  claimText: string;
+  claimType: ClaimType;
+  claimContext?: string;
+  verificationStatus: VerificationStatus;
+  accuracyScore: number;
+  confidenceLevel: number;
+  supportingEvidence?: Array<{ source: string; match: string }>;
+  contradictingEvidence?: Record<string, any>;
+  relatedInformation?: Record<string, any>;
+  technicalDepth?: TechnicalDepth;
+  isCurrent: boolean;
+  relevanceToRole: number;
+  potentialIssues: string[];
+  exaggerationRisk: number;
+  inconsistencies?: Record<string, any>;
+  followUpQuestions: string[];
+  verificationNotes?: string;
+  knowledgeBaseMatches?: Record<string, any>;
+  verifiedAt: string;
+  verifiedBy?: string;
+}
+
+// 4.2.7 - Red Flag Alert
+export interface RedFlagAlert {
+  id: string;
+  interviewId: string;
+  responseId?: string;
+  flagType: RedFlagType;
+  severity: RedFlagSeverity;
+  title: string;
+  description: string;
+  triggerText?: string;
+  questionContext?: string;
+  timestamp?: string;
+  confidence: number;
+  evidence?: Record<string, any>;
+  patterns: string[];
+  categories: string[];
+  impactArea?: string;
+  riskLevel: string;
+  suggestedActions: string[];
+  followUpQuestions: string[];
+  additionalContext?: string;
+  isReviewed: boolean;
+  reviewedById?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  isFalsePositive: boolean;
+  disposition?: RedFlagDisposition;
+  detectedAt: string;
+}
+
+// 4.2.8 - Interview Summary
+export interface InterviewSummary {
+  id: string;
+  interviewId: string;
+  candidateId: string;
+  executiveSummary: string;
+  detailedSummary: string;
+  bulletPoints: string[];
+  overallScore: number;
+  scoreBreakdown?: Record<string, number>;
+  ranking?: string;
+  topStrengths: string[];
+  areasOfConcern: string[];
+  uniqueQualities: string[];
+  technicalSkills?: Record<string, number>;
+  softSkills?: Record<string, number>;
+  skillGaps: string[];
+  culturalFitScore?: number;
+  culturalFitNotes: string[];
+  relevantExperience: string[];
+  notableAchievements: string[];
+  experienceGaps: string[];
+  hiringRecommendation: HiringRecommendation;
+  recommendationReason?: string;
+  nextSteps: string[];
+  suggestedInterviewers: string[];
+  followUpQuestions: string[];
+  areasToProbe: string[];
+  comparedToCriteria?: Record<string, any>;
+  standoutFactors: string[];
+  reviewedById?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  isApproved: boolean;
+  version: number;
+  previousVersionId?: string;
+  generatedAt: string;
+  updatedAt: string;
+  candidate?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  reviewer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+// 4.2.9 - Interview Highlight
+export interface InterviewHighlight {
+  id: string;
+  interviewId: string;
+  responseId?: string;
+  startTime?: number;
+  endTime?: number;
+  duration?: number;
+  highlightType: HighlightType;
+  title: string;
+  description?: string;
+  transcript?: string;
+  questionAsked?: string;
+  topic?: string;
+  importance: HighlightImportance;
+  relevanceScore: number;
+  tags: string[];
+  categories: string[];
+  aiInsight?: string;
+  sentiment?: string;
+  keyTakeaway?: string;
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  isShareable: boolean;
+  sharedWith: string[];
+  isBookmarked: boolean;
+  bookmarkedById?: string;
+  bookmarkNotes?: string;
+  extractedAt: string;
+}
+
+// 4.2.10 - Candidate Comparison
+export interface CandidateComparison {
+  id: string;
+  jobId: string;
+  comparisonName?: string;
+  candidateIds: string[];
+  interviewIds: string[];
+  primaryCandidateId?: string;
+  createdById: string;
+  criteria: string[];
+  weights?: Record<string, number>;
+  overallRanking: Array<{ candidateId: string; rank: number; score: number }>;
+  categoryRankings?: Record<string, Array<{ candidateId: string; rank: number; score: number }>>;
+  scores: Record<string, Record<string, number>>;
+  normalizedScores?: Record<string, Record<string, number>>;
+  strengthsComparison?: Record<string, string[]>;
+  weaknessesComparison?: Record<string, string[]>;
+  uniqueStrengths?: Record<string, string[]>;
+  skillsMatrix?: Record<string, Record<string, number>>;
+  skillGapsAnalysis?: Record<string, any>;
+  culturalFitScores?: Record<string, number>;
+  experienceComparison?: Record<string, any>;
+  qualificationMatch?: Record<string, any>;
+  topRecommendation?: string;
+  recommendationReason?: string;
+  orderOfPreference: string[];
+  keyDifferentiators?: Record<string, string>;
+  tieBreakers: string[];
+  concerns?: Record<string, string[]>;
+  status: ComparisonStatus;
+  isActive: boolean;
+  sharedWith: string[];
+  sharedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  primaryCandidate?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+// Full Analysis Result
+export interface FullAnalysisResult {
+  interviewId: string;
+  transcriptions: InterviewTranscription[];
+  answerAnalyses: AnswerAnalysis[];
+  topicDetections: TopicDetection[];
+  sentimentAnalyses: SentimentAnalysis[];
+  communicationScore: CommunicationScore | null;
+  technicalVerifications: TechnicalVerification[];
+  redFlagAlerts: RedFlagAlert[];
+  summaries: InterviewSummary[];
+  highlights: InterviewHighlight[];
+  analysisStats: {
+    transcriptionCount: number;
+    answerAnalysisCount: number;
+    redFlagCount: number;
+    highlightCount: number;
+    averageAnswerScore: number | null;
+  };
+}
+
+// Input Types for Batch 18
+
+export interface CreateTranscriptionInput {
+  interviewId: string;
+  responseId?: string;
+  sourceType: string;
+  sourceUrl?: string;
+  duration?: number;
+  language?: string;
+}
+
+export interface AnalyzeAnswerInput {
+  interviewId: string;
+  transcriptionId?: string;
+  responseId?: string;
+  questionId?: string;
+  questionText?: string;
+  questionType?: string;
+  answerText: string;
+  expectedKeywords?: string[];
+}
+
+export interface DetectTopicsInput {
+  interviewId: string;
+  transcriptionId?: string;
+  expectedTopics?: string[];
+}
+
+export interface AnalyzeSentimentInput {
+  interviewId: string;
+  transcriptionId?: string;
+  responseId?: string;
+}
+
+export interface CalculateCommunicationScoreInput {
+  interviewId: string;
+  benchmarkRole?: string;
+}
+
+export interface VerifyTechnicalClaimInput {
+  interviewId: string;
+  responseId?: string;
+  claimText: string;
+  claimType?: ClaimType;
+  claimContext?: string;
+}
+
+export interface ReviewRedFlagInput {
+  disposition: RedFlagDisposition;
+  reviewNotes?: string;
+  isFalsePositive?: boolean;
+}
+
+export interface ApproveSummaryInput {
+  reviewNotes?: string;
+}
+
+export interface UpdateRecommendationInput {
+  hiringRecommendation: HiringRecommendation;
+  recommendationReason?: string;
+  nextSteps?: string[];
+}
+
+export interface BookmarkHighlightInput {
+  bookmarkNotes?: string;
+}
+
+export interface ShareHighlightInput {
+  userIds: string[];
+}
+
+export interface CreateComparisonInput {
+  jobId: string;
+  comparisonName?: string;
+  candidateIds: string[];
+  interviewIds?: string[];
+  primaryCandidateId?: string;
+  criteria?: string[];
+  weights?: Record<string, number>;
+}
+
+export interface ShareComparisonInput {
+  userIds: string[];
+}
