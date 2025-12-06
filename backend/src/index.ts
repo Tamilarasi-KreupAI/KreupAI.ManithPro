@@ -32,6 +32,7 @@ import batch13CandidateAIContentRoutes from './routes/batch13CandidateAIContent.
 import batch14ExtendedAINLPRoutes from './routes/batch14ExtendedAINLP.routes';
 import batch15CalendarSchedulingRoutes from './routes/batch15CalendarScheduling.routes';
 import batch16RemindersNotificationsRoutes from './routes/batch16RemindersNotifications.routes';
+import batch17AIScreeningRoutes from './routes/batch17AIScreening.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -90,6 +91,7 @@ app.get('/', (req, res) => {
       batch14ExtendedAINLP: '/api/ai-nlp',
       batch15CalendarScheduling: '/api/calendar',
       batch16RemindersNotifications: '/api/reminders',
+      batch17AIScreening: '/api/screening',
     },
   });
 });
@@ -123,6 +125,7 @@ app.use('/api/candidate-ai', batch13CandidateAIContentRoutes);
 app.use('/api/ai-nlp', batch14ExtendedAINLPRoutes);
 app.use('/api/calendar', batch15CalendarSchedulingRoutes);
 app.use('/api/reminders', batch16RemindersNotificationsRoutes);
+app.use('/api/screening', batch17AIScreeningRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

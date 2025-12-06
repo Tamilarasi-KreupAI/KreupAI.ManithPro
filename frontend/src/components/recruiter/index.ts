@@ -9,3 +9,6 @@ export { default as CalendarSchedulingHub } from './CalendarSchedulingHub';
 
 // Recruiter Components - Batch 16: Reminders & Notifications
 export { default as RemindersNotificationsHub } from './RemindersNotificationsHub';
+
+// Recruiter Components - Batch 17: AI Screening Interviews
+export { default as AIScreeningHub } from './AIScreeningHub';

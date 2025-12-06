@@ -6783,3 +6783,448 @@ export interface RegisterPushSubscriptionInput {
   deviceName?: string;
   deviceModel?: string;
 }
+
+// ============================================
+// BATCH 17: AI SCREENING INTERVIEWS (4.1.1-4.1.8)
+// ============================================
+
+// Enums for AI Screening
+export type ScreeningInterviewType = 'VIDEO_ASYNC' | 'PHONE' | 'CHAT';
+export type ScreeningInterviewStatus = 'PENDING' | 'INVITED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
+export type AITone = 'PROFESSIONAL' | 'FRIENDLY' | 'CASUAL' | 'FORMAL' | 'EMPATHETIC';
+export type ScreeningQuestionType = 'TEXT' | 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'SCALE' | 'SITUATIONAL' | 'BEHAVIORAL' | 'TECHNICAL' | 'CODING';
+export type ResponseType = 'VIDEO' | 'AUDIO' | 'TEXT' | 'CODE' | 'MULTIPLE_CHOICE';
+export type ScreeningResponseStatus = 'PENDING' | 'RECORDING' | 'SUBMITTED' | 'ANALYZING' | 'REVIEWED' | 'FLAGGED';
+export type FollowUpConditionType = 'KEYWORD_MATCH' | 'SCORE_THRESHOLD' | 'SENTIMENT' | 'RESPONSE_LENGTH' | 'TIME_SPENT' | 'ALWAYS';
+export type FollowUpActionType = 'ASK_FOLLOW_UP' | 'SKIP_QUESTION' | 'ADD_QUESTIONS' | 'END_INTERVIEW' | 'FLAG_RESPONSE' | 'GENERATE_AI_QUESTION';
+export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
+
+// AI Screening Interview
+export interface AIScreeningInterview {
+  id: string;
+  candidateId: string;
+  recruiterId: string;
+  jobId?: string;
+  applicationId?: string;
+  interviewType: ScreeningInterviewType;
+  title: string;
+  description?: string;
+  inviteToken: string;
+  status: ScreeningInterviewStatus;
+  questionFlowId?: string;
+  totalQuestions: number;
+  completedQuestions: number;
+  currentQuestionIndex: number;
+  totalTimeLimit?: number;
+  perQuestionTimeLimit?: number;
+  timeRemaining?: number;
+  language: string;
+  accessibilitySettings?: Record<string, any>;
+  aiTone: AITone;
+  aiPersonality?: string;
+  enableSmallTalk: boolean;
+  recordingConsent: boolean;
+  scheduledFor?: string;
+  expiresAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  tokenExpiresAt?: string;
+  overallScore?: number;
+  aiFeedback?: string;
+  recruiterNotes?: string;
+  isArchived: boolean;
+  deadlineExtensions: number;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  job?: {
+    id: string;
+    title: string;
+    companyName?: string;
+    companyLogo?: string;
+    description?: string;
+  };
+  questionFlow?: QuestionFlow;
+  responses?: ScreeningResponse[];
+  _count?: {
+    responses: number;
+  };
+}
+
+// Question Flow
+export interface QuestionFlow {
+  id: string;
+  createdById: string;
+  name: string;
+  description?: string;
+  category?: string;
+  jobId?: string;
+  targetRole?: string;
+  targetLevel?: string;
+  interviewType: ScreeningInterviewType;
+  supportedLanguages: string[];
+  defaultLanguage: string;
+  estimatedDuration?: number;
+  defaultTimePerQuestion?: number;
+  isTemplate: boolean;
+  isActive: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  questions?: ScreeningQuestion[];
+  followUpRules?: FollowUpRule[];
+  job?: {
+    id: string;
+    title: string;
+  };
+  _count?: {
+    questions: number;
+    screeningInterviews: number;
+  };
+}
+
+// Screening Question
+export interface ScreeningQuestion {
+  id: string;
+  flowId: string;
+  questionText: string;
+  questionType: ScreeningQuestionType;
+  category?: string;
+  translations?: Record<string, string>;
+  expectedResponseType: ResponseType;
+  maxResponseDuration?: number;
+  maxResponseLength?: number;
+  allowRetakes: boolean;
+  maxRetakes: number;
+  options?: string[];
+  correctAnswer?: string;
+  orderIndex: number;
+  isRequired: boolean;
+  difficulty: DifficultyLevel;
+  maxPoints: number;
+  scoringCriteria?: Record<string, any>;
+  hint?: string;
+  sampleAnswer?: string;
+  evaluationGuidelines?: string;
+  timeLimit?: number;
+  accessibilityNotes?: string;
+  hasAudioDescription: boolean;
+  hasSignLanguage: boolean;
+  aiFollowUpEnabled: boolean;
+  aiEvaluationPrompt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Screening Response
+export interface ScreeningResponse {
+  id: string;
+  interviewId: string;
+  questionId: string;
+  userId?: string;
+  responseType: ResponseType;
+  textResponse?: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  transcription?: string;
+  codeResponse?: string;
+  codeLanguage?: string;
+  selectedOptions: string[];
+  startedAt?: string;
+  completedAt?: string;
+  timeSpentSeconds?: number;
+  retakeNumber: number;
+  aiScore?: number;
+  aiSummary?: string;
+  aiKeywords?: string[];
+  aiSentiment?: string;
+  aiConfidenceLevel?: number;
+  aiDetailedAnalysis?: Record<string, any>;
+  manualScore?: number;
+  manualFeedback?: string;
+  reviewedById?: string;
+  reviewedAt?: string;
+  status: ScreeningResponseStatus;
+  technicalIssues?: string;
+  createdAt: string;
+  updatedAt: string;
+  question?: {
+    id: string;
+    questionText: string;
+    questionType: ScreeningQuestionType;
+    maxPoints: number;
+  };
+}
+
+// Follow-Up Rule
+export interface FollowUpRule {
+  id: string;
+  flowId: string;
+  triggerQuestionId: string;
+  conditionType: FollowUpConditionType;
+  conditionValue: Record<string, any>;
+  conditionOperator: string;
+  actionType: FollowUpActionType;
+  followUpQuestionId?: string;
+  customFollowUpText?: string;
+  additionalQuestionIds: string[];
+  useAIGeneration: boolean;
+  aiGenerationPrompt?: string;
+  priority: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  triggerQuestion?: {
+    id: string;
+    questionText: string;
+  };
+  followUpQuestion?: {
+    id: string;
+    questionText: string;
+  };
+}
+
+// Screening Template
+export interface ScreeningTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  interviewType: ScreeningInterviewType;
+  defaultQuestions?: Record<string, any>[];
+  defaultDuration?: number;
+  defaultTimePerQuestion?: number;
+  aiTone: AITone;
+  aiPersonality?: string;
+  smallTalkEnabled: boolean;
+  smallTalkPrompts: string[];
+  supportedLanguages: string[];
+  defaultLanguage: string;
+  defaultAccessibility?: Record<string, any>;
+  logoUrl?: string;
+  primaryColor?: string;
+  welcomeMessage?: string;
+  completionMessage?: string;
+  isPublic: boolean;
+  usageCount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Candidate Accessibility Preferences
+export interface CandidateAccessibilityPrefs {
+  id: string;
+  candidateId: string;
+  needsScreenReader: boolean;
+  needsHighContrast: boolean;
+  needsLargeText: boolean;
+  needsKeyboardNav: boolean;
+  needsCaptions: boolean;
+  needsSignLanguage: boolean;
+  needsAudioDescriptions: boolean;
+  needsExtendedTime: boolean;
+  timeExtensionPercent: number;
+  needsBreaks: boolean;
+  breakFrequencyMinutes?: number;
+  breakDurationMinutes?: number;
+  preferredInputMethod?: string;
+  preferredOutputFormat?: string;
+  customAccommodations?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Chat Message Response
+export interface ChatMessage {
+  type: 'QUESTION' | 'COMPLETION' | 'FOLLOW_UP' | 'SMALL_TALK';
+  questionId?: string;
+  message: string;
+  questionType?: ScreeningQuestionType;
+  expectedResponseType?: ResponseType;
+  timeLimit?: number;
+  options?: string[];
+  hint?: string;
+}
+
+// Screening Statistics
+export interface ScreeningStats {
+  total: number;
+  completed: number;
+  inProgress: number;
+  pending: number;
+  completionRate: string;
+  avgScore?: string;
+}
+
+// Follow-Up Evaluation Result
+export interface FollowUpEvaluationResult {
+  responseId: string;
+  triggeredRules: FollowUpRule[];
+  nextAction: FollowUpActionType | null;
+  followUpQuestionId: string | null;
+}
+
+// Input Types for API Operations
+
+export interface CreateScreeningInterviewInput {
+  candidateId: string;
+  jobId?: string;
+  applicationId?: string;
+  interviewType?: ScreeningInterviewType;
+  title: string;
+  description?: string;
+  questionFlowId?: string;
+  totalTimeLimit?: number;
+  perQuestionTimeLimit?: number;
+  language?: string;
+  accessibilitySettings?: Record<string, any>;
+  aiTone?: AITone;
+  aiPersonality?: string;
+  enableSmallTalk?: boolean;
+  expiresAt?: string;
+}
+
+export interface CreateQuestionFlowInput {
+  name: string;
+  description?: string;
+  category?: string;
+  jobId?: string;
+  targetRole?: string;
+  targetLevel?: string;
+  interviewType?: ScreeningInterviewType;
+  supportedLanguages?: string[];
+  defaultLanguage?: string;
+  estimatedDuration?: number;
+  defaultTimePerQuestion?: number;
+  isTemplate?: boolean;
+}
+
+export interface UpdateQuestionFlowInput {
+  name?: string;
+  description?: string;
+  category?: string;
+  targetRole?: string;
+  targetLevel?: string;
+  supportedLanguages?: string[];
+  defaultLanguage?: string;
+  estimatedDuration?: number;
+  defaultTimePerQuestion?: number;
+  isTemplate?: boolean;
+  isActive?: boolean;
+}
+
+export interface AddScreeningQuestionInput {
+  questionText: string;
+  questionType?: ScreeningQuestionType;
+  category?: string;
+  translations?: Record<string, string>;
+  expectedResponseType?: ResponseType;
+  maxResponseDuration?: number;
+  maxResponseLength?: number;
+  allowRetakes?: boolean;
+  maxRetakes?: number;
+  options?: string[];
+  correctAnswer?: string;
+  orderIndex?: number;
+  isRequired?: boolean;
+  difficulty?: DifficultyLevel;
+  maxPoints?: number;
+  scoringCriteria?: Record<string, any>;
+  hint?: string;
+  sampleAnswer?: string;
+  evaluationGuidelines?: string;
+  timeLimit?: number;
+  accessibilityNotes?: string;
+  hasAudioDescription?: boolean;
+  hasSignLanguage?: boolean;
+  aiFollowUpEnabled?: boolean;
+  aiEvaluationPrompt?: string;
+}
+
+export interface SubmitScreeningResponseInput {
+  responseType: ResponseType;
+  textResponse?: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  codeResponse?: string;
+  codeLanguage?: string;
+  selectedOptions?: string[];
+  timeSpentSeconds?: number;
+}
+
+export interface ReviewScreeningResponseInput {
+  manualScore: number;
+  manualFeedback?: string;
+}
+
+export interface AddFollowUpRuleInput {
+  triggerQuestionId: string;
+  conditionType: FollowUpConditionType;
+  conditionValue: Record<string, any>;
+  conditionOperator?: string;
+  actionType: FollowUpActionType;
+  followUpQuestionId?: string;
+  customFollowUpText?: string;
+  additionalQuestionIds?: string[];
+  useAIGeneration?: boolean;
+  aiGenerationPrompt?: string;
+  priority?: number;
+}
+
+export interface CreateScreeningTemplateInput {
+  name: string;
+  description?: string;
+  category?: string;
+  interviewType?: ScreeningInterviewType;
+  defaultQuestions?: Record<string, any>[];
+  defaultDuration?: number;
+  defaultTimePerQuestion?: number;
+  aiTone?: AITone;
+  aiPersonality?: string;
+  smallTalkEnabled?: boolean;
+  smallTalkPrompts?: string[];
+  supportedLanguages?: string[];
+  defaultLanguage?: string;
+  defaultAccessibility?: Record<string, any>;
+  logoUrl?: string;
+  primaryColor?: string;
+  welcomeMessage?: string;
+  completionMessage?: string;
+  isPublic?: boolean;
+}
+
+export interface UpdateAccessibilityPrefsInput {
+  needsScreenReader?: boolean;
+  needsHighContrast?: boolean;
+  needsLargeText?: boolean;
+  needsKeyboardNav?: boolean;
+  needsCaptions?: boolean;
+  needsSignLanguage?: boolean;
+  needsAudioDescriptions?: boolean;
+  needsExtendedTime?: boolean;
+  timeExtensionPercent?: number;
+  needsBreaks?: boolean;
+  breakFrequencyMinutes?: number;
+  breakDurationMinutes?: number;
+  preferredInputMethod?: string;
+  preferredOutputFormat?: string;
+  customAccommodations?: string;
+}
+
+export interface StartInterviewInput {
+  recordingConsent?: boolean;
+  language?: string;
+  accessibilitySettings?: Record<string, any>;
+}
+
+export interface SubmitChatResponseInput {
+  questionId: string;
+  message: string;
+  responseType?: ResponseType;
+}
