@@ -10962,3 +10962,482 @@ export interface SmartRecommendationsStats {
     cost: number;
   }>;
 }
+
+// ============================================================================
+// BATCH 24: HIRING TEAM MANAGEMENT (6.1.1-6.1.7)
+// ============================================================================
+
+// Common types
+export type TeamStatus = 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'ARCHIVED';
+export type TeamType = 'STANDARD' | 'EXECUTIVE' | 'HIGH_VOLUME';
+export type TeamRole = 'LEAD_RECRUITER' | 'RECRUITER' | 'HIRING_MANAGER' | 'INTERVIEWER' | 'COORDINATOR' | 'VIEWER';
+export type PermissionLevel = 'VIEWER' | 'COMMENTER' | 'EDITOR' | 'ADMIN';
+export type RoundType = 'PHONE_SCREEN' | 'TECHNICAL' | 'BEHAVIORAL' | 'CULTURE' | 'FINAL' | 'OFFER';
+export type InterviewFormat = 'IN_PERSON' | 'VIDEO' | 'PHONE';
+export type SchedulingMode = 'MANUAL' | 'SELF_SCHEDULE' | 'AUTO';
+export type CoverageReason = 'VACATION' | 'SICK' | 'LEAVE' | 'TRAINING' | 'OTHER';
+export type CoverageType = 'FULL' | 'PARTIAL' | 'SPECIFIC_TASKS';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type CoverageStatus = 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export type PeriodType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
+export type ActivityType = 'MEMBER_ADDED' | 'MEMBER_REMOVED' | 'ROLE_CHANGED' | 'PERMISSIONS_CHANGED' | 'INTERVIEW_SCHEDULED' | 'CANDIDATE_MOVED' | 'DECISION_MADE';
+
+// 6.1.1 Hiring Team Types
+export interface HiringTeam {
+  id: string;
+  companyId: string;
+  jobId: string;
+  name: string;
+  description?: string;
+  teamType: TeamType;
+  leadRecruiterId: string;
+  hiringManagerId?: string;
+  status: TeamStatus;
+  activatedAt: string;
+  completedAt?: string;
+  settings?: Record<string, unknown>;
+  notificationPrefs?: Record<string, boolean>;
+  totalCandidates: number;
+  totalInterviews: number;
+  totalHires: number;
+  avgTimeToHire?: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  members?: HiringTeamMember[];
+}
+
+export interface CreateHiringTeamInput {
+  companyId: string;
+  jobId: string;
+  name: string;
+  description?: string;
+  teamType?: TeamType;
+  leadRecruiterId: string;
+  hiringManagerId?: string;
+  settings?: Record<string, unknown>;
+  notificationPrefs?: Record<string, boolean>;
+}
+
+export interface UpdateHiringTeamInput {
+  name?: string;
+  description?: string;
+  teamType?: TeamType;
+  hiringManagerId?: string;
+  settings?: Record<string, unknown>;
+  notificationPrefs?: Record<string, boolean>;
+}
+
+// 6.1.2 Team Member & Permission Types
+export interface HiringTeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  companyId: string;
+  role: TeamRole;
+  title?: string;
+  permissionLevel: PermissionLevel;
+  canViewCandidates: boolean;
+  canEditCandidates: boolean;
+  canScheduleInterviews: boolean;
+  canSubmitFeedback: boolean;
+  canMakeDecisions: boolean;
+  canManageTeam: boolean;
+  canAccessReports: boolean;
+  customPermissions?: Record<string, boolean>;
+  isActive: boolean;
+  availableFrom?: string;
+  availableUntil?: string;
+  maxInterviewsPerWeek?: number;
+  currentInterviewLoad: number;
+  expertiseAreas?: string[];
+  interviewTypes?: string[];
+  notifyOnNewCandidates: boolean;
+  notifyOnInterviews: boolean;
+  notifyOnDecisions: boolean;
+  addedById: string;
+  joinedAt: string;
+  lastActiveAt?: string;
+  updatedAt: string;
+}
+
+export interface AddTeamMemberInput {
+  userId: string;
+  companyId: string;
+  role: TeamRole;
+  title?: string;
+  permissionLevel?: PermissionLevel;
+  canViewCandidates?: boolean;
+  canEditCandidates?: boolean;
+  canScheduleInterviews?: boolean;
+  canSubmitFeedback?: boolean;
+  canMakeDecisions?: boolean;
+  canManageTeam?: boolean;
+  canAccessReports?: boolean;
+  customPermissions?: Record<string, boolean>;
+  expertiseAreas?: string[];
+  interviewTypes?: string[];
+  maxInterviewsPerWeek?: number;
+}
+
+export interface UpdateMemberPermissionsInput {
+  role?: TeamRole;
+  title?: string;
+  permissionLevel?: PermissionLevel;
+  canViewCandidates?: boolean;
+  canEditCandidates?: boolean;
+  canScheduleInterviews?: boolean;
+  canSubmitFeedback?: boolean;
+  canMakeDecisions?: boolean;
+  canManageTeam?: boolean;
+  canAccessReports?: boolean;
+  customPermissions?: Record<string, boolean>;
+  isActive?: boolean;
+  maxInterviewsPerWeek?: number;
+}
+
+// 6.1.3 Interview Panel Types
+export interface PanelMember {
+  userId: string;
+  role: TeamRole;
+  isRequired: boolean;
+}
+
+export interface InterviewPanel {
+  id: string;
+  companyId: string;
+  teamId: string;
+  jobId: string;
+  name: string;
+  roundNumber: number;
+  roundType: RoundType;
+  panelMembers: PanelMember[];
+  minPanelSize: number;
+  maxPanelSize: number;
+  duration: number;
+  format: InterviewFormat;
+  location?: string;
+  videoLink?: string;
+  scorecardTemplateId?: string;
+  passingScore?: number;
+  requireUnanimous: boolean;
+  schedulingMode: SchedulingMode;
+  bufferTime: number;
+  allowWeekends: boolean;
+  timeSlotPreferences?: string[];
+  isActive: boolean;
+  order: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInterviewPanelInput {
+  companyId: string;
+  teamId: string;
+  jobId: string;
+  name: string;
+  roundNumber: number;
+  roundType: RoundType;
+  panelMembers: PanelMember[];
+  minPanelSize?: number;
+  maxPanelSize?: number;
+  duration?: number;
+  format?: InterviewFormat;
+  location?: string;
+  videoLink?: string;
+  scorecardTemplateId?: string;
+  passingScore?: number;
+  requireUnanimous?: boolean;
+  schedulingMode?: SchedulingMode;
+  bufferTime?: number;
+  allowWeekends?: boolean;
+  timeSlotPreferences?: string[];
+  order: number;
+}
+
+export interface UpdateInterviewPanelInput {
+  name?: string;
+  panelMembers?: PanelMember[];
+  minPanelSize?: number;
+  maxPanelSize?: number;
+  duration?: number;
+  format?: InterviewFormat;
+  location?: string;
+  videoLink?: string;
+  scorecardTemplateId?: string;
+  passingScore?: number;
+  requireUnanimous?: boolean;
+  schedulingMode?: SchedulingMode;
+  bufferTime?: number;
+  allowWeekends?: boolean;
+  timeSlotPreferences?: string[];
+  isActive?: boolean;
+  order?: number;
+}
+
+// 6.1.4 Workload Types
+export interface TeamWorkload {
+  id: string;
+  companyId: string;
+  teamId: string;
+  userId: string;
+  periodStart: string;
+  periodEnd: string;
+  maxCapacity: number;
+  currentLoad: number;
+  availableCapacity: number;
+  scheduledInterviews: number;
+  completedInterviews: number;
+  cancelledInterviews: number;
+  pendingFeedback: number;
+  pendingReviews: number;
+  pendingDecisions: number;
+  totalInterviewHours: number;
+  totalPrepHours: number;
+  avgFeedbackTime?: number;
+  feedbackQualityScore?: number;
+  availableSlots?: string[];
+  blockedDates?: string[];
+  timeZone: string;
+  isOverloaded: boolean;
+  overloadAlertSent: boolean;
+  calculatedAt: string;
+  updatedAt: string;
+}
+
+export interface WorkloadSummary {
+  totalMembers: number;
+  totalCapacity: number;
+  currentLoad: number;
+  availableCapacity: number;
+  overloadedMembers: number;
+  byRole: Record<string, { count: number; load: number; capacity: number }>;
+}
+
+// 6.1.5 Coverage Schedule Types
+export interface CoverageSchedule {
+  id: string;
+  companyId: string;
+  teamId: string;
+  primaryUserId: string;
+  coveringUserId: string;
+  startDate: string;
+  endDate: string;
+  reason: CoverageReason;
+  notes?: string;
+  coverageType: CoverageType;
+  coveredResponsibilities?: string[];
+  excludedResponsibilities?: string[];
+  handoffNotes?: string;
+  handoffDocuments?: string[];
+  handoffCompletedAt?: string;
+  approvalStatus: ApprovalStatus;
+  approvedById?: string;
+  approvedAt?: string;
+  notifyStakeholders: boolean;
+  stakeholdersNotified: boolean;
+  status: CoverageStatus;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCoverageScheduleInput {
+  companyId: string;
+  teamId: string;
+  primaryUserId: string;
+  coveringUserId: string;
+  startDate: string;
+  endDate: string;
+  reason: CoverageReason;
+  notes?: string;
+  coverageType?: CoverageType;
+  coveredResponsibilities?: string[];
+  excludedResponsibilities?: string[];
+  handoffNotes?: string;
+  handoffDocuments?: string[];
+  notifyStakeholders?: boolean;
+}
+
+export interface UpdateCoverageScheduleInput {
+  coveringUserId?: string;
+  startDate?: string;
+  endDate?: string;
+  reason?: CoverageReason;
+  notes?: string;
+  coverageType?: CoverageType;
+  coveredResponsibilities?: string[];
+  excludedResponsibilities?: string[];
+  handoffNotes?: string;
+  handoffDocuments?: string[];
+  status?: CoverageStatus;
+}
+
+// 6.1.6 Team Performance Types
+export interface TeamPerformance {
+  id: string;
+  companyId: string;
+  teamId: string;
+  periodType: PeriodType;
+  periodStart: string;
+  periodEnd: string;
+  candidatesSourced: number;
+  candidatesScreened: number;
+  interviewsScheduled: number;
+  interviewsCompleted: number;
+  offersExtended: number;
+  offersAccepted: number;
+  hiresMade: number;
+  avgTimeToScreen?: number;
+  avgTimeToInterview?: number;
+  avgTimeToOffer?: number;
+  avgTimeToHire?: number;
+  avgInterviewsPerHire?: number;
+  candidateQualityScore?: number;
+  interviewQualityScore?: number;
+  offerAcceptanceRate?: number;
+  newHireRetention90?: number;
+  teamUtilization?: number;
+  avgFeedbackTurnaround?: number;
+  feedbackCompletionRate?: number;
+  teamSatisfactionScore?: number;
+  vsCompanyAvg?: Record<string, number>;
+  vsPreviousPeriod?: Record<string, number>;
+  vsGoals?: Record<string, number>;
+  byRecruiter?: Record<string, unknown>;
+  bySource?: Record<string, unknown>;
+  byStage?: Record<string, unknown>;
+  calculatedAt: string;
+  updatedAt: string;
+}
+
+export interface PerformanceTrend {
+  direction: 'up' | 'down' | 'stable';
+  percentage: number;
+}
+
+export interface PerformanceComparison {
+  performance: TeamPerformance[];
+  trends: {
+    hires: PerformanceTrend;
+    interviews: PerformanceTrend;
+    timeToHire: PerformanceTrend;
+  };
+}
+
+// 6.1.7 Hiring Manager Dashboard Types
+export interface DashboardWidget {
+  type: string;
+  position: { x: number; y: number; w: number; h: number };
+  config?: Record<string, unknown>;
+}
+
+export interface SavedFilter {
+  id: string;
+  name: string;
+  config: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface HiringManagerDashboard {
+  id: string;
+  companyId: string;
+  userId: string;
+  dashboardName: string;
+  layout?: Record<string, unknown>;
+  visibleJobIds?: string[];
+  pinnedJobIds?: string[];
+  widgets: DashboardWidget[];
+  defaultTimeRange: string;
+  autoRefresh: boolean;
+  refreshInterval: number;
+  defaultFilters?: Record<string, unknown>;
+  savedFilters?: SavedFilter[];
+  emailDigest: boolean;
+  digestFrequency: string;
+  alertThresholds?: Record<string, number>;
+  quickActions?: Record<string, unknown>[];
+  showCompletedJobs: boolean;
+  showTeamMetrics: boolean;
+  compactMode: boolean;
+  colorScheme: string;
+  lastViewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateDashboardConfigInput {
+  dashboardName?: string;
+  defaultTimeRange?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+  defaultFilters?: Record<string, unknown>;
+  emailDigest?: boolean;
+  digestFrequency?: string;
+  alertThresholds?: Record<string, number>;
+  showCompletedJobs?: boolean;
+  showTeamMetrics?: boolean;
+  compactMode?: boolean;
+  colorScheme?: string;
+}
+
+export interface DashboardData {
+  summary: {
+    activeTeams: number;
+    totalCandidates: number;
+    totalInterviews: number;
+    totalHires: number;
+  };
+  teams: Array<{
+    id: string;
+    name: string;
+    candidates: number;
+    interviews: number;
+    hires: number;
+    status: TeamStatus;
+  }>;
+  recentActivity: Array<{
+    id: string;
+    type: ActivityType;
+    description: string;
+    performedAt: string;
+  }>;
+  upcomingInterviews: Array<{
+    id: string;
+    candidateName: string;
+    jobTitle: string;
+    scheduledAt: string;
+  }>;
+  pendingActions: {
+    feedbackPending: number;
+    decisionsNeeded: number;
+    interviewsToSchedule: number;
+  };
+}
+
+// Team Activity Log Types
+export interface TeamActivityLog {
+  id: string;
+  companyId: string;
+  teamId: string;
+  userId: string;
+  activityType: ActivityType;
+  entityType: string;
+  entityId: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  previousState?: Record<string, unknown>;
+  newState?: Record<string, unknown>;
+  performedAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+// Hiring Team Stats
+export interface HiringTeamStats {
+  teamsByStatus: Record<TeamStatus, number>;
+  membersByRole: Record<TeamRole, number>;
+  activePanels: number;
+  activeCoverages: number;
+}
