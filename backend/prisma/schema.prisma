@@ -657,6 +657,11 @@ model CandidateProfile {
   versions              ProfileVersion[]
   githubProfile         GithubProfile?
   linkedInProfile       LinkedInProfile?
+  stackOverflowProfile  StackOverflowProfile?
+  notionPortfolio       NotionPortfolio?
+  gitlabProfile         GitLabProfile?
+  designPortfolios      DesignPortfolio[]
+  blogPlatforms         BlogPlatform[]
 
   @@index([userId])
   @@index([completenessScore])
@@ -1307,4 +1312,315 @@ model AchievementDefinition {
   @@index([category])
   @@index([isActive])
   @@map("achievement_definitions")
+}
+
+// ============================================
+// ADDITIONAL PLATFORM INTEGRATIONS (Features 1.2.3-1.2.7)
+// ============================================
+
+// 1.2.3 - Stack Overflow Integration
+model StackOverflowProfile {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // Stack Overflow Account Info
+  stackOverflowId       String              @unique
+  displayName           String
+  profileUrl            String
+  avatarUrl             String?
+  websiteUrl            String?
+  location              String?
+  aboutMe               String?
+
+  // Statistics
+  reputation            Int                 @default(0)
+  goldBadges            Int                 @default(0)
+  silverBadges          Int                 @default(0)
+  bronzeBadges          Int                 @default(0)
+  totalBadges           Int                 @default(0)
+
+  // Activity
+  questionCount         Int                 @default(0)
+  answerCount           Int                 @default(0)
+  acceptedAnswerCount   Int                 @default(0)
+  upVotes               Int                 @default(0)
+  downVotes             Int                 @default(0)
+  viewCount             Int                 @default(0)
+
+  // Top Tags
+  topTags               Json?               // Array of {name, score, answerCount}
+
+  // Top Answers
+  topAnswers            Json?               // Array of top answers with links
+
+  // Account Age
+  creationDate          DateTime?
+  lastAccessDate        DateTime?
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  tokenExpiresAt        DateTime?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([stackOverflowId])
+  @@map("stackoverflow_profiles")
+}
+
+// 1.2.4 - Notion Portfolio Import
+model NotionPortfolio {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // Notion Account Info
+  workspaceId           String
+  workspaceName         String?
+  workspaceIcon         String?
+
+  // User Info
+  notionUserId          String?
+  userName              String?
+  userEmail             String?
+  avatarUrl             String?
+
+  // Imported Pages
+  portfolioPages        Json?               // Array of imported portfolio pages
+  totalPages            Int                 @default(0)
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  botId                 String?
+
+  // Import Settings
+  importedDatabases     String[]            @default([])
+  autoImportPages       Boolean             @default(false)
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("notion_portfolios")
+}
+
+// 1.2.5 - GitLab Integration
+model GitLabProfile {
+  id                    String              @id @default(uuid())
+  profileId             String              @unique
+
+  // GitLab Account Info
+  gitlabId              String              @unique
+  username              String
+  name                  String?
+  avatarUrl             String?
+  webUrl                String
+  email                 String?
+  bio                   String?
+  company               String?
+  location              String?
+  website               String?
+  twitter               String?
+  linkedin              String?
+
+  // Statistics
+  publicRepos           Int                 @default(0)
+  privateRepos          Int                 @default(0)
+  followers             Int                 @default(0)
+  following             Int                 @default(0)
+  starredProjects       Int                 @default(0)
+  totalCommits          Int                 @default(0)
+  totalMergeRequests    Int                 @default(0)
+  totalIssues           Int                 @default(0)
+
+  // Contribution Data
+  contributionCalendar  Json?
+  topLanguages          Json?
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  refreshToken          String?
+  tokenExpiresAt        DateTime?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  projects              GitLabProject[]
+
+  @@index([profileId])
+  @@index([username])
+  @@map("gitlab_profiles")
+}
+
+model GitLabProject {
+  id                    String              @id @default(uuid())
+  gitlabProfileId       String
+
+  // Project Info
+  projectId             String
+  name                  String
+  nameWithNamespace     String
+  path                  String
+  description           String?
+  webUrl                String
+
+  // Stats
+  starCount             Int                 @default(0)
+  forksCount            Int                 @default(0)
+  openIssuesCount       Int                 @default(0)
+
+  // Languages
+  languages             Json?
+
+  // Visibility
+  visibility            String?             // public, internal, private
+  isArchived            Boolean             @default(false)
+
+  // Display Settings
+  isShowcased           Boolean             @default(false)
+  displayOrder          Int                 @default(0)
+
+  // Timestamps
+  createdAt             DateTime
+  lastActivityAt        DateTime?
+
+  // Relations
+  gitlabProfile         GitLabProfile       @relation(fields: [gitlabProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([gitlabProfileId, projectId])
+  @@index([gitlabProfileId])
+  @@map("gitlab_projects")
+}
+
+// 1.2.6 - Behance/Dribbble Integration
+model DesignPortfolio {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Platform Info
+  platform              String              // "behance" or "dribbble"
+  platformUserId        String
+  username              String
+  displayName           String?
+  profileUrl            String
+  avatarUrl             String?
+  bio                   String?
+  location              String?
+
+  // Statistics
+  followers             Int                 @default(0)
+  following             Int                 @default(0)
+  projectCount          Int                 @default(0)
+  appreciations         Int                 @default(0) // Behance
+  likes                 Int                 @default(0) // Dribbble
+  views                 Int                 @default(0)
+  comments              Int                 @default(0)
+
+  // Skills/Fields
+  skills                String[]            @default([])
+  fields                String[]            @default([])
+
+  // Featured Projects
+  featuredProjects      Json?               // Array of top projects
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  tokenExpiresAt        DateTime?
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@index([platform])
+  @@map("design_portfolios")
+}
+
+// 1.2.7 - Medium/Dev.to Integration
+model BlogPlatform {
+  id                    String              @id @default(uuid())
+  profileId             String
+
+  // Platform Info
+  platform              String              // "medium" or "devto"
+  platformUserId        String
+  username              String
+  displayName           String?
+  profileUrl            String
+  avatarUrl             String?
+  bio                   String?
+
+  // Statistics
+  followers             Int                 @default(0)
+  following             Int                 @default(0)
+  articleCount          Int                 @default(0)
+  totalReactions        Int                 @default(0)
+  totalViews            Int                 @default(0)
+  totalComments         Int                 @default(0)
+
+  // Topics/Tags
+  topTopics             String[]            @default([])
+
+  // Articles
+  articles              Json?               // Array of articles with stats
+
+  // Connection Status
+  status                IntegrationStatus   @default(CONNECTED)
+  accessToken           String?
+  apiKey                String?             // Dev.to uses API key
+
+  // Sync Info
+  lastSyncAt            DateTime?
+  syncError             String?
+  autoSync              Boolean             @default(true)
+
+  // Timestamps
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  profile               CandidateProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@index([platform])
+  @@map("blog_platforms")
 }

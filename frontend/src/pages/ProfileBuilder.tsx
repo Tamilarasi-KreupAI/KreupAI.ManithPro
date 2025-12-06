@@ -11,8 +11,9 @@ import ProjectPortfolio from '../components/profile/ProjectPortfolio';
 import AchievementBadges from '../components/profile/AchievementBadges';
 import ProfileVersionHistory from '../components/profile/ProfileVersionHistory';
 import IntegrationsHub from '../components/profile/IntegrationsHub';
+import AdditionalIntegrationsHub from '../components/profile/AdditionalIntegrationsHub';
 
-type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations';
+type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skills' | 'projects' | 'achievements' | 'versions' | 'integrations' | 'more-integrations';
 
 const ProfileBuilder: React.FC = () => {
   const { user } = useAuth();
@@ -57,6 +58,7 @@ const ProfileBuilder: React.FC = () => {
     { id: 'projects' as ProfileSection, label: 'Projects', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
     { id: 'achievements' as ProfileSection, label: 'Achievements', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
     { id: 'integrations' as ProfileSection, label: 'Integrations', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
+    { id: 'more-integrations' as ProfileSection, label: 'More Platforms', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
     { id: 'versions' as ProfileSection, label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
   ];
 
@@ -355,6 +357,10 @@ const ProfileBuilder: React.FC = () => {
 
             {activeSection === 'integrations' && (
               <IntegrationsHub />
+            )}
+
+            {activeSection === 'more-integrations' && (
+              <AdditionalIntegrationsHub />
             )}
 
             {activeSection === 'versions' && (

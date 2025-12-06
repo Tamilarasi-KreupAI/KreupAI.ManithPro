@@ -872,3 +872,429 @@ export interface IntegrationStatusResponse {
     isVerified?: boolean;
   };
 }
+
+// ============================================
+// BATCH 3: ADDITIONAL INTEGRATIONS
+// ============================================
+
+// 1.2.3 - Stack Overflow Integration
+export interface StackOverflowProfile {
+  id: string;
+  profileId: string;
+  stackOverflowId: string;
+  displayName: string;
+  profileUrl: string;
+  avatarUrl?: string;
+  websiteUrl?: string;
+  location?: string;
+  aboutMe?: string;
+  reputation: number;
+  reputationChangeYear: number;
+  reputationChangeQuarter: number;
+  reputationChangeMonth: number;
+  reputationChangeWeek: number;
+  reputationChangeDay: number;
+  badges: {
+    gold: number;
+    silver: number;
+    bronze: number;
+  };
+  questionCount: number;
+  answerCount: number;
+  acceptedAnswerCount: number;
+  acceptRate?: number;
+  topTags: StackOverflowTag[];
+  recentAnswers?: StackOverflowAnswer[];
+  recentQuestions?: StackOverflowQuestion[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface StackOverflowTag {
+  name: string;
+  count: number;
+  score: number;
+  isTopTag: boolean;
+}
+
+export interface StackOverflowAnswer {
+  id: string;
+  questionId: string;
+  questionTitle: string;
+  score: number;
+  isAccepted: boolean;
+  createdAt: string;
+  url: string;
+}
+
+export interface StackOverflowQuestion {
+  id: string;
+  title: string;
+  score: number;
+  answerCount: number;
+  isAnswered: boolean;
+  viewCount: number;
+  tags: string[];
+  createdAt: string;
+  url: string;
+}
+
+// 1.2.4 - Notion Portfolio Import
+export interface NotionPortfolio {
+  id: string;
+  profileId: string;
+  workspaceId: string;
+  workspaceName?: string;
+  workspaceIcon?: string;
+  accessToken?: string;
+  pages: NotionPage[];
+  databases: NotionDatabase[];
+  importedProjects: NotionProject[];
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  status: IntegrationStatus;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface NotionPage {
+  id: string;
+  title: string;
+  url: string;
+  icon?: string;
+  cover?: string;
+  lastEditedAt: string;
+  isImported: boolean;
+  importedAsType?: 'project' | 'case_study' | 'article';
+}
+
+export interface NotionDatabase {
+  id: string;
+  title: string;
+  description?: string;
+  url: string;
+  icon?: string;
+  itemCount: number;
+  lastEditedAt: string;
+}
+
+export interface NotionProject {
+  id: string;
+  notionPageId: string;
+  title: string;
+  description?: string;
+  status?: string;
+  technologies: string[];
+  url?: string;
+  thumbnailUrl?: string;
+  importedAt: string;
+}
+
+// 1.2.5 - GitLab Integration
+export interface GitLabProfile {
+  id: string;
+  profileId: string;
+  gitLabId: string;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  profileUrl: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  email?: string;
+  company?: string;
+  jobTitle?: string;
+  publicRepos: number;
+  privateRepos: number;
+  followers: number;
+  following: number;
+  totalStars: number;
+  totalForks: number;
+  totalMergeRequests: number;
+  totalIssues: number;
+  totalContributions: number;
+  contributionsLastYear: number;
+  contributionGraph?: any;
+  topLanguages?: GitLabLanguage[];
+  projects?: GitLabProject[];
+  groups?: GitLabGroup[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface GitLabLanguage {
+  name: string;
+  percentage: number;
+  bytes: number;
+}
+
+export interface GitLabProject {
+  id: string;
+  gitLabProfileId: string;
+  projectId: string;
+  name: string;
+  nameWithNamespace: string;
+  path: string;
+  pathWithNamespace: string;
+  description?: string;
+  visibility: 'public' | 'internal' | 'private';
+  webUrl: string;
+  httpUrlToRepo?: string;
+  avatarUrl?: string;
+  readmeUrl?: string;
+  defaultBranch?: string;
+  topics: string[];
+  languages?: GitLabLanguage[];
+  stars: number;
+  forks: number;
+  openIssuesCount: number;
+  openMergeRequestsCount: number;
+  pipelinesEnabled: boolean;
+  lastActivityAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  isArchived: boolean;
+  isForked: boolean;
+  isMirror: boolean;
+  role?: 'owner' | 'maintainer' | 'developer' | 'reporter' | 'guest';
+  isShowcased: boolean;
+  displayOrder: number;
+}
+
+export interface GitLabGroup {
+  id: string;
+  name: string;
+  path: string;
+  description?: string;
+  visibility: string;
+  webUrl: string;
+  avatarUrl?: string;
+  projectCount: number;
+  memberCount: number;
+}
+
+// 1.2.6 - Behance/Dribbble Integration
+export type DesignPlatformType = 'behance' | 'dribbble';
+
+export interface DesignPortfolio {
+  id: string;
+  profileId: string;
+  platform: DesignPlatformType;
+  platformUserId: string;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  profileUrl: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  specializations: string[];
+  followers: number;
+  following: number;
+  projectsCount: number;
+  appreciations: number;
+  views: number;
+  likes: number;
+  comments: number;
+  teams?: string[];
+  fields?: string[];
+  projects?: DesignProject[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface DesignProject {
+  id: string;
+  designPortfolioId: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  url: string;
+  thumbnailUrl?: string;
+  images: DesignProjectImage[];
+  fields: string[];
+  tools: string[];
+  tags: string[];
+  colors?: string[];
+  views: number;
+  appreciations: number;
+  likes: number;
+  comments: number;
+  publishedAt: string;
+  modifiedAt?: string;
+  isFeatured: boolean;
+  isShowcased: boolean;
+  displayOrder: number;
+}
+
+export interface DesignProjectImage {
+  url: string;
+  width: number;
+  height: number;
+  caption?: string;
+}
+
+// 1.2.7 - Medium/Dev.to Integration
+export type BlogPlatformType = 'medium' | 'devto' | 'hashnode';
+
+export interface BlogPlatform {
+  id: string;
+  profileId: string;
+  platform: BlogPlatformType;
+  platformUserId: string;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  profileUrl: string;
+  bio?: string;
+  followersCount: number;
+  followingCount: number;
+  postsCount: number;
+  totalReactions: number;
+  totalViews: number;
+  totalComments: number;
+  topTags: BlogTag[];
+  featuredPost?: BlogPost;
+  recentPosts: BlogPost[];
+  publications?: BlogPublication[];
+  status: IntegrationStatus;
+  lastSyncAt?: string;
+  syncError?: string;
+  autoSync: boolean;
+  showOnProfile: boolean;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface BlogTag {
+  name: string;
+  count: number;
+}
+
+export interface BlogPost {
+  id: string;
+  blogPlatformId: string;
+  postId: string;
+  title: string;
+  slug: string;
+  url: string;
+  excerpt?: string;
+  coverImage?: string;
+  content?: string;
+  tags: string[];
+  readingTime: number;
+  reactions: number;
+  comments: number;
+  views: number;
+  isPublished: boolean;
+  isFeatured: boolean;
+  isShowcased: boolean;
+  publishedAt: string;
+  updatedAt?: string;
+  displayOrder: number;
+}
+
+export interface BlogPublication {
+  id: string;
+  name: string;
+  description?: string;
+  url: string;
+  imageUrl?: string;
+  followerCount: number;
+}
+
+// Extended Integration Status Response (with all integrations)
+export interface AllIntegrationsStatusResponse extends IntegrationStatusResponse {
+  stackoverflow: {
+    connected: boolean;
+    id?: string;
+    displayName?: string;
+    reputation?: number;
+    status?: IntegrationStatus;
+    lastSyncAt?: string;
+    syncError?: string;
+  };
+  notion: {
+    connected: boolean;
+    id?: string;
+    workspaceName?: string;
+    pageCount?: number;
+    status?: IntegrationStatus;
+    lastSyncAt?: string;
+    syncError?: string;
+  };
+  gitlab: {
+    connected: boolean;
+    id?: string;
+    username?: string;
+    status?: IntegrationStatus;
+    lastSyncAt?: string;
+    syncError?: string;
+  };
+  design: {
+    behance?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      projectsCount?: number;
+      status?: IntegrationStatus;
+      lastSyncAt?: string;
+      syncError?: string;
+    };
+    dribbble?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      projectsCount?: number;
+      status?: IntegrationStatus;
+      lastSyncAt?: string;
+      syncError?: string;
+    };
+  };
+  blog: {
+    medium?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      postsCount?: number;
+      status?: IntegrationStatus;
+      lastSyncAt?: string;
+      syncError?: string;
+    };
+    devto?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      postsCount?: number;
+      status?: IntegrationStatus;
+      lastSyncAt?: string;
+      syncError?: string;
+    };
+    hashnode?: {
+      connected: boolean;
+      id?: string;
+      username?: string;
+      postsCount?: number;
+      status?: IntegrationStatus;
+      lastSyncAt?: string;
+      syncError?: string;
+    };
+  };
+}

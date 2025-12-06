@@ -10,3 +10,6 @@ export { default as ProjectPortfolio } from './ProjectPortfolio';
 export { default as AchievementBadges } from './AchievementBadges';
 export { default as ProfileVersionHistory } from './ProfileVersionHistory';
 export { default as IntegrationsHub } from './IntegrationsHub';
+
+// Profile Builder Components - Batch 3
+export { default as AdditionalIntegrationsHub } from './AdditionalIntegrationsHub';

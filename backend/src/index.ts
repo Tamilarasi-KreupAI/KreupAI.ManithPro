@@ -17,6 +17,7 @@ import candidateProfileRoutes from './routes/candidateProfile.routes';
 import achievementsRoutes from './routes/achievements.routes';
 import profileVersioningRoutes from './routes/profileVersioning.routes';
 import integrationsRoutes from './routes/integrations.routes';
+import additionalIntegrationsRoutes from './routes/additionalIntegrations.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -60,6 +61,7 @@ app.get('/', (req, res) => {
       achievements: '/api/achievements',
       profileVersions: '/api/profile-versions',
       integrations: '/api/integrations',
+      additionalIntegrations: '/api/additional-integrations',
     },
   });
 });
@@ -78,6 +80,7 @@ app.use('/api/candidate-profile', candidateProfileRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/profile-versions', profileVersioningRoutes);
 app.use('/api/integrations', integrationsRoutes);
+app.use('/api/additional-integrations', additionalIntegrationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
