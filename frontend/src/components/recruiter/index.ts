@@ -63,3 +63,6 @@ export { default as PlatformIntegrationsHub } from './PlatformIntegrationsHub';
 
 // Recruiter Components - Batch 37-39: Workflow Automation
 export { default as WorkflowAutomationHub } from './WorkflowAutomationHub';
+
+// Recruiter Components - Batch 40-42: Mobile & Accessibility
+export { default as MobileAccessibilityHub } from './MobileAccessibilityHub';

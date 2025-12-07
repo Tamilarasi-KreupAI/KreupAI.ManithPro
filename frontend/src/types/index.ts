@@ -16263,3 +16263,276 @@ export interface AutomationDashboard {
     requester: string;
   }>;
 }
+
+// ==========================================
+// Batch 40-42: Mobile & Accessibility Types (12.1-12.3)
+// ==========================================
+
+// Batch 40: Mobile Applications
+export interface MobileDevice {
+  id: string;
+  userId: string;
+  organizationId: string;
+  deviceId: string;
+  platform: 'ios' | 'android';
+  deviceName?: string;
+  deviceModel?: string;
+  osVersion?: string;
+  appVersion?: string;
+  pushToken?: string;
+  pushEnabled: boolean;
+  pushCategories: string[];
+  biometricEnabled: boolean;
+  biometricType?: 'face_id' | 'touch_id' | 'fingerprint';
+  isActive: boolean;
+  lastActiveAt?: string;
+  registeredAt: string;
+  deviceTrusted: boolean;
+  trustedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PushNotification {
+  id: string;
+  userId: string;
+  deviceId?: string;
+  organizationId: string;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  imageUrl?: string;
+  notificationType: string;
+  priority: 'low' | 'normal' | 'high' | 'critical';
+  category?: string;
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'read';
+  sentAt?: string;
+  deliveredAt?: string;
+  readAt?: string;
+  failedAt?: string;
+  failureReason?: string;
+  scheduledFor?: string;
+  expiresAt?: string;
+  clickedAt?: string;
+  actionTaken?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface MobileAppConfig {
+  id: string;
+  organizationId?: string;
+  platform: string;
+  minVersion?: string;
+  currentVersion?: string;
+  forceUpdate: boolean;
+  maintenanceMode: boolean;
+  maintenanceMessage?: string;
+  features?: Record<string, boolean>;
+  featureFlags?: Record<string, boolean>;
+  deepLinkScheme?: string;
+  universalLinks?: Record<string, unknown>;
+  offlineEnabled: boolean;
+  offlineCacheDays: number;
+  offlineFeatures: string[];
+  analyticsEnabled: boolean;
+  crashReportingEnabled: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OfflineSyncItem {
+  id: string;
+  userId: string;
+  deviceId: string;
+  entityType: string;
+  entityId?: string;
+  action: 'create' | 'update' | 'delete';
+  data: Record<string, unknown>;
+  status: 'pending' | 'syncing' | 'synced' | 'failed' | 'conflict';
+  syncAttempts: number;
+  lastAttemptAt?: string;
+  syncedAt?: string;
+  errorMessage?: string;
+  hasConflict: boolean;
+  conflictData?: Record<string, unknown>;
+  resolution?: 'client_wins' | 'server_wins' | 'merged';
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Batch 41: PWA
+export interface PWAConfig {
+  id: string;
+  organizationId?: string;
+  appName: string;
+  shortName?: string;
+  description?: string;
+  themeColor: string;
+  backgroundColor: string;
+  icons?: Array<{
+    src: string;
+    sizes: string;
+    type: string;
+    purpose?: string;
+  }>;
+  swVersion?: string;
+  cacheVersion?: string;
+  cacheStrategies?: Record<string, string>;
+  pushEnabled: boolean;
+  vapidPublicKey?: string;
+  installPromptEnabled: boolean;
+  installBannerDelay: number;
+  offlinePageUrl?: string;
+  offlineFallbacks?: Record<string, string>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebPushSubscription {
+  id: string;
+  userId: string;
+  organizationId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  browserName?: string;
+  browserVersion?: string;
+  userAgent?: string;
+  isActive: boolean;
+  categories: string[];
+  lastNotifiedAt?: string;
+  totalSent: number;
+  totalDelivered: number;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceWorkerStatus {
+  version: string;
+  cacheVersion: string;
+  isActive: boolean;
+  registeredAt: string;
+  lastUpdated: string;
+  cacheSize: number;
+  cachedRoutes: string[];
+  pendingUpdates: boolean;
+}
+
+// Batch 42: Accessibility
+export interface AccessibilitySettings {
+  id: string;
+  userId: string;
+  organizationId: string;
+  // Visual
+  highContrast: boolean;
+  colorScheme: 'light' | 'dark' | 'system' | 'high_contrast';
+  fontSize: 'small' | 'medium' | 'large' | 'x-large';
+  fontFamily: 'system' | 'dyslexic-friendly' | 'monospace';
+  reducedMotion: boolean;
+  underlineLinks: boolean;
+  // Reading
+  lineSpacing: 'compact' | 'normal' | 'relaxed';
+  letterSpacing: 'tight' | 'normal' | 'wide';
+  textAlignment: 'left' | 'justified';
+  // Navigation
+  keyboardNavigation: boolean;
+  focusIndicators: boolean;
+  skipLinks: boolean;
+  // Screen reader
+  screenReaderOptimized: boolean;
+  verboseLabels: boolean;
+  announceImages: boolean;
+  // Timing
+  extendedTimeouts: boolean;
+  autoPlayMedia: boolean;
+  carouselAutoPlay: boolean;
+  // Audio
+  soundEnabled: boolean;
+  soundVolume: number;
+  speechRate: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccessibilityPreset {
+  id: string;
+  name: string;
+  description: string;
+  settings: Partial<AccessibilitySettings>;
+}
+
+export interface AccessibilityAudit {
+  id: string;
+  organizationId: string;
+  pageUrl: string;
+  pageTitle?: string;
+  auditDate: string;
+  standard: 'WCAG20A' | 'WCAG20AA' | 'WCAG21A' | 'WCAG21AA' | 'WCAG21AAA';
+  score: number;
+  passedRules: number;
+  failedRules: number;
+  warningRules: number;
+  manualReviewRules: number;
+  issues: AccessibilityIssue[];
+  criticalCount: number;
+  seriousCount: number;
+  moderateCount: number;
+  minorCount: number;
+  auditTool?: string;
+  toolVersion?: string;
+  remediationNotes?: string;
+  fixedIssuesCount: number;
+  lastFixedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AccessibilityIssue {
+  id: string;
+  rule: string;
+  severity: 'critical' | 'serious' | 'moderate' | 'minor';
+  element: string;
+  message: string;
+  helpUrl?: string;
+}
+
+export interface MobileAccessibilityDashboard {
+  mobile: {
+    registeredDevices: number;
+    activeDevices: number;
+    iosDevices: number;
+    androidDevices: number;
+    pushEnabled: number;
+    biometricEnabled: number;
+    appVersion: string;
+    updateRequired: number;
+  };
+  pwa: {
+    installations: number;
+    activeUsers: number;
+    pushSubscriptions: number;
+    offlineUsage: number;
+    cacheHitRate: number;
+  };
+  accessibility: {
+    overallScore: number;
+    wcagCompliance: string;
+    issuesOpen: number;
+    usersWithSettings: number;
+    highContrastUsers: number;
+    screenReaderUsers: number;
+  };
+  notifications: {
+    sentToday: number;
+    deliveryRate: number;
+    clickRate: number;
+    byType: Record<string, number>;
+  };
+}

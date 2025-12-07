@@ -16560,3 +16560,337 @@ model ApprovalStepRecord {
   @@index([approverId])
   @@map("approval_step_records")
 }
+
+// ==========================================
+// Batch 40-42: Mobile & Accessibility (12.1-12.3)
+// ==========================================
+
+// Batch 40: Mobile Applications (12.1)
+model MobileDevice {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Device info
+  deviceId        String   @unique
+  platform        String   // ios, android
+  deviceName      String?
+  deviceModel     String?
+  osVersion       String?
+  appVersion      String?
+
+  // Push notifications
+  pushToken       String?
+  pushEnabled     Boolean  @default(true)
+  pushCategories  String[] // which notification types enabled
+
+  // Biometric
+  biometricEnabled Boolean @default(false)
+  biometricType   String?  // face_id, touch_id, fingerprint
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastActiveAt    DateTime?
+  registeredAt    DateTime @default(now())
+
+  // Security
+  deviceTrusted   Boolean  @default(false)
+  trustedAt       DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("mobile_devices")
+}
+
+// Push Notification
+model PushNotification {
+  id              String   @id @default(uuid())
+  userId          String
+  deviceId        String?
+  organizationId  String
+
+  // Notification content
+  title           String
+  body            String
+  data            Json?    // custom payload
+  imageUrl        String?
+
+  // Notification type
+  notificationType String  // interview_reminder, application_update, message, etc.
+  priority        String   @default("normal") // low, normal, high, critical
+  category        String?  // action category for iOS
+
+  // Delivery status
+  status          String   @default("pending") // pending, sent, delivered, failed, read
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  readAt          DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+
+  // Scheduling
+  scheduledFor    DateTime?
+  expiresAt       DateTime?
+
+  // Tracking
+  clickedAt       DateTime?
+  actionTaken     String?  // which action was selected
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([notificationType])
+  @@index([scheduledFor])
+  @@map("push_notifications")
+}
+
+// Mobile App Config
+model MobileAppConfig {
+  id              String   @id @default(uuid())
+  organizationId  String?  // null for global config
+
+  // App settings
+  platform        String   // ios, android, all
+  minVersion      String?  // minimum required version
+  currentVersion  String?
+  forceUpdate     Boolean  @default(false)
+  maintenanceMode Boolean  @default(false)
+  maintenanceMessage String?
+
+  // Feature flags
+  features        Json?    // enabled/disabled features
+  featureFlags    Json?    // A/B testing flags
+
+  // Deep linking
+  deepLinkScheme  String?
+  universalLinks  Json?    // configured universal links
+
+  // Offline mode
+  offlineEnabled  Boolean  @default(true)
+  offlineCacheDays Int     @default(7)
+  offlineFeatures String[] // which features work offline
+
+  // Analytics
+  analyticsEnabled Boolean @default(true)
+  crashReportingEnabled Boolean @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@map("mobile_app_configs")
+}
+
+// Offline Sync Queue
+model OfflineSyncQueue {
+  id              String   @id @default(uuid())
+  userId          String
+  deviceId        String
+
+  // Sync data
+  entityType      String   // application, interview, message, etc.
+  entityId        String?
+  action          String   // create, update, delete
+  data            Json     // payload to sync
+
+  // Status
+  status          String   @default("pending") // pending, syncing, synced, failed, conflict
+  syncAttempts    Int      @default(0)
+  lastAttemptAt   DateTime?
+  syncedAt        DateTime?
+  errorMessage    String?
+
+  // Conflict resolution
+  hasConflict     Boolean  @default(false)
+  conflictData    Json?    // server data that conflicts
+  resolution      String?  // client_wins, server_wins, merged
+
+  // Priority
+  priority        Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([entityType])
+  @@map("offline_sync_queue")
+}
+
+// Batch 41: PWA Configuration (12.2)
+model PWAConfig {
+  id              String   @id @default(uuid())
+  organizationId  String?
+
+  // PWA manifest
+  appName         String
+  shortName       String?
+  description     String?
+  themeColor      String   @default("#3B82F6")
+  backgroundColor String   @default("#FFFFFF")
+
+  // Icons
+  icons           Json?    // array of icon configs
+
+  // Service worker
+  swVersion       String?
+  cacheVersion    String?
+  cacheStrategies Json?    // per-route caching strategies
+
+  // Push
+  pushEnabled     Boolean  @default(true)
+  vapidPublicKey  String?
+
+  // Installation
+  installPromptEnabled Boolean @default(true)
+  installBannerDelay Int    @default(30) // seconds
+
+  // Offline
+  offlinePageUrl  String?
+  offlineFallbacks Json?   // fallback pages/assets
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("pwa_configs")
+}
+
+// Web Push Subscription
+model WebPushSubscription {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Subscription details
+  endpoint        String   @unique
+  p256dh          String   // public key
+  auth            String   // auth secret
+
+  // Browser info
+  browserName     String?
+  browserVersion  String?
+  userAgent       String?
+
+  // Settings
+  isActive        Boolean  @default(true)
+  categories      String[] // enabled notification categories
+
+  // Stats
+  lastNotifiedAt  DateTime?
+  totalSent       Int      @default(0)
+  totalDelivered  Int      @default(0)
+
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("web_push_subscriptions")
+}
+
+// Batch 42: Accessibility (12.3)
+model AccessibilitySettings {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  organizationId  String
+
+  // Visual
+  highContrast    Boolean  @default(false)
+  colorScheme     String   @default("system") // light, dark, system, high_contrast
+  fontSize        String   @default("medium") // small, medium, large, x-large
+  fontFamily      String   @default("system") // system, dyslexic-friendly, monospace
+  reducedMotion   Boolean  @default(false)
+  underlineLinks  Boolean  @default(false)
+
+  // Reading
+  lineSpacing     String   @default("normal") // compact, normal, relaxed
+  letterSpacing   String   @default("normal") // tight, normal, wide
+  textAlignment   String   @default("left") // left, justified
+
+  // Navigation
+  keyboardNavigation Boolean @default(true)
+  focusIndicators Boolean  @default(true)
+  skipLinks       Boolean  @default(true)
+
+  // Screen reader
+  screenReaderOptimized Boolean @default(false)
+  verboseLabels   Boolean  @default(false)
+  announceImages  Boolean  @default(true)
+
+  // Timing
+  extendedTimeouts Boolean @default(false)
+  autoPlayMedia   Boolean  @default(false)
+  carouselAutoPlay Boolean @default(false)
+
+  // Audio
+  soundEnabled    Boolean  @default(true)
+  soundVolume     Int      @default(100)
+  speechRate      Float    @default(1.0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("accessibility_settings")
+}
+
+// Accessibility Audit Log
+model AccessibilityAudit {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Audit details
+  pageUrl         String
+  pageTitle       String?
+  auditDate       DateTime @default(now())
+  standard        String   @default("WCAG21AA") // WCAG20A, WCAG20AA, WCAG21A, WCAG21AA, WCAG21AAA
+
+  // Results
+  score           Float    // 0-100
+  passedRules     Int
+  failedRules     Int
+  warningRules    Int
+  manualReviewRules Int
+
+  // Issues
+  issues          Json     // array of accessibility issues
+  criticalCount   Int      @default(0)
+  seriousCount    Int      @default(0)
+  moderateCount   Int      @default(0)
+  minorCount      Int      @default(0)
+
+  // Tool info
+  auditTool       String?  // axe, lighthouse, pa11y, etc.
+  toolVersion     String?
+
+  // Remediation
+  remediationNotes String?
+  fixedIssuesCount Int     @default(0)
+  lastFixedAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([pageUrl])
+  @@index([auditDate])
+  @@index([score])
+  @@map("accessibility_audits")
+}
