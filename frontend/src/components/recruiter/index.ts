@@ -36,3 +36,39 @@ export { default as HiringTeamManagementHub } from './HiringTeamManagementHub';
 
 // Recruiter Components - Batch 25: Collaborative Evaluation
 export { default as CollaborativeEvaluationHub } from './CollaborativeEvaluationHub';
+
+// Recruiter Components - Batch 26: Real-Time Communication
+export { default as RealtimeCommunicationHub } from './RealtimeCommunicationHub';
+
+// Recruiter Components - Batch 27: Security & Access Control
+export { default as SecuritySettingsHub } from './SecuritySettingsHub';
+
+// Recruiter Components - Batch 28: Data Protection
+export { default as DataProtectionHub } from './DataProtectionHub';
+
+// Recruiter Components - Batch 29: Compliance Features
+export { default as ComplianceHub } from './ComplianceHub';
+
+// Recruiter Components - Batch 30: Recruitment Analytics
+export { default as RecruitmentAnalyticsHub } from './RecruitmentAnalyticsHub';
+
+// Recruiter Components - Batch 31: Executive Dashboards
+export { default as ExecutiveDashboardsHub } from './ExecutiveDashboardsHub';
+
+// Recruiter Components - Batch 32: Market Intelligence
+export { default as MarketIntelligenceHub } from './MarketIntelligenceHub';
+
+// Recruiter Components - Batch 33-36: Platform Integrations
+export { default as PlatformIntegrationsHub } from './PlatformIntegrationsHub';
+
+// Recruiter Components - Batch 37-39: Workflow Automation
+export { default as WorkflowAutomationHub } from './WorkflowAutomationHub';
+
+// Recruiter Components - Batch 40-42: Mobile & Accessibility
+export { default as MobileAccessibilityHub } from './MobileAccessibilityHub';
+
+// Recruiter Components - Batch 43-45: Enterprise Administration
+export { default as EnterpriseAdminHub } from './EnterpriseAdminHub';
+
+// Recruiter Components - Batch 46-49: Technical Infrastructure
+export { default as TechnicalInfraHub } from './TechnicalInfraHub';

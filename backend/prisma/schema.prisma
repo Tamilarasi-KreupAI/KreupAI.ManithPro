@@ -12103,3 +12103,6360 @@ model HiringBenchmark {
   @@index([roleCategory])
   @@map("hiring_benchmarks")
 }
+
+// ============================================================================
+// BATCH 26: REAL-TIME COMMUNICATION (7.1-7.2)
+// ============================================================================
+
+// 7.1.1-7.1.2 User Presence System
+model UserPresence {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // Status
+  status                String              @default("OFFLINE") // ONLINE, AWAY, BUSY, OFFLINE
+  customStatus          String?             // User-set status message
+  lastSeen              DateTime            @default(now())
+
+  // Activity
+  currentPage           String?             // Current page/route
+  currentActivity       String?             // What user is doing
+
+  // Device Info
+  deviceType            String?             // DESKTOP, MOBILE, TABLET
+  browserInfo           String?
+  platform              String?
+
+  // Preferences
+  autoAway              Boolean             @default(true)
+  autoAwayMinutes       Int                 @default(5)
+  showPresence          Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("user_presences")
+}
+
+// 7.1.1 WebSocket Connections
+model RealtimeConnection {
+  id                    String              @id @default(uuid())
+  userId                String
+  socketId              String              @unique
+
+  // Connection Details
+  connectedAt           DateTime            @default(now())
+  lastPing              DateTime            @default(now())
+
+  // Client Info
+  clientVersion         String?
+  deviceId              String?
+  ipAddress             String?
+  userAgent             String?
+
+  // Rooms/Channels
+  subscribedChannels    Json?               // List of channels subscribed to
+
+  // Status
+  isActive              Boolean             @default(true)
+  disconnectedAt        DateTime?
+  disconnectReason      String?
+
+  @@index([userId])
+  @@index([socketId])
+  @@index([isActive])
+  @@map("realtime_connections")
+}
+
+// 7.1.3 Real-Time Notifications
+model RealtimeNotification {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  userId                String              // Recipient
+
+  // Notification Content
+  type                  String              // MESSAGE, APPLICATION, INTERVIEW, SYSTEM, etc.
+  title                 String
+  body                  String
+  icon                  String?
+  imageUrl              String?
+
+  // Reference
+  entityType            String?             // What entity this relates to
+  entityId              String?
+  actionUrl             String?             // URL to navigate to
+
+  // Priority & Display
+  priority              String              @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  sound                 Boolean             @default(true)
+  vibrate               Boolean             @default(true)
+  persistent            Boolean             @default(false)
+
+  // Status
+  isDelivered           Boolean             @default(false)
+  deliveredAt           DateTime?
+  isRead                Boolean             @default(false)
+  readAt                DateTime?
+  isDismissed           Boolean             @default(false)
+  dismissedAt           DateTime?
+
+  // Actions
+  actions               Json?               // {id, label, action, url}[]
+
+  // Metadata
+  expiresAt             DateTime?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("realtime_notifications")
+}
+
+// 7.1.4 Dashboard Live Update Subscriptions
+model DashboardSubscription {
+  id                    String              @id @default(uuid())
+  userId                String
+  dashboardId           String
+
+  // Widgets subscribed to
+  widgetIds             Json                // List of widget IDs to receive updates
+
+  // Update Preferences
+  refreshInterval       Int                 @default(30) // seconds
+  autoRefresh           Boolean             @default(true)
+
+  // Status
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([userId, dashboardId])
+  @@index([userId])
+  @@map("dashboard_subscriptions")
+}
+
+// 7.2.1-7.2.2 Conversations (DM and Group)
+model Conversation {
+  id                    String              @id @default(uuid())
+  companyId             String?
+
+  // Type
+  type                  String              @default("DIRECT") // DIRECT, GROUP, CHANNEL
+  name                  String?             // For groups/channels
+  description           String?
+  avatarUrl             String?
+
+  // Context (optional)
+  contextType           String?             // JOB, APPLICATION, INTERVIEW
+  contextId             String?
+
+  // Settings
+  isArchived            Boolean             @default(false)
+  isMuted               Boolean             @default(false)
+  allowReactions        Boolean             @default(true)
+  allowAttachments      Boolean             @default(true)
+
+  // Group Settings
+  isPublic              Boolean             @default(false)
+  maxParticipants       Int?
+
+  // Activity
+  lastMessageId         String?
+  lastMessageAt         DateTime?
+  messageCount          Int                 @default(0)
+
+  // Metadata
+  createdBy             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  participants          ConversationParticipant[]
+  messages              Message[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([contextType, contextId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+// Conversation Participants
+model ConversationParticipant {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  userId                String
+
+  // Role
+  role                  String              @default("MEMBER") // OWNER, ADMIN, MEMBER
+
+  // Status
+  isActive              Boolean             @default(true)
+  isMuted               Boolean             @default(false)
+  isPinned              Boolean             @default(false)
+
+  // Read Status
+  lastReadMessageId     String?
+  lastReadAt            DateTime?
+  unreadCount           Int                 @default(0)
+
+  // Notifications
+  notifyOnMessage       Boolean             @default(true)
+  notifyOnMention       Boolean             @default(true)
+
+  // Metadata
+  joinedAt              DateTime            @default(now())
+  leftAt                DateTime?
+  removedBy             String?
+
+  // Relations
+  conversation          Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+// 7.2.1 Messages
+model Message {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  senderId              String
+
+  // Content
+  type                  String              @default("TEXT") // TEXT, IMAGE, FILE, AUDIO, SYSTEM
+  content               String?             @db.Text
+  richContent           Json?               // For rich text formatting
+
+  // Reply
+  replyToId             String?             // Parent message for threads
+  threadCount           Int                 @default(0)
+
+  // Mentions
+  mentions              Json?               // {userId, startIndex, length}[]
+
+  // Status
+  status                String              @default("SENT") // SENDING, SENT, DELIVERED, READ, FAILED
+  editedAt              DateTime?
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Delivery Tracking (7.1.6)
+  deliveredTo           Json?               // {userId: deliveredAt}
+  readBy                Json?               // {userId: readAt}
+
+  // Metadata
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  conversation          Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attachments           MessageAttachment[]
+  reactions             MessageReaction[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([replyToId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+// 7.2.1 Message Reactions
+model MessageReaction {
+  id                    String              @id @default(uuid())
+  messageId             String
+  userId                String
+
+  // Reaction
+  emoji                 String              // Unicode emoji or custom code
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  message               Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+// 7.2.6 Message Attachments
+model MessageAttachment {
+  id                    String              @id @default(uuid())
+  messageId             String
+
+  // File Info
+  fileName              String
+  fileType              String              // MIME type
+  fileSize              Int                 // bytes
+  fileUrl               String
+  thumbnailUrl          String?
+
+  // Type
+  attachmentType        String              // IMAGE, DOCUMENT, AUDIO, VIDEO, OTHER
+
+  // Processing
+  isProcessed           Boolean             @default(false)
+  processingError       String?
+
+  // Metadata
+  dimensions            Json?               // {width, height} for images/videos
+  duration              Int?                // seconds for audio/video
+  metadata              Json?
+
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  message               Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// 7.2.3 Message Templates
+model MessageTemplate {
+  id                    String              @id @default(uuid())
+  companyId             String?
+  userId                String?             // Personal templates
+
+  // Template Info
+  name                  String
+  shortcut              String?             // e.g., "/thanks" for quick insert
+  category              String              // GREETING, FOLLOWUP, REJECTION, CUSTOM
+
+  // Content
+  content               String              @db.Text
+  richContent           Json?               // For rich text
+  variables             Json?               // {name, placeholder, defaultValue}[]
+
+  // Usage
+  usageCount            Int                 @default(0)
+  lastUsedAt            DateTime?
+
+  // Settings
+  isShared              Boolean             @default(false)
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdBy             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([category])
+  @@index([shortcut])
+  @@map("message_templates")
+}
+
+// 7.2.4 Scheduled Messages
+model ScheduledMessage {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  senderId              String
+
+  // Content
+  type                  String              @default("TEXT")
+  content               String              @db.Text
+  richContent           Json?
+  attachmentIds         Json?               // Pre-uploaded attachment IDs
+
+  // Schedule
+  scheduledFor          DateTime
+  timezone              String              @default("UTC")
+
+  // Status
+  status                String              @default("PENDING") // PENDING, SENT, CANCELLED, FAILED
+  sentAt                DateTime?
+  sentMessageId         String?             // ID of actual message once sent
+  failureReason         String?
+
+  // Recurrence (optional)
+  isRecurring           Boolean             @default(false)
+  recurrenceRule        Json?               // {frequency, interval, endDate, etc.}
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([senderId])
+  @@index([conversationId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("scheduled_messages")
+}
+
+// 7.2.8 Email Fallback Settings
+model EmailFallbackConfig {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // Settings
+  enabled               Boolean             @default(true)
+  offlineMinutes        Int                 @default(15) // Send email if offline for this long
+  digestMode            Boolean             @default(false) // Bundle into digest vs individual
+  digestIntervalHours   Int                 @default(4)
+
+  // Preferences
+  includeContent        Boolean             @default(true)
+  includeSender         Boolean             @default(true)
+  maxEmailsPerDay       Int                 @default(50)
+
+  // Tracking
+  lastDigestSent        DateTime?
+  emailsSentToday       Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("email_fallback_configs")
+}
+
+// 7.1.5 Typing Indicators (Stored briefly)
+model TypingIndicator {
+  id                    String              @id @default(uuid())
+  conversationId        String
+  userId                String
+
+  // Status
+  isTyping              Boolean             @default(true)
+  startedAt             DateTime            @default(now())
+  expiresAt             DateTime            // Auto-expire after ~5 seconds
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([expiresAt])
+  @@map("typing_indicators")
+}
+
+// ============================================================================
+// BATCH 27: AUTHENTICATION & ACCESS (8.1.1-8.1.11)
+// ============================================================================
+
+// 8.1.1 Two-Factor Authentication
+model TwoFactorAuth {
+  id                    String              @id @default(uuid())
+  userId                String              @unique
+
+  // 2FA Status
+  enabled               Boolean             @default(false)
+  method                String              @default("TOTP") // TOTP, SMS, EMAIL, BACKUP_CODES
+  verifiedAt            DateTime?
+
+  // TOTP Settings
+  totpSecret            String?             // Encrypted TOTP secret
+  totpVerified          Boolean             @default(false)
+
+  // SMS Settings
+  phoneNumber           String?
+  phoneVerified         Boolean             @default(false)
+
+  // Email Settings
+  emailVerified         Boolean             @default(false)
+
+  // Backup Codes
+  backupCodes           Json?               // Array of hashed backup codes
+  backupCodesUsed       Int                 @default(0)
+  backupCodesGenerated  DateTime?
+
+  // Recovery
+  recoveryEmail         String?
+  recoveryPhone         String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("two_factor_auth")
+}
+
+// 8.1.2, 8.1.3 SSO Provider Configuration
+model SSOProvider {
+  id                    String              @id @default(uuid())
+  organizationId        String?             // Optional, for org-specific SSO
+
+  // Provider Info
+  name                  String              // Display name
+  type                  String              // SAML, OAUTH2, OIDC
+  isEnabled             Boolean             @default(true)
+  isDefault             Boolean             @default(false)
+
+  // SAML Configuration
+  samlEntityId          String?
+  samlSsoUrl            String?
+  samlCertificate       String?             // Public certificate
+  samlLogoutUrl         String?
+  samlNameIdFormat      String?             @default("email")
+
+  // OAuth2/OIDC Configuration
+  clientId              String?
+  clientSecret          String?             // Encrypted
+  authorizationUrl      String?
+  tokenUrl              String?
+  userInfoUrl           String?
+  scopes                String[]            @default([])
+  callbackUrl           String?
+
+  // Provider-specific (Google, Microsoft, Okta)
+  provider              String?             // google, microsoft, okta, custom
+  tenantId              String?             // For Microsoft Azure AD
+  oktaDomain            String?             // For Okta
+
+  // Attribute Mapping
+  attributeMapping      Json?               // Map SSO attributes to user fields
+
+  // Domain restrictions
+  allowedDomains        String[]            @default([])
+
+  // Auto-provisioning
+  autoCreateUsers       Boolean             @default(false)
+  defaultRole           String              @default("CANDIDATE")
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  sessions              SSOSession[]
+
+  @@index([organizationId])
+  @@index([type])
+  @@map("sso_providers")
+}
+
+// SSO Session Tracking
+model SSOSession {
+  id                    String              @id @default(uuid())
+  userId                String
+  providerId            String
+
+  // Session Info
+  ssoSessionId          String?             // Provider's session ID
+  accessToken           String?             // Encrypted
+  refreshToken          String?             // Encrypted
+  idToken               String?             // Encrypted
+
+  // Token expiry
+  accessTokenExpiry     DateTime?
+  refreshTokenExpiry    DateTime?
+
+  // Status
+  isActive              Boolean             @default(true)
+  revokedAt             DateTime?
+  revokedReason         String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  lastUsedAt            DateTime            @default(now())
+
+  // Relations
+  provider              SSOProvider         @relation(fields: [providerId], references: [id])
+
+  @@index([userId])
+  @@index([providerId])
+  @@index([ssoSessionId])
+  @@map("sso_sessions")
+}
+
+// 8.1.4 Password Policy Configuration
+model PasswordPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique // null for global policy
+
+  // Complexity Requirements
+  minLength             Int                 @default(8)
+  maxLength             Int                 @default(128)
+  requireUppercase      Boolean             @default(true)
+  requireLowercase      Boolean             @default(true)
+  requireNumbers        Boolean             @default(true)
+  requireSpecialChars   Boolean             @default(true)
+  specialCharsAllowed   String              @default("!@#$%^&*()_+-=[]{}|;:,.<>?")
+
+  // History & Rotation
+  passwordHistoryCount  Int                 @default(5) // Prevent reuse of last N passwords
+  maxPasswordAgeDays    Int                 @default(90) // Force rotation after N days
+  minPasswordAgeDays    Int                 @default(1) // Prevent immediate re-change
+  warnBeforeExpireDays  Int                 @default(14)
+
+  // Lockout
+  maxFailedAttempts     Int                 @default(5)
+  lockoutDurationMins   Int                 @default(30)
+  resetCounterAfterMins Int                 @default(60)
+
+  // Additional Rules
+  preventCommonPasswords Boolean            @default(true)
+  preventUserInfoInPwd  Boolean             @default(true) // No name/email in password
+
+  // Metadata
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@map("password_policies")
+}
+
+// Password History for preventing reuse
+model PasswordHistory {
+  id                    String              @id @default(uuid())
+  userId                String
+  passwordHash          String              // Hashed password
+
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@map("password_history")
+}
+
+// 8.1.5 Session Management
+model UserSession {
+  id                    String              @id @default(uuid())
+  userId                String
+  sessionToken          String              @unique
+
+  // Device Info
+  deviceId              String?
+  deviceType            String?             // desktop, mobile, tablet
+  deviceName            String?
+  browser               String?
+  browserVersion        String?
+  operatingSystem       String?
+  osVersion             String?
+
+  // Location
+  ipAddress             String?
+  country               String?
+  region                String?
+  city                  String?
+  latitude              Float?
+  longitude             Float?
+
+  // Status
+  isActive              Boolean             @default(true)
+  lastActivityAt        DateTime            @default(now())
+  expiresAt             DateTime
+  terminatedAt          DateTime?
+  terminatedReason      String?             // logout, timeout, forced, security
+
+  // Security
+  isTrusted             Boolean             @default(false)
+  riskScore             Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+// Session Settings per user/org
+model SessionSettings {
+  id                    String              @id @default(uuid())
+  userId                String?             @unique // User-specific settings
+  organizationId        String?             @unique // Org-wide settings
+
+  // Timeout settings
+  sessionTimeoutMins    Int                 @default(30)
+  idleTimeoutMins       Int                 @default(15)
+  absoluteTimeoutHours  Int                 @default(24)
+
+  // Concurrent sessions
+  maxConcurrentSessions Int                 @default(5)
+  singleSessionOnly     Boolean             @default(false)
+  terminateOldest       Boolean             @default(true) // When limit reached
+
+  // Remember me
+  allowRememberMe       Boolean             @default(true)
+  rememberMeDays        Int                 @default(30)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("session_settings")
+}
+
+// 8.1.6 IP Whitelisting
+model IPWhitelist {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // IP Configuration
+  name                  String
+  description           String?
+  ipAddress             String?             // Single IP
+  ipRangeStart          String?             // Range start
+  ipRangeEnd            String?             // Range end
+  cidrBlock             String?             // CIDR notation (e.g., 192.168.1.0/24)
+
+  // Scope
+  appliesToAll          Boolean             @default(true)
+  appliesToRoles        String[]            @default([])
+  appliesToUsers        String[]            @default([])
+
+  // Status
+  isEnabled             Boolean             @default(true)
+  enforcementMode       String              @default("BLOCK") // BLOCK, WARN, LOG
+
+  // Time-based restrictions
+  activeStartTime       String?             // HH:MM format
+  activeEndTime         String?
+  activeDays            String[]            @default([]) // MON, TUE, etc.
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([isEnabled])
+  @@map("ip_whitelists")
+}
+
+// 8.1.7 Trusted Devices
+model TrustedDevice {
+  id                    String              @id @default(uuid())
+  userId                String
+
+  // Device Fingerprint
+  deviceFingerprint     String              // Hashed device fingerprint
+  deviceId              String?             // Optional persistent ID
+
+  // Device Info
+  deviceName            String?
+  deviceType            String              // desktop, mobile, tablet
+  browser               String?
+  browserVersion        String?
+  operatingSystem       String?
+  osVersion             String?
+
+  // Trust Status
+  isTrusted             Boolean             @default(true)
+  trustLevel            String              @default("STANDARD") // STANDARD, HIGH, ALWAYS
+  verificationMethod    String?             // 2fa, email, sms
+
+  // Last seen
+  lastUsedAt            DateTime            @default(now())
+  lastIpAddress         String?
+  lastLocation          String?
+
+  // Expiry
+  expiresAt             DateTime?           // null = never expires
+  autoRenew             Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  revokedAt             DateTime?
+  revokedReason         String?
+
+  @@unique([userId, deviceFingerprint])
+  @@index([userId])
+  @@index([isTrusted])
+  @@map("trusted_devices")
+}
+
+// 8.1.8 Login Attempts for Anomaly Detection
+model LoginAttempt {
+  id                    String              @id @default(uuid())
+  userId                String?             // null if user not found
+
+  // Attempt details
+  email                 String
+  success               Boolean
+  failureReason         String?             // invalid_password, account_locked, 2fa_failed, etc.
+
+  // Client info
+  ipAddress             String
+  userAgent             String?
+  deviceFingerprint     String?
+
+  // Location
+  country               String?
+  region                String?
+  city                  String?
+  latitude              Float?
+  longitude             Float?
+
+  // Risk assessment
+  riskScore             Int                 @default(0)
+  riskFactors           Json?               // Array of detected risk factors
+  isAnomaly             Boolean             @default(false)
+  anomalyType           String?             // new_location, new_device, impossible_travel, etc.
+
+  // Action taken
+  actionTaken           String?             // allowed, blocked, challenged
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@index([isAnomaly])
+  @@map("login_attempts")
+}
+
+// Login Anomaly Configuration
+model LoginAnomalyConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique
+
+  // Detection settings
+  enableAnomalyDetection Boolean            @default(true)
+  enableImpossibleTravel Boolean            @default(true)
+  enableNewLocationAlert Boolean            @default(true)
+  enableNewDeviceAlert   Boolean            @default(true)
+  enableBruteForceDetect Boolean            @default(true)
+
+  // Thresholds
+  maxTravelSpeedKmh     Int                 @default(1000) // For impossible travel
+  suspiciousCountryList String[]            @default([])
+  blockedCountryList    String[]            @default([])
+
+  // Action configuration
+  anomalyAction         String              @default("CHALLENGE") // BLOCK, CHALLENGE, WARN, LOG
+  alertAdmins           Boolean             @default(true)
+  alertUser             Boolean             @default(true)
+
+  // ML model settings
+  modelSensitivity      String              @default("MEDIUM") // LOW, MEDIUM, HIGH
+  learningPeriodDays    Int                 @default(30)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("login_anomaly_configs")
+}
+
+// 8.1.9 API Key Management
+model APIKey {
+  id                    String              @id @default(uuid())
+  userId                String
+  organizationId        String?
+
+  // Key info
+  name                  String
+  description           String?
+  keyPrefix             String              // First few chars for identification
+  keyHash               String              // Hashed full key
+  lastFourChars         String              // Last 4 chars for display
+
+  // Permissions
+  scopes                String[]            @default([]) // read:jobs, write:applications, etc.
+  allowedEndpoints      String[]            @default([]) // Specific endpoint restrictions
+  allowedIPs            String[]            @default([]) // IP restrictions
+
+  // Rate limiting
+  rateLimit             Int                 @default(1000) // Requests per hour
+  rateLimitWindow       Int                 @default(3600) // Window in seconds
+
+  // Status
+  isActive              Boolean             @default(true)
+  expiresAt             DateTime?
+
+  // Usage tracking
+  lastUsedAt            DateTime?
+  lastUsedIP            String?
+  totalRequests         Int                 @default(0)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  revokedAt             DateTime?
+  revokedBy             String?
+  revokedReason         String?
+
+  // Relations
+  usageLogs             APIKeyUsageLog[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+// API Key Usage Logs
+model APIKeyUsageLog {
+  id                    String              @id @default(uuid())
+  apiKeyId              String
+
+  // Request info
+  endpoint              String
+  method                String
+  statusCode            Int
+  responseTimeMs        Int
+
+  // Client info
+  ipAddress             String
+  userAgent             String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  apiKey                APIKey              @relation(fields: [apiKeyId], references: [id])
+
+  @@index([apiKeyId])
+  @@index([createdAt])
+  @@map("api_key_usage_logs")
+}
+
+// 8.1.10 Role-Based Access Control (RBAC)
+model Role {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Role info
+  name                  String
+  displayName           String
+  description           String?
+
+  // Hierarchy
+  level                 Int                 @default(0) // Higher = more permissions
+  parentRoleId          String?             // For role inheritance
+
+  // Status
+  isSystem              Boolean             @default(false) // Built-in roles
+  isActive              Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  permissions           RolePermission[]
+  userRoles             UserRole[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("roles")
+}
+
+// Permission definitions
+model Permission {
+  id                    String              @id @default(uuid())
+
+  // Permission info
+  name                  String              @unique // e.g., jobs:create, applications:read
+  displayName           String
+  description           String?
+  category              String              // jobs, applications, users, admin, etc.
+
+  // Resource info
+  resource              String              // jobs, applications, users, etc.
+  action                String              // create, read, update, delete, manage
+
+  // Status
+  isSystem              Boolean             @default(false)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  rolePermissions       RolePermission[]
+  userOverrides         UserPermissionOverride[]
+
+  @@index([category])
+  @@index([resource])
+  @@map("permissions")
+}
+
+// Role-Permission mapping
+model RolePermission {
+  id                    String              @id @default(uuid())
+  roleId                String
+  permissionId          String
+
+  // Grant type
+  grantType             String              @default("ALLOW") // ALLOW, DENY
+
+  // Conditions
+  conditions            Json?               // Additional conditions for this permission
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  // Relations
+  role                  Role                @relation(fields: [roleId], references: [id])
+  permission            Permission          @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// User Role assignments
+model UserRole {
+  id                    String              @id @default(uuid())
+  userId                String
+  roleId                String
+
+  // Scope
+  organizationId        String?
+  departmentId          String?
+
+  // Time-bound access
+  startsAt              DateTime            @default(now())
+  expiresAt             DateTime?
+
+  // Metadata
+  assignedBy            String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  role                  Role                @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId, organizationId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// User-level permission overrides
+model UserPermissionOverride {
+  id                    String              @id @default(uuid())
+  userId                String
+  permissionId          String
+
+  // Override type
+  grantType             String              // ALLOW, DENY
+
+  // Scope
+  organizationId        String?
+  resourceId            String?             // Specific resource ID
+
+  // Time-bound
+  expiresAt             DateTime?
+
+  // Metadata
+  reason                String?
+  grantedBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  permission            Permission          @relation(fields: [permissionId], references: [id])
+
+  @@unique([userId, permissionId, organizationId, resourceId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permission_overrides")
+}
+
+// 8.1.11 Attribute-Based Access Control (ABAC)
+model ABACPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Policy info
+  name                  String
+  description           String?
+  priority              Int                 @default(0) // Higher = evaluated first
+
+  // Target
+  targetResource        String              // jobs, applications, users, etc.
+  targetAction          String?             // create, read, update, delete, * for all
+
+  // Conditions (evaluated at runtime)
+  conditions            Json                // Complex condition tree
+  /*
+    Example conditions:
+    {
+      "all": [
+        { "attribute": "user.role", "operator": "eq", "value": "RECRUITER" },
+        { "attribute": "resource.department", "operator": "eq", "value": "${user.department}" },
+        { "attribute": "time.hour", "operator": "between", "value": [9, 17] }
+      ]
+    }
+  */
+
+  // Effect
+  effect                String              @default("ALLOW") // ALLOW, DENY
+
+  // Status
+  isEnabled             Boolean             @default(true)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([targetResource])
+  @@index([isEnabled])
+  @@map("abac_policies")
+}
+
+// ABAC Attribute Definitions
+model ABACAttribute {
+  id                    String              @id @default(uuid())
+
+  // Attribute info
+  name                  String              @unique // user.department, resource.owner, etc.
+  displayName           String
+  description           String?
+
+  // Type info
+  category              String              // user, resource, environment, context
+  dataType              String              // string, number, boolean, array, date
+
+  // Source
+  source                String              // database, jwt, header, computed
+  sourcePath            String?             // Path to extract value (e.g., jwt.claims.department)
+
+  // Validation
+  allowedValues         Json?               // For enum-like attributes
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([category])
+  @@map("abac_attributes")
+}
+
+// Security Audit Log
+model SecurityAuditLog {
+  id                    String              @id @default(uuid())
+  userId                String?
+
+  // Event info
+  eventType             String              // login, logout, password_change, 2fa_enable, etc.
+  eventCategory         String              // authentication, authorization, configuration
+  eventAction           String              // success, failure, attempt
+
+  // Details
+  description           String
+  details               Json?               // Additional event-specific details
+
+  // Target
+  targetType            String?             // user, role, permission, policy
+  targetId              String?
+
+  // Client info
+  ipAddress             String?
+  userAgent             String?
+  sessionId             String?
+
+  // Risk
+  riskLevel             String              @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([eventCategory])
+  @@index([createdAt])
+  @@index([riskLevel])
+  @@map("security_audit_logs")
+}
+
+// ============================================================================
+// BATCH 28: DATA PROTECTION (8.2.1-8.2.8)
+// ============================================================================
+
+// 8.2.1, 8.2.8 Encryption Key Management
+model EncryptionKey {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Key Info
+  name                  String
+  description           String?
+  keyType               String              // MASTER, DATA, FIELD, BACKUP
+  algorithm             String              @default("AES-256-GCM")
+
+  // Key Material (encrypted with master key or HSM)
+  encryptedKeyMaterial  String
+  keyCheckValue         String?             // KCV for verification
+
+  // Version & Rotation
+  version               Int                 @default(1)
+  previousKeyId         String?             // For key rotation
+  rotationDue           DateTime?
+
+  // Status
+  status                String              @default("ACTIVE") // ACTIVE, PENDING_ROTATION, ROTATED, REVOKED, DESTROYED
+  activatedAt           DateTime?
+  expiresAt             DateTime?
+
+  // Usage
+  purpose               String[]            @default([]) // database, files, backups, api_tokens
+  allowedOperations     String[]            @default([]) // encrypt, decrypt, sign, verify
+
+  // HSM Integration
+  isHSMKey              Boolean             @default(false)
+  hsmKeyId              String?
+  hsmProvider           String?             // aws_kms, azure_keyvault, gcp_kms, hashicorp_vault
+
+  // Audit
+  lastUsedAt            DateTime?
+  usageCount            Int                 @default(0)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId])
+  @@index([keyType])
+  @@index([status])
+  @@map("encryption_keys")
+}
+
+// Key Rotation Schedule
+model KeyRotationSchedule {
+  id                    String              @id @default(uuid())
+  keyId                 String
+
+  // Schedule
+  rotationIntervalDays  Int                 @default(90)
+  nextRotationAt        DateTime
+  lastRotationAt        DateTime?
+
+  // Notifications
+  notifyBeforeDays      Int                 @default(14)
+  notifyEmails          String[]            @default([])
+
+  // Auto rotation
+  autoRotate            Boolean             @default(false)
+  autoRevokeOldDays     Int                 @default(30)
+
+  // Status
+  isEnabled             Boolean             @default(true)
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([keyId])
+  @@index([nextRotationAt])
+  @@map("key_rotation_schedules")
+}
+
+// 8.2.3 PII Detection & Masking Configuration
+model PIIDetectionConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Detection settings
+  isEnabled             Boolean             @default(true)
+  scanFrequency         String              @default("REALTIME") // REALTIME, HOURLY, DAILY
+
+  // PII Types to detect
+  detectEmail           Boolean             @default(true)
+  detectPhone           Boolean             @default(true)
+  detectSSN             Boolean             @default(true)
+  detectCreditCard      Boolean             @default(true)
+  detectAddress         Boolean             @default(true)
+  detectDOB             Boolean             @default(true)
+  detectPassport        Boolean             @default(true)
+  detectDriverLicense   Boolean             @default(true)
+  customPatterns        Json?               // Custom regex patterns
+
+  // Action settings
+  defaultAction         String              @default("MASK") // MASK, ENCRYPT, REDACT, LOG_ONLY
+  maskingChar           String              @default("*")
+  preserveFormat        Boolean             @default(true)
+
+  // Notifications
+  alertOnDetection      Boolean             @default(true)
+  alertEmails           String[]            @default([])
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId])
+  @@map("pii_detection_configs")
+}
+
+// PII Detection Log
+model PIIDetectionLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Detection info
+  sourceType            String              // database, upload, api_request
+  sourceLocation        String              // table.column, file_path, endpoint
+  recordId              String?
+
+  // PII found
+  piiType               String              // email, phone, ssn, etc.
+  piiCount              Int                 @default(1)
+  confidence            Float               // 0-1 confidence score
+
+  // Action taken
+  actionTaken           String              // masked, encrypted, redacted, logged
+  originalHash          String?             // Hash of original for verification
+
+  // Metadata
+  detectedAt            DateTime            @default(now())
+  processedBy           String?
+
+  @@index([organizationId])
+  @@index([piiType])
+  @@index([detectedAt])
+  @@map("pii_detection_logs")
+}
+
+// 8.2.4 Data Anonymization Rules
+model AnonymizationRule {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Rule info
+  name                  String
+  description           String?
+  isEnabled             Boolean             @default(true)
+
+  // Target
+  targetTable           String
+  targetColumn          String
+
+  // Anonymization method
+  method                String              // hash, fake, mask, shuffle, null, generalize
+  methodConfig          Json?               // Method-specific config
+
+  // Conditional application
+  conditions            Json?               // When to apply (e.g., only for certain roles)
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, targetTable, targetColumn])
+  @@index([organizationId])
+  @@index([targetTable])
+  @@map("anonymization_rules")
+}
+
+// Anonymization Job
+model AnonymizationJob {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Job info
+  name                  String
+  description           String?
+  jobType               String              // FULL, INCREMENTAL, SELECTIVE
+
+  // Scope
+  targetEnvironment     String              // production, staging, analytics
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  ruleIds               String[]            @default([])
+
+  // Execution
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  startedAt             DateTime?
+  completedAt           DateTime?
+  recordsProcessed      Int                 @default(0)
+  errorCount            Int                 @default(0)
+  errorLog              Json?
+
+  // Scheduling
+  isScheduled           Boolean             @default(false)
+  cronExpression        String?
+  nextRunAt             DateTime?
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([nextRunAt])
+  @@map("anonymization_jobs")
+}
+
+// 8.2.5 Secure File Storage
+model SecureFile {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  uploadedBy            String?
+
+  // File info
+  originalName          String
+  storedName            String              // UUID-based name
+  mimeType              String
+  fileSize              Int
+
+  // Storage location
+  storageProvider       String              @default("LOCAL") // LOCAL, S3, AZURE_BLOB, GCS
+  storagePath           String
+  storageRegion         String?
+
+  // Encryption
+  isEncrypted           Boolean             @default(true)
+  encryptionKeyId       String?
+  encryptionAlgorithm   String?             @default("AES-256-GCM")
+  checksum              String?             // SHA-256 of encrypted content
+
+  // Classification
+  classification        String              @default("INTERNAL") // PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED
+  containsPII           Boolean             @default(false)
+  piiTypes              String[]            @default([])
+
+  // Access control
+  accessLevel           String              @default("OWNER") // PUBLIC, AUTHENTICATED, OWNER, SPECIFIC
+  allowedUsers          String[]            @default([])
+  allowedRoles          String[]            @default([])
+
+  // Retention
+  retentionPolicy       String?
+  expiresAt             DateTime?
+  deletedAt             DateTime?
+  deleteReason          String?
+
+  // Versioning
+  version               Int                 @default(1)
+  previousVersionId     String?
+
+  // Audit
+  downloadCount         Int                 @default(0)
+  lastAccessedAt        DateTime?
+
+  // Metadata
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  accessLogs            FileAccessLog[]
+
+  @@index([organizationId])
+  @@index([uploadedBy])
+  @@index([classification])
+  @@index([containsPII])
+  @@index([expiresAt])
+  @@map("secure_files")
+}
+
+// File Access Log
+model FileAccessLog {
+  id                    String              @id @default(uuid())
+  fileId                String
+  userId                String?
+
+  // Access info
+  action                String              // VIEW, DOWNLOAD, SHARE, DELETE
+  ipAddress             String?
+  userAgent             String?
+
+  // Outcome
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  // Metadata
+  accessedAt            DateTime            @default(now())
+
+  // Relations
+  file                  SecureFile          @relation(fields: [fileId], references: [id])
+
+  @@index([fileId])
+  @@index([userId])
+  @@index([accessedAt])
+  @@map("file_access_logs")
+}
+
+// 8.2.6 Data Residency Configuration
+model DataResidencyConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String              @unique
+
+  // Primary Region
+  primaryRegion         String              // us-east, eu-west, ap-south, etc.
+  primaryProvider       String              // aws, azure, gcp
+
+  // Data categories and their regions
+  piiDataRegion         String?             // Override for PII data
+  backupRegion          String?             // Region for backups
+  analyticsRegion       String?             // Region for analytics data
+
+  // Replication
+  enableReplication     Boolean             @default(false)
+  replicaRegions        String[]            @default([])
+
+  // Compliance
+  gdprCompliant         Boolean             @default(false)
+  ccpaCompliant         Boolean             @default(false)
+  hipaaCompliant        Boolean             @default(false)
+
+  // Transfer rules
+  allowCrossBorderTransfer Boolean          @default(true)
+  approvedCountries     String[]            @default([])
+  blockedCountries      String[]            @default([])
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("data_residency_configs")
+}
+
+// 8.2.7 Backup & Recovery
+model BackupConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  // Backup settings
+  name                  String
+  description           String?
+  isEnabled             Boolean             @default(true)
+
+  // Scope
+  backupType            String              @default("FULL") // FULL, INCREMENTAL, DIFFERENTIAL
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  includeFiles          Boolean             @default(true)
+
+  // Schedule
+  schedule              String              // cron expression
+  retentionDays         Int                 @default(30)
+  maxBackups            Int                 @default(10)
+
+  // Storage
+  storageProvider       String              // LOCAL, S3, AZURE_BLOB, GCS
+  storagePath           String
+  storageRegion         String?
+
+  // Encryption
+  encryptBackups        Boolean             @default(true)
+  encryptionKeyId       String?
+
+  // Notifications
+  notifyOnSuccess       Boolean             @default(false)
+  notifyOnFailure       Boolean             @default(true)
+  notifyEmails          String[]            @default([])
+
+  // Metadata
+  createdBy             String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  backups               Backup[]
+
+  @@index([organizationId])
+  @@map("backup_configs")
+}
+
+// Backup Record
+model Backup {
+  id                    String              @id @default(uuid())
+  configId              String
+  organizationId        String?
+
+  // Backup info
+  backupType            String              // FULL, INCREMENTAL, DIFFERENTIAL
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED, VERIFYING
+
+  // Timing
+  startedAt             DateTime?
+  completedAt           DateTime?
+  duration              Int?                // seconds
+
+  // Size
+  sizeBytes             BigInt?
+  compressedSizeBytes   BigInt?
+  recordCount           Int?
+
+  // Storage
+  storagePath           String?
+  storageRegion         String?
+
+  // Encryption
+  isEncrypted           Boolean             @default(true)
+  encryptionKeyId       String?
+  checksum              String?
+
+  // Verification
+  verifiedAt            DateTime?
+  isVerified            Boolean             @default(false)
+  verificationResult    Json?
+
+  // Retention
+  expiresAt             DateTime?
+  deletedAt             DateTime?
+
+  // Error handling
+  errorMessage          String?
+  errorDetails          Json?
+  retryCount            Int                 @default(0)
+
+  // Metadata
+  triggeredBy           String?             // SCHEDULED, MANUAL, API
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  config                BackupConfig        @relation(fields: [configId], references: [id])
+  restores              RestoreJob[]
+
+  @@index([configId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("backups")
+}
+
+// Restore Job
+model RestoreJob {
+  id                    String              @id @default(uuid())
+  backupId              String
+  organizationId        String?
+
+  // Restore info
+  restoreType           String              // FULL, PARTIAL, POINT_IN_TIME
+  targetEnvironment     String              // production, staging, new_instance
+
+  // Scope
+  includeTables         String[]            @default([])
+  excludeTables         String[]            @default([])
+  pointInTime           DateTime?
+
+  // Status
+  status                String              @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED, CANCELLED
+
+  // Progress
+  startedAt             DateTime?
+  completedAt           DateTime?
+  progress              Int                 @default(0)       // percentage
+  recordsRestored       Int                 @default(0)
+
+  // Error handling
+  errorMessage          String?
+  errorDetails          Json?
+
+  // Validation
+  validateAfterRestore  Boolean             @default(true)
+  validationResult      Json?
+
+  // Metadata
+  requestedBy           String
+  approvedBy            String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  backup                Backup              @relation(fields: [backupId], references: [id])
+
+  @@index([backupId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("restore_jobs")
+}
+
+// 8.2.2 TLS Configuration (for compliance tracking)
+model TLSConfig {
+  id                    String              @id @default(uuid())
+  organizationId        String?             @unique
+
+  // TLS Settings
+  minVersion            String              @default("1.2") // 1.2, 1.3
+  preferredVersion      String              @default("1.3")
+
+  // Cipher suites
+  allowedCipherSuites   String[]            @default([])
+  blockedCipherSuites   String[]            @default([])
+
+  // Certificate
+  certificateProvider   String?             // letsencrypt, digicert, custom
+  certificateExpiry     DateTime?
+  autoRenew             Boolean             @default(true)
+  renewBeforeDays       Int                 @default(30)
+
+  // HSTS
+  hstsEnabled           Boolean             @default(true)
+  hstsMaxAge            Int                 @default(31536000)
+  hstsIncludeSubdomains Boolean             @default(true)
+  hstsPreload           Boolean             @default(false)
+
+  // Other security headers
+  enableCertTransparency Boolean            @default(true)
+  enableOCSPStapling     Boolean            @default(true)
+
+  // Metadata
+  lastAuditedAt         DateTime?
+  auditResult           Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("tls_configs")
+}
+
+// Data Protection Audit Log
+model DataProtectionAuditLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  // Event info
+  eventType             String              // encryption, decryption, key_access, backup, restore, pii_access
+  eventCategory         String              // keys, data, files, backups
+
+  // Resource
+  resourceType          String              // key, file, table, backup
+  resourceId            String
+
+  // Details
+  description           String
+  details               Json?
+
+  // Outcome
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  // Client info
+  ipAddress             String?
+  userAgent             String?
+
+  // Metadata
+  createdAt             DateTime            @default(now())
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([resourceType])
+  @@index([createdAt])
+  @@map("data_protection_audit_logs")
+}
+
+// ==========================================
+// Batch 29: Compliance Features (8.3.1-8.3.11)
+// ==========================================
+
+// 8.3.1 GDPR Compliance Suite
+model GDPRConsentRecord {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String
+
+  consentType           String              // data_processing, marketing, third_party, cookies
+  purpose               String
+  legalBasis            String              // consent, contract, legal_obligation, vital_interests
+
+  granted               Boolean
+  grantedAt             DateTime?
+  revokedAt             DateTime?
+  expiresAt             DateTime?
+
+  source                String              // form, api, import
+  ipAddress             String?
+  userAgent             String?
+
+  version               Int                 @default(1)
+  policyVersion         String?
+
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([consentType])
+  @@map("gdpr_consent_records")
+}
+
+// 8.3.2 CCPA Compliance
+model CCPARequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // know, delete, opt_out, opt_in
+  requestSource         String              // web_form, email, phone
+  requesterEmail        String
+  requesterName         String?
+  verificationMethod    String              // email, document, knowledge_based
+
+  status                String              @default("pending")
+  verified              Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  assignedTo            String?
+  dueDate               DateTime
+  completedAt           DateTime?
+
+  response              String?
+  dataExportUrl         String?
+
+  notes                 String?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestType])
+  @@map("ccpa_requests")
+}
+
+// 8.3.3 EEOC/OFCCP Reporting
+model EEOCReport {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  reportType            String              // eeo1, vets4212, ofccp_aap
+  reportingYear         Int
+  reportingPeriod       String              // annual, quarterly
+
+  status                String              @default("draft")
+  submittedAt           DateTime?
+
+  employeeData          Json?
+  applicantData         Json?
+  aggregatedData        Json?
+
+  filingConfirmation    String?
+  reviewedBy            String?
+  reviewNotes           String?
+
+  generatedBy           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, reportType, reportingYear])
+  @@index([organizationId])
+  @@index([status])
+  @@map("eeoc_reports")
+}
+
+// 8.3.4 Data Retention Policies
+model DataRetentionPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  name                  String
+  description           String?
+  dataCategory          String              // candidates, applications, interviews, messages
+  dataType              String?
+
+  retentionPeriodDays   Int
+  retentionBasis        String              // legal_requirement, business_need, consent
+  legalReference        String?
+
+  actionOnExpiry        String              // delete, anonymize, archive
+  archiveLocation       String?
+
+  autoEnforce           Boolean             @default(false)
+  lastEnforcedAt        DateTime?
+  nextEnforcementAt     DateTime?
+
+  exceptions            Json?
+
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([dataCategory])
+  @@map("data_retention_policies")
+}
+
+// 8.3.5 Right to be Forgotten
+model DeletionRequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // full_deletion, partial_deletion, anonymization
+  requesterEmail        String
+  requesterName         String?
+  regulation            String              // gdpr, ccpa, other
+
+  dataScope             String[]
+  exclusions            String[]
+
+  verified              Boolean             @default(false)
+  verificationToken     String?
+  verifiedAt            DateTime?
+
+  status                String              @default("pending")
+  statusHistory         Json[]              @default([])
+
+  assignedTo            String?
+  scheduledFor          DateTime?
+  completedAt           DateTime?
+
+  deletedItems          Json?
+  retainedItems         Json?
+
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+  @@map("deletion_requests")
+}
+
+// 8.3.6 Consent Management
+model ConsentPolicy {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  name                  String
+  description           String
+  category              String              // essential, functional, analytics, marketing
+  purpose               String
+
+  legalBasis            String
+  dataCategories        String[]
+  recipients            String[]
+  crossBorderTransfer   Boolean             @default(false)
+  transferCountries     String[]            @default([])
+
+  isRequired            Boolean             @default(false)
+  canWithdraw           Boolean             @default(true)
+
+  displayOrder          Int                 @default(0)
+  isActive              Boolean             @default(true)
+  version               Int                 @default(1)
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  consents              UserConsent[]
+
+  @@index([organizationId])
+  @@index([category])
+  @@map("consent_policies")
+}
+
+model UserConsent {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String
+  policyId              String
+
+  consented             Boolean
+  consentedAt           DateTime?
+  withdrawnAt           DateTime?
+
+  source                String              // banner, form, settings
+  ipAddress             String?
+  userAgent             String?
+
+  policyVersion         Int
+
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  policy                ConsentPolicy       @relation(fields: [policyId], references: [id])
+
+  @@unique([userId, policyId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("user_consents")
+}
+
+// 8.3.7 Data Subject Access Requests (DSAR)
+model DataSubjectRequest {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  requestType           String              // access, rectification, erasure, portability
+  regulation            String              // gdpr, ccpa, lgpd
+  requesterEmail        String
+  requesterName         String?
+
+  verificationMethod    String
+  verified              Boolean             @default(false)
+  verifiedAt            DateTime?
+
+  status                String              @default("received")
+  priority              String              @default("normal")
+  statusHistory         Json[]              @default([])
+
+  receivedAt            DateTime            @default(now())
+  deadlineAt            DateTime
+  respondedAt           DateTime?
+
+  assignedTo            String?
+  department            String?
+
+  responseType          String?
+  responseDetails       String?
+  exportFileUrl         String?
+
+  communications        Json[]              @default([])
+
+  notes                 String?
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestType])
+  @@map("data_subject_requests")
+}
+
+// 8.3.8 Audit Trail
+model ComplianceAuditLog {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+  userId                String?
+
+  eventType             String              // data_access, data_modification, consent_change
+  eventCategory         String              // gdpr, ccpa, eeoc, general
+  action                String              // create, read, update, delete
+
+  resourceType          String
+  resourceId            String
+  resourceName          String?
+
+  previousValue         Json?
+  newValue              Json?
+  changedFields         String[]            @default([])
+
+  actorType             String              // user, system, api
+  actorId               String?
+  actorEmail            String?
+
+  ipAddress             String?
+  userAgent             String?
+  sessionId             String?
+
+  success               Boolean             @default(true)
+  failureReason         String?
+
+  tags                  String[]            @default([])
+  metadata              Json?
+  createdAt             DateTime            @default(now())
+
+  @@index([organizationId])
+  @@index([eventType])
+  @@index([resourceType])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("compliance_audit_logs")
+}
+
+// 8.3.9 Compliance Dashboards
+model ComplianceMetric {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  metricType            String              // consent_rate, dsar_response_time, retention_compliance
+  category              String              // gdpr, ccpa, eeoc, general
+  period                String              // daily, weekly, monthly
+  periodStart           DateTime
+  periodEnd             DateTime
+
+  value                 Float
+  previousValue         Float?
+  target                Float?
+  unit                  String              // percentage, days, count
+
+  status                String              // on_track, at_risk, non_compliant
+  threshold             Json?
+
+  breakdown             Json?
+  calculatedAt          DateTime            @default(now())
+
+  @@unique([organizationId, metricType, periodStart])
+  @@index([organizationId])
+  @@index([metricType])
+  @@map("compliance_metrics")
+}
+
+// 8.3.10 Bias Auditing
+model BiasAuditReport {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  auditType             String              // hiring_funnel, ai_scoring, job_posting
+  auditPeriod           String              // weekly, monthly, quarterly
+  startDate             DateTime
+  endDate               DateTime
+
+  jobIds                String[]            @default([])
+  departmentIds         String[]            @default([])
+  stages                String[]            @default([])
+
+  status                String              @default("pending")
+  overallScore          Float?
+  riskLevel             String?
+
+  demographicCategories String[]            @default([])
+
+  findings              Json?
+  disparities           Json?
+  recommendations       Json?
+  statisticalTests      Json?
+
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  reviewNotes           String?
+  actionsTaken          Json[]              @default([])
+
+  generatedBy           String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([auditType])
+  @@index([status])
+  @@map("bias_audit_reports")
+}
+
+// 8.3.11 SOC 2 Readiness
+model SOC2Control {
+  id                    String              @id @default(uuid())
+  organizationId        String?
+
+  controlId             String              // CC1.1, CC2.2
+  category              String              // security, availability, processing_integrity
+  subcategory           String?
+  name                  String
+  description           String
+
+  trustServiceCriteria  String              // CC, A, PI, C, P
+
+  implementationStatus  String              @default("not_started")
+  implementedBy         String?
+  implementedAt         DateTime?
+
+  evidenceRequired      String[]            @default([])
+  evidenceProvided      Json[]              @default([])
+  evidenceLastUpdated   DateTime?
+
+  lastTestedAt          DateTime?
+  testResult            String?
+  testNotes             String?
+  testedBy              String?
+
+  gaps                  Json[]              @default([])
+  remediationPlan       String?
+  remediationDueDate    DateTime?
+
+  riskLevel             String?
+
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, controlId])
+  @@index([organizationId])
+  @@index([category])
+  @@map("soc2_controls")
+}
+
+model SOC2Audit {
+  id                    String              @id @default(uuid())
+  organizationId        String
+
+  auditType             String              // type1, type2
+  auditPeriod           String?
+  startDate             DateTime
+  endDate               DateTime?
+
+  auditorFirm           String
+  auditorContact        String?
+  auditorEmail          String?
+
+  status                String              @default("planning")
+  phase                 String?
+
+  trustCategories       String[]
+  systemDescription     String?
+  excludedControls      String[]            @default([])
+
+  opinion               String?
+  exceptions            Json[]              @default([])
+  recommendations       Json[]              @default([])
+
+  reportDate            DateTime?
+  reportUrl             String?
+
+  kickoffDate           DateTime?
+  fieldworkStartDate    DateTime?
+  fieldworkEndDate      DateTime?
+  finalReportDate       DateTime?
+
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("soc2_audits")
+}
+
+// ==========================================
+// Batch 30: Recruitment Analytics (9.1.1-9.1.12)
+// ==========================================
+
+// 9.1.1 Funnel Analytics
+model FunnelAnalytics {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+  recruiterId     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String   // daily, weekly, monthly, quarterly
+
+  // Funnel stages
+  sourced         Int      @default(0)
+  applied         Int      @default(0)
+  screened        Int      @default(0)
+  interviewed     Int      @default(0)
+  offered         Int      @default(0)
+  hired           Int      @default(0)
+
+  // Conversion rates
+  sourceToApply   Float?
+  applyToScreen   Float?
+  screenToInterview Float?
+  interviewToOffer Float?
+  offerToHire     Float?
+  overallConversion Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([jobId])
+  @@index([periodStart, periodEnd])
+  @@map("funnel_analytics")
+}
+
+// 9.1.2 Time-to-Hire Tracking
+model TimeToHireMetric {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+  recruiterId     String?
+  candidateId     String?
+
+  hireDate        DateTime
+  jobOpenDate     DateTime
+  firstApplyDate  DateTime?
+  firstScreenDate DateTime?
+  firstInterviewDate DateTime?
+  offerDate       DateTime?
+  offerAcceptDate DateTime?
+
+  // Calculated metrics (in days)
+  timeToFill      Int      // Open to hire
+  timeToHire      Int      // Apply to hire
+  timeToScreen    Int?     // Apply to screen
+  timeToInterview Int?     // Screen to interview
+  timeToOffer     Int?     // Interview to offer
+  timeToAccept    Int?     // Offer to accept
+
+  jobType         String?  // Full-time, Part-time, Contract
+  seniorityLevel  String?
+  department      String?
+  location        String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([hireDate])
+  @@index([recruiterId])
+  @@map("time_to_hire_metrics")
+}
+
+// 9.1.3 Cost-per-Hire Analysis
+model CostPerHireMetric {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+  recruiterId     String?
+  candidateId     String?
+
+  hireDate        DateTime
+
+  // Internal costs
+  recruiterTime   Float    @default(0)
+  hiringManagerTime Float  @default(0)
+  interviewerTime Float    @default(0)
+  adminTime       Float    @default(0)
+  internalCostTotal Float  @default(0)
+
+  // External costs
+  jobBoardFees    Float    @default(0)
+  agencyFees      Float    @default(0)
+  advertisingCost Float    @default(0)
+  backgroundCheckCost Float @default(0)
+  assessmentCost  Float    @default(0)
+  relocationCost  Float    @default(0)
+  signingBonus    Float    @default(0)
+  travelCost      Float    @default(0)
+  externalCostTotal Float  @default(0)
+
+  // Totals
+  totalCost       Float    @default(0)
+  costPerHire     Float    @default(0)
+
+  currency        String   @default("USD")
+  source          String?  // Sourcing channel
+  department      String?
+  seniorityLevel  String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([hireDate])
+  @@map("cost_per_hire_metrics")
+}
+
+// 9.1.4 Source Effectiveness
+model SourceEffectiveness {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String   // weekly, monthly, quarterly
+
+  sourceName      String   // LinkedIn, Indeed, Referral, etc.
+  sourceCategory  String   // Job Board, Social, Referral, Agency, Direct
+
+  // Volume metrics
+  candidatesSourced Int    @default(0)
+  applicants      Int      @default(0)
+  screened        Int      @default(0)
+  interviewed     Int      @default(0)
+  offers          Int      @default(0)
+  hires           Int      @default(0)
+
+  // Quality metrics
+  avgTimeToHire   Float?
+  avgCostPerHire  Float?
+  avgQualityScore Float?
+  retentionRate   Float?   // % still employed after X months
+
+  // ROI metrics
+  totalSpend      Float    @default(0)
+  costPerApplicant Float?
+  costPerHire     Float?
+  roi             Float?
+
+  isActive        Boolean  @default(true)
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([sourceName])
+  @@index([periodStart, periodEnd])
+  @@map("source_effectiveness")
+}
+
+// 9.1.5 Recruiter Performance
+model RecruiterPerformance {
+  id              String   @id @default(uuid())
+  organizationId  String
+  recruiterId     String
+  recruiterName   String
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String   // weekly, monthly, quarterly
+
+  // Activity metrics
+  jobsHandled     Int      @default(0)
+  candidatesSourced Int    @default(0)
+  screensCompleted Int     @default(0)
+  interviewsScheduled Int  @default(0)
+  offersExtended  Int      @default(0)
+  hiresCompleted  Int      @default(0)
+
+  // Efficiency metrics
+  avgTimeToFill   Float?
+  avgTimeToHire   Float?
+  avgCostPerHire  Float?
+  fillRate        Float?   // % jobs filled vs assigned
+
+  // Quality metrics
+  offerAcceptRate Float?
+  candidateSatisfaction Float?
+  hiringManagerSatisfaction Float?
+  qualityOfHireScore Float?
+
+  // Pipeline metrics
+  activePipeline  Int      @default(0)
+  pipelineVelocity Float?
+
+  rank            Int?
+  tier            String?  // Top, Middle, Developing
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([recruiterId])
+  @@index([periodStart, periodEnd])
+  @@map("recruiter_performance")
+}
+
+// 9.1.6 Offer Acceptance Tracking
+model OfferAcceptanceMetric {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+  recruiterId     String?
+  candidateId     String?
+
+  offerDate       DateTime
+  responseDate    DateTime?
+  status          String   // accepted, declined, pending, expired, withdrawn
+
+  // Offer details
+  offeredSalary   Float?
+  expectedSalary  Float?
+  salarySatisfaction Float? // 1-5 scale
+  currency        String   @default("USD")
+
+  // Decline reasons
+  declineReason   String?  // Compensation, Counter-offer, Role fit, Location, etc.
+  declineDetails  String?
+  competitorName  String?
+  competitorOffer Float?
+
+  // Time metrics
+  daysToDecision  Int?
+  negotiationRounds Int    @default(0)
+
+  department      String?
+  seniorityLevel  String?
+  jobType         String?
+  location        String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([offerDate])
+  @@map("offer_acceptance_metrics")
+}
+
+// 9.1.7 Pipeline Velocity
+model PipelineVelocity {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String
+
+  // Stage counts
+  inSourced       Int      @default(0)
+  inScreening     Int      @default(0)
+  inInterview     Int      @default(0)
+  inOffer         Int      @default(0)
+  hired           Int      @default(0)
+  rejected        Int      @default(0)
+  withdrawn       Int      @default(0)
+
+  // Velocity (avg days per stage)
+  sourcedToScreening Float?
+  screeningToInterview Float?
+  interviewToOffer Float?
+  offerToHire     Float?
+  totalVelocity   Float?   // End-to-end days
+
+  // Throughput
+  candidatesEntered Int    @default(0)
+  candidatesExited Int     @default(0)
+  netPipelineChange Int    @default(0)
+
+  bottleneckStage String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([jobId])
+  @@index([periodStart, periodEnd])
+  @@map("pipeline_velocity")
+}
+
+// 9.1.8 Quality of Hire
+model QualityOfHireMetric {
+  id              String   @id @default(uuid())
+  organizationId  String
+  hireId          String   @unique
+  candidateId     String
+  jobId           String
+  recruiterId     String?
+  hiringManagerId String?
+
+  hireDate        DateTime
+  assessmentDate  DateTime?
+
+  // Performance metrics (30/60/90 day reviews)
+  performanceScore30 Float?
+  performanceScore60 Float?
+  performanceScore90 Float?
+  annualPerformance Float?
+
+  // Retention
+  isRetained      Boolean  @default(true)
+  retainedAt30Days Boolean @default(true)
+  retainedAt90Days Boolean?
+  retainedAt1Year Boolean?
+  separationDate  DateTime?
+  separationReason String?
+
+  // Manager feedback
+  managerSatisfaction Float? // 1-5
+  meetingExpectations String? // Exceeds, Meets, Below
+  wouldRehire     Boolean?
+  promotionTimeline String?
+
+  // Cultural fit
+  culturalFitScore Float?
+  teamIntegration Float?
+
+  // Ramp-up time
+  timeToProductivity Int?  // Days to full productivity
+  trainingCompleted Boolean @default(false)
+
+  overallQualityScore Float?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([hireDate])
+  @@index([recruiterId])
+  @@map("quality_of_hire_metrics")
+}
+
+// 9.1.9 Diversity Analytics
+model DiversityAnalytics {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String
+
+  // Pipeline diversity
+  totalApplicants Int      @default(0)
+
+  // Gender metrics
+  genderMale      Int      @default(0)
+  genderFemale    Int      @default(0)
+  genderNonBinary Int      @default(0)
+  genderUndisclosed Int    @default(0)
+
+  // Ethnicity metrics
+  ethnicityWhite  Int      @default(0)
+  ethnicityBlack  Int      @default(0)
+  ethnicityHispanic Int    @default(0)
+  ethnicityAsian  Int      @default(0)
+  ethnicityOther  Int      @default(0)
+  ethnicityUndisclosed Int @default(0)
+
+  // Age groups
+  age18to25       Int      @default(0)
+  age26to35       Int      @default(0)
+  age36to45       Int      @default(0)
+  age46to55       Int      @default(0)
+  age56plus       Int      @default(0)
+  ageUndisclosed  Int      @default(0)
+
+  // Veteran status
+  veteranYes      Int      @default(0)
+  veteranNo       Int      @default(0)
+  veteranUndisclosed Int   @default(0)
+
+  // Disability status
+  disabilityYes   Int      @default(0)
+  disabilityNo    Int      @default(0)
+  disabilityUndisclosed Int @default(0)
+
+  // Stage breakdown (JSON with diversity by stage)
+  diversityByStage Json?
+
+  // Conversion rates by group
+  conversionByGender Json?
+  conversionByEthnicity Json?
+
+  // Hires diversity
+  hiresTotal      Int      @default(0)
+  hiresDiversity  Json?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([periodStart, periodEnd])
+  @@map("diversity_analytics")
+}
+
+// 9.1.10 Interview-to-Offer Ratio
+model InterviewOfferRatio {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+  recruiterId     String?
+  hiringManagerId String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String
+
+  // Interview counts
+  phoneScreens    Int      @default(0)
+  technicalInterviews Int  @default(0)
+  onsiteInterviews Int     @default(0)
+  finalInterviews Int      @default(0)
+  totalInterviews Int      @default(0)
+
+  // Candidate counts
+  uniqueCandidatesInterviewed Int @default(0)
+  passedScreening Int      @default(0)
+  passedTechnical Int      @default(0)
+  passedOnsite    Int      @default(0)
+
+  // Offers
+  offersExtended  Int      @default(0)
+  offersAccepted  Int      @default(0)
+  hires           Int      @default(0)
+
+  // Ratios
+  interviewsPerHire Float?
+  screenPassRate  Float?
+  technicalPassRate Float?
+  onsitePassRate  Float?
+  offerRate       Float?   // Offers / Unique interviewed
+  acceptanceRate  Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([periodStart, periodEnd])
+  @@map("interview_offer_ratios")
+}
+
+// 9.1.11 Drop-off Analysis
+model DropOffAnalysis {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  departmentId    String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String
+
+  // Stage drop-offs
+  sourceToApplyDropOff Int  @default(0)
+  applyToScreenDropOff Int  @default(0)
+  screenToInterviewDropOff Int @default(0)
+  interviewToOfferDropOff Int @default(0)
+  offerToHireDropOff Int   @default(0)
+
+  // Drop-off rates
+  sourceToApplyDropRate Float?
+  applyToScreenDropRate Float?
+  screenToInterviewDropRate Float?
+  interviewToOfferDropRate Float?
+  offerToHireDropRate Float?
+
+  // Withdrawal reasons (JSON breakdown)
+  withdrawalReasons Json?
+
+  // Rejection reasons (JSON breakdown)
+  rejectionReasons Json?
+
+  // Time in stage before drop-off
+  avgDaysBeforeDropOff Json?
+
+  // Recovery metrics
+  reEngaged       Int      @default(0)
+  reEngagementRate Float?
+
+  worstStage      String?
+  worstDropRate   Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([periodStart, periodEnd])
+  @@map("drop_off_analysis")
+}
+
+// 9.1.12 SLA Tracking
+model RecruitmentSLA {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  slaType         String   // response_time, stage_duration, feedback, overall
+  targetMetric    String   // e.g., "time_to_screen", "time_to_feedback"
+  targetValue     Int      // Target in hours/days
+  targetUnit      String   // hours, days, business_days
+
+  priority        String   // high, medium, low
+  applicableJobs  String[] @default([])
+  applicableDepartments String[] @default([])
+
+  escalationEnabled Boolean @default(true)
+  escalationThreshold Int?  // % of target before escalation
+  escalationRecipients String[] @default([])
+
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([slaType])
+  @@map("recruitment_slas")
+}
+
+model SLATracking {
+  id              String   @id @default(uuid())
+  organizationId  String
+  slaId           String
+  jobId           String?
+  candidateId     String?
+  recruiterId     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+  periodType      String
+
+  // Compliance metrics
+  totalMeasured   Int      @default(0)
+  metSLA          Int      @default(0)
+  missedSLA       Int      @default(0)
+  complianceRate  Float?
+
+  // Performance metrics
+  avgActualTime   Float?
+  minTime         Float?
+  maxTime         Float?
+  medianTime      Float?
+  p90Time         Float?   // 90th percentile
+
+  // Breach details
+  breachDetails   Json[]   @default([])
+  escalationsTriggered Int @default(0)
+
+  // Trend
+  previousPeriodCompliance Float?
+  trend           String?  // improving, stable, declining
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([slaId])
+  @@index([periodStart, periodEnd])
+  @@map("sla_tracking")
+}
+
+// ==========================================
+// Batch 31: Executive Dashboards (9.2.1-9.2.8)
+// ==========================================
+
+// 9.2.1 Executive Summary Dashboard
+model ExecutiveDashboard {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  layout          Json     // Dashboard layout configuration
+  widgets         Json[]   // Array of widget configurations
+  filters         Json?    // Default filters
+
+  isDefault       Boolean  @default(false)
+  isShared        Boolean  @default(false)
+  createdBy       String
+  lastViewedAt    DateTime?
+  viewCount       Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([createdBy])
+  @@map("executive_dashboards")
+}
+
+// 9.2.2 Trend Analysis
+model TrendAnalysis {
+  id              String   @id @default(uuid())
+  organizationId  String
+  metricName      String
+  metricCategory  String   // hiring, cost, quality, time, diversity
+
+  periodType      String   // daily, weekly, monthly, quarterly, yearly
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  dataPoints      Json[]   // Array of { date, value }
+  trend           String   // increasing, decreasing, stable, seasonal
+  trendStrength   Float?   // -1 to 1
+  forecast        Json[]   // Forecasted values
+
+  // Statistical analysis
+  avgValue        Float
+  minValue        Float
+  maxValue        Float
+  stdDeviation    Float?
+  yoyChange       Float?   // Year-over-year change %
+  momChange       Float?   // Month-over-month change %
+
+  seasonalPattern String?  // Q1-high, summer-low, etc.
+  anomalies       Json[]   @default([])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([metricName])
+  @@index([periodStart, periodEnd])
+  @@map("trend_analyses")
+}
+
+// 9.2.3 Benchmark Comparisons
+model IndustryBenchmark {
+  id              String   @id @default(uuid())
+  industry        String
+  companySize     String   // small, medium, large, enterprise
+  region          String   // US, EU, APAC, Global
+  metricName      String
+  metricCategory  String
+
+  year            Int
+  quarter         Int?
+
+  p10Value        Float    // 10th percentile
+  p25Value        Float    // 25th percentile
+  p50Value        Float    // Median
+  p75Value        Float    // 75th percentile
+  p90Value        Float    // 90th percentile
+  avgValue        Float
+
+  source          String?
+  sampleSize      Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([industry])
+  @@index([metricName])
+  @@map("industry_benchmarks")
+}
+
+model BenchmarkComparison {
+  id              String   @id @default(uuid())
+  organizationId  String
+  benchmarkId     String
+
+  comparisonDate  DateTime
+  metricName      String
+  metricCategory  String
+
+  orgValue        Float
+  benchmarkValue  Float
+  percentile      Float    // Where org stands
+  gap             Float    // Difference from median
+
+  status          String   // above_average, average, below_average, top_quartile
+  recommendation  String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([metricName])
+  @@map("benchmark_comparisons")
+}
+
+// 9.2.4 Custom Dashboard Builder
+model DashboardWidget {
+  id              String   @id @default(uuid())
+  organizationId  String
+  dashboardId     String?
+  name            String
+  description     String?
+
+  widgetType      String   // chart, metric, table, funnel, gauge, list
+  chartType       String?  // line, bar, pie, donut, area, scatter
+  dataSource      String   // API endpoint or data source name
+  query           Json?    // Query parameters
+
+  // Visual configuration
+  width           Int      @default(1)   // Grid units
+  height          Int      @default(1)
+  position        Json?    // { x, y }
+  colors          Json?    // Color scheme
+  showLegend      Boolean  @default(true)
+  showLabels      Boolean  @default(true)
+
+  // Refresh settings
+  refreshInterval Int?     // Seconds
+  lastRefreshed   DateTime?
+
+  isTemplate      Boolean  @default(false)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([dashboardId])
+  @@map("dashboard_widgets")
+}
+
+// 9.2.5 Scheduled Reports
+model ScheduledReport {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  reportType      String   // executive_summary, hiring_metrics, diversity, etc.
+  templateId      String?
+  format          String   // pdf, excel, csv, ppt
+
+  schedule        String   // cron expression
+  timezone        String   @default("UTC")
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+
+  recipients      String[] // Email addresses
+  ccRecipients    String[] @default([])
+  includeComments Boolean  @default(false)
+
+  filters         Json?    // Report filters
+  dateRange       String   // last_week, last_month, custom
+  customDateStart DateTime?
+  customDateEnd   DateTime?
+
+  isActive        Boolean  @default(true)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([nextRunAt])
+  @@map("scheduled_reports")
+}
+
+model ReportExecution {
+  id              String   @id @default(uuid())
+  scheduledReportId String
+  organizationId  String
+
+  executionTime   DateTime
+  status          String   // pending, running, completed, failed
+  duration        Int?     // Seconds
+
+  fileUrl         String?
+  fileSize        Int?
+  pageCount       Int?
+
+  recipientsSent  String[]
+  deliveryStatus  Json?    // Per-recipient status
+
+  errorMessage    String?
+  retryCount      Int      @default(0)
+
+  createdAt       DateTime @default(now())
+
+  @@index([scheduledReportId])
+  @@index([executionTime])
+  @@map("report_executions")
+}
+
+// 9.2.6 BI Tool Export
+model BIExportConfig {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  toolType        String   // tableau, looker, powerbi, google_datastudio
+  connectionType  String   // direct, api, file_export
+
+  // Connection details (encrypted)
+  serverUrl       String?
+  apiKey          String?
+  credentials     Json?    // Encrypted credentials
+
+  // Data configuration
+  dataSources     String[] // Which data to export
+  refreshSchedule String?  // Cron expression
+  lastExportAt    DateTime?
+
+  // Status
+  connectionStatus String  @default("pending") // pending, connected, error
+  lastConnectionTest DateTime?
+  errorMessage    String?
+
+  isActive        Boolean  @default(true)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([toolType])
+  @@map("bi_export_configs")
+}
+
+model BIExportLog {
+  id              String   @id @default(uuid())
+  configId        String
+  organizationId  String
+
+  exportTime      DateTime
+  status          String   // started, completed, failed
+  exportType      String   // full, incremental
+
+  recordsExported Int?
+  duration        Int?     // Seconds
+  fileSize        Int?
+
+  errorMessage    String?
+  metadata        Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([configId])
+  @@index([exportTime])
+  @@map("bi_export_logs")
+}
+
+// 9.2.7 Goal Tracking
+model HiringGoal {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  description     String?
+
+  goalType        String   // hiring_count, time_to_hire, cost_per_hire, diversity, quality
+  targetValue     Float
+  currentValue    Float    @default(0)
+  unit            String   // count, days, dollars, percentage
+
+  departmentId    String?
+  jobId           String?
+  recruiterId     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  status          String   @default("on_track") // on_track, at_risk, behind, exceeded, completed
+  progress        Float    @default(0) // 0-100
+
+  milestones      Json[]   @default([])
+  notifications   Json?    // Notification settings
+
+  createdBy       String
+  ownerId         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([periodEnd])
+  @@map("hiring_goals")
+}
+
+model GoalProgress {
+  id              String   @id @default(uuid())
+  goalId          String
+  organizationId  String
+
+  recordDate      DateTime
+  value           Float
+  cumulativeValue Float
+
+  milestone       String?
+  note            String?
+  updatedBy       String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([goalId])
+  @@index([recordDate])
+  @@map("goal_progress")
+}
+
+// 9.2.8 Department/Team Views
+model DepartmentView {
+  id              String   @id @default(uuid())
+  organizationId  String
+  departmentId    String
+  departmentName  String
+
+  // Snapshot data
+  snapshotDate    DateTime
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Hiring metrics
+  openPositions   Int      @default(0)
+  activeApplicants Int     @default(0)
+  hiredThisPeriod Int      @default(0)
+  targetHires     Int?
+
+  // Time metrics
+  avgTimeToFill   Float?
+  avgTimeToHire   Float?
+
+  // Cost metrics
+  avgCostPerHire  Float?
+  totalHiringBudget Float?
+  budgetUsed      Float?
+
+  // Quality metrics
+  avgQualityScore Float?
+  offerAcceptRate Float?
+  retention90Days Float?
+
+  // Diversity
+  diversityScore  Float?
+
+  // Pipeline
+  pipelineHealth  Json?    // Breakdown by stage
+
+  headcount       Int?
+  attritionRate   Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([snapshotDate])
+  @@map("department_views")
+}
+
+model TeamHiringMetrics {
+  id              String   @id @default(uuid())
+  organizationId  String
+  teamId          String
+  teamName        String
+  managerId       String?
+  managerName     String?
+
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Activity
+  positionsOpened Int      @default(0)
+  positionsFilled Int      @default(0)
+  positionsClosed Int      @default(0)
+
+  // Performance
+  avgTimeToFill   Float?
+  avgCostPerHire  Float?
+  avgQualityScore Float?
+  fillRate        Float?
+
+  // Efficiency
+  interviewsPerHire Float?
+  offerAcceptRate Float?
+
+  // Satisfaction
+  hiringManagerSatisfaction Float?
+  candidateExperience Float?
+
+  trend           String?  // improving, stable, declining
+  ranking         Int?     // Among teams
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([teamId])
+  @@index([periodStart, periodEnd])
+  @@map("team_hiring_metrics")
+}
+
+// ==========================================
+// Batch 32: Market Intelligence (9.3.1-9.3.6)
+// ==========================================
+
+// 9.3.1 Salary Market Data
+model SalaryMarketData {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Job identification
+  jobTitle        String
+  jobFamily       String?
+  level           String?  // entry, mid, senior, lead, executive
+
+  // Location
+  location        String
+  country         String
+  region          String?
+  isRemote        Boolean  @default(false)
+
+  // Compensation data
+  currency        String   @default("USD")
+  minSalary       Float
+  maxSalary       Float
+  medianSalary    Float
+  percentile25    Float?
+  percentile75    Float?
+  percentile90    Float?
+
+  // Additional compensation
+  bonusMin        Float?
+  bonusMax        Float?
+  bonusMedian     Float?
+  equityMin       Float?
+  equityMax       Float?
+  equityMedian    Float?
+
+  // Metadata
+  dataSource      String   // internal, survey, market_data_provider
+  sampleSize      Int?
+  confidenceLevel Float?
+  effectiveDate   DateTime
+  expiryDate      DateTime?
+
+  industry        String?
+  companySize     String?  // startup, small, medium, large, enterprise
+
+  trendDirection  String?  // increasing, stable, decreasing
+  trendPercentage Float?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([jobTitle])
+  @@index([location])
+  @@index([effectiveDate])
+  @@map("salary_market_data")
+}
+
+// 9.3.2 Talent Pool Analysis
+model TalentPoolAnalysis {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Analysis parameters
+  analysisName    String
+  analysisType    String   // skill_based, location_based, experience_based, combined
+  status          String   @default("pending") // pending, processing, completed, failed
+
+  // Target criteria
+  targetSkills    Json?    // Array of skills
+  targetLocations Json?    // Array of locations
+  experienceRange Json?    // {min: X, max: Y}
+  educationLevel  String?
+
+  // Results
+  totalCandidates Int?
+  qualifiedCandidates Int?
+  activeJobSeekers Int?
+  passiveCandidates Int?
+
+  // Breakdown
+  skillDistribution Json?   // Skill counts
+  locationDistribution Json? // Location counts
+  experienceDistribution Json?
+  salaryDistribution Json?
+
+  // Availability
+  availabilityScore Float?  // 0-100
+  competitionLevel String?  // low, medium, high, very_high
+  avgTimeToHire Float?      // days
+
+  // Recommendations
+  recommendations Json?
+
+  completedAt     DateTime?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([analysisType])
+  @@map("talent_pool_analyses")
+}
+
+// 9.3.3 Competitor Hiring Insights
+model CompetitorInsight {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Competitor identification
+  competitorName  String
+  competitorDomain String?
+  industry        String?
+  companySize     String?
+
+  // Tracking period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Job postings data
+  totalJobPostings Int     @default(0)
+  activeJobPostings Int    @default(0)
+  closedJobPostings Int    @default(0)
+
+  // Department breakdown
+  engineeringJobs Int      @default(0)
+  salesJobs       Int      @default(0)
+  marketingJobs   Int      @default(0)
+  operationsJobs  Int      @default(0)
+  otherJobs       Int      @default(0)
+
+  // Hiring velocity
+  avgPostingDuration Float?   // days
+  hiringVelocity String?     // slow, normal, aggressive
+
+  // Skills in demand
+  topSkills       Json?       // Array of skills
+  emergingSkills  Json?       // New skills being sought
+
+  // Location insights
+  primaryLocations Json?
+  remoteRatio     Float?      // Percentage of remote jobs
+
+  // Salary insights
+  avgSalaryRange  Json?       // {min, max, currency}
+
+  // Trends
+  growthTrend     String?     // growing, stable, contracting
+  growthRate      Float?      // Percentage
+
+  source          String?     // linkedin, indeed, glassdoor, etc.
+  lastUpdated     DateTime    @default(now())
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([competitorName])
+  @@index([periodStart, periodEnd])
+  @@map("competitor_insights")
+}
+
+// 9.3.4 Skills Demand Trends
+model SkillDemandTrend {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Skill identification
+  skillName       String
+  skillCategory   String?  // technical, soft, industry_specific, certification
+  skillType       String?  // programming, framework, tool, methodology
+
+  // Time period
+  periodStart     DateTime
+  periodEnd       DateTime
+  granularity     String   @default("monthly") // daily, weekly, monthly, quarterly
+
+  // Demand metrics
+  demandScore     Float?   // 0-100 normalized
+  mentionCount    Int      @default(0)
+  jobPostingCount Int      @default(0)
+  growthRate      Float?   // Percentage change
+
+  // Trend analysis
+  trendDirection  String?  // emerging, growing, stable, declining
+  velocityScore   Float?   // Speed of change
+  maturityLevel   String?  // emerging, growing, mature, declining
+
+  // Industry breakdown
+  industryDemand  Json?    // Industry -> demand mapping
+  locationDemand  Json?    // Location -> demand mapping
+
+  // Salary impact
+  salaryPremium   Float?   // Percentage premium for skill
+  avgSalaryWithSkill Float?
+
+  // Related skills
+  relatedSkills   Json?    // Commonly paired skills
+  substitutes     Json?    // Alternative skills
+
+  // Predictions
+  forecastDemand  Json?    // Future demand predictions
+  confidenceScore Float?
+
+  source          String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([skillName])
+  @@index([skillCategory])
+  @@index([periodStart, periodEnd])
+  @@map("skill_demand_trends")
+}
+
+// 9.3.5 Location Intelligence
+model LocationIntelligence {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Location identification
+  locationName    String
+  locationType    String   // city, state, country, region
+  country         String
+  region          String?
+  timezone        String?
+
+  // Analysis period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Talent metrics
+  totalTalentPool Int?
+  activeTalentPool Int?
+  talenDensity    Float?   // Per capita
+
+  // Cost metrics
+  costOfLiving    Float?   // Index
+  avgSalary       Float?
+  salaryIndex     Float?   // Compared to baseline
+
+  // Work mode trends
+  remoteRatio     Float?   // Percentage
+  hybridRatio     Float?
+  onsiteRatio     Float?
+  remoteGrowth    Float?   // Trend
+
+  // Competition
+  competitorPresence Int?  // Number of competitors
+  hiringActivity  String?  // low, medium, high
+  talentDemand    Float?   // Demand index
+
+  // Quality indicators
+  educationLevel  Json?    // Distribution
+  experienceLevel Json?    // Distribution
+  skillAvailability Json?  // Skills available
+
+  // Economic factors
+  unemploymentRate Float?
+  techJobGrowth   Float?
+  startupActivity Float?   // Ecosystem score
+
+  // Infrastructure
+  techInfrastructure Float? // Score
+  connectivity    Float?   // Score
+
+  recommendations Json?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([locationName])
+  @@index([country])
+  @@index([periodStart, periodEnd])
+  @@map("location_intelligence")
+}
+
+// 9.3.6 Industry Trends
+model IndustryTrend {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Industry identification
+  industryName    String
+  industryCode    String?  // NAICS, SIC, etc.
+  subIndustry     String?
+
+  // Analysis period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Hiring trends
+  totalHiring     Int?
+  hiringGrowth    Float?   // Percentage change
+  hiringVelocity  String?  // slow, normal, fast
+  seasonality     Json?    // Monthly patterns
+
+  // Role trends
+  topRoles        Json?    // Most hired roles
+  emergingRoles   Json?    // New roles appearing
+  decliningRoles  Json?    // Roles being phased out
+
+  // Skills trends
+  topSkills       Json?    // Most demanded skills
+  emergingSkills  Json?    // New skills
+  skillGaps       Json?    // Hard to fill skills
+
+  // Compensation trends
+  avgSalaryGrowth Float?   // Percentage
+  compensationTrends Json? // By role/level
+
+  // Work mode
+  remoteAdoption  Float?   // Percentage
+  hybridAdoption  Float?
+  workModeShift   Json?    // Historical trend
+
+  // Market factors
+  marketSize      Float?   // In billions
+  marketGrowth    Float?   // Percentage
+  investmentTrend Json?    // VC/PE activity
+
+  // Talent dynamics
+  talentFlow      Json?    // Where talent comes from/goes to
+  retentionTrends Float?
+  turnoverRate    Float?
+
+  // Predictions
+  outlook         String?  // positive, neutral, negative
+  predictions     Json?
+  confidenceScore Float?
+
+  source          String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([industryName])
+  @@index([periodStart, periodEnd])
+  @@map("industry_trends")
+}
+
+// Market Intelligence Dashboard Snapshot
+model MarketIntelligenceSnapshot {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  snapshotDate    DateTime @default(now())
+  snapshotType    String   @default("daily") // daily, weekly, monthly
+
+  // Summary metrics
+  salaryIndexChange Float?
+  talentAvailabilityScore Float?
+  competitorActivityScore Float?
+  skillDemandShift Float?
+  marketHealthScore Float?
+
+  // Top insights
+  topInsights     Json?    // Array of key insights
+  alerts          Json?    // Important changes/warnings
+  recommendations Json?    // Action items
+
+  // Detailed data references
+  salaryDataIds   Json?    // References to SalaryMarketData
+  talentPoolIds   Json?    // References to TalentPoolAnalysis
+  competitorIds   Json?    // References to CompetitorInsight
+  skillTrendIds   Json?    // References to SkillDemandTrend
+  locationIds     Json?    // References to LocationIntelligence
+  industryIds     Json?    // References to IndustryTrend
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([snapshotDate])
+  @@index([snapshotType])
+  @@map("market_intelligence_snapshots")
+}
+
+// ==========================================
+// Batch 33: HR & Payroll Integrations (10.1.1-10.1.7)
+// ==========================================
+
+// HR Integration Configuration
+model HRIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  provider        String   // workday, successfactors, bamboohr, adp, gusto, deel, custom
+  integrationType String   @default("bidirectional") // inbound, outbound, bidirectional
+
+  // Connection settings
+  connectionSettings Json  // Provider-specific config (encrypted)
+  authType        String   // oauth2, api_key, saml, basic
+  authCredentials Json?    // Encrypted credentials
+
+  // Sync configuration
+  syncEnabled     Boolean  @default(true)
+  syncFrequency   String   @default("hourly") // realtime, hourly, daily, weekly
+  syncSchedule    Json?    // Custom schedule
+
+  // Sync scope
+  syncPositions   Boolean  @default(true)
+  syncCandidates  Boolean  @default(true)
+  syncHires       Boolean  @default(true)
+  syncEmployees   Boolean  @default(false)
+
+  // Mapping configuration
+  fieldMapping    Json?    // Field mapping between systems
+  statusMapping   Json?    // Status code mapping
+  customTransforms Json?   // Data transformation rules
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastSyncAt      DateTime?
+  lastSyncStatus  String?
+  errorMessage    String?
+  errorCount      Int      @default(0)
+
+  // Webhook configuration
+  webhookUrl      String?
+  webhookSecret   String?
+  webhookEnabled  Boolean  @default(false)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  syncLogs        HRSyncLog[]
+
+  @@index([organizationId])
+  @@index([provider])
+  @@index([status])
+  @@map("hr_integrations")
+}
+
+// HR Sync Log
+model HRSyncLog {
+  id              String   @id @default(uuid())
+  integrationId   String
+  integration     HRIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  syncType        String   // full, incremental, positions, candidates, hires
+  direction       String   // inbound, outbound
+
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  status          String   @default("running") // running, completed, failed, partial
+
+  // Statistics
+  recordsProcessed Int     @default(0)
+  recordsCreated  Int      @default(0)
+  recordsUpdated  Int      @default(0)
+  recordsDeleted  Int      @default(0)
+  recordsFailed   Int      @default(0)
+
+  // Details
+  errors          Json?    // Array of error details
+  warnings        Json?    // Array of warnings
+  summary         Json?    // Sync summary
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([integrationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("hr_sync_logs")
+}
+
+// ==========================================
+// Batch 34: Communication Platform Integrations (10.2.1-10.2.6)
+// ==========================================
+
+// Communication Integration Configuration
+model CommunicationIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  platform        String   // slack, teams, gmail, outlook, whatsapp, sms, discord
+  integrationType String   @default("notification") // notification, messaging, sync
+
+  // Connection settings
+  connectionSettings Json  // Platform-specific config
+  authType        String   // oauth2, api_key, webhook
+  authCredentials Json?    // Encrypted credentials
+
+  // Workspace/Team settings
+  workspaceId     String?  // Slack workspace, Teams tenant, etc.
+  defaultChannel  String?  // Default channel for notifications
+
+  // Features enabled
+  notificationsEnabled Boolean @default(true)
+  approvalsEnabled  Boolean @default(false)
+  messagingEnabled  Boolean @default(false)
+  threadingEnabled  Boolean @default(false)
+
+  // Notification settings
+  notificationTypes Json?  // Which events trigger notifications
+  notificationChannels Json? // Channel routing rules
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastActivityAt  DateTime?
+  errorMessage    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([status])
+  @@map("communication_integrations")
+}
+
+// Message Template
+model MessageTemplate {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  templateType    String   // notification, email, sms, chat
+  platform        String?  // Platform-specific templates
+  eventType       String?  // Trigger event
+
+  subject         String?  // Email subject
+  content         String   // Template content
+  contentHtml     String?  // HTML version
+  variables       Json?    // Available variables
+
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([templateType])
+  @@index([platform])
+  @@map("message_templates")
+}
+
+// ==========================================
+// Batch 35: Job Boards & Sourcing Integrations (10.3.1-10.3.8)
+// ==========================================
+
+// Job Board Integration Configuration
+model JobBoardIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  platform        String   // indeed, linkedin, glassdoor, ziprecruiter, google_jobs, angellist, niche, university
+  platformSubtype String?  // For niche boards: tech, healthcare, finance, etc.
+
+  // Connection settings
+  connectionSettings Json  // Platform-specific config
+  authType        String   // oauth2, api_key, xml_feed
+  authCredentials Json?    // Encrypted credentials
+
+  // Posting configuration
+  autoPostEnabled Boolean  @default(false)
+  postingRules    Json?    // Which jobs to auto-post
+  defaultBudget   Float?   // Default sponsored budget
+
+  // Application handling
+  applicationImport Boolean @default(true)
+  applicationMapping Json? // Field mapping for applications
+  deduplication   Boolean  @default(true)
+
+  // Branding
+  companyPageUrl  String?
+  brandingEnabled Boolean  @default(true)
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastSyncAt      DateTime?
+  errorMessage    String?
+
+  // Statistics
+  totalPostings   Int      @default(0)
+  activePostings  Int      @default(0)
+  totalApplications Int    @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  postings        JobBoardPosting[]
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([status])
+  @@map("job_board_integrations")
+}
+
+// Job Board Posting
+model JobBoardPosting {
+  id              String   @id @default(uuid())
+  integrationId   String
+  integration     JobBoardIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  jobId           String   // Reference to internal job
+
+  // External reference
+  externalId      String?  // Job board's posting ID
+  externalUrl     String?  // URL on job board
+
+  // Posting details
+  title           String
+  status          String   @default("pending") // pending, active, expired, closed, error
+  postedAt        DateTime?
+  expiresAt       DateTime?
+
+  // Sponsorship
+  isSponsored     Boolean  @default(false)
+  budget          Float?
+  budgetSpent     Float?
+
+  // Performance
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  applications    Int      @default(0)
+  costPerApply    Float?
+
+  errorMessage    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([integrationId])
+  @@index([jobId])
+  @@index([status])
+  @@index([externalId])
+  @@map("job_board_postings")
+}
+
+// ==========================================
+// Batch 36: Developer Tools & API (10.4.1-10.4.8)
+// ==========================================
+
+// API Key
+model APIKey {
+  id              String   @id @default(uuid())
+  organizationId  String
+  userId          String?  // Optional user association
+
+  name            String
+  keyHash         String   // Hashed API key
+  keyPrefix       String   // First few chars for identification
+
+  // Permissions
+  scopes          Json     // Array of API scopes
+  permissions     Json?    // Detailed permissions
+
+  // Rate limiting
+  rateLimit       Int      @default(1000) // Requests per hour
+  rateLimitPeriod String   @default("hour")
+
+  // IP restrictions
+  allowedIPs      Json?    // Array of allowed IPs/CIDR ranges
+  ipRestricted    Boolean  @default(false)
+
+  // Status
+  isActive        Boolean  @default(true)
+  expiresAt       DateTime?
+  lastUsedAt      DateTime?
+  usageCount      Int      @default(0)
+
+  // Metadata
+  description     String?
+  environment     String   @default("production") // production, staging, development
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+// Webhook Configuration
+model WebhookConfig {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  url             String
+  secret          String?  // Webhook signing secret
+
+  // Events
+  events          Json     // Array of event types to send
+  eventFilters    Json?    // Additional filtering rules
+
+  // Configuration
+  httpMethod      String   @default("POST")
+  headers         Json?    // Custom headers
+  retryPolicy     Json?    // Retry configuration
+  timeout         Int      @default(30000) // ms
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  lastResponseCode Int?
+  failureCount    Int      @default(0)
+
+  // Statistics
+  totalSent       Int      @default(0)
+  totalSuccess    Int      @default(0)
+  totalFailed     Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveries      WebhookDelivery[]
+
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("webhook_configs")
+}
+
+// Webhook Delivery Log
+model WebhookDelivery {
+  id              String   @id @default(uuid())
+  webhookId       String
+  webhook         WebhookConfig @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  eventType       String
+  eventId         String?  // Reference to source event
+  payload         Json     // Event payload
+
+  // Delivery details
+  attemptNumber   Int      @default(1)
+  requestUrl      String
+  requestHeaders  Json?
+  requestBody     String?
+
+  // Response
+  responseCode    Int?
+  responseBody    String?
+  responseHeaders Json?
+
+  // Status
+  status          String   @default("pending") // pending, success, failed, retrying
+  deliveredAt     DateTime?
+  duration        Int?     // ms
+
+  errorMessage    String?
+  nextRetryAt     DateTime?
+
+  createdAt       DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+// Zapier/Automation Integration
+model AutomationIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  platform        String   // zapier, make, n8n, custom
+  connectionId    String?  // External connection ID
+
+  // Triggers
+  triggers        Json?    // Configured triggers
+  triggerCount    Int      @default(0)
+
+  // Actions
+  actions         Json?    // Configured actions
+  actionCount     Int      @default(0)
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastActivityAt  DateTime?
+
+  // Statistics
+  executionCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("automation_integrations")
+}
+
+// API Usage Log
+model APIUsageLog {
+  id              String   @id @default(uuid())
+  organizationId  String
+  apiKeyId        String?
+
+  // Request details
+  endpoint        String
+  method          String
+  path            String
+  queryParams     Json?
+
+  // Response
+  statusCode      Int
+  responseTime    Int      // ms
+
+  // Client info
+  clientIP        String?
+  userAgent       String?
+
+  // Rate limiting
+  rateLimitRemaining Int?
+  rateLimitReset  DateTime?
+
+  timestamp       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([apiKeyId])
+  @@index([endpoint])
+  @@index([timestamp])
+  @@map("api_usage_logs")
+}
+
+// ==========================================
+// Batch 37-39: Workflow Automation (11.1-11.3)
+// ==========================================
+
+// Batch 37: Automation Engine (11.1)
+model WorkflowAutomation {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Workflow details
+  name            String
+  description     String?
+  category        String?  // candidate_management, communication, scheduling, etc.
+
+  // Trigger configuration
+  triggerType     String   // event, schedule, manual, condition
+  triggerEvent    String?  // candidate_applied, interview_scheduled, offer_sent, etc.
+  triggerSchedule String?  // cron expression for scheduled triggers
+  triggerConditions Json?  // conditions that must be met
+
+  // Workflow steps
+  steps           Json     // array of workflow steps
+
+  // Conditional logic
+  conditionalLogic Json?   // if/then/else branching rules
+
+  // Delay settings
+  delayEnabled    Boolean  @default(false)
+  delayDuration   Int?     // minutes
+  delayType       String?  // fixed, business_hours, smart
+
+  // Status
+  status          String   @default("draft") // draft, active, paused, archived
+  isActive        Boolean  @default(false)
+  version         Int      @default(1)
+
+  // Analytics
+  executionCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  lastExecutedAt  DateTime?
+  avgExecutionTime Int?    // ms
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  executions      WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([triggerType])
+  @@index([triggerEvent])
+  @@index([isActive])
+  @@map("workflow_automations")
+}
+
+// Workflow Execution Log
+model WorkflowExecution {
+  id              String   @id @default(uuid())
+  workflowId      String
+  organizationId  String
+
+  // Trigger info
+  triggeredBy     String   // system, user, schedule, event
+  triggerEvent    String?
+  triggerData     Json?
+
+  // Execution status
+  status          String   @default("pending") // pending, running, completed, failed, cancelled
+  startedAt       DateTime?
+  completedAt     DateTime?
+  duration        Int?     // ms
+
+  // Step tracking
+  currentStep     Int      @default(0)
+  totalSteps      Int
+  stepsCompleted  Int      @default(0)
+  stepResults     Json?    // results of each step
+
+  // Error handling
+  errorMessage    String?
+  errorStep       Int?
+  retryCount      Int      @default(0)
+  maxRetries      Int      @default(3)
+
+  // Context
+  contextData     Json?    // candidate, job, application context
+  outputData      Json?    // final output
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workflow        WorkflowAutomation @relation(fields: [workflowId], references: [id])
+
+  @@index([workflowId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("workflow_executions")
+}
+
+// Workflow Template
+model WorkflowTemplate {
+  id              String   @id @default(uuid())
+
+  // Template info
+  name            String
+  description     String?
+  category        String   // onboarding, screening, scheduling, communication, rejection
+  useCase         String?  // specific use case description
+  icon            String?
+
+  // Template configuration
+  triggerType     String
+  triggerEvent    String?
+  steps           Json     // array of step templates
+  conditionalLogic Json?
+
+  // Template meta
+  isPublic        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  usageCount      Int      @default(0)
+  rating          Float?
+
+  // Customization
+  variables       Json?    // customizable variables
+  requiredFields  Json?    // fields that must be configured
+
+  tags            String[]
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+  @@index([isFeatured])
+  @@map("workflow_templates")
+}
+
+// Scheduled Job
+model ScheduledJob {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Job details
+  name            String
+  description     String?
+  jobType         String   // report_generation, data_cleanup, notification, sync, etc.
+
+  // Schedule
+  schedule        String   // cron expression
+  timezone        String   @default("UTC")
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+
+  // Configuration
+  configuration   Json?    // job-specific config
+  parameters      Json?    // runtime parameters
+
+  // Status
+  status          String   @default("active") // active, paused, disabled
+  isActive        Boolean  @default(true)
+
+  // Execution tracking
+  runCount        Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  lastStatus      String?  // success, failed, skipped
+  lastError       String?
+  lastDuration    Int?     // ms
+
+  // Retry settings
+  retryOnFailure  Boolean  @default(true)
+  maxRetries      Int      @default(3)
+  retryDelay      Int      @default(5) // minutes
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([nextRunAt])
+  @@index([jobType])
+  @@map("scheduled_jobs")
+}
+
+// Bulk Action
+model BulkAction {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Action details
+  name            String?
+  actionType      String   // update_status, send_email, move_stage, assign_recruiter, add_tag, etc.
+  targetType      String   // candidates, applications, jobs, etc.
+
+  // Targets
+  targetIds       String[] // IDs of target records
+  totalCount      Int
+  processedCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+
+  // Action configuration
+  actionData      Json     // action-specific data (new status, email template, etc.)
+  filters         Json?    // filters used to select targets
+
+  // Status
+  status          String   @default("pending") // pending, processing, completed, failed, cancelled
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Results
+  results         Json?    // per-record results
+  errors          Json?    // error details
+
+  // Progress
+  progress        Float    @default(0) // 0-100
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([actionType])
+  @@index([createdBy])
+  @@map("bulk_actions")
+}
+
+// Batch 38: Common Automation Use Cases - handled by WorkflowAutomation with specific triggerEvents
+
+// Batch 39: Approval Workflows (11.3)
+model ApprovalWorkflow {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Workflow details
+  name            String
+  description     String?
+  workflowType    String   // job_requisition, offer_approval, budget_approval, exception_approval
+
+  // Approval chain
+  steps           Json     // array of approval steps with approvers and conditions
+  escalationRules Json?    // escalation on timeout
+
+  // Configuration
+  requireAllApprovers Boolean @default(false) // all must approve vs any can approve
+  allowParallelApproval Boolean @default(false)
+  autoApproveOnTimeout Boolean @default(false)
+  timeoutHours    Int?
+
+  // Delegation
+  delegationEnabled Boolean @default(true)
+  delegationRules Json?    // backup approver rules
+
+  // Status
+  isActive        Boolean  @default(true)
+  version         Int      @default(1)
+
+  // Analytics
+  avgApprovalTime Int?     // hours
+  approvalRate    Float?
+  totalRequests   Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requests        ApprovalRequest[]
+
+  @@index([organizationId])
+  @@index([workflowType])
+  @@index([isActive])
+  @@map("approval_workflows")
+}
+
+// Approval Request
+model ApprovalRequest {
+  id              String   @id @default(uuid())
+  workflowId      String
+  organizationId  String
+  requestedBy     String
+
+  // Request details
+  requestType     String   // job_requisition, offer, budget, exception
+  title           String
+  description     String?
+
+  // Reference
+  referenceType   String?  // job, offer, candidate, etc.
+  referenceId     String?
+
+  // Request data
+  requestData     Json     // full request details
+  attachments     Json?    // supporting documents
+
+  // Current state
+  currentStep     Int      @default(0)
+  status          String   @default("pending") // pending, in_review, approved, rejected, cancelled
+
+  // Approval tracking
+  approvalSteps   Json     // status of each approval step
+  approvedBy      String[]
+  rejectedBy      String?
+
+  // Timing
+  submittedAt     DateTime @default(now())
+  dueDate         DateTime?
+  decidedAt       DateTime?
+
+  // Response
+  decision        String?  // approved, rejected
+  decisionNotes   String?
+  conditions      Json?    // approval conditions
+
+  // Priority
+  priority        String   @default("normal") // low, normal, high, urgent
+  isEscalated     Boolean  @default(false)
+  escalatedAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workflow        ApprovalWorkflow @relation(fields: [workflowId], references: [id])
+
+  @@index([workflowId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestedBy])
+  @@index([requestType])
+  @@map("approval_requests")
+}
+
+// Approval Step Record (individual step within a request)
+model ApprovalStepRecord {
+  id              String   @id @default(uuid())
+  requestId       String
+
+  // Step info
+  stepNumber      Int
+  stepName        String?
+
+  // Approver(s)
+  approverType    String   // user, role, department, manager
+  approverId      String?  // specific user ID if user type
+  approverRole    String?  // role name if role type
+
+  // Status
+  status          String   @default("pending") // pending, approved, rejected, skipped, delegated
+
+  // Response
+  respondedBy     String?
+  respondedAt     DateTime?
+  decision        String?  // approved, rejected
+  comments        String?
+
+  // Delegation
+  delegatedTo     String?
+  delegatedAt     DateTime?
+  delegationReason String?
+
+  // Timing
+  dueDate         DateTime?
+  reminderSentAt  DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([requestId])
+  @@index([status])
+  @@index([approverId])
+  @@map("approval_step_records")
+}
+
+// ==========================================
+// Batch 40-42: Mobile & Accessibility (12.1-12.3)
+// ==========================================
+
+// Batch 40: Mobile Applications (12.1)
+model MobileDevice {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Device info
+  deviceId        String   @unique
+  platform        String   // ios, android
+  deviceName      String?
+  deviceModel     String?
+  osVersion       String?
+  appVersion      String?
+
+  // Push notifications
+  pushToken       String?
+  pushEnabled     Boolean  @default(true)
+  pushCategories  String[] // which notification types enabled
+
+  // Biometric
+  biometricEnabled Boolean @default(false)
+  biometricType   String?  // face_id, touch_id, fingerprint
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastActiveAt    DateTime?
+  registeredAt    DateTime @default(now())
+
+  // Security
+  deviceTrusted   Boolean  @default(false)
+  trustedAt       DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("mobile_devices")
+}
+
+// Push Notification
+model PushNotification {
+  id              String   @id @default(uuid())
+  userId          String
+  deviceId        String?
+  organizationId  String
+
+  // Notification content
+  title           String
+  body            String
+  data            Json?    // custom payload
+  imageUrl        String?
+
+  // Notification type
+  notificationType String  // interview_reminder, application_update, message, etc.
+  priority        String   @default("normal") // low, normal, high, critical
+  category        String?  // action category for iOS
+
+  // Delivery status
+  status          String   @default("pending") // pending, sent, delivered, failed, read
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  readAt          DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+
+  // Scheduling
+  scheduledFor    DateTime?
+  expiresAt       DateTime?
+
+  // Tracking
+  clickedAt       DateTime?
+  actionTaken     String?  // which action was selected
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([notificationType])
+  @@index([scheduledFor])
+  @@map("push_notifications")
+}
+
+// Mobile App Config
+model MobileAppConfig {
+  id              String   @id @default(uuid())
+  organizationId  String?  // null for global config
+
+  // App settings
+  platform        String   // ios, android, all
+  minVersion      String?  // minimum required version
+  currentVersion  String?
+  forceUpdate     Boolean  @default(false)
+  maintenanceMode Boolean  @default(false)
+  maintenanceMessage String?
+
+  // Feature flags
+  features        Json?    // enabled/disabled features
+  featureFlags    Json?    // A/B testing flags
+
+  // Deep linking
+  deepLinkScheme  String?
+  universalLinks  Json?    // configured universal links
+
+  // Offline mode
+  offlineEnabled  Boolean  @default(true)
+  offlineCacheDays Int     @default(7)
+  offlineFeatures String[] // which features work offline
+
+  // Analytics
+  analyticsEnabled Boolean @default(true)
+  crashReportingEnabled Boolean @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@map("mobile_app_configs")
+}
+
+// Offline Sync Queue
+model OfflineSyncQueue {
+  id              String   @id @default(uuid())
+  userId          String
+  deviceId        String
+
+  // Sync data
+  entityType      String   // application, interview, message, etc.
+  entityId        String?
+  action          String   // create, update, delete
+  data            Json     // payload to sync
+
+  // Status
+  status          String   @default("pending") // pending, syncing, synced, failed, conflict
+  syncAttempts    Int      @default(0)
+  lastAttemptAt   DateTime?
+  syncedAt        DateTime?
+  errorMessage    String?
+
+  // Conflict resolution
+  hasConflict     Boolean  @default(false)
+  conflictData    Json?    // server data that conflicts
+  resolution      String?  // client_wins, server_wins, merged
+
+  // Priority
+  priority        Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([entityType])
+  @@map("offline_sync_queue")
+}
+
+// Batch 41: PWA Configuration (12.2)
+model PWAConfig {
+  id              String   @id @default(uuid())
+  organizationId  String?
+
+  // PWA manifest
+  appName         String
+  shortName       String?
+  description     String?
+  themeColor      String   @default("#3B82F6")
+  backgroundColor String   @default("#FFFFFF")
+
+  // Icons
+  icons           Json?    // array of icon configs
+
+  // Service worker
+  swVersion       String?
+  cacheVersion    String?
+  cacheStrategies Json?    // per-route caching strategies
+
+  // Push
+  pushEnabled     Boolean  @default(true)
+  vapidPublicKey  String?
+
+  // Installation
+  installPromptEnabled Boolean @default(true)
+  installBannerDelay Int    @default(30) // seconds
+
+  // Offline
+  offlinePageUrl  String?
+  offlineFallbacks Json?   // fallback pages/assets
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("pwa_configs")
+}
+
+// Web Push Subscription
+model WebPushSubscription {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Subscription details
+  endpoint        String   @unique
+  p256dh          String   // public key
+  auth            String   // auth secret
+
+  // Browser info
+  browserName     String?
+  browserVersion  String?
+  userAgent       String?
+
+  // Settings
+  isActive        Boolean  @default(true)
+  categories      String[] // enabled notification categories
+
+  // Stats
+  lastNotifiedAt  DateTime?
+  totalSent       Int      @default(0)
+  totalDelivered  Int      @default(0)
+
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("web_push_subscriptions")
+}
+
+// Batch 42: Accessibility (12.3)
+model AccessibilitySettings {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  organizationId  String
+
+  // Visual
+  highContrast    Boolean  @default(false)
+  colorScheme     String   @default("system") // light, dark, system, high_contrast
+  fontSize        String   @default("medium") // small, medium, large, x-large
+  fontFamily      String   @default("system") // system, dyslexic-friendly, monospace
+  reducedMotion   Boolean  @default(false)
+  underlineLinks  Boolean  @default(false)
+
+  // Reading
+  lineSpacing     String   @default("normal") // compact, normal, relaxed
+  letterSpacing   String   @default("normal") // tight, normal, wide
+  textAlignment   String   @default("left") // left, justified
+
+  // Navigation
+  keyboardNavigation Boolean @default(true)
+  focusIndicators Boolean  @default(true)
+  skipLinks       Boolean  @default(true)
+
+  // Screen reader
+  screenReaderOptimized Boolean @default(false)
+  verboseLabels   Boolean  @default(false)
+  announceImages  Boolean  @default(true)
+
+  // Timing
+  extendedTimeouts Boolean @default(false)
+  autoPlayMedia   Boolean  @default(false)
+  carouselAutoPlay Boolean @default(false)
+
+  // Audio
+  soundEnabled    Boolean  @default(true)
+  soundVolume     Int      @default(100)
+  speechRate      Float    @default(1.0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("accessibility_settings")
+}
+
+// Accessibility Audit Log
+model AccessibilityAudit {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Audit details
+  pageUrl         String
+  pageTitle       String?
+  auditDate       DateTime @default(now())
+  standard        String   @default("WCAG21AA") // WCAG20A, WCAG20AA, WCAG21A, WCAG21AA, WCAG21AAA
+
+  // Results
+  score           Float    // 0-100
+  passedRules     Int
+  failedRules     Int
+  warningRules    Int
+  manualReviewRules Int
+
+  // Issues
+  issues          Json     // array of accessibility issues
+  criticalCount   Int      @default(0)
+  seriousCount    Int      @default(0)
+  moderateCount   Int      @default(0)
+  minorCount      Int      @default(0)
+
+  // Tool info
+  auditTool       String?  // axe, lighthouse, pa11y, etc.
+  toolVersion     String?
+
+  // Remediation
+  remediationNotes String?
+  fixedIssuesCount Int     @default(0)
+  lastFixedAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([pageUrl])
+  @@index([auditDate])
+  @@index([score])
+  @@map("accessibility_audits")
+}
+
+// ==========================================
+// Batch 43-45: Enterprise Administration (13.1-13.3)
+// ==========================================
+
+// Batch 43: Multi-Tenant & Organization (13.1)
+model Tenant {
+  id              String   @id @default(uuid())
+
+  // Tenant info
+  name            String
+  slug            String   @unique
+  domain          String?  @unique
+  logo            String?
+
+  // Plan & Status
+  plan            String   @default("free") // free, starter, professional, enterprise
+  status          String   @default("active") // active, suspended, cancelled
+
+  // Settings
+  settings        Json?
+  features        Json?    // enabled features for this tenant
+
+  // Limits
+  maxUsers        Int      @default(5)
+  maxJobs         Int      @default(10)
+  storageLimit    Int      @default(1024) // MB
+
+  // Billing
+  billingEmail    String?
+  billingAddress  Json?
+  stripeCustomerId String?
+
+  // Trial
+  trialEndsAt     DateTime?
+  isTrialActive   Boolean  @default(false)
+
+  // Data isolation
+  dataRegion      String   @default("us-east-1")
+  encryptionKey   String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organizations   Organization[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([plan])
+  @@map("tenants")
+}
+
+model Organization {
+  id              String   @id @default(uuid())
+  tenantId        String
+  parentId        String?  // for hierarchical orgs
+
+  // Org info
+  name            String
+  code            String?  // internal code
+  type            String   @default("company") // company, department, team, subsidiary
+  logo            String?
+  description     String?
+
+  // Hierarchy
+  level           Int      @default(0)
+  path            String?  // materialized path for hierarchy
+
+  // Settings
+  settings        Json?
+  timezone        String   @default("UTC")
+  locale          String   @default("en")
+  currency        String   @default("USD")
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  costCenters     CostCenter[]
+  departments     Department[]
+
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([type])
+  @@index([isActive])
+  @@map("organizations")
+}
+
+model CostCenter {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Cost center info
+  code            String
+  name            String
+  description     String?
+
+  // Budget
+  annualBudget    Float?
+  currentSpend    Float    @default(0)
+  currency        String   @default("USD")
+
+  // Owner
+  ownerId         String?
+  ownerName       String?
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  // Tracking
+  allocatedHeadcount Int   @default(0)
+  currentHeadcount Int     @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([code])
+  @@map("cost_centers")
+}
+
+model Department {
+  id              String   @id @default(uuid())
+  organizationId  String
+  parentId        String?
+
+  // Department info
+  name            String
+  code            String?
+  description     String?
+
+  // Hierarchy
+  level           Int      @default(0)
+  path            String?
+
+  // Head
+  headId          String?
+  headName        String?
+
+  // Settings
+  settings        Json?
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([parentId])
+  @@map("departments")
+}
+
+// Batch 44: User & License Management (13.2)
+model License {
+  id              String   @id @default(uuid())
+  tenantId        String
+
+  // License info
+  licenseType     String   // seat, usage, feature
+  name            String
+  description     String?
+
+  // Quantity
+  totalSeats      Int
+  usedSeats       Int      @default(0)
+  availableSeats  Int
+
+  // Pricing
+  pricePerSeat    Float?
+  currency        String   @default("USD")
+  billingCycle    String   @default("monthly") // monthly, annual
+
+  // Validity
+  startsAt        DateTime
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+
+  // Features
+  features        String[]
+  restrictions    Json?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  allocations     LicenseAllocation[]
+
+  @@index([tenantId])
+  @@index([licenseType])
+  @@index([isActive])
+  @@map("licenses")
+}
+
+model LicenseAllocation {
+  id              String   @id @default(uuid())
+  licenseId       String
+  userId          String
+  organizationId  String
+
+  // Allocation info
+  allocatedAt     DateTime @default(now())
+  allocatedBy     String?
+  expiresAt       DateTime?
+
+  // Status
+  isActive        Boolean  @default(true)
+  revokedAt       DateTime?
+  revokedBy       String?
+  revokeReason    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  license         License  @relation(fields: [licenseId], references: [id])
+
+  @@unique([licenseId, userId])
+  @@index([licenseId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("license_allocations")
+}
+
+model RoleTemplate {
+  id              String   @id @default(uuid())
+  tenantId        String?  // null for system templates
+
+  // Template info
+  name            String
+  description     String?
+  category        String?  // admin, recruiter, hiring_manager, viewer
+
+  // Permissions
+  permissions     String[]
+  featureAccess   Json?
+
+  // Restrictions
+  restrictions    Json?
+  dataAccess      String   @default("own") // own, team, department, all
+
+  // Status
+  isSystem        Boolean  @default(false)
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([isSystem])
+  @@map("role_templates")
+}
+
+model CustomRole {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+
+  // Role info
+  name            String
+  description     String?
+  baseTemplateId  String?  // based on template
+
+  // Permissions
+  permissions     String[]
+  featureAccess   Json?
+  dataAccess      String   @default("own")
+
+  // Settings
+  canBeAssigned   Boolean  @default(true)
+  isActive        Boolean  @default(true)
+
+  // Stats
+  userCount       Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([tenantId])
+  @@index([organizationId])
+  @@map("custom_roles")
+}
+
+model AccessReview {
+  id              String   @id @default(uuid())
+  organizationId  String
+  initiatedBy     String
+
+  // Review info
+  name            String
+  description     String?
+  reviewType      String   // periodic, ad_hoc, compliance
+
+  // Scope
+  targetUsers     String[] // specific users or 'all'
+  targetRoles     String[] // specific roles or 'all'
+
+  // Schedule
+  startDate       DateTime
+  dueDate         DateTime
+  completedAt     DateTime?
+
+  // Status
+  status          String   @default("pending") // pending, in_progress, completed, cancelled
+  totalItems      Int      @default(0)
+  reviewedItems   Int      @default(0)
+  approvedItems   Int      @default(0)
+  revokedItems    Int      @default(0)
+
+  // Results
+  results         Json?    // detailed review results
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("access_reviews")
+}
+
+model UserActivityLog {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Activity info
+  action          String   // login, logout, create, update, delete, view, download, export
+  resourceType    String   // job, candidate, application, report, etc.
+  resourceId      String?
+  resourceName    String?
+
+  // Details
+  details         Json?
+  changes         Json?    // before/after for updates
+
+  // Context
+  ipAddress       String?
+  userAgent       String?
+  sessionId       String?
+  location        String?
+
+  // Result
+  status          String   @default("success") // success, failed, blocked
+  errorMessage    String?
+
+  timestamp       DateTime @default(now())
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([timestamp])
+  @@map("user_activity_logs")
+}
+
+// Batch 45: Billing & Subscriptions (13.3)
+model Subscription {
+  id              String   @id @default(uuid())
+  tenantId        String   @unique
+  organizationId  String
+
+  // Stripe info
+  stripeSubscriptionId String? @unique
+  stripeCustomerId String?
+  stripePriceId   String?
+
+  // Plan
+  planId          String
+  planName        String
+  planTier        String   // free, starter, professional, enterprise
+
+  // Status
+  status          String   @default("active") // active, past_due, cancelled, trialing
+  cancelAtPeriodEnd Boolean @default(false)
+  cancelReason    String?
+
+  // Billing
+  billingCycle    String   @default("monthly") // monthly, annual
+  amount          Float
+  currency        String   @default("USD")
+  discount        Float?
+  discountType    String?  // percentage, fixed
+
+  // Period
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  trialStart      DateTime?
+  trialEnd        DateTime?
+
+  // Usage
+  usageThisMonth  Json?    // usage-based metrics
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoices        Invoice[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([planTier])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id              String   @id @default(uuid())
+  subscriptionId  String
+  tenantId        String
+
+  // Stripe info
+  stripeInvoiceId String?  @unique
+
+  // Invoice details
+  invoiceNumber   String   @unique
+  status          String   @default("draft") // draft, open, paid, void, uncollectible
+
+  // Amounts
+  subtotal        Float
+  tax             Float    @default(0)
+  discount        Float    @default(0)
+  total           Float
+  amountPaid      Float    @default(0)
+  amountDue       Float
+  currency        String   @default("USD")
+
+  // Dates
+  invoiceDate     DateTime @default(now())
+  dueDate         DateTime
+  paidAt          DateTime?
+
+  // Line items
+  lineItems       Json     // array of invoice line items
+
+  // Payment
+  paymentMethod   String?
+  paymentIntentId String?
+
+  // PDF
+  pdfUrl          String?
+  hostedUrl       String?
+
+  // Notes
+  notes           String?
+  memo            String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@map("invoices")
+}
+
+model UsageRecord {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+  subscriptionId  String?
+
+  // Usage info
+  metricName      String   // jobs_posted, candidates_processed, interviews, api_calls, storage
+  metricValue     Float
+  unit            String   // count, gb, minutes, requests
+
+  // Period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Billing
+  isBillable      Boolean  @default(true)
+  pricePerUnit    Float?
+  totalCost       Float?
+  currency        String   @default("USD")
+
+  // Context
+  resourceId      String?
+  resourceType    String?
+  userId          String?
+
+  recordedAt      DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([subscriptionId])
+  @@index([metricName])
+  @@index([periodStart])
+  @@map("usage_records")
+}
+
+model Quota {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String?
+
+  // Quota info
+  quotaType       String   // users, jobs, storage, api_calls, candidates
+  quotaLimit      Int
+  currentUsage    Int      @default(0)
+  unit            String   // count, gb, requests
+
+  // Alerts
+  warningThreshold Float   @default(0.8) // 80%
+  criticalThreshold Float  @default(0.95) // 95%
+  alertsSent      Int      @default(0)
+  lastAlertAt     DateTime?
+
+  // Overage
+  allowOverage    Boolean  @default(false)
+  overagePrice    Float?
+  overageUsage    Int      @default(0)
+
+  // Period
+  resetFrequency  String?  // daily, weekly, monthly, never
+  lastResetAt     DateTime?
+  nextResetAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, quotaType])
+  @@index([tenantId])
+  @@index([organizationId])
+  @@map("quotas")
+}
+
+model EnterpriseContract {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+
+  // Contract info
+  contractNumber  String   @unique
+  name            String
+  description     String?
+
+  // Terms
+  startDate       DateTime
+  endDate         DateTime
+  autoRenew       Boolean  @default(false)
+  renewalTermMonths Int?
+
+  // Pricing
+  contractValue   Float
+  currency        String   @default("USD")
+  paymentTerms    String   @default("net30") // net30, net60, upfront
+  billingFrequency String  @default("annual") // monthly, quarterly, annual
+
+  // Custom terms
+  customPricing   Json?    // custom pricing overrides
+  customFeatures  Json?    // custom feature access
+  slaTerms        Json?    // SLA commitments
+
+  // Status
+  status          String   @default("active") // draft, pending, active, expired, cancelled
+  signedAt        DateTime?
+  signedBy        String?
+
+  // Documents
+  contractDocument String?
+  amendments      Json?    // array of amendments
+
+  // Account manager
+  accountManagerId String?
+  accountManagerName String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([endDate])
+  @@map("enterprise_contracts")
+}
+
+// ==========================================
+// Batch 46-49: Technical Infrastructure (14.1-14.4)
+// ==========================================
+
+// Batch 46: API Infrastructure (14.1)
+model APIKey {
+  id            String   @id @default(uuid())
+  tenantId      String?
+  userId        String?
+
+  // Key details
+  name          String
+  description   String?
+  keyHash       String   @unique // hashed key for security
+  keyPrefix     String   // first 8 chars for identification
+
+  // Permissions
+  scopes        Json     // array of allowed scopes
+  permissions   Json?    // specific endpoint permissions
+  ipWhitelist   Json?    // allowed IP addresses
+
+  // Limits
+  rateLimit     Int      @default(1000) // requests per hour
+  dailyLimit    Int?     // requests per day
+  monthlyLimit  Int?     // requests per month
+
+  // Usage tracking
+  lastUsedAt    DateTime?
+  totalRequests Int      @default(0)
+  lastRequestIp String?
+
+  // Status
+  status        String   @default("active") // active, revoked, expired
+  expiresAt     DateTime?
+  revokedAt     DateTime?
+  revokedReason String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([keyPrefix])
+  @@index([status])
+  @@map("api_keys")
+}
+
+model RateLimitRule {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Rule definition
+  name          String
+  description   String?
+  ruleType      String   // global, tenant, user, endpoint, ip
+  priority      Int      @default(0) // higher = more important
+
+  // Target
+  targetType    String   // all, tenant, user, api_key, ip
+  targetId      String?  // specific ID if not "all"
+  endpoint      String?  // specific endpoint pattern
+  method        String?  // GET, POST, etc.
+
+  // Limits
+  requestsPerSecond Int?
+  requestsPerMinute Int?
+  requestsPerHour   Int?
+  requestsPerDay    Int?
+  burstLimit        Int? // max requests in burst
+
+  // Response
+  responseCode  Int      @default(429) // HTTP status when limited
+  retryAfter    Int?     // suggested retry after seconds
+
+  // Status
+  isActive      Boolean  @default(true)
+  startsAt      DateTime?
+  endsAt        DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([ruleType])
+  @@index([isActive])
+  @@map("rate_limit_rules")
+}
+
+model CacheEntry {
+  id            String   @id @default(uuid())
+
+  // Cache key
+  cacheKey      String   @unique
+  namespace     String   // cache namespace/category
+
+  // Value
+  value         Json     // cached data
+  valueType     String   @default("json") // json, string, binary
+  sizeBytes     Int?     // size of cached value
+
+  // Metadata
+  hitCount      Int      @default(0)
+  lastHitAt     DateTime?
+
+  // TTL
+  ttlSeconds    Int      @default(3600)
+  expiresAt     DateTime
+
+  // Tags for invalidation
+  tags          Json?    // array of tags for group invalidation
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([namespace])
+  @@index([expiresAt])
+  @@map("cache_entries")
+}
+
+model APIDocumentation {
+  id            String   @id @default(uuid())
+
+  // Document info
+  title         String
+  description   String?
+  version       String
+  apiVersion    String   // v1, v2, etc.
+
+  // Content
+  openApiSpec   Json?    // OpenAPI/Swagger spec
+  endpoints     Json     // array of endpoint docs
+  schemas       Json?    // data schemas
+  examples      Json?    // request/response examples
+
+  // Categories
+  category      String?  // auth, jobs, candidates, etc.
+  tags          Json?    // array of tags
+
+  // Status
+  status        String   @default("published") // draft, published, deprecated
+  publishedAt   DateTime?
+  deprecatedAt  DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([apiVersion])
+  @@index([status])
+  @@map("api_documentation")
+}
+
+model Webhook {
+  id            String   @id @default(uuid())
+  tenantId      String
+
+  // Webhook config
+  name          String
+  description   String?
+  url           String
+  secret        String?  // for signature verification
+
+  // Events
+  events        Json     // array of event types to subscribe
+  eventFilters  Json?    // additional filters
+
+  // Settings
+  isActive      Boolean  @default(true)
+  version       String   @default("1.0") // webhook payload version
+  contentType   String   @default("application/json")
+
+  // Retry config
+  maxRetries    Int      @default(3)
+  retryDelayMs  Int      @default(1000)
+  timeoutMs     Int      @default(30000)
+
+  // Stats
+  totalDeliveries Int    @default(0)
+  successCount    Int    @default(0)
+  failureCount    Int    @default(0)
+  lastDeliveryAt  DateTime?
+  lastStatus      String? // success, failed
+
+  // Security
+  signingAlgorithm String @default("sha256") // hmac algorithm
+  ipWhitelist   Json?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id            String   @id @default(uuid())
+  webhookId     String
+
+  // Event
+  eventType     String
+  eventId       String   // unique event identifier
+  payload       Json     // sent payload
+
+  // Delivery
+  attempt       Int      @default(1)
+  status        String   // pending, success, failed
+
+  // Response
+  responseCode  Int?
+  responseBody  String?
+  responseTime  Int?     // ms
+
+  // Error
+  error         String?
+
+  // Timestamps
+  scheduledAt   DateTime
+  deliveredAt   DateTime?
+  nextRetryAt   DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([eventType])
+  @@map("webhook_deliveries")
+}
+
+// Batch 47: Testing & Quality (14.2)
+model TestSuite {
+  id            String   @id @default(uuid())
+
+  // Suite info
+  name          String
+  description   String?
+  suiteType     String   // unit, integration, e2e, performance, security
+
+  // Configuration
+  framework     String   // jest, mocha, cypress, playwright
+  configPath    String?
+  testPattern   String?  // file pattern for tests
+  setupScript   String?
+  teardownScript String?
+
+  // Execution
+  timeout       Int      @default(30000) // ms
+  retries       Int      @default(0)
+  parallel      Boolean  @default(true)
+
+  // Stats
+  totalTests    Int      @default(0)
+  passingTests  Int      @default(0)
+  failingTests  Int      @default(0)
+  skippedTests  Int      @default(0)
+
+  // Status
+  isActive      Boolean  @default(true)
+  lastRunAt     DateTime?
+  lastStatus    String?  // passed, failed, error
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([suiteType])
+  @@index([isActive])
+  @@map("test_suites")
+}
+
+model TestCase {
+  id            String   @id @default(uuid())
+  suiteId       String
+
+  // Test info
+  name          String
+  description   String?
+  testPath      String   // file path
+  testLine      Int?     // line number
+
+  // Classification
+  priority      String   @default("medium") // critical, high, medium, low
+  category      String?
+  tags          Json?
+
+  // Expected behavior
+  expectedResult String?
+  timeout       Int?     // ms override
+
+  // Stats
+  runCount      Int      @default(0)
+  passCount     Int      @default(0)
+  failCount     Int      @default(0)
+  avgDuration   Float?   // ms
+
+  // Status
+  isActive      Boolean  @default(true)
+  isFlaky       Boolean  @default(false)
+  lastRunAt     DateTime?
+  lastStatus    String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([suiteId])
+  @@index([isActive])
+  @@map("test_cases")
+}
+
+model TestRun {
+  id            String   @id @default(uuid())
+  suiteId       String?
+
+  // Run info
+  runType       String   // manual, scheduled, ci, pre-commit
+  branch        String?
+  commit        String?
+  triggeredBy   String?
+
+  // Environment
+  environment   String   @default("test") // test, staging, ci
+  nodeVersion   String?
+  osInfo        String?
+
+  // Results
+  status        String   @default("running") // pending, running, passed, failed, error, cancelled
+  totalTests    Int      @default(0)
+  passed        Int      @default(0)
+  failed        Int      @default(0)
+  skipped       Int      @default(0)
+  errors        Int      @default(0)
+
+  // Timing
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  duration      Int?     // ms
+
+  // Coverage
+  coveragePercent Float?
+  coverageReport Json?   // detailed coverage
+
+  // Artifacts
+  logs          Json?    // test logs
+  screenshots   Json?    // e2e screenshots
+  videos        Json?    // e2e video recordings
+  reportUrl     String?
+
+  // Failures
+  failureDetails Json?   // array of failure info
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([suiteId])
+  @@index([status])
+  @@index([runType])
+  @@index([startedAt])
+  @@map("test_runs")
+}
+
+model CodeQualityReport {
+  id            String   @id @default(uuid())
+
+  // Report info
+  reportType    String   // linting, security, complexity, dependencies
+  tool          String   // eslint, sonarqube, snyk, etc.
+  version       String?
+
+  // Target
+  branch        String?
+  commit        String?
+  targetPath    String?
+
+  // Scores
+  overallScore  Float?   // 0-100
+  grade         String?  // A, B, C, D, F
+
+  // Issues
+  totalIssues   Int      @default(0)
+  criticalIssues Int     @default(0)
+  majorIssues   Int      @default(0)
+  minorIssues   Int      @default(0)
+  infoIssues    Int      @default(0)
+
+  // Details
+  issues        Json?    // array of issue details
+  metrics       Json?    // code metrics
+  duplications  Json?    // code duplications
+
+  // Comparisons
+  previousScore Float?
+  scoreDelta    Float?
+  newIssues     Int?
+  fixedIssues   Int?
+
+  // Status
+  status        String   @default("completed") // running, completed, failed
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([reportType])
+  @@index([branch])
+  @@index([createdAt])
+  @@map("code_quality_reports")
+}
+
+model CIPipeline {
+  id            String   @id @default(uuid())
+
+  // Pipeline info
+  name          String
+  description   String?
+  provider      String   // github, gitlab, jenkins, circleci
+
+  // Configuration
+  configPath    String?  // .github/workflows, .gitlab-ci.yml
+  configContent Json?    // parsed config
+
+  // Triggers
+  triggers      Json     // push, pr, schedule, manual
+  branches      Json?    // branch patterns
+
+  // Stages
+  stages        Json     // array of stage definitions
+
+  // Settings
+  timeout       Int      @default(3600) // seconds
+  concurrency   Int      @default(1)
+  isActive      Boolean  @default(true)
+
+  // Stats
+  totalRuns     Int      @default(0)
+  successRuns   Int      @default(0)
+  failedRuns    Int      @default(0)
+  avgDuration   Float?   // seconds
+
+  // Status
+  lastRunId     String?
+  lastRunAt     DateTime?
+  lastStatus    String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([provider])
+  @@index([isActive])
+  @@map("ci_pipelines")
+}
+
+// Batch 48: Monitoring & Logging (14.3)
+model SystemMetric {
+  id            String   @id @default(uuid())
+
+  // Metric info
+  metricName    String
+  metricType    String   // counter, gauge, histogram, summary
+  category      String   // system, application, business
+
+  // Value
+  value         Float
+  unit          String?  // ms, bytes, percent, count
+
+  // Dimensions
+  service       String?
+  host          String?
+  instance      String?
+  tags          Json?
+
+  // Timestamp
+  timestamp     DateTime @default(now())
+
+  // Aggregation info
+  aggregation   String?  // sum, avg, min, max, p50, p95, p99
+  period        Int?     // seconds
+
+  @@index([metricName])
+  @@index([category])
+  @@index([timestamp])
+  @@map("system_metrics")
+}
+
+model ErrorLog {
+  id            String   @id @default(uuid())
+
+  // Error info
+  errorType     String   // exception, validation, timeout, network
+  errorCode     String?
+  message       String
+  stackTrace    String?
+
+  // Context
+  service       String?
+  endpoint      String?
+  method        String?
+  userId        String?
+  tenantId      String?
+  requestId     String?
+
+  // Request info
+  requestBody   Json?
+  requestHeaders Json?
+  queryParams   Json?
+
+  // Environment
+  environment   String   // development, staging, production
+  version       String?
+  host          String?
+
+  // Severity
+  severity      String   @default("error") // debug, info, warning, error, critical
+
+  // Grouping
+  fingerprint   String?  // error grouping hash
+  occurrences   Int      @default(1)
+  firstSeenAt   DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+
+  // Status
+  status        String   @default("open") // open, acknowledged, resolved, ignored
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  resolution    String?
+
+  // Additional
+  browserInfo   Json?
+  deviceInfo    Json?
+  metadata      Json?
+
+  timestamp     DateTime @default(now())
+
+  @@index([errorType])
+  @@index([severity])
+  @@index([status])
+  @@index([fingerprint])
+  @@index([timestamp])
+  @@map("error_logs")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  tenantId      String?
+  userId        String?
+
+  // Action
+  action        String   // create, read, update, delete, login, etc.
+  actionType    String   // user, system, api, scheduled
+
+  // Resource
+  resourceType  String
+  resourceId    String?
+  resourceName  String?
+
+  // Changes
+  previousValue Json?
+  newValue      Json?
+  changes       Json?    // detailed field changes
+
+  // Context
+  ipAddress     String?
+  userAgent     String?
+  sessionId     String?
+  requestId     String?
+
+  // Outcome
+  status        String   @default("success") // success, failure, blocked
+  errorMessage  String?
+
+  // Compliance
+  dataCategory  String?  // pii, financial, healthcare
+  retentionDays Int?
+
+  metadata      Json?
+  timestamp     DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model PerformanceTrace {
+  id            String   @id @default(uuid())
+  traceId       String   // distributed trace ID
+  spanId        String?  // span within trace
+  parentSpanId  String?
+
+  // Operation
+  operationName String
+  operationType String   // http, database, cache, queue, external
+
+  // Timing
+  startTime     DateTime
+  endTime       DateTime?
+  duration      Int?     // ms
+
+  // Context
+  service       String
+  endpoint      String?
+  method        String?
+
+  // Status
+  status        String   @default("success") // success, error, timeout
+  statusCode    Int?
+  errorMessage  String?
+
+  // Metrics
+  requestSize   Int?     // bytes
+  responseSize  Int?     // bytes
+
+  // Tags
+  tags          Json?
+
+  // Nested spans
+  childCount    Int      @default(0)
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([traceId])
+  @@index([service])
+  @@index([operationType])
+  @@index([startTime])
+  @@map("performance_traces")
+}
+
+model AlertRule {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Rule info
+  name          String
+  description   String?
+  severity      String   @default("warning") // info, warning, critical
+
+  // Condition
+  metricName    String
+  condition     String   // gt, lt, eq, gte, lte
+  threshold     Float
+  duration      Int?     // seconds for condition to persist
+
+  // Aggregation
+  aggregation   String?  // avg, sum, max, min, count
+  groupBy       Json?    // dimensions to group by
+
+  // Notification
+  channels      Json     // array of notification channels
+  notifyOnResolve Boolean @default(true)
+  cooldownMinutes Int    @default(5)
+
+  // Schedule
+  isActive      Boolean  @default(true)
+  schedule      String?  // cron for check frequency
+
+  // Stats
+  lastTriggeredAt DateTime?
+  triggerCount  Int      @default(0)
+  lastStatus    String?  // ok, alerting
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([severity])
+  @@map("alert_rules")
+}
+
+model AlertIncident {
+  id            String   @id @default(uuid())
+  ruleId        String
+
+  // Incident info
+  title         String
+  description   String?
+  severity      String
+
+  // Status
+  status        String   @default("firing") // firing, acknowledged, resolved
+
+  // Timeline
+  startedAt     DateTime @default(now())
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  resolvedAt    DateTime?
+  resolvedBy    String?
+
+  // Value
+  triggerValue  Float?
+  threshold     Float
+
+  // Notifications
+  notificationsSent Int   @default(0)
+  lastNotifiedAt DateTime?
+
+  // Notes
+  notes         Json?    // array of notes/updates
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ruleId])
+  @@index([status])
+  @@index([severity])
+  @@index([startedAt])
+  @@map("alert_incidents")
+}
+
+// Batch 49: DevOps & Deployment (14.4)
+model Deployment {
+  id            String   @id @default(uuid())
+
+  // Deployment info
+  name          String?
+  version       String
+  environment   String   // development, staging, production
+
+  // Source
+  branch        String?
+  commit        String?
+  commitMessage String?
+  tag           String?
+
+  // Trigger
+  triggeredBy   String?  // user ID or "system"
+  triggerType   String   // manual, auto, rollback, scheduled
+
+  // Status
+  status        String   @default("pending") // pending, in_progress, success, failed, cancelled, rolled_back
+
+  // Timing
+  startedAt     DateTime?
+  completedAt   DateTime?
+  duration      Int?     // seconds
+
+  // Steps
+  steps         Json?    // array of deployment steps
+  currentStep   Int?
+
+  // Artifacts
+  artifactUrl   String?
+  artifactSize  Int?     // bytes
+  dockerImage   String?
+
+  // Health
+  healthCheckUrl String?
+  healthStatus  String?
+
+  // Rollback
+  previousDeploymentId String?
+  canRollback   Boolean  @default(true)
+
+  // Notes
+  notes         String?
+  changelog     Json?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([environment])
+  @@index([status])
+  @@index([version])
+  @@index([createdAt])
+  @@map("deployments")
+}
+
+model Environment {
+  id            String   @id @default(uuid())
+
+  // Environment info
+  name          String   @unique
+  displayName   String
+  description   String?
+  type          String   // development, staging, production, preview
+
+  // Infrastructure
+  provider      String?  // aws, gcp, azure, vercel
+  region        String?
+  cluster       String?
+  namespace     String?
+
+  // URLs
+  url           String?
+  apiUrl        String?
+
+  // Configuration
+  variables     Json?    // environment variables (encrypted)
+  secrets       Json?    // secret references
+
+  // Protection
+  isProtected   Boolean  @default(false)
+  requiresApproval Boolean @default(false)
+  approvers     Json?    // user IDs who can approve
+
+  // Limits
+  maxInstances  Int?
+  autoScale     Boolean  @default(false)
+  scaleConfig   Json?
+
+  // Status
+  status        String   @default("active") // active, maintenance, inactive
+  lastDeploymentId String?
+  lastDeployedAt DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@map("environments")
+}
+
+model FeatureFlag {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Flag info
+  key           String   @unique
+  name          String
+  description   String?
+
+  // Value
+  flagType      String   @default("boolean") // boolean, string, number, json
+  defaultValue  Json
+
+  // Targeting
+  isEnabled     Boolean  @default(false)
+  targetingRules Json?   // array of targeting rules
+
+  // Rollout
+  rolloutPercentage Int  @default(100) // 0-100
+  rolloutStrategy String @default("random") // random, user_id, gradual
+
+  // Segments
+  enabledSegments Json?  // user segments with flag enabled
+  disabledSegments Json? // user segments with flag disabled
+
+  // Schedule
+  startsAt      DateTime?
+  endsAt        DateTime?
+
+  // Stats
+  evaluations   Int      @default(0)
+  uniqueUsers   Int      @default(0)
+  lastEvaluatedAt DateTime?
+
+  // Status
+  status        String   @default("active") // active, archived
+  archivedAt    DateTime?
+
+  // History
+  lastModifiedBy String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([key])
+  @@index([status])
+  @@map("feature_flags")
+}
+
+model ServiceHealth {
+  id            String   @id @default(uuid())
+
+  // Service info
+  serviceName   String
+  serviceType   String   // api, database, cache, queue, external
+  environment   String
+
+  // Health check
+  healthUrl     String?
+  checkInterval Int      @default(60) // seconds
+  timeout       Int      @default(10) // seconds
+
+  // Current status
+  status        String   @default("unknown") // healthy, degraded, unhealthy, unknown
+  lastCheckAt   DateTime?
+  lastHealthy   DateTime?
+
+  // Metrics
+  responseTime  Int?     // ms
+  uptime        Float?   // percentage
+
+  // Dependencies
+  dependencies  Json?    // array of dependent services
+
+  // Incidents
+  activeIncidents Int    @default(0)
+  totalIncidents  Int    @default(0)
+
+  // SLA
+  slaTarget     Float?   // uptime percentage target
+  slaActual     Float?   // actual uptime
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([serviceName])
+  @@index([status])
+  @@index([environment])
+  @@map("service_health")
+}
+
+model BackupRecord {
+  id            String   @id @default(uuid())
+
+  // Backup info
+  name          String?
+  backupType    String   // full, incremental, differential
+  source        String   // database, files, config
+
+  // Target
+  destination   String   // s3, gcs, azure-blob
+  path          String
+
+  // Size
+  sizeBytes     BigInt?
+  compressedSize BigInt?
+
+  // Timing
+  startedAt     DateTime
+  completedAt   DateTime?
+  duration      Int?     // seconds
+
+  // Status
+  status        String   @default("in_progress") // pending, in_progress, completed, failed
+  errorMessage  String?
+
+  // Verification
+  verified      Boolean  @default(false)
+  verifiedAt    DateTime?
+  checksum      String?
+
+  // Retention
+  retentionDays Int      @default(30)
+  expiresAt     DateTime
+  isArchived    Boolean  @default(false)
+
+  // Encryption
+  isEncrypted   Boolean  @default(true)
+  encryptionKey String?  // reference to key, not actual key
+
+  // Schedule
+  scheduleId    String?
+  isScheduled   Boolean  @default(false)
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([backupType])
+  @@index([source])
+  @@index([status])
+  @@index([createdAt])
+  @@map("backup_records")
+}

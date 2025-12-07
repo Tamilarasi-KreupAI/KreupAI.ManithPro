@@ -41,6 +41,21 @@ import batch22PredictiveAnalyticsRoutes from './routes/batch22PredictiveAnalytic
 import batch23SmartRecommendationsRoutes from './routes/batch23SmartRecommendations.routes';
 import batch24HiringTeamManagementRoutes from './routes/batch24HiringTeamManagement.routes';
 import batch25CollaborativeEvaluationRoutes from './routes/batch25CollaborativeEvaluation.routes';
+import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunication.routes';
+import batch27AuthenticationAccessRoutes from './routes/batch27AuthenticationAccess.routes';
+import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes';
+import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
+import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
+import batch31ExecutiveDashboardsRoutes from './routes/batch31ExecutiveDashboards.routes';
+import batch32MarketIntelligenceRoutes from './routes/batch32MarketIntelligence.routes';
+import batch33HRIntegrationsRoutes from './routes/batch33HRIntegrations.routes';
+import batch34CommunicationIntegrationsRoutes from './routes/batch34CommunicationIntegrations.routes';
+import batch35JobBoardIntegrationsRoutes from './routes/batch35JobBoardIntegrations.routes';
+import batch36DeveloperToolsRoutes from './routes/batch36DeveloperTools.routes';
+import batch37_39WorkflowAutomationRoutes from './routes/batch37_39WorkflowAutomation.routes';
+import batch40_42MobileAccessibilityRoutes from './routes/batch40_42MobileAccessibility.routes';
+import batch43_45EnterpriseAdminRoutes from './routes/batch43_45EnterpriseAdmin.routes';
+import batch46_49TechnicalInfraRoutes from './routes/batch46_49TechnicalInfra.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -108,6 +123,21 @@ app.get('/', (req, res) => {
       batch23SmartRecommendations: '/api/recommendations',
       batch24HiringTeamManagement: '/api/hiring-teams',
       batch25CollaborativeEvaluation: '/api/evaluation',
+      batch26RealtimeCommunication: '/api/realtime',
+      batch27AuthenticationAccess: '/api/security',
+      batch28DataProtection: '/api/data-protection',
+      batch29Compliance: '/api/compliance',
+      batch30RecruitmentAnalytics: '/api/recruitment-analytics',
+      batch31ExecutiveDashboards: '/api/executive',
+      batch32MarketIntelligence: '/api/market-intelligence',
+      batch33HRIntegrations: '/api/hr-integrations',
+      batch34CommunicationIntegrations: '/api/communication-integrations',
+      batch35JobBoardIntegrations: '/api/job-boards',
+      batch36DeveloperTools: '/api/developer',
+      batch37_39WorkflowAutomation: '/api/workflow-automation',
+      batch40_42MobileAccessibility: '/api/mobile',
+      batch43_45EnterpriseAdmin: '/api/admin-enterprise',
+      batch46_49TechnicalInfra: '/api/infrastructure',
     },
   });
 });
@@ -150,6 +180,21 @@ app.use('/api/predictions', batch22PredictiveAnalyticsRoutes);
 app.use('/api/recommendations', batch23SmartRecommendationsRoutes);
 app.use('/api/hiring-teams', batch24HiringTeamManagementRoutes);
 app.use('/api/evaluation', batch25CollaborativeEvaluationRoutes);
+app.use('/api/realtime', batch26RealtimeCommunicationRoutes);
+app.use('/api/security', batch27AuthenticationAccessRoutes);
+app.use('/api/data-protection', batch28DataProtectionRoutes);
+app.use('/api/compliance', batch29ComplianceRoutes);
+app.use('/api/recruitment-analytics', batch30RecruitmentAnalyticsRoutes);
+app.use('/api/executive', batch31ExecutiveDashboardsRoutes);
+app.use('/api/market-intelligence', batch32MarketIntelligenceRoutes);
+app.use('/api/hr-integrations', batch33HRIntegrationsRoutes);
+app.use('/api/communication-integrations', batch34CommunicationIntegrationsRoutes);
+app.use('/api/job-boards', batch35JobBoardIntegrationsRoutes);
+app.use('/api/developer', batch36DeveloperToolsRoutes);
+app.use('/api/workflow-automation', batch37_39WorkflowAutomationRoutes);
+app.use('/api/mobile', batch40_42MobileAccessibilityRoutes);
+app.use('/api/admin-enterprise', batch43_45EnterpriseAdminRoutes);
+app.use('/api/infrastructure', batch46_49TechnicalInfraRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -11886,3 +11886,5429 @@ export interface CollaborativeEvaluationStats {
   hiringBenchmarks: number;
   avgFeedbackTimeMinutes: number;
 }
+
+// ============================================================================
+// BATCH 26: REAL-TIME COMMUNICATION (7.1-7.2)
+// ============================================================================
+
+// 7.1.1-7.1.2 User Presence
+export type PresenceStatus = 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE';
+export type DeviceType = 'DESKTOP' | 'MOBILE' | 'TABLET';
+
+export interface UserPresence {
+  id: string;
+  userId: string;
+  status: PresenceStatus;
+  customStatus?: string;
+  lastSeen: string;
+  currentPage?: string;
+  currentActivity?: string;
+  deviceType?: DeviceType;
+  browserInfo?: string;
+  platform?: string;
+  autoAway: boolean;
+  autoAwayMinutes: number;
+  showPresence: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PresencePreferences {
+  autoAway: boolean;
+  autoAwayMinutes: number;
+  showPresence: boolean;
+}
+
+// 7.1.1 WebSocket Connections
+export interface RealtimeConnection {
+  id: string;
+  userId: string;
+  socketId: string;
+  connectedAt: string;
+  lastPing: string;
+  clientVersion?: string;
+  deviceId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  subscribedChannels?: string[];
+  isActive: boolean;
+  disconnectedAt?: string;
+  disconnectReason?: string;
+}
+
+// 7.1.3 Real-Time Notifications
+export type NotificationType = 'MESSAGE' | 'APPLICATION' | 'INTERVIEW' | 'SYSTEM' | 'MENTION' | 'REMINDER';
+export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export interface NotificationAction {
+  id: string;
+  label: string;
+  action: string;
+  url?: string;
+}
+
+export interface RealtimeNotification {
+  id: string;
+  companyId?: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  icon?: string;
+  imageUrl?: string;
+  entityType?: string;
+  entityId?: string;
+  actionUrl?: string;
+  priority: NotificationPriority;
+  sound: boolean;
+  vibrate: boolean;
+  persistent: boolean;
+  isDelivered: boolean;
+  deliveredAt?: string;
+  isRead: boolean;
+  readAt?: string;
+  isDismissed: boolean;
+  dismissedAt?: string;
+  actions?: NotificationAction[];
+  expiresAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 7.2.1-7.2.2 Conversations
+export type ConversationType = 'DIRECT' | 'GROUP' | 'CHANNEL';
+export type ParticipantRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+
+export interface Conversation {
+  id: string;
+  companyId?: string;
+  type: ConversationType;
+  name?: string;
+  description?: string;
+  avatarUrl?: string;
+  contextType?: string;
+  contextId?: string;
+  isArchived: boolean;
+  isMuted: boolean;
+  allowReactions: boolean;
+  allowAttachments: boolean;
+  isPublic: boolean;
+  maxParticipants?: number;
+  lastMessageId?: string;
+  lastMessageAt?: string;
+  messageCount: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  participants?: ConversationParticipant[];
+  messages?: Message[];
+}
+
+export interface ConversationParticipant {
+  id: string;
+  conversationId: string;
+  userId: string;
+  userName?: string;
+  role: ParticipantRole;
+  isActive: boolean;
+  isMuted: boolean;
+  isPinned: boolean;
+  lastReadMessageId?: string;
+  lastReadAt?: string;
+  unreadCount: number;
+  notifyOnMessage: boolean;
+  notifyOnMention: boolean;
+  joinedAt: string;
+  leftAt?: string;
+  removedBy?: string;
+}
+
+// 7.2.1 Messages
+export type MessageType = 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'SYSTEM';
+export type MessageStatus = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+
+export interface Mention {
+  userId: string;
+  userName?: string;
+  startIndex: number;
+  length: number;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName?: string;
+  type: MessageType;
+  content?: string;
+  richContent?: Record<string, unknown>;
+  replyToId?: string;
+  replyTo?: Message;
+  threadCount: number;
+  mentions?: Mention[];
+  status: MessageStatus;
+  editedAt?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  deliveredTo?: Record<string, string>;
+  readBy?: Record<string, string>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt?: string;
+  attachments?: MessageAttachment[];
+  reactions?: MessageReaction[];
+}
+
+// Message Reactions
+export interface MessageReaction {
+  id: string;
+  messageId: string;
+  userId: string;
+  userName?: string;
+  emoji: string;
+  createdAt: string;
+}
+
+// 7.2.6 Message Attachments
+export type AttachmentType = 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'VIDEO' | 'OTHER';
+
+export interface MessageAttachment {
+  id: string;
+  messageId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+  thumbnailUrl?: string;
+  attachmentType: AttachmentType;
+  isProcessed: boolean;
+  processingError?: string;
+  dimensions?: { width: number; height: number };
+  duration?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 7.2.3 Message Templates
+export type TemplateCategory = 'GREETING' | 'FOLLOWUP' | 'REJECTION' | 'OFFER' | 'CUSTOM';
+
+export interface TemplateVariable {
+  name: string;
+  placeholder: string;
+  defaultValue?: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  companyId?: string;
+  userId?: string;
+  name: string;
+  shortcut?: string;
+  category: TemplateCategory;
+  content: string;
+  richContent?: Record<string, unknown>;
+  variables?: TemplateVariable[];
+  usageCount: number;
+  lastUsedAt?: string;
+  isShared: boolean;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 7.2.4 Scheduled Messages
+export type ScheduledMessageStatus = 'PENDING' | 'SENT' | 'CANCELLED' | 'FAILED';
+
+export interface RecurrenceRule {
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  interval: number;
+  endDate?: string;
+  daysOfWeek?: number[];
+}
+
+export interface ScheduledMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  type: MessageType;
+  content: string;
+  richContent?: Record<string, unknown>;
+  attachmentIds?: string[];
+  scheduledFor: string;
+  timezone: string;
+  status: ScheduledMessageStatus;
+  sentAt?: string;
+  sentMessageId?: string;
+  failureReason?: string;
+  isRecurring: boolean;
+  recurrenceRule?: RecurrenceRule;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// 7.1.5 Typing Indicators
+export interface TypingIndicator {
+  id: string;
+  conversationId: string;
+  userId: string;
+  userName?: string;
+  isTyping: boolean;
+  startedAt: string;
+  expiresAt: string;
+}
+
+// 7.2.8 Email Fallback
+export interface EmailFallbackConfig {
+  id: string;
+  userId: string;
+  enabled: boolean;
+  offlineMinutes: number;
+  digestMode: boolean;
+  digestIntervalHours: number;
+  includeContent: boolean;
+  includeSender: boolean;
+  maxEmailsPerDay: number;
+  lastDigestSent?: string;
+  emailsSentToday: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Communication Stats
+export interface CommunicationStats {
+  totalConversations: number;
+  unreadMessages: number;
+  totalMessagesSent: number;
+  pendingScheduled: number;
+  availableTemplates: number;
+}
+
+// Conversation with last message preview
+export interface ConversationPreview extends Conversation {
+  lastMessage?: Message;
+  otherParticipants?: ConversationParticipant[];
+}
+
+// Search results
+export interface MessageSearchResult extends Message {
+  conversation?: Conversation;
+  highlightedContent?: string;
+}
+
+// ============================================================================
+// BATCH 27: AUTHENTICATION & ACCESS (8.1.1-8.1.11)
+// ============================================================================
+
+// 8.1.1 Two-Factor Authentication
+export type TwoFactorMethod = 'TOTP' | 'SMS' | 'EMAIL' | 'BACKUP_CODES';
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  method: TwoFactorMethod | null;
+  verifiedAt?: string;
+  methods: {
+    totp: boolean;
+    sms: boolean;
+    email: boolean;
+  };
+  backupCodes: {
+    used: number;
+    generatedAt?: string;
+  };
+  recovery: {
+    email: string | null;
+    phone: string | null;
+  };
+}
+
+export interface TwoFactorSetupResponse {
+  message: string;
+  method: TwoFactorMethod;
+  qrCode?: string;
+  requiresVerification: boolean;
+}
+
+export interface BackupCodesResponse {
+  message: string;
+  codes: string[];
+  warning: string;
+}
+
+// 8.1.2, 8.1.3 SSO Integration
+export type SSOProviderType = 'SAML' | 'OAUTH2' | 'OIDC';
+export type SSOProviderName = 'google' | 'microsoft' | 'okta' | 'custom';
+
+export interface SSOProvider {
+  id: string;
+  organizationId?: string;
+  name: string;
+  type: SSOProviderType;
+  provider?: SSOProviderName;
+  isEnabled: boolean;
+  isDefault: boolean;
+
+  // SAML config
+  samlEntityId?: string;
+  samlSsoUrl?: string;
+  samlCertificate?: string;
+  samlLogoutUrl?: string;
+  samlNameIdFormat?: string;
+
+  // OAuth2/OIDC config
+  clientId?: string;
+  clientSecret?: string;
+  authorizationUrl?: string;
+  tokenUrl?: string;
+  userInfoUrl?: string;
+  scopes?: string[];
+  callbackUrl?: string;
+
+  // Provider-specific
+  tenantId?: string;
+  oktaDomain?: string;
+
+  // Settings
+  attributeMapping?: Record<string, string>;
+  allowedDomains?: string[];
+  autoCreateUsers?: boolean;
+  defaultRole?: string;
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SSOSession {
+  id: string;
+  userId: string;
+  providerId: string;
+  ssoSessionId?: string;
+  isActive: boolean;
+  lastUsedAt: string;
+  createdAt: string;
+}
+
+export interface SSOLoginResponse {
+  redirectUrl: string;
+  provider: string;
+  type: SSOProviderType;
+}
+
+// 8.1.4 Password Policies
+export interface PasswordPolicy {
+  id?: string;
+  organizationId?: string;
+
+  // Complexity
+  minLength: number;
+  maxLength: number;
+  requireUppercase: boolean;
+  requireLowercase: boolean;
+  requireNumbers: boolean;
+  requireSpecialChars: boolean;
+  specialCharsAllowed?: string;
+
+  // History & Rotation
+  passwordHistoryCount: number;
+  maxPasswordAgeDays: number;
+  minPasswordAgeDays: number;
+  warnBeforeExpireDays: number;
+
+  // Lockout
+  maxFailedAttempts: number;
+  lockoutDurationMins: number;
+  resetCounterAfterMins: number;
+
+  // Additional
+  preventCommonPasswords: boolean;
+  preventUserInfoInPwd: boolean;
+
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type PasswordStrength = 'weak' | 'fair' | 'strong' | 'very_strong';
+
+export interface PasswordValidationResult {
+  isValid: boolean;
+  errors: string[];
+  strength: PasswordStrength;
+}
+
+// 8.1.5 Session Management
+export interface UserSession {
+  id: string;
+  userId: string;
+  sessionToken: string;
+
+  // Device info
+  deviceId?: string;
+  deviceType?: string;
+  deviceName?: string;
+  browser?: string;
+  browserVersion?: string;
+  operatingSystem?: string;
+  osVersion?: string;
+
+  // Location
+  ipAddress?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Status
+  isActive: boolean;
+  isCurrent?: boolean;
+  lastActivityAt: string;
+  expiresAt: string;
+  terminatedAt?: string;
+  terminatedReason?: string;
+
+  // Security
+  isTrusted: boolean;
+  riskScore: number;
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SessionSettings {
+  id?: string;
+  userId?: string;
+  organizationId?: string;
+
+  sessionTimeoutMins: number;
+  idleTimeoutMins: number;
+  absoluteTimeoutHours: number;
+
+  maxConcurrentSessions: number;
+  singleSessionOnly: boolean;
+  terminateOldest: boolean;
+
+  allowRememberMe: boolean;
+  rememberMeDays: number;
+
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 8.1.6 IP Whitelisting
+export type IPEnforcementMode = 'BLOCK' | 'WARN' | 'LOG';
+
+export interface IPWhitelist {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  ipAddress?: string;
+  ipRangeStart?: string;
+  ipRangeEnd?: string;
+  cidrBlock?: string;
+
+  appliesToAll: boolean;
+  appliesToRoles?: string[];
+  appliesToUsers?: string[];
+
+  isEnabled: boolean;
+  enforcementMode: IPEnforcementMode;
+
+  activeStartTime?: string;
+  activeEndTime?: string;
+  activeDays?: string[];
+
+  createdBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface IPAccessCheckResult {
+  allowed: boolean;
+  matchedRule?: string;
+  reason?: string;
+  enforcementMode?: IPEnforcementMode;
+}
+
+// 8.1.7 Trusted Devices
+export type DeviceTrustLevel = 'STANDARD' | 'HIGH' | 'ALWAYS';
+
+export interface TrustedDevice {
+  id: string;
+  userId: string;
+
+  deviceFingerprint: string;
+  deviceId?: string;
+
+  deviceName?: string;
+  deviceType: string;
+  browser?: string;
+  browserVersion?: string;
+  operatingSystem?: string;
+  osVersion?: string;
+
+  isTrusted: boolean;
+  trustLevel: DeviceTrustLevel;
+  verificationMethod?: string;
+
+  lastUsedAt: string;
+  lastIpAddress?: string;
+  lastLocation?: string;
+
+  expiresAt?: string;
+  autoRenew: boolean;
+
+  createdAt: string;
+  updatedAt?: string;
+  revokedAt?: string;
+  revokedReason?: string;
+}
+
+// 8.1.8 Login Anomaly Detection
+export type AnomalyType = 'new_location' | 'new_device' | 'impossible_travel' | 'brute_force_suspected';
+export type AnomalyAction = 'BLOCK' | 'CHALLENGE' | 'WARN' | 'LOG';
+
+export interface LoginAttempt {
+  id: string;
+  userId?: string;
+  email: string;
+  success: boolean;
+  failureReason?: string;
+
+  ipAddress: string;
+  userAgent?: string;
+  deviceFingerprint?: string;
+
+  country?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+
+  riskScore: number;
+  riskFactors?: string[];
+  isAnomaly: boolean;
+  anomalyType?: AnomalyType;
+  actionTaken?: string;
+
+  createdAt: string;
+}
+
+export interface LoginAnomalyConfig {
+  id?: string;
+  organizationId?: string;
+
+  enableAnomalyDetection: boolean;
+  enableImpossibleTravel: boolean;
+  enableNewLocationAlert: boolean;
+  enableNewDeviceAlert: boolean;
+  enableBruteForceDetect: boolean;
+
+  maxTravelSpeedKmh: number;
+  suspiciousCountryList?: string[];
+  blockedCountryList?: string[];
+
+  anomalyAction: AnomalyAction;
+  alertAdmins: boolean;
+  alertUser: boolean;
+
+  modelSensitivity: 'LOW' | 'MEDIUM' | 'HIGH';
+  learningPeriodDays: number;
+
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LoginAttemptResult {
+  id: string;
+  riskScore: number;
+  isAnomaly: boolean;
+  anomalyType?: AnomalyType;
+  actionRequired?: string;
+}
+
+// 8.1.9 API Key Management
+export interface APIKey {
+  id: string;
+  userId: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  keyPrefix: string;
+  lastFourChars: string;
+
+  scopes?: string[];
+  allowedEndpoints?: string[];
+  allowedIPs?: string[];
+
+  rateLimit: number;
+  rateLimitWindow: number;
+
+  isActive: boolean;
+  expiresAt?: string;
+
+  lastUsedAt?: string;
+  lastUsedIP?: string;
+  totalRequests: number;
+
+  createdAt: string;
+  updatedAt?: string;
+  revokedAt?: string;
+  revokedBy?: string;
+  revokedReason?: string;
+}
+
+export interface APIKeyCreateResponse {
+  id: string;
+  name: string;
+  key: string;
+  keyPrefix: string;
+  lastFourChars: string;
+  scopes?: string[];
+  expiresAt?: string;
+  warning: string;
+}
+
+export interface APIKeyUsageLog {
+  id: string;
+  apiKeyId: string;
+  endpoint: string;
+  method: string;
+  statusCode: number;
+  responseTimeMs: number;
+  ipAddress: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export interface APIKeyUsageStats {
+  endpoint: string;
+  _count: number;
+  _avg: { responseTimeMs: number };
+}
+
+// 8.1.10 Role-Based Access Control (RBAC)
+export interface RBACRole {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  displayName: string;
+  description?: string;
+
+  level: number;
+  parentRoleId?: string;
+
+  isSystem: boolean;
+  isActive: boolean;
+
+  permissions?: RolePermission[];
+  _count?: { userRoles: number };
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  category: string;
+  resource: string;
+  action: string;
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type GrantType = 'ALLOW' | 'DENY';
+
+export interface RolePermission {
+  id: string;
+  roleId: string;
+  permissionId: string;
+  grantType: GrantType;
+  conditions?: Record<string, any>;
+  permission?: Permission;
+  createdAt: string;
+}
+
+export interface UserRoleAssignment {
+  id: string;
+  userId: string;
+  roleId: string;
+  organizationId?: string;
+  departmentId?: string;
+  startsAt: string;
+  expiresAt?: string;
+  assignedBy?: string;
+  role?: RBACRole;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UserPermissionOverride {
+  id: string;
+  userId: string;
+  permissionId: string;
+  grantType: GrantType;
+  organizationId?: string;
+  resourceId?: string;
+  expiresAt?: string;
+  reason?: string;
+  grantedBy?: string;
+  permission?: Permission;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PermissionCheckResult {
+  allowed: boolean;
+  source: 'user_override' | 'role' | null;
+}
+
+// 8.1.11 Attribute-Based Access Control (ABAC)
+export type ABACEffect = 'ALLOW' | 'DENY';
+export type ABACConditionOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains' | 'between';
+
+export interface ABACCondition {
+  attribute: string;
+  operator: ABACConditionOperator;
+  value: any;
+}
+
+export interface ABACConditionGroup {
+  all?: (ABACCondition | ABACConditionGroup)[];
+  any?: (ABACCondition | ABACConditionGroup)[];
+  none?: (ABACCondition | ABACConditionGroup)[];
+}
+
+export interface ABACPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  priority: number;
+
+  targetResource: string;
+  targetAction?: string;
+
+  conditions: ABACConditionGroup | ABACCondition;
+  effect: ABACEffect;
+
+  isEnabled: boolean;
+
+  createdBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type ABACAttributeCategory = 'user' | 'resource' | 'environment' | 'context';
+export type ABACAttributeDataType = 'string' | 'number' | 'boolean' | 'array' | 'date';
+
+export interface ABACAttribute {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+
+  category: ABACAttributeCategory;
+  dataType: ABACAttributeDataType;
+
+  source: string;
+  sourcePath?: string;
+
+  allowedValues?: any[];
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ABACEvaluationResult {
+  allowed: boolean;
+  matchedPolicy?: string;
+  effect?: ABACEffect;
+  reason?: string;
+}
+
+// Security Audit Log
+export type SecurityEventType =
+  | 'login'
+  | 'logout'
+  | 'password_change'
+  | '2fa_enable'
+  | '2fa_disable'
+  | 'api_key_create'
+  | 'api_key_revoke'
+  | 'role_assign'
+  | 'role_revoke'
+  | 'permission_change';
+
+export type SecurityEventCategory = 'authentication' | 'authorization' | 'configuration';
+export type SecurityRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface SecurityAuditLog {
+  id: string;
+  userId?: string;
+
+  eventType: SecurityEventType;
+  eventCategory: SecurityEventCategory;
+  eventAction: string;
+
+  description: string;
+  details?: Record<string, any>;
+
+  targetType?: string;
+  targetId?: string;
+
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+
+  riskLevel: SecurityRiskLevel;
+
+  createdAt: string;
+}
+
+// Security Stats
+export interface SecurityStats {
+  twoFactorAuth: {
+    enabledUsers: number;
+  };
+  sessions: {
+    active: number;
+  };
+  loginAttempts: {
+    last24h: number;
+    anomalies24h: number;
+  };
+  apiKeys: {
+    active: number;
+  };
+  rbac: {
+    roles: number;
+    permissions: number;
+  };
+  auditLogs: {
+    highRiskLast7d: number;
+  };
+}
+
+// ==========================================
+// Batch 28: Data Protection Types (8.2.1-8.2.8)
+// ==========================================
+
+// 8.2.1 Encryption Key Management
+export type EncryptionKeyType = 'AES_256_GCM' | 'AES_256_CBC' | 'RSA_4096' | 'RSA_2048' | 'ECDSA_P384';
+export type EncryptionKeyStatus = 'ACTIVE' | 'PENDING_ROTATION' | 'ROTATING' | 'RETIRED' | 'REVOKED';
+export type EncryptionKeyPurpose = 'DATA_ENCRYPTION' | 'KEY_WRAPPING' | 'SIGNING' | 'AUTHENTICATION' | 'BACKUP';
+export type KeyStorageType = 'SOFTWARE' | 'HSM' | 'CLOUD_KMS';
+
+export interface EncryptionKey {
+  id: string;
+  name: string;
+  description?: string;
+
+  keyType: EncryptionKeyType;
+  purpose: EncryptionKeyPurpose;
+  status: EncryptionKeyStatus;
+
+  storageType: KeyStorageType;
+  hsmKeyId?: string;
+  cloudKmsKeyId?: string;
+
+  keyFingerprint: string;
+  publicKeyPem?: string;
+
+  version: number;
+  previousVersionId?: string;
+
+  createdAt: string;
+  activatedAt?: string;
+  lastRotatedAt?: string;
+  expiresAt?: string;
+  retiredAt?: string;
+
+  rotationEnabled: boolean;
+  rotationIntervalDays?: number;
+
+  allowedOperations: string[];
+
+  metadata?: Record<string, any>;
+}
+
+export interface KeyRotationSchedule {
+  id: string;
+  keyId: string;
+
+  cronExpression: string;
+  rotationIntervalDays: number;
+
+  lastRotationAt?: string;
+  nextRotationAt: string;
+
+  autoRotateEnabled: boolean;
+  notifyBeforeDays: number;
+  notificationEmails: string[];
+
+  retainVersionCount: number;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KeyRotationEvent {
+  id: string;
+  keyId: string;
+
+  eventType: 'SCHEDULED' | 'MANUAL' | 'EMERGENCY' | 'AUTOMATED';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+
+  previousVersion: number;
+  newVersion: number;
+
+  initiatedBy?: string;
+  startedAt: string;
+  completedAt?: string;
+
+  errorMessage?: string;
+  details?: Record<string, any>;
+}
+
+// 8.2.2 TLS Configuration
+export type TLSVersion = 'TLS_1_2' | 'TLS_1_3';
+export type CertificateStatus = 'VALID' | 'EXPIRING_SOON' | 'EXPIRED' | 'REVOKED' | 'PENDING';
+
+export interface TLSConfig {
+  id: string;
+
+  minVersion: TLSVersion;
+  maxVersion: TLSVersion;
+
+  cipherSuites: string[];
+  preferServerCipherOrder: boolean;
+
+  hsts: {
+    enabled: boolean;
+    maxAge: number;
+    includeSubdomains: boolean;
+    preload: boolean;
+  };
+
+  certificateInfo: {
+    issuer: string;
+    subject: string;
+    serialNumber: string;
+    validFrom: string;
+    validTo: string;
+    status: CertificateStatus;
+    daysUntilExpiry: number;
+    fingerprint: string;
+    san: string[];
+  };
+
+  ocspStapling: boolean;
+  sessionTickets: boolean;
+  sessionTimeout: number;
+
+  clientCertificateAuth: {
+    enabled: boolean;
+    required: boolean;
+    trustedCAs: string[];
+  };
+
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+// 8.2.3 PII Detection & Masking
+export type PIIType =
+  | 'SSN'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'CREDIT_CARD'
+  | 'PASSPORT'
+  | 'DRIVERS_LICENSE'
+  | 'BANK_ACCOUNT'
+  | 'DATE_OF_BIRTH'
+  | 'ADDRESS'
+  | 'IP_ADDRESS'
+  | 'NAME'
+  | 'CUSTOM';
+
+export type MaskingStrategy =
+  | 'FULL_MASK'
+  | 'PARTIAL_MASK'
+  | 'HASH'
+  | 'TOKENIZE'
+  | 'REDACT'
+  | 'ENCRYPT';
+
+export interface PIIDetectionConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  piiTypes: PIIType[];
+  customPatterns?: {
+    name: string;
+    pattern: string;
+    description?: string;
+  }[];
+
+  scanLocations: {
+    databases: boolean;
+    files: boolean;
+    logs: boolean;
+    apiResponses: boolean;
+  };
+
+  maskingStrategy: MaskingStrategy;
+  maskingOptions: {
+    maskChar: string;
+    preserveLength: boolean;
+    preserveFormat: boolean;
+    showLastN?: number;
+    showFirstN?: number;
+  };
+
+  autoMask: boolean;
+  logDetections: boolean;
+  alertOnDetection: boolean;
+  alertThreshold?: number;
+
+  excludePatterns?: string[];
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PIIDetectionLog {
+  id: string;
+  configId: string;
+
+  piiType: PIIType;
+  detectedValue: string; // Masked
+
+  location: {
+    type: 'DATABASE' | 'FILE' | 'LOG' | 'API_RESPONSE';
+    path: string;
+    field?: string;
+    lineNumber?: number;
+  };
+
+  action: 'DETECTED' | 'MASKED' | 'ALERTED' | 'BLOCKED';
+
+  matchedPattern?: string;
+  confidence: number;
+
+  userId?: string;
+  requestId?: string;
+
+  createdAt: string;
+}
+
+export interface PIIScanResult {
+  scanId: string;
+  status: 'SCANNING' | 'COMPLETED' | 'FAILED';
+
+  scannedItems: number;
+  detections: {
+    piiType: PIIType;
+    count: number;
+    locations: string[];
+  }[];
+
+  totalDetections: number;
+  maskedCount: number;
+
+  startedAt: string;
+  completedAt?: string;
+
+  errors?: string[];
+}
+
+// 8.2.4 Data Anonymization
+export type AnonymizationMethod =
+  | 'GENERALIZATION'
+  | 'SUPPRESSION'
+  | 'PSEUDONYMIZATION'
+  | 'DATA_SWAPPING'
+  | 'NOISE_ADDITION'
+  | 'AGGREGATION'
+  | 'K_ANONYMITY'
+  | 'L_DIVERSITY'
+  | 'T_CLOSENESS';
+
+export interface AnonymizationRule {
+  id: string;
+  name: string;
+  description?: string;
+
+  targetField: string;
+  targetTable?: string;
+
+  method: AnonymizationMethod;
+
+  options: {
+    generalizationLevel?: number;
+    kValue?: number;
+    lValue?: number;
+    tValue?: number;
+    noiseLevel?: number;
+    aggregationType?: 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
+    replacementValue?: string;
+    preserveFormat?: boolean;
+    seedValue?: string;
+  };
+
+  conditions?: {
+    field: string;
+    operator: 'equals' | 'contains' | 'gt' | 'lt' | 'regex';
+    value: string;
+  }[];
+
+  priority: number;
+  isActive: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AnonymizationJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface AnonymizationJob {
+  id: string;
+  name: string;
+
+  ruleIds: string[];
+
+  sourceType: 'DATABASE' | 'FILE' | 'API';
+  sourceConfig: Record<string, any>;
+
+  destinationType: 'DATABASE' | 'FILE' | 'API';
+  destinationConfig: Record<string, any>;
+
+  status: AnonymizationJobStatus;
+
+  progress: number;
+  totalRecords?: number;
+  processedRecords?: number;
+
+  startedAt?: string;
+  completedAt?: string;
+
+  errors?: string[];
+  warnings?: string[];
+
+  createdBy: string;
+  createdAt: string;
+}
+
+// 8.2.5 Secure File Storage
+export type FileEncryptionMethod = 'AES_256_GCM' | 'AES_256_CBC' | 'CHACHA20_POLY1305';
+export type FileStorageLocation = 'LOCAL' | 'S3' | 'AZURE_BLOB' | 'GCS';
+
+export interface SecureFile {
+  id: string;
+  originalName: string;
+  storageName: string;
+
+  mimeType: string;
+  size: number;
+
+  encryptionMethod: FileEncryptionMethod;
+  encryptionKeyId: string;
+
+  storageLocation: FileStorageLocation;
+  storagePath: string;
+  storageRegion?: string;
+
+  checksum: string;
+  checksumAlgorithm: 'SHA256' | 'SHA512';
+
+  metadata?: Record<string, any>;
+  tags?: string[];
+
+  accessControl: {
+    ownerId: string;
+    readAccess: string[];
+    writeAccess: string[];
+    publicAccess: boolean;
+    expiresAt?: string;
+  };
+
+  virusScanStatus: 'PENDING' | 'CLEAN' | 'INFECTED' | 'SCAN_FAILED';
+  virusScanDate?: string;
+
+  retentionPolicy?: {
+    deleteAfterDays?: number;
+    archiveAfterDays?: number;
+    legalHold: boolean;
+  };
+
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  lastAccessedAt?: string;
+}
+
+export interface FileAccessLog {
+  id: string;
+  fileId: string;
+
+  action: 'VIEW' | 'DOWNLOAD' | 'UPLOAD' | 'DELETE' | 'SHARE' | 'MODIFY';
+
+  userId: string;
+  userEmail?: string;
+
+  ipAddress: string;
+  userAgent?: string;
+
+  success: boolean;
+  errorMessage?: string;
+
+  metadata?: Record<string, any>;
+
+  createdAt: string;
+}
+
+export interface FileShare {
+  id: string;
+  fileId: string;
+
+  shareType: 'USER' | 'GROUP' | 'LINK';
+  sharedWith?: string;
+
+  permissions: ('READ' | 'WRITE' | 'DELETE')[];
+
+  expiresAt?: string;
+  accessCount: number;
+  maxAccessCount?: number;
+
+  password?: boolean; // Indicates if password protected
+
+  createdBy: string;
+  createdAt: string;
+}
+
+// 8.2.6 Data Residency
+export type DataResidencyRegion =
+  | 'US_EAST'
+  | 'US_WEST'
+  | 'EU_WEST'
+  | 'EU_CENTRAL'
+  | 'APAC_SOUTHEAST'
+  | 'APAC_EAST';
+
+export type ComplianceFramework = 'GDPR' | 'CCPA' | 'HIPAA' | 'SOC2' | 'LGPD' | 'PDPA';
+
+export interface DataResidencyConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  primaryRegion: DataResidencyRegion;
+  allowedRegions: DataResidencyRegion[];
+
+  dataTypes: string[];
+
+  complianceFrameworks: ComplianceFramework[];
+
+  replicationConfig?: {
+    enabled: boolean;
+    targetRegions: DataResidencyRegion[];
+    syncMode: 'SYNCHRONOUS' | 'ASYNCHRONOUS';
+    lagTolerance?: number;
+  };
+
+  crossBorderTransfer: {
+    allowed: boolean;
+    requiresConsent: boolean;
+    approvedCountries?: string[];
+    dataTransferAgreement?: string;
+  };
+
+  retentionPolicy: {
+    defaultRetentionDays: number;
+    byDataType?: Record<string, number>;
+  };
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegionInfo {
+  id: DataResidencyRegion;
+  name: string;
+  country: string;
+  countryCode: string;
+
+  complianceFrameworks: ComplianceFramework[];
+
+  datacenters: {
+    provider: string;
+    location: string;
+    tier: number;
+  }[];
+
+  features: {
+    encryption: boolean;
+    backup: boolean;
+    replication: boolean;
+    edgeNodes: boolean;
+  };
+
+  latency?: number;
+  isAvailable: boolean;
+}
+
+// 8.2.7 Backup & Recovery
+export type BackupType = 'FULL' | 'INCREMENTAL' | 'DIFFERENTIAL';
+export type BackupStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CORRUPTED';
+export type BackupStorageType = 'LOCAL' | 'S3' | 'AZURE_BLOB' | 'GCS' | 'TAPE';
+
+export interface BackupConfig {
+  id: string;
+  name: string;
+  description?: string;
+
+  backupType: BackupType;
+
+  schedule: {
+    enabled: boolean;
+    cronExpression: string;
+    timezone: string;
+  };
+
+  sources: {
+    databases: string[];
+    tables?: string[];
+    files?: string[];
+    includeBlobs: boolean;
+  };
+
+  storage: {
+    type: BackupStorageType;
+    path: string;
+    region?: DataResidencyRegion;
+
+    encryption: {
+      enabled: boolean;
+      keyId?: string;
+    };
+
+    compression: {
+      enabled: boolean;
+      algorithm: 'GZIP' | 'LZ4' | 'ZSTD';
+      level: number;
+    };
+  };
+
+  retention: {
+    dailyCount: number;
+    weeklyCount: number;
+    monthlyCount: number;
+    yearlyCount: number;
+  };
+
+  notifications: {
+    onSuccess: boolean;
+    onFailure: boolean;
+    emails: string[];
+  };
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Backup {
+  id: string;
+  configId: string;
+  configName: string;
+
+  backupType: BackupType;
+  status: BackupStatus;
+
+  sizeBytes: number;
+  compressedSizeBytes?: number;
+
+  storagePath: string;
+  storageType: BackupStorageType;
+  storageRegion?: DataResidencyRegion;
+
+  encryptionKeyId?: string;
+  checksum: string;
+
+  tablesIncluded: number;
+  recordsIncluded: number;
+
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+
+  verifiedAt?: string;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'FAILED';
+
+  expiresAt?: string;
+
+  errorMessage?: string;
+
+  metadata?: Record<string, any>;
+}
+
+export type RestoreJobStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface RestoreJob {
+  id: string;
+  backupId: string;
+
+  restoreType: 'FULL' | 'PARTIAL' | 'POINT_IN_TIME';
+
+  targetDatabase?: string;
+  tables?: string[];
+  pointInTime?: string;
+
+  status: RestoreJobStatus;
+  progress: number;
+
+  tablesRestored?: number;
+  recordsRestored?: number;
+
+  overwriteExisting: boolean;
+  createNewDatabase: boolean;
+
+  startedAt?: string;
+  completedAt?: string;
+
+  errorMessage?: string;
+  warnings?: string[];
+
+  initiatedBy: string;
+  createdAt: string;
+}
+
+// 8.2.8 Key Lifecycle Management
+export interface KeyLifecycleEvent {
+  id: string;
+  keyId: string;
+  keyName: string;
+
+  eventType: 'CREATED' | 'ACTIVATED' | 'ROTATED' | 'SUSPENDED' | 'RETIRED' | 'REVOKED' | 'DESTROYED';
+
+  previousState?: EncryptionKeyStatus;
+  newState: EncryptionKeyStatus;
+
+  reason?: string;
+
+  performedBy?: string;
+  performedAt: string;
+
+  metadata?: Record<string, any>;
+}
+
+export interface KeyUsageAnalytics {
+  keyId: string;
+  keyName: string;
+
+  period: {
+    start: string;
+    end: string;
+  };
+
+  operations: {
+    encrypt: number;
+    decrypt: number;
+    sign: number;
+    verify: number;
+    wrap: number;
+    unwrap: number;
+  };
+
+  uniqueUsers: number;
+  uniqueApplications: number;
+
+  errorRate: number;
+  avgLatencyMs: number;
+
+  peakUsage: {
+    timestamp: string;
+    operationsPerSecond: number;
+  };
+}
+
+// Data Protection Audit Log
+export type DataProtectionEventType =
+  | 'KEY_OPERATION'
+  | 'PII_DETECTION'
+  | 'DATA_ANONYMIZATION'
+  | 'FILE_ACCESS'
+  | 'BACKUP_OPERATION'
+  | 'RESTORE_OPERATION'
+  | 'CONFIG_CHANGE'
+  | 'COMPLIANCE_CHECK';
+
+export interface DataProtectionAuditLog {
+  id: string;
+
+  eventType: DataProtectionEventType;
+  action: string;
+
+  resourceType: string;
+  resourceId: string;
+
+  userId?: string;
+  userEmail?: string;
+
+  details: Record<string, any>;
+
+  ipAddress?: string;
+  userAgent?: string;
+
+  status: 'SUCCESS' | 'FAILURE';
+  errorMessage?: string;
+
+  createdAt: string;
+}
+
+// Data Protection Statistics
+export interface DataProtectionStats {
+  encryption: {
+    activeKeys: number;
+    pendingRotation: number;
+    keysRotatedLast30d: number;
+    hsmEnabled: boolean;
+  };
+
+  piiDetection: {
+    activeConfigs: number;
+    detectionsLast24h: number;
+    maskedLast24h: number;
+    alertsLast24h: number;
+  };
+
+  anonymization: {
+    activeRules: number;
+    jobsLast7d: number;
+    recordsAnonymized: number;
+  };
+
+  secureStorage: {
+    totalFiles: number;
+    totalSizeGB: number;
+    encryptedPercentage: number;
+    accessesLast24h: number;
+  };
+
+  backup: {
+    activeConfigs: number;
+    backupsLast7d: number;
+    lastBackupAt?: string;
+    totalBackupSizeGB: number;
+    verifiedBackups: number;
+  };
+
+  compliance: {
+    frameworks: ComplianceFramework[];
+    lastCheckAt?: string;
+    passRate: number;
+    criticalIssues: number;
+  };
+}
+
+// Data Protection Dashboard
+export interface DataProtectionDashboard {
+  stats: DataProtectionStats;
+
+  recentActivity: DataProtectionAuditLog[];
+
+  alerts: {
+    id: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    type: string;
+    message: string;
+    createdAt: string;
+    acknowledged: boolean;
+  }[];
+
+  keyRotationSchedule: {
+    keyId: string;
+    keyName: string;
+    nextRotation: string;
+    daysUntil: number;
+  }[];
+
+  backupSchedule: {
+    configId: string;
+    configName: string;
+    nextBackup: string;
+    lastBackupStatus?: BackupStatus;
+  }[];
+
+  complianceStatus: {
+    framework: ComplianceFramework;
+    status: 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT';
+    lastCheck: string;
+    issues: number;
+  }[];
+}
+
+// ==========================================
+// Batch 29: Compliance Features Types (8.3.1-8.3.11)
+// ==========================================
+
+// 8.3.1 GDPR Compliance
+export type ConsentType = 'data_processing' | 'marketing' | 'third_party' | 'cookies' | 'analytics';
+export type LegalBasis = 'consent' | 'contract' | 'legal_obligation' | 'vital_interests' | 'public_task' | 'legitimate_interests';
+
+export interface GDPRConsentRecord {
+  id: string;
+  userId: string;
+
+  consentType: ConsentType;
+  purpose: string;
+  legalBasis: LegalBasis;
+
+  granted: boolean;
+  grantedAt?: string;
+  revokedAt?: string;
+  expiresAt?: string;
+
+  source: string;
+  ipAddress?: string;
+  userAgent?: string;
+
+  version: number;
+  policyVersion?: string;
+
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.2 CCPA Compliance
+export type CCPARequestType = 'know' | 'delete' | 'opt_out' | 'opt_in';
+export type CCPARequestStatus = 'pending' | 'verified' | 'processing' | 'completed' | 'rejected';
+
+export interface CCPARequest {
+  id: string;
+  userId?: string;
+
+  requestType: CCPARequestType;
+  requestSource: string;
+  requesterEmail: string;
+  requesterName?: string;
+  verificationMethod: string;
+
+  status: CCPARequestStatus;
+  verified: boolean;
+  verifiedAt?: string;
+
+  assignedTo?: string;
+  dueDate: string;
+  completedAt?: string;
+
+  response?: string;
+  dataExportUrl?: string;
+
+  notes?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.3 EEOC/OFCCP Reporting
+export type EEOCReportType = 'eeo1' | 'vets4212' | 'ofccp_aap';
+export type EEOCReportStatus = 'draft' | 'pending_review' | 'submitted' | 'accepted' | 'rejected';
+
+export interface EEOCReport {
+  id: string;
+  organizationId: string;
+
+  reportType: EEOCReportType;
+  reportingYear: number;
+  reportingPeriod: string;
+
+  status: EEOCReportStatus;
+  submittedAt?: string;
+
+  employeeData?: Record<string, any>;
+  applicantData?: Record<string, any>;
+  aggregatedData?: Record<string, any>;
+
+  filingConfirmation?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+
+  generatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.4 Data Retention Policies
+export type RetentionAction = 'delete' | 'anonymize' | 'archive';
+
+export interface DataRetentionPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description?: string;
+  dataCategory: string;
+  dataType?: string;
+
+  retentionPeriodDays: number;
+  retentionBasis: string;
+  legalReference?: string;
+
+  actionOnExpiry: RetentionAction;
+  archiveLocation?: string;
+
+  autoEnforce: boolean;
+  lastEnforcedAt?: string;
+  nextEnforcementAt?: string;
+
+  exceptions?: Record<string, any>;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.5 Right to be Forgotten
+export type DeletionRequestType = 'full_deletion' | 'partial_deletion' | 'anonymization';
+export type DeletionRequestStatus = 'pending' | 'verified' | 'processing' | 'completed' | 'rejected';
+
+export interface DeletionRequest {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  requestType: DeletionRequestType;
+  requesterEmail: string;
+  requesterName?: string;
+  regulation: string;
+
+  dataScope: string[];
+  exclusions: string[];
+
+  verified: boolean;
+  verificationToken?: string;
+  verifiedAt?: string;
+
+  status: DeletionRequestStatus;
+  statusHistory?: any[];
+
+  assignedTo?: string;
+  scheduledFor?: string;
+  completedAt?: string;
+
+  deletedItems?: Record<string, any>;
+  retainedItems?: Record<string, any>;
+
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.6 Consent Management
+export type ConsentCategory = 'essential' | 'functional' | 'analytics' | 'marketing';
+
+export interface ConsentPolicy {
+  id: string;
+  organizationId?: string;
+
+  name: string;
+  description: string;
+  category: ConsentCategory;
+  purpose: string;
+
+  legalBasis: string;
+  dataCategories: string[];
+  recipients: string[];
+  crossBorderTransfer: boolean;
+  transferCountries: string[];
+
+  isRequired: boolean;
+  canWithdraw: boolean;
+
+  displayOrder: number;
+  isActive: boolean;
+  version: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserConsent {
+  id: string;
+  organizationId?: string;
+  userId: string;
+  policyId: string;
+  policyName?: string;
+
+  consented: boolean;
+  consentedAt?: string;
+  withdrawnAt?: string;
+
+  source: string;
+  ipAddress?: string;
+  userAgent?: string;
+
+  policyVersion: number;
+
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.7 Data Subject Access Requests (DSAR)
+export type DSARRequestType = 'access' | 'rectification' | 'erasure' | 'restriction' | 'portability' | 'objection';
+export type DSARStatus = 'received' | 'verified' | 'processing' | 'completed' | 'rejected';
+export type DSARPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface DataSubjectRequest {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  requestType: DSARRequestType;
+  regulation: string;
+  requesterEmail: string;
+  requesterName?: string;
+
+  verificationMethod: string;
+  verified: boolean;
+  verifiedAt?: string;
+
+  status: DSARStatus;
+  priority: DSARPriority;
+  statusHistory?: any[];
+
+  receivedAt: string;
+  deadlineAt: string;
+  respondedAt?: string;
+
+  assignedTo?: string;
+  department?: string;
+
+  responseType?: string;
+  responseDetails?: string;
+  exportFileUrl?: string;
+
+  communications?: any[];
+
+  notes?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.8 Audit Trail
+export type ComplianceEventType = 'data_access' | 'data_modification' | 'consent_change' | 'deletion' | 'export';
+export type ComplianceEventCategory = 'gdpr' | 'ccpa' | 'eeoc' | 'general';
+
+export interface ComplianceAuditLog {
+  id: string;
+  organizationId?: string;
+  userId?: string;
+
+  eventType: ComplianceEventType;
+  eventCategory: ComplianceEventCategory;
+  action: string;
+
+  resourceType: string;
+  resourceId: string;
+  resourceName?: string;
+
+  previousValue?: Record<string, any>;
+  newValue?: Record<string, any>;
+  changedFields: string[];
+
+  actorType: 'user' | 'system' | 'api';
+  actorId?: string;
+  actorEmail?: string;
+
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+
+  success: boolean;
+  failureReason?: string;
+
+  tags: string[];
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// 8.3.9 Compliance Dashboards
+export type ComplianceMetricStatus = 'on_track' | 'at_risk' | 'non_compliant';
+
+export interface ComplianceMetric {
+  id: string;
+  organizationId: string;
+
+  metricType: string;
+  category: ComplianceEventCategory;
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+
+  value: number;
+  previousValue?: number;
+  target?: number;
+  unit: string;
+
+  status: ComplianceMetricStatus;
+  threshold?: Record<string, any>;
+
+  breakdown?: Record<string, any>;
+  calculatedAt: string;
+}
+
+export interface ComplianceDashboard {
+  summary: {
+    overallScore: number;
+    gdprCompliance: number;
+    ccpaCompliance: number;
+    eeocCompliance: number;
+  };
+
+  pendingActions: {
+    dsars: number;
+    deletionRequests: number;
+    consentUpdates: number;
+    retentionEnforcements: number;
+  };
+
+  recentActivity: {
+    type: string;
+    description: string;
+    timestamp: string;
+  }[];
+
+  upcomingDeadlines: {
+    type: string;
+    id: string;
+    deadline: string;
+    daysRemaining: number;
+  }[];
+
+  riskAreas: {
+    area: string;
+    risk: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[];
+}
+
+// 8.3.10 Bias Auditing
+export type BiasAuditType = 'hiring_funnel' | 'ai_scoring' | 'job_posting' | 'screening';
+export type BiasRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export interface BiasAuditReport {
+  id: string;
+  organizationId: string;
+
+  auditType: BiasAuditType;
+  auditPeriod: string;
+  startDate: string;
+  endDate: string;
+
+  jobIds: string[];
+  departmentIds: string[];
+  stages: string[];
+
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  overallScore?: number;
+  riskLevel?: BiasRiskLevel;
+
+  demographicCategories: string[];
+
+  findings?: {
+    summary: string;
+    byStage?: {
+      stage: string;
+      score: number;
+      risk: string;
+    }[];
+  };
+
+  disparities?: {
+    category: string;
+    stage: string;
+    metric: string;
+    groupA: { name: string; value: number };
+    groupB: { name: string; value: number };
+    adverseImpactRatio: number;
+    significant: boolean;
+  }[];
+
+  recommendations?: string[];
+  statisticalTests?: Record<string, any>;
+
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  actionsTaken?: any[];
+
+  generatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 8.3.11 SOC 2 Readiness
+export type SOC2Category = 'security' | 'availability' | 'processing_integrity' | 'confidentiality' | 'privacy';
+export type SOC2ImplementationStatus = 'not_started' | 'in_progress' | 'implemented' | 'tested';
+export type SOC2TestResult = 'pass' | 'fail' | 'partial';
+
+export interface SOC2Control {
+  id: string;
+  organizationId?: string;
+
+  controlId: string;
+  category: SOC2Category;
+  subcategory?: string;
+  name: string;
+  description: string;
+
+  trustServiceCriteria: string;
+
+  implementationStatus: SOC2ImplementationStatus;
+  implementedBy?: string;
+  implementedAt?: string;
+
+  evidenceRequired: string[];
+  evidenceProvided: any[];
+  evidenceLastUpdated?: string;
+
+  lastTestedAt?: string;
+  testResult?: SOC2TestResult;
+  testNotes?: string;
+  testedBy?: string;
+
+  gaps: any[];
+  remediationPlan?: string;
+  remediationDueDate?: string;
+
+  riskLevel?: string;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SOC2AuditType = 'type1' | 'type2';
+export type SOC2AuditStatus = 'planning' | 'fieldwork' | 'review' | 'completed';
+export type SOC2Opinion = 'unqualified' | 'qualified' | 'adverse' | 'disclaimer';
+
+export interface SOC2Audit {
+  id: string;
+  organizationId: string;
+
+  auditType: SOC2AuditType;
+  auditPeriod?: string;
+  startDate: string;
+  endDate?: string;
+
+  auditorFirm: string;
+  auditorContact?: string;
+  auditorEmail?: string;
+
+  status: SOC2AuditStatus;
+  phase?: string;
+
+  trustCategories: SOC2Category[];
+  systemDescription?: string;
+  excludedControls: string[];
+
+  opinion?: SOC2Opinion;
+  exceptions: any[];
+  recommendations: any[];
+
+  reportDate?: string;
+  reportUrl?: string;
+
+  kickoffDate?: string;
+  fieldworkStartDate?: string;
+  fieldworkEndDate?: string;
+  finalReportDate?: string;
+
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SOC2ReadinessScore {
+  overallScore: number;
+
+  byCategory: {
+    security: number;
+    availability: number;
+    processing_integrity: number;
+    confidentiality: number;
+    privacy: number;
+  };
+
+  controlsStatus: {
+    total: number;
+    implemented: number;
+    inProgress: number;
+    notStarted: number;
+  };
+
+  gapsSummary: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+
+  recommendations: string[];
+  lastUpdated: string;
+}
+
+// Compliance Statistics
+export interface ComplianceStats {
+  gdpr: {
+    activeConsents: number;
+    pendingDSARs: number;
+    avgResponseTime: number;
+    consentRate: number;
+  };
+
+  ccpa: {
+    pendingRequests: number;
+    completedThisMonth: number;
+    avgResponseTime: number;
+  };
+
+  eeoc: {
+    reportsGenerated: number;
+    pendingSubmissions: number;
+    lastSubmission?: string;
+  };
+
+  retention: {
+    activePolicies: number;
+    recordsProcessedThisMonth: number;
+    complianceRate: number;
+  };
+
+  biasAudit: {
+    auditsThisYear: number;
+    avgScore: number;
+    lastAudit?: string;
+  };
+
+  soc2: {
+    readinessScore: number;
+    controlsImplemented: number;
+    gapsRemaining: number;
+    auditStatus: string;
+  };
+}
+
+// ==========================================
+// Batch 30: Recruitment Analytics Types (9.1.1-9.1.12)
+// ==========================================
+
+// 9.1.1 Funnel Analytics
+export interface FunnelAnalytics {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
+  sourced: number;
+  applied: number;
+  screened: number;
+  interviewed: number;
+  offered: number;
+  hired: number;
+
+  sourceToApply?: number;
+  applyToScreen?: number;
+  screenToInterview?: number;
+  interviewToOffer?: number;
+  offerToHire?: number;
+  overallConversion?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FunnelTrends {
+  periods: string[];
+  sourced: number[];
+  applied: number[];
+  screened: number[];
+  interviewed: number[];
+  offered: number[];
+  hired: number[];
+  conversionRates: number[];
+}
+
+// 9.1.2 Time-to-Hire
+export interface TimeToHireMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  hireDate: string;
+  jobOpenDate: string;
+  firstApplyDate?: string;
+  firstScreenDate?: string;
+  firstInterviewDate?: string;
+  offerDate?: string;
+  offerAcceptDate?: string;
+
+  timeToFill: number;
+  timeToHire: number;
+  timeToScreen?: number;
+  timeToInterview?: number;
+  timeToOffer?: number;
+  timeToAccept?: number;
+
+  jobType?: string;
+  seniorityLevel?: string;
+  department?: string;
+  location?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface TimeToHireAverages {
+  overall: {
+    avgTimeToFill: number;
+    avgTimeToHire: number;
+    avgTimeToScreen: number;
+    avgTimeToInterview: number;
+    avgTimeToOffer: number;
+    avgTimeToAccept: number;
+  };
+  byDepartment: Array<{ department: string; avgTimeToHire: number }>;
+  bySeniority: Array<{ level: string; avgTimeToHire: number }>;
+  trend: string;
+}
+
+// 9.1.3 Cost-per-Hire
+export interface CostPerHireMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  hireDate: string;
+
+  recruiterTime: number;
+  hiringManagerTime: number;
+  interviewerTime: number;
+  adminTime: number;
+  internalCostTotal: number;
+
+  jobBoardFees: number;
+  agencyFees: number;
+  advertisingCost: number;
+  backgroundCheckCost: number;
+  assessmentCost: number;
+  relocationCost: number;
+  signingBonus: number;
+  travelCost: number;
+  externalCostTotal: number;
+
+  totalCost: number;
+  costPerHire: number;
+  currency: string;
+  source?: string;
+  department?: string;
+  seniorityLevel?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface CostBreakdown {
+  averageCostPerHire: number;
+  medianCostPerHire: number;
+  totalHiringCost: number;
+  totalHires: number;
+  byCategory: {
+    internalCosts: number;
+    externalCosts: number;
+  };
+  bySource: Array<{ source: string; avgCost: number; hires: number }>;
+  byDepartment: Array<{ department: string; avgCost: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.4 Source Effectiveness
+export interface SourceEffectiveness {
+  id: string;
+  organizationId: string;
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  sourceName: string;
+  sourceCategory: string;
+
+  candidatesSourced: number;
+  applicants: number;
+  screened: number;
+  interviewed: number;
+  offers: number;
+  hires: number;
+
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  avgQualityScore?: number;
+  retentionRate?: number;
+
+  totalSpend: number;
+  costPerApplicant?: number;
+  costPerHire?: number;
+  roi?: number;
+
+  isActive: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SourceROI {
+  topSources: Array<{ name: string; roi: number; hires: number }>;
+  recommendations: Array<{ action: string; source: string; reason: string }>;
+}
+
+// 9.1.5 Recruiter Performance
+export interface RecruiterPerformance {
+  id: string;
+  organizationId: string;
+  recruiterId: string;
+  recruiterName: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  jobsHandled: number;
+  candidatesSourced: number;
+  screensCompleted: number;
+  interviewsScheduled: number;
+  offersExtended: number;
+  hiresCompleted: number;
+
+  avgTimeToFill?: number;
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  fillRate?: number;
+
+  offerAcceptRate?: number;
+  candidateSatisfaction?: number;
+  hiringManagerSatisfaction?: number;
+  qualityOfHireScore?: number;
+
+  activePipeline: number;
+  pipelineVelocity?: number;
+
+  rank?: number;
+  tier?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecruiterLeaderboard {
+  period: string;
+  rankings: Array<{
+    rank: number;
+    name: string;
+    hires: number;
+    score: number;
+  }>;
+  teamAverage: {
+    hires: number;
+    avgTimeToHire: number;
+    fillRate: number;
+  };
+}
+
+export interface RecruiterGoals {
+  recruiterId: string;
+  period: string;
+  goals: Array<{
+    metric: string;
+    target: number;
+    actual: number;
+    progress: number;
+  }>;
+  overallProgress: number;
+}
+
+// 9.1.6 Offer Acceptance
+export interface OfferAcceptanceMetric {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  candidateId?: string;
+
+  offerDate: string;
+  responseDate?: string;
+  status: 'accepted' | 'declined' | 'pending' | 'expired' | 'withdrawn';
+
+  offeredSalary?: number;
+  expectedSalary?: number;
+  salarySatisfaction?: number;
+  currency: string;
+
+  declineReason?: string;
+  declineDetails?: string;
+  competitorName?: string;
+  competitorOffer?: number;
+
+  daysToDecision?: number;
+  negotiationRounds: number;
+
+  department?: string;
+  seniorityLevel?: string;
+  jobType?: string;
+  location?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface OfferAcceptanceRates {
+  overall: {
+    totalOffers: number;
+    accepted: number;
+    declined: number;
+    pending: number;
+    acceptanceRate: number;
+    avgDaysToDecision: number;
+  };
+  byDepartment: Array<{ department: string; rate: number; total: number }>;
+  declineReasons: Array<{ reason: string; count: number; percentage: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.7 Pipeline Velocity
+export interface PipelineVelocity {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  inSourced: number;
+  inScreening: number;
+  inInterview: number;
+  inOffer: number;
+  hired: number;
+  rejected: number;
+  withdrawn: number;
+
+  sourcedToScreening?: number;
+  screeningToInterview?: number;
+  interviewToOffer?: number;
+  offerToHire?: number;
+  totalVelocity?: number;
+
+  candidatesEntered: number;
+  candidatesExited: number;
+  netPipelineChange: number;
+
+  bottleneckStage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VelocityTrends {
+  periods: string[];
+  totalVelocity: number[];
+  stageVelocity: {
+    sourcedToScreening: number[];
+    screeningToInterview: number[];
+    interviewToOffer: number[];
+    offerToHire: number[];
+  };
+  improvement: number;
+}
+
+export interface BottleneckAnalysis {
+  currentBottleneck: {
+    stage: string;
+    avgDays: number;
+    targetDays: number;
+    impact: string;
+    candidatesStuck: number;
+  };
+  recommendations: Array<{
+    action: string;
+    priority: string;
+    expectedImprovement: string;
+  }>;
+  historicalBottlenecks: Array<{
+    period: string;
+    stage: string;
+    resolved: boolean;
+  }>;
+}
+
+// 9.1.8 Quality of Hire
+export interface QualityOfHireMetric {
+  id: string;
+  organizationId: string;
+  hireId: string;
+  candidateId: string;
+  jobId: string;
+  recruiterId?: string;
+  hiringManagerId?: string;
+
+  hireDate: string;
+  assessmentDate?: string;
+
+  performanceScore30?: number;
+  performanceScore60?: number;
+  performanceScore90?: number;
+  annualPerformance?: number;
+
+  isRetained: boolean;
+  retainedAt30Days: boolean;
+  retainedAt90Days?: boolean;
+  retainedAt1Year?: boolean;
+  separationDate?: string;
+  separationReason?: string;
+
+  managerSatisfaction?: number;
+  meetingExpectations?: string;
+  wouldRehire?: boolean;
+  promotionTimeline?: string;
+
+  culturalFitScore?: number;
+  teamIntegration?: number;
+
+  timeToProductivity?: number;
+  trainingCompleted: boolean;
+
+  overallQualityScore?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QualityScoreSummary {
+  overall: {
+    avgQualityScore: number;
+    avgPerformance90: number;
+    retentionRate90Days: number;
+    retentionRate1Year: number;
+    avgTimeToProductivity: number;
+    managerSatisfactionAvg: number;
+  };
+  bySource: Array<{ source: string; avgQuality: number; retention: number }>;
+  byRecruiter: Array<{ name: string; avgQuality: number; hires: number }>;
+  trend: {
+    currentPeriod: number;
+    previousPeriod: number;
+    change: number;
+  };
+}
+
+// 9.1.9 Diversity Analytics
+export interface DiversityAnalyticsData {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  totalApplicants: number;
+
+  genderDistribution: {
+    male: number;
+    female: number;
+    nonBinary: number;
+    undisclosed: number;
+  };
+
+  ethnicityDistribution: {
+    white: number;
+    black: number;
+    hispanic: number;
+    asian: number;
+    other: number;
+    undisclosed: number;
+  };
+
+  ageDistribution: Record<string, number>;
+
+  veteranStatus: {
+    yes: number;
+    no: number;
+    undisclosed: number;
+  };
+
+  disabilityStatus: {
+    yes: number;
+    no: number;
+    undisclosed: number;
+  };
+
+  hiresTotal: number;
+  hiresDiversity?: Record<string, number>;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiversityGoals {
+  goals: Array<{
+    metric: string;
+    target: number;
+    actual: number;
+    status: string;
+  }>;
+  initiatives: Array<{
+    name: string;
+    status: string;
+    impact: string;
+  }>;
+}
+
+export interface DiversityConversionRates {
+  byGender: Array<{
+    group: string;
+    applyRate: number;
+    screenRate: number;
+    interviewRate: number;
+    offerRate: number;
+    hireRate: number;
+  }>;
+  byEthnicity: Array<{
+    group: string;
+    applyRate: number;
+    hireRate: number;
+  }>;
+  disparityFlags: Array<{
+    stage: string;
+    group: string;
+    disparity: string;
+    severity: string;
+  }>;
+}
+
+// 9.1.10 Interview-to-Offer Ratio
+export interface InterviewOfferRatio {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+  recruiterId?: string;
+  hiringManagerId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  phoneScreens: number;
+  technicalInterviews: number;
+  onsiteInterviews: number;
+  finalInterviews: number;
+  totalInterviews: number;
+
+  uniqueCandidatesInterviewed: number;
+  passedScreening: number;
+  passedTechnical: number;
+  passedOnsite: number;
+
+  offersExtended: number;
+  offersAccepted: number;
+  hires: number;
+
+  interviewsPerHire?: number;
+  screenPassRate?: number;
+  technicalPassRate?: number;
+  onsitePassRate?: number;
+  offerRate?: number;
+  acceptanceRate?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewEfficiency {
+  currentInterviewsPerHire: number;
+  targetInterviewsPerHire: number;
+  industryBenchmark: number;
+  byRole: Array<{
+    role: string;
+    interviewsPerHire: number;
+    target: number;
+  }>;
+  passRatesByStage: Record<string, { rate: number; benchmark: number }>;
+  recommendations: Array<{
+    action: string;
+    impact: string;
+  }>;
+}
+
+// 9.1.11 Drop-off Analysis
+export interface DropOffAnalysisData {
+  id: string;
+  organizationId: string;
+  jobId?: string;
+  departmentId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  stageDropOffs: Record<string, { count: number; rate: number }>;
+  withdrawalReasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  rejectionReasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  avgDaysBeforeDropOff: Record<string, number>;
+
+  reEngaged: number;
+  reEngagementRate?: number;
+
+  worstStage?: string;
+  worstDropRate?: number;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DropOffRecommendations {
+  criticalIssues: Array<{
+    stage: string;
+    issue: string;
+    rootCauses: string[];
+    recommendations: string[];
+    expectedImprovement: string;
+  }>;
+  quickWins: Array<{
+    action: string;
+    impact: string;
+  }>;
+}
+
+// 9.1.12 SLA Tracking
+export interface RecruitmentSLA {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+
+  slaType: 'response_time' | 'stage_duration' | 'feedback' | 'overall';
+  targetMetric: string;
+  targetValue: number;
+  targetUnit: 'hours' | 'days' | 'business_days';
+
+  priority: 'high' | 'medium' | 'low';
+  applicableJobs: string[];
+  applicableDepartments: string[];
+
+  escalationEnabled: boolean;
+  escalationThreshold?: number;
+  escalationRecipients: string[];
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SLATracking {
+  id: string;
+  organizationId: string;
+  slaId: string;
+  jobId?: string;
+  candidateId?: string;
+  recruiterId?: string;
+
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+
+  totalMeasured: number;
+  metSLA: number;
+  missedSLA: number;
+  complianceRate?: number;
+
+  avgActualTime?: number;
+  minTime?: number;
+  maxTime?: number;
+  medianTime?: number;
+  p90Time?: number;
+
+  breachDetails: Array<Record<string, unknown>>;
+  escalationsTriggered: number;
+
+  previousPeriodCompliance?: number;
+  trend?: string;
+
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SLABreaches {
+  totalBreaches: number;
+  bySLA: Array<{
+    slaId: string;
+    name: string;
+    breaches: number;
+    rate: number;
+  }>;
+  recentBreaches: Array<{
+    id: string;
+    slaId: string;
+    candidateId: string;
+    jobId: string;
+    targetHours: number;
+    actualHours: number;
+    breach: number;
+    recruiterId: string;
+    timestamp: string;
+  }>;
+  byRecruiter: Array<{
+    recruiterId: string;
+    name: string;
+    breaches: number;
+    rate: number;
+  }>;
+}
+
+// Recruitment Analytics Dashboard
+export interface RecruitmentAnalyticsDashboard {
+  summary: {
+    totalHires: number;
+    openPositions: number;
+    activeCandidates: number;
+    avgTimeToHire: number;
+    avgCostPerHire: number;
+    offerAcceptanceRate: number;
+    diversityScore: number;
+  };
+  funnelSnapshot: {
+    sourced: number;
+    applied: number;
+    screened: number;
+    interviewed: number;
+    offered: number;
+    hired: number;
+  };
+  trends: {
+    hiresOverTime: number[];
+    timeToHireTrend: number[];
+    costPerHireTrend: number[];
+  };
+  topSources: Array<{
+    name: string;
+    hires: number;
+    percentage: number;
+  }>;
+  topRecruiters: Array<{
+    name: string;
+    hires: number;
+    avgTime: number;
+  }>;
+  slaCompliance: {
+    overall: number;
+    byType: Record<string, number>;
+  };
+  alerts: Array<{
+    type: string;
+    message: string;
+    priority: string;
+  }>;
+}
+
+export interface RecruitmentStats {
+  period: {
+    start: string;
+    end: string;
+  };
+  hiring: {
+    totalHires: number;
+    targetHires: number;
+    progress: number;
+    avgTimeToHire: number;
+    avgCostPerHire: number;
+  };
+  pipeline: {
+    totalCandidates: number;
+    activeInPipeline: number;
+    hiredThisPeriod: number;
+    rejectedThisPeriod: number;
+    withdrawnThisPeriod: number;
+  };
+  efficiency: {
+    funnelConversion: number;
+    interviewsPerHire: number;
+    offerAcceptanceRate: number;
+    slaCompliance: number;
+  };
+  diversity: {
+    femaleHires: number;
+    minorityHires: number;
+    veteranHires: number;
+  };
+  quality: {
+    avgQualityScore: number;
+    retention90Days: number;
+    managerSatisfaction: number;
+  };
+}
+
+// ==========================================
+// Batch 31: Executive Dashboards Types (9.2.1-9.2.8)
+// ==========================================
+
+// 9.2.1 Executive Dashboard
+export interface ExecutiveDashboard {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  layout: { columns: number; rows: number };
+  widgets: DashboardWidgetConfig[];
+  filters?: Record<string, unknown>;
+  isDefault: boolean;
+  isShared: boolean;
+  createdBy: string;
+  lastViewedAt?: string;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DashboardWidgetConfig {
+  id: string;
+  type: string;
+  name: string;
+  position: { x: number; y: number };
+  value?: number | string;
+}
+
+export interface ExecutiveSummary {
+  period: string;
+  kpis: Array<{
+    name: string;
+    value: number;
+    target: number;
+    status: string;
+    trend: string;
+    unit?: string;
+  }>;
+  highlights: Array<{
+    type: string;
+    message: string;
+  }>;
+  departmentOverview: Array<{
+    name: string;
+    hires: number;
+    target: number;
+    progress: number;
+  }>;
+}
+
+// 9.2.2 Trend Analysis
+export interface TrendAnalysis {
+  id: string;
+  organizationId: string;
+  metricName: string;
+  metricCategory: string;
+  periodType: string;
+  periodStart: string;
+  periodEnd: string;
+  dataPoints: Array<{ date: string; value: number }>;
+  trend: string;
+  trendStrength?: number;
+  forecast: Array<{ date: string; value: number }>;
+  avgValue: number;
+  minValue: number;
+  maxValue: number;
+  stdDeviation?: number;
+  yoyChange?: number;
+  momChange?: number;
+  seasonalPattern?: string;
+  anomalies: Array<Record<string, unknown>>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ForecastResult {
+  metricName: string;
+  currentValue: number;
+  forecastedValues: Array<{
+    period: string;
+    value: number;
+    confidence: number;
+  }>;
+  assumptions: string[];
+  modelAccuracy: number;
+}
+
+// 9.2.3 Benchmark Comparisons
+export interface IndustryBenchmark {
+  id: string;
+  industry: string;
+  companySize: string;
+  region: string;
+  metricName: string;
+  metricCategory: string;
+  year: number;
+  quarter?: number;
+  p10Value: number;
+  p25Value: number;
+  p50Value: number;
+  p75Value: number;
+  p90Value: number;
+  avgValue: number;
+  source?: string;
+  sampleSize?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BenchmarkComparison {
+  id: string;
+  organizationId: string;
+  benchmarkId: string;
+  comparisonDate: string;
+  metricName: string;
+  metricCategory: string;
+  orgValue: number;
+  benchmarkValue: number;
+  percentile: number;
+  gap: number;
+  status: string;
+  recommendation?: string;
+  createdAt: string;
+}
+
+// 9.2.4 Dashboard Widget
+export interface DashboardWidget {
+  id: string;
+  organizationId: string;
+  dashboardId?: string;
+  name: string;
+  description?: string;
+  widgetType: string;
+  chartType?: string;
+  dataSource: string;
+  query?: Record<string, unknown>;
+  width: number;
+  height: number;
+  position?: { x: number; y: number };
+  colors?: Record<string, string>;
+  showLegend: boolean;
+  showLabels: boolean;
+  refreshInterval?: number;
+  lastRefreshed?: string;
+  isTemplate: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WidgetTemplate {
+  id: string;
+  name: string;
+  widgetType: string;
+  chartType?: string;
+  description: string;
+}
+
+// 9.2.5 Scheduled Reports
+export interface ScheduledReport {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  reportType: string;
+  templateId?: string;
+  format: 'pdf' | 'excel' | 'csv' | 'ppt';
+  schedule: string;
+  timezone: string;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  recipients: string[];
+  ccRecipients: string[];
+  includeComments: boolean;
+  filters?: Record<string, unknown>;
+  dateRange: string;
+  customDateStart?: string;
+  customDateEnd?: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportExecution {
+  id: string;
+  scheduledReportId: string;
+  organizationId: string;
+  executionTime: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  duration?: number;
+  fileUrl?: string;
+  fileSize?: number;
+  pageCount?: number;
+  recipientsSent: string[];
+  deliveryStatus?: Record<string, unknown>;
+  errorMessage?: string;
+  retryCount: number;
+  createdAt: string;
+}
+
+// 9.2.6 BI Export
+export interface BIExportConfig {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  toolType: 'tableau' | 'looker' | 'powerbi' | 'google_datastudio';
+  connectionType: 'direct' | 'api' | 'file_export';
+  serverUrl?: string;
+  apiKey?: string;
+  credentials?: Record<string, unknown>;
+  dataSources: string[];
+  refreshSchedule?: string;
+  lastExportAt?: string;
+  connectionStatus: 'pending' | 'connected' | 'error';
+  lastConnectionTest?: string;
+  errorMessage?: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BIExportLog {
+  id: string;
+  configId: string;
+  organizationId: string;
+  exportTime: string;
+  status: 'started' | 'completed' | 'failed';
+  exportType: 'full' | 'incremental';
+  recordsExported?: number;
+  duration?: number;
+  fileSize?: number;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 9.2.7 Goal Tracking
+export interface HiringGoal {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  goalType: 'hiring_count' | 'time_to_hire' | 'cost_per_hire' | 'diversity' | 'quality';
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  departmentId?: string;
+  jobId?: string;
+  recruiterId?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: 'on_track' | 'at_risk' | 'behind' | 'exceeded' | 'completed';
+  progress: number;
+  milestones: Array<{
+    name: string;
+    date: string;
+    target: number;
+    actual?: number | null;
+  }>;
+  notifications?: Record<string, unknown>;
+  createdBy: string;
+  ownerId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalProgress {
+  id: string;
+  goalId: string;
+  organizationId: string;
+  recordDate: string;
+  value: number;
+  cumulativeValue: number;
+  milestone?: string;
+  note?: string;
+  updatedBy?: string;
+  createdAt: string;
+}
+
+// 9.2.8 Department/Team Views
+export interface DepartmentView {
+  id: string;
+  organizationId: string;
+  departmentId: string;
+  departmentName: string;
+  snapshotDate: string;
+  periodStart: string;
+  periodEnd: string;
+  openPositions: number;
+  activeApplicants: number;
+  hiredThisPeriod: number;
+  targetHires?: number;
+  avgTimeToFill?: number;
+  avgTimeToHire?: number;
+  avgCostPerHire?: number;
+  totalHiringBudget?: number;
+  budgetUsed?: number;
+  avgQualityScore?: number;
+  offerAcceptRate?: number;
+  retention90Days?: number;
+  diversityScore?: number;
+  pipelineHealth?: Record<string, number>;
+  headcount?: number;
+  attritionRate?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamHiringMetrics {
+  id: string;
+  organizationId: string;
+  teamId: string;
+  teamName: string;
+  managerId?: string;
+  managerName?: string;
+  periodStart: string;
+  periodEnd: string;
+  positionsOpened: number;
+  positionsFilled: number;
+  positionsClosed: number;
+  avgTimeToFill?: number;
+  avgCostPerHire?: number;
+  avgQualityScore?: number;
+  fillRate?: number;
+  interviewsPerHire?: number;
+  offerAcceptRate?: number;
+  hiringManagerSatisfaction?: number;
+  candidateExperience?: number;
+  trend?: string;
+  ranking?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentComparison {
+  departments: string[];
+  metrics: Array<{
+    metric: string;
+    values: Record<string, number>;
+  }>;
+}
+
+// ==========================================
+// Batch 32: Market Intelligence Types (9.3.1-9.3.6)
+// ==========================================
+
+// 9.3.1 Salary Market Data
+export interface SalaryMarketData {
+  id: string;
+  organizationId: string;
+  jobTitle: string;
+  jobFamily?: string;
+  level?: string;
+  location: string;
+  country: string;
+  region?: string;
+  isRemote: boolean;
+  currency: string;
+  minSalary: number;
+  maxSalary: number;
+  medianSalary: number;
+  percentile25?: number;
+  percentile75?: number;
+  percentile90?: number;
+  bonusMin?: number;
+  bonusMax?: number;
+  bonusMedian?: number;
+  equityMin?: number;
+  equityMax?: number;
+  equityMedian?: number;
+  dataSource: string;
+  sampleSize?: number;
+  confidenceLevel?: number;
+  effectiveDate: string;
+  expiryDate?: string;
+  industry?: string;
+  companySize?: string;
+  trendDirection?: string;
+  trendPercentage?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SalaryComparison {
+  jobTitle: string;
+  location: string;
+  organizationSalary: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  marketSalary: {
+    min: number;
+    max: number;
+    median: number;
+  };
+  variance: {
+    minVariance: number;
+    maxVariance: number;
+    medianVariance: number;
+  };
+  competitiveness: string;
+  recommendations: string[];
+}
+
+export interface SalaryTrend {
+  jobTitle: string;
+  location: string;
+  period: string;
+  dataPoints: Array<{
+    month: string;
+    median: number;
+    change: number;
+  }>;
+  overallChange: number;
+  averageMonthlyChange: number;
+  forecast: {
+    nextQuarter: number;
+    nextYear: number;
+    confidence: number;
+  };
+}
+
+// 9.3.2 Talent Pool Analysis
+export interface TalentPoolAnalysis {
+  id: string;
+  organizationId: string;
+  analysisName: string;
+  analysisType: string;
+  status: string;
+  targetSkills?: string[];
+  targetLocations?: string[];
+  experienceRange?: { min: number; max: number };
+  educationLevel?: string;
+  totalCandidates?: number;
+  qualifiedCandidates?: number;
+  activeJobSeekers?: number;
+  passiveCandidates?: number;
+  skillDistribution?: Record<string, number>;
+  locationDistribution?: Record<string, number>;
+  experienceDistribution?: Record<string, number>;
+  salaryDistribution?: Record<string, number>;
+  availabilityScore?: number;
+  competitionLevel?: string;
+  avgTimeToHire?: number;
+  recommendations?: string[];
+  completedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 9.3.3 Competitor Hiring Insights
+export interface CompetitorInsight {
+  id: string;
+  organizationId: string;
+  competitorName: string;
+  competitorDomain?: string;
+  industry?: string;
+  companySize?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalJobPostings: number;
+  activeJobPostings: number;
+  closedJobPostings: number;
+  engineeringJobs: number;
+  salesJobs: number;
+  marketingJobs: number;
+  operationsJobs: number;
+  otherJobs: number;
+  avgPostingDuration?: number;
+  hiringVelocity?: string;
+  topSkills?: string[];
+  emergingSkills?: string[];
+  primaryLocations?: string[];
+  remoteRatio?: number;
+  avgSalaryRange?: { min: number; max: number; currency: string };
+  growthTrend?: string;
+  growthRate?: number;
+  source?: string;
+  lastUpdated: string;
+  historicalData?: Array<{
+    month: string;
+    postings: number;
+    hires: number;
+  }>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 9.3.4 Skills Demand Trends
+export interface SkillDemandTrend {
+  id: string;
+  organizationId: string;
+  skillName: string;
+  skillCategory?: string;
+  skillType?: string;
+  periodStart: string;
+  periodEnd: string;
+  granularity: string;
+  demandScore?: number;
+  mentionCount: number;
+  jobPostingCount: number;
+  growthRate?: number;
+  trendDirection?: string;
+  velocityScore?: number;
+  maturityLevel?: string;
+  industryDemand?: Record<string, number>;
+  locationDemand?: Record<string, number>;
+  salaryPremium?: number;
+  avgSalaryWithSkill?: number;
+  relatedSkills?: string[];
+  substitutes?: string[];
+  forecastDemand?: Record<string, number>;
+  confidenceScore?: number;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmergingSkill {
+  skillName: string;
+  growthRate: number;
+  demandScore: number;
+  category: string;
+}
+
+export interface SkillForecast {
+  skillName: string;
+  currentDemandScore: number;
+  forecast: Array<{
+    period: string;
+    demandScore: number;
+    confidence: number;
+  }>;
+  factors: Array<{
+    factor: string;
+    impact: string;
+    weight: number;
+  }>;
+  recommendations: string[];
+}
+
+// 9.3.5 Location Intelligence
+export interface LocationIntelligence {
+  id: string;
+  organizationId: string;
+  locationName: string;
+  locationType: string;
+  country: string;
+  region?: string;
+  timezone?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalTalentPool?: number;
+  activeTalentPool?: number;
+  talentDensity?: number;
+  costOfLiving?: number;
+  avgSalary?: number;
+  salaryIndex?: number;
+  remoteRatio?: number;
+  hybridRatio?: number;
+  onsiteRatio?: number;
+  remoteGrowth?: number;
+  competitorPresence?: number;
+  hiringActivity?: string;
+  talentDemand?: number;
+  educationLevel?: Record<string, number>;
+  experienceLevel?: Record<string, number>;
+  skillAvailability?: Record<string, number>;
+  unemploymentRate?: number;
+  techJobGrowth?: number;
+  startupActivity?: number;
+  techInfrastructure?: number;
+  connectivity?: number;
+  recommendations?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationComparison {
+  locations: string[];
+  metrics: Array<{
+    metric: string;
+    [key: string]: string | number;
+  }>;
+  recommendation: string;
+}
+
+export interface RemoteWorkTrends {
+  overallRemoteAdoption: number;
+  hybridAdoption: number;
+  onsiteOnly: number;
+  yearOverYearChange: {
+    remote: number;
+    hybrid: number;
+    onsite: number;
+  };
+  byRole: Record<string, { remote: number; hybrid: number; onsite: number }>;
+  byCompanySize: Record<string, { remote: number; hybrid: number; onsite: number }>;
+  forecast: Record<string, { remote: number; hybrid: number; onsite: number }>;
+}
+
+// 9.3.6 Industry Trends
+export interface IndustryTrend {
+  id: string;
+  organizationId: string;
+  industryName: string;
+  industryCode?: string;
+  subIndustry?: string;
+  periodStart: string;
+  periodEnd: string;
+  totalHiring?: number;
+  hiringGrowth?: number;
+  hiringVelocity?: string;
+  seasonality?: Record<string, number>;
+  topRoles?: Array<{ role: string; percentage: number; growth: number }>;
+  emergingRoles?: string[];
+  decliningRoles?: string[];
+  topSkills?: string[];
+  emergingSkills?: string[];
+  skillGaps?: string[];
+  avgSalaryGrowth?: number;
+  compensationTrends?: Record<string, unknown>;
+  remoteAdoption?: number;
+  hybridAdoption?: number;
+  workModeShift?: Record<string, unknown>;
+  marketSize?: number;
+  marketGrowth?: number;
+  investmentTrend?: Record<string, unknown>;
+  talentFlow?: Record<string, unknown>;
+  retentionTrends?: number;
+  turnoverRate?: number;
+  outlook?: string;
+  predictions?: Record<string, unknown>;
+  confidenceScore?: number;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IndustryComparison {
+  industries: string[];
+  metrics: Array<{
+    metric: string;
+    [key: string]: string | number;
+  }>;
+  insights: string[];
+}
+
+export interface IndustryForecast {
+  industryName: string;
+  currentMetrics: {
+    hiringGrowth: number;
+    avgSalary: number;
+    remoteAdoption: number;
+  };
+  forecast: Array<{
+    period: string;
+    hiringGrowth: number;
+    avgSalaryGrowth: number;
+    confidence: number;
+  }>;
+  keyDrivers: string[];
+  risks: string[];
+}
+
+// Market Intelligence Dashboard
+export interface MarketIntelligenceDashboard {
+  snapshot: {
+    date: string;
+    marketHealthScore: number;
+    salaryIndexChange: number;
+    talentAvailabilityScore: number;
+    competitorActivityScore: number;
+    skillDemandShift: number;
+  };
+  topInsights: Array<{
+    type: string;
+    title: string;
+    description: string;
+    severity: string;
+  }>;
+  quickStats: {
+    trackedCompetitors: number;
+    salaryDataPoints: number;
+    talentPoolAnalyses: number;
+    skillsTracked: number;
+    locationsMonitored: number;
+  };
+  recentActivity: Array<{
+    action: string;
+    target: string;
+    time: string;
+  }>;
+}
+
+export interface MarketSnapshot {
+  id: string;
+  organizationId: string;
+  snapshotDate: string;
+  snapshotType: string;
+  salaryIndexChange?: number;
+  talentAvailabilityScore?: number;
+  competitorActivityScore?: number;
+  skillDemandShift?: number;
+  marketHealthScore?: number;
+  topInsights?: string[];
+  alerts?: Array<{ type: string; message: string }>;
+  recommendations?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==========================================
+// Batch 33: HR & Payroll Integrations Types (10.1.1-10.1.7)
+// ==========================================
+
+export interface HRIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  provider: string;
+  integrationType: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  syncEnabled: boolean;
+  syncFrequency: string;
+  syncSchedule?: Record<string, unknown>;
+  syncPositions: boolean;
+  syncCandidates: boolean;
+  syncHires: boolean;
+  syncEmployees: boolean;
+  fieldMapping?: Record<string, unknown>;
+  statusMapping?: Record<string, unknown>;
+  status: string;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+  errorMessage?: string;
+  errorCount: number;
+  webhookEnabled: boolean;
+  webhookUrl?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HRSyncLog {
+  id: string;
+  integrationId: string;
+  syncType: string;
+  direction: string;
+  startedAt: string;
+  completedAt?: string;
+  status: string;
+  recordsProcessed: number;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsDeleted: number;
+  recordsFailed: number;
+  errors?: Array<{ type: string; message: string; count: number }>;
+  warnings?: Array<{ type: string; message: string; count: number }>;
+  summary?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface HRProvider {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authTypes: string[];
+  features: string[];
+  complexity: string;
+  setupTime: string;
+}
+
+// ==========================================
+// Batch 34: Communication Platform Types (10.2.1-10.2.6)
+// ==========================================
+
+export interface CommunicationIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  integrationType: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  workspaceId?: string;
+  workspaceName?: string;
+  defaultChannel?: string;
+  notificationsEnabled: boolean;
+  approvalsEnabled: boolean;
+  messagingEnabled: boolean;
+  threadingEnabled: boolean;
+  notificationTypes?: string[];
+  notificationChannels?: Record<string, string[]>;
+  status: string;
+  lastActivityAt?: string;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  organizationId: string;
+  name: string;
+  templateType: string;
+  platform?: string;
+  eventType?: string;
+  subject?: string;
+  content: string;
+  contentHtml?: string;
+  variables?: string[];
+  isActive: boolean;
+  isDefault: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunicationPlatform {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authType: string;
+  features: string[];
+  setupTime: string;
+  providers?: string[];
+}
+
+// ==========================================
+// Batch 35: Job Boards & Sourcing Types (10.3.1-10.3.8)
+// ==========================================
+
+export interface JobBoardIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  platformSubtype?: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  autoPostEnabled: boolean;
+  postingRules?: Record<string, unknown>;
+  defaultBudget?: number;
+  applicationImport: boolean;
+  applicationMapping?: Record<string, string>;
+  deduplication: boolean;
+  companyPageUrl?: string;
+  brandingEnabled: boolean;
+  status: string;
+  lastSyncAt?: string;
+  errorMessage?: string;
+  totalPostings: number;
+  activePostings: number;
+  totalApplications: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobBoardPosting {
+  id: string;
+  integrationId: string;
+  jobId: string;
+  externalId?: string;
+  externalUrl?: string;
+  title: string;
+  status: string;
+  postedAt?: string;
+  expiresAt?: string;
+  isSponsored: boolean;
+  budget?: number;
+  budgetSpent?: number;
+  impressions: number;
+  clicks: number;
+  applications: number;
+  costPerApply?: number;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobBoard {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authType: string;
+  features: string[];
+  pricing: string;
+}
+
+// ==========================================
+// Batch 36: Developer Tools & API Types (10.4.1-10.4.8)
+// ==========================================
+
+export interface APIKey {
+  id: string;
+  organizationId: string;
+  userId?: string;
+  name: string;
+  keyPrefix: string;
+  keyValue?: string; // Only on creation
+  scopes: string[];
+  permissions?: Record<string, boolean>;
+  rateLimit: number;
+  rateLimitPeriod: string;
+  allowedIPs?: string[];
+  ipRestricted: boolean;
+  isActive: boolean;
+  expiresAt?: string;
+  lastUsedAt?: string;
+  usageCount: number;
+  description?: string;
+  environment: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebhookConfig {
+  id: string;
+  organizationId: string;
+  name: string;
+  url: string;
+  secret?: string; // Only on creation
+  events: string[];
+  eventFilters?: Record<string, unknown>;
+  httpMethod: string;
+  headers?: Record<string, string>;
+  retryPolicy?: { maxRetries: number; retryInterval: number };
+  timeout: number;
+  isActive: boolean;
+  lastTriggeredAt?: string;
+  lastResponseCode?: number;
+  failureCount: number;
+  totalSent: number;
+  totalSuccess: number;
+  totalFailed: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  eventType: string;
+  eventId?: string;
+  payload?: Record<string, unknown>;
+  attemptNumber: number;
+  requestUrl: string;
+  requestHeaders?: Record<string, string>;
+  requestBody?: string;
+  responseCode?: number;
+  responseBody?: string;
+  responseHeaders?: Record<string, string>;
+  status: string;
+  deliveredAt?: string;
+  duration?: number;
+  errorMessage?: string;
+  nextRetryAt?: string;
+  createdAt: string;
+}
+
+export interface AutomationIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  connectionId?: string;
+  triggers?: Record<string, unknown>;
+  triggerCount: number;
+  actions?: Record<string, unknown>;
+  actionCount: number;
+  isActive: boolean;
+  lastActivityAt?: string;
+  executionCount: number;
+  successCount: number;
+  failureCount: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface APIScope {
+  name: string;
+  description: string;
+}
+
+export interface APIEvent {
+  name: string;
+  description: string;
+}
+
+export interface DeveloperDashboard {
+  organization: {
+    name: string;
+    plan: string;
+    apiVersion: string;
+  };
+  apiKeys: {
+    total: number;
+    active: number;
+    expired: number;
+  };
+  webhooks: {
+    total: number;
+    active: number;
+    failureRate: number;
+  };
+  usage: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    rateLimit: number;
+    rateLimitUsed: number;
+  };
+  recentActivity: Array<{
+    type: string;
+    endpoint?: string;
+    event?: string;
+    method?: string;
+    status?: string;
+    time: string;
+  }>;
+}
+
+// ==========================================
+// Batch 37-39: Workflow Automation Types (11.1-11.3)
+// ==========================================
+
+// Batch 37: Automation Engine
+export interface WorkflowAutomation {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  category?: string;
+  triggerType: 'event' | 'schedule' | 'manual' | 'condition';
+  triggerEvent?: string;
+  triggerSchedule?: string;
+  triggerConditions?: Record<string, unknown>;
+  steps: WorkflowStep[];
+  conditionalLogic?: Record<string, unknown>;
+  delayEnabled: boolean;
+  delayDuration?: number;
+  delayType?: 'fixed' | 'business_hours' | 'smart';
+  status: 'draft' | 'active' | 'paused' | 'archived';
+  isActive: boolean;
+  version: number;
+  executionCount: number;
+  successCount: number;
+  failureCount: number;
+  lastExecutedAt?: string;
+  avgExecutionTime?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowStep {
+  id?: string;
+  action: string;
+  params?: Record<string, unknown>;
+  order?: number;
+  configurable?: boolean;
+}
+
+export interface WorkflowExecution {
+  id: string;
+  workflowId: string;
+  organizationId: string;
+  triggeredBy: 'system' | 'user' | 'schedule' | 'event';
+  triggerEvent?: string;
+  triggerData?: Record<string, unknown>;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  startedAt?: string;
+  completedAt?: string;
+  duration?: number;
+  currentStep: number;
+  totalSteps: number;
+  stepsCompleted: number;
+  stepResults?: Record<string, unknown>;
+  errorMessage?: string;
+  errorStep?: number;
+  retryCount: number;
+  maxRetries: number;
+  contextData?: Record<string, unknown>;
+  outputData?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  useCase?: string;
+  icon?: string;
+  triggerType: string;
+  triggerEvent?: string;
+  steps: WorkflowStep[];
+  conditionalLogic?: Record<string, unknown>;
+  isPublic: boolean;
+  isFeatured: boolean;
+  usageCount: number;
+  rating?: number;
+  variables?: string[];
+  requiredFields?: string[];
+  tags: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduledJob {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  jobType: string;
+  schedule: string;
+  timezone: string;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  configuration?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
+  status: 'active' | 'paused' | 'disabled';
+  isActive: boolean;
+  runCount: number;
+  successCount: number;
+  failureCount: number;
+  lastStatus?: string;
+  lastError?: string;
+  lastDuration?: number;
+  retryOnFailure: boolean;
+  maxRetries: number;
+  retryDelay: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BulkAction {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name?: string;
+  actionType: string;
+  targetType: string;
+  targetIds: string[];
+  totalCount: number;
+  processedCount: number;
+  successCount: number;
+  failureCount: number;
+  actionData: Record<string, unknown>;
+  filters?: Record<string, unknown>;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  startedAt?: string;
+  completedAt?: string;
+  results?: Record<string, unknown>;
+  errors?: Record<string, unknown>;
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TriggerEvent {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+}
+
+export interface WorkflowAction {
+  id: string;
+  name: string;
+  category: string;
+  params: string[];
+}
+
+// Batch 39: Approval Workflows
+export interface ApprovalWorkflow {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  workflowType: 'job_requisition' | 'offer_approval' | 'budget_approval' | 'exception_approval';
+  steps: ApprovalStep[];
+  escalationRules?: Record<string, unknown>;
+  requireAllApprovers: boolean;
+  allowParallelApproval: boolean;
+  autoApproveOnTimeout: boolean;
+  timeoutHours?: number;
+  delegationEnabled: boolean;
+  delegationRules?: Record<string, unknown>;
+  isActive: boolean;
+  version: number;
+  avgApprovalTime?: number;
+  approvalRate?: number;
+  totalRequests: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalStep {
+  step: number;
+  name: string;
+  approverType: 'user' | 'role' | 'department' | 'manager';
+  approverId?: string;
+  approverRole?: string;
+  condition?: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  workflowId: string;
+  organizationId: string;
+  requestedBy: string;
+  requestedByName?: string;
+  requestType: string;
+  title: string;
+  description?: string;
+  referenceType?: string;
+  referenceId?: string;
+  requestData: Record<string, unknown>;
+  attachments?: Record<string, unknown>;
+  currentStep: number;
+  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'cancelled';
+  approvalSteps: ApprovalStepStatus[];
+  approvedBy: string[];
+  rejectedBy?: string;
+  submittedAt: string;
+  dueDate?: string;
+  decidedAt?: string;
+  decision?: 'approved' | 'rejected';
+  decisionNotes?: string;
+  conditions?: Record<string, unknown>;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  isEscalated: boolean;
+  escalatedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalStepStatus {
+  step: number;
+  status: 'pending' | 'approved' | 'rejected' | 'skipped' | 'delegated';
+  approver?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface ApprovalAnalytics {
+  summary: {
+    totalRequests: number;
+    pendingRequests: number;
+    approvedRequests: number;
+    rejectedRequests: number;
+    avgApprovalTime: number;
+    approvalRate: number;
+  };
+  byWorkflowType: Array<{
+    type: string;
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    avgTime: number;
+  }>;
+  bottlenecks: Array<{
+    step: string;
+    avgWaitTime: number;
+    pendingCount: number;
+  }>;
+  trends: {
+    daily: Array<{
+      date: string;
+      submitted: number;
+      completed: number;
+    }>;
+  };
+}
+
+export interface AutomationDashboard {
+  workflowAutomations: {
+    total: number;
+    active: number;
+    paused: number;
+    draft: number;
+    executionsToday: number;
+    successRate: number;
+  };
+  scheduledJobs: {
+    total: number;
+    active: number;
+    paused: number;
+    nextRunIn: number;
+    jobsRunToday: number;
+  };
+  bulkActions: {
+    inProgress: number;
+    completedToday: number;
+    recordsProcessedToday: number;
+  };
+  approvalWorkflows: {
+    total: number;
+    active: number;
+    pendingApprovals: number;
+    urgentApprovals: number;
+    avgApprovalTime: number;
+  };
+  recentExecutions: Array<{
+    id: string;
+    workflowName: string;
+    status: string;
+    time: string;
+  }>;
+  recentApprovals: Array<{
+    id: string;
+    title: string;
+    status: string;
+    requester: string;
+  }>;
+}
+
+// ==========================================
+// Batch 40-42: Mobile & Accessibility Types (12.1-12.3)
+// ==========================================
+
+// Batch 40: Mobile Applications
+export interface MobileDevice {
+  id: string;
+  userId: string;
+  organizationId: string;
+  deviceId: string;
+  platform: 'ios' | 'android';
+  deviceName?: string;
+  deviceModel?: string;
+  osVersion?: string;
+  appVersion?: string;
+  pushToken?: string;
+  pushEnabled: boolean;
+  pushCategories: string[];
+  biometricEnabled: boolean;
+  biometricType?: 'face_id' | 'touch_id' | 'fingerprint';
+  isActive: boolean;
+  lastActiveAt?: string;
+  registeredAt: string;
+  deviceTrusted: boolean;
+  trustedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PushNotification {
+  id: string;
+  userId: string;
+  deviceId?: string;
+  organizationId: string;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  imageUrl?: string;
+  notificationType: string;
+  priority: 'low' | 'normal' | 'high' | 'critical';
+  category?: string;
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'read';
+  sentAt?: string;
+  deliveredAt?: string;
+  readAt?: string;
+  failedAt?: string;
+  failureReason?: string;
+  scheduledFor?: string;
+  expiresAt?: string;
+  clickedAt?: string;
+  actionTaken?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface MobileAppConfig {
+  id: string;
+  organizationId?: string;
+  platform: string;
+  minVersion?: string;
+  currentVersion?: string;
+  forceUpdate: boolean;
+  maintenanceMode: boolean;
+  maintenanceMessage?: string;
+  features?: Record<string, boolean>;
+  featureFlags?: Record<string, boolean>;
+  deepLinkScheme?: string;
+  universalLinks?: Record<string, unknown>;
+  offlineEnabled: boolean;
+  offlineCacheDays: number;
+  offlineFeatures: string[];
+  analyticsEnabled: boolean;
+  crashReportingEnabled: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OfflineSyncItem {
+  id: string;
+  userId: string;
+  deviceId: string;
+  entityType: string;
+  entityId?: string;
+  action: 'create' | 'update' | 'delete';
+  data: Record<string, unknown>;
+  status: 'pending' | 'syncing' | 'synced' | 'failed' | 'conflict';
+  syncAttempts: number;
+  lastAttemptAt?: string;
+  syncedAt?: string;
+  errorMessage?: string;
+  hasConflict: boolean;
+  conflictData?: Record<string, unknown>;
+  resolution?: 'client_wins' | 'server_wins' | 'merged';
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Batch 41: PWA
+export interface PWAConfig {
+  id: string;
+  organizationId?: string;
+  appName: string;
+  shortName?: string;
+  description?: string;
+  themeColor: string;
+  backgroundColor: string;
+  icons?: Array<{
+    src: string;
+    sizes: string;
+    type: string;
+    purpose?: string;
+  }>;
+  swVersion?: string;
+  cacheVersion?: string;
+  cacheStrategies?: Record<string, string>;
+  pushEnabled: boolean;
+  vapidPublicKey?: string;
+  installPromptEnabled: boolean;
+  installBannerDelay: number;
+  offlinePageUrl?: string;
+  offlineFallbacks?: Record<string, string>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebPushSubscription {
+  id: string;
+  userId: string;
+  organizationId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  browserName?: string;
+  browserVersion?: string;
+  userAgent?: string;
+  isActive: boolean;
+  categories: string[];
+  lastNotifiedAt?: string;
+  totalSent: number;
+  totalDelivered: number;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceWorkerStatus {
+  version: string;
+  cacheVersion: string;
+  isActive: boolean;
+  registeredAt: string;
+  lastUpdated: string;
+  cacheSize: number;
+  cachedRoutes: string[];
+  pendingUpdates: boolean;
+}
+
+// Batch 42: Accessibility
+export interface AccessibilitySettings {
+  id: string;
+  userId: string;
+  organizationId: string;
+  // Visual
+  highContrast: boolean;
+  colorScheme: 'light' | 'dark' | 'system' | 'high_contrast';
+  fontSize: 'small' | 'medium' | 'large' | 'x-large';
+  fontFamily: 'system' | 'dyslexic-friendly' | 'monospace';
+  reducedMotion: boolean;
+  underlineLinks: boolean;
+  // Reading
+  lineSpacing: 'compact' | 'normal' | 'relaxed';
+  letterSpacing: 'tight' | 'normal' | 'wide';
+  textAlignment: 'left' | 'justified';
+  // Navigation
+  keyboardNavigation: boolean;
+  focusIndicators: boolean;
+  skipLinks: boolean;
+  // Screen reader
+  screenReaderOptimized: boolean;
+  verboseLabels: boolean;
+  announceImages: boolean;
+  // Timing
+  extendedTimeouts: boolean;
+  autoPlayMedia: boolean;
+  carouselAutoPlay: boolean;
+  // Audio
+  soundEnabled: boolean;
+  soundVolume: number;
+  speechRate: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccessibilityPreset {
+  id: string;
+  name: string;
+  description: string;
+  settings: Partial<AccessibilitySettings>;
+}
+
+export interface AccessibilityAudit {
+  id: string;
+  organizationId: string;
+  pageUrl: string;
+  pageTitle?: string;
+  auditDate: string;
+  standard: 'WCAG20A' | 'WCAG20AA' | 'WCAG21A' | 'WCAG21AA' | 'WCAG21AAA';
+  score: number;
+  passedRules: number;
+  failedRules: number;
+  warningRules: number;
+  manualReviewRules: number;
+  issues: AccessibilityIssue[];
+  criticalCount: number;
+  seriousCount: number;
+  moderateCount: number;
+  minorCount: number;
+  auditTool?: string;
+  toolVersion?: string;
+  remediationNotes?: string;
+  fixedIssuesCount: number;
+  lastFixedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AccessibilityIssue {
+  id: string;
+  rule: string;
+  severity: 'critical' | 'serious' | 'moderate' | 'minor';
+  element: string;
+  message: string;
+  helpUrl?: string;
+}
+
+export interface MobileAccessibilityDashboard {
+  mobile: {
+    registeredDevices: number;
+    activeDevices: number;
+    iosDevices: number;
+    androidDevices: number;
+    pushEnabled: number;
+    biometricEnabled: number;
+    appVersion: string;
+    updateRequired: number;
+  };
+  pwa: {
+    installations: number;
+    activeUsers: number;
+    pushSubscriptions: number;
+    offlineUsage: number;
+    cacheHitRate: number;
+  };
+  accessibility: {
+    overallScore: number;
+    wcagCompliance: string;
+    issuesOpen: number;
+    usersWithSettings: number;
+    highContrastUsers: number;
+    screenReaderUsers: number;
+  };
+  notifications: {
+    sentToday: number;
+    deliveryRate: number;
+    clickRate: number;
+    byType: Record<string, number>;
+  };
+}
+
+// ==========================================
+// Batch 43-45: Enterprise Administration Types (13.1-13.3)
+// ==========================================
+
+// Batch 43: Multi-Tenant & Organization (13.1)
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  domain?: string;
+  plan: 'starter' | 'professional' | 'enterprise' | 'custom';
+  status: 'active' | 'suspended' | 'trial' | 'cancelled';
+  maxUsers: number;
+  maxJobs: number;
+  storageLimit: number;
+  dataRegion: string;
+  settings?: TenantSettings;
+  features?: TenantFeatures;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface TenantSettings {
+  sso?: boolean;
+  mfa?: boolean;
+  ipWhitelist?: string[];
+  customDomain?: boolean;
+  branding?: {
+    logo?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  };
+}
+
+export interface TenantFeatures {
+  ai: boolean;
+  analytics: boolean;
+  api: boolean;
+  customIntegrations: boolean;
+  advancedReporting: boolean;
+  dedicatedSupport: boolean;
+}
+
+export interface Organization {
+  id: string;
+  tenantId: string;
+  parentId?: string;
+  name: string;
+  type: 'company' | 'division' | 'department' | 'team' | 'branch';
+  code?: string;
+  isActive: boolean;
+  level: number;
+  headId?: string;
+  headName?: string;
+  children?: Organization[];
+  createdAt?: string;
+}
+
+export interface CostCenter {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  organizationId?: string;
+  managerId?: string;
+  annualBudget: number;
+  currentSpend: number;
+  currency: string;
+  isActive: boolean;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  code: string;
+  parentId?: string;
+  headId?: string;
+  headName?: string;
+  level: number;
+  employeeCount?: number;
+  isActive: boolean;
+}
+
+// Batch 44: User & License Management (13.2)
+export interface License {
+  id: string;
+  name: string;
+  licenseType: 'seat' | 'feature' | 'usage' | 'module';
+  totalSeats: number;
+  usedSeats: number;
+  availableSeats: number;
+  pricePerSeat?: number;
+  features?: string[];
+  validFrom?: string;
+  validUntil?: string;
+  autoRenew: boolean;
+  isActive: boolean;
+}
+
+export interface LicenseAllocation {
+  id: string;
+  licenseId: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  allocatedAt: string;
+  allocatedBy: string;
+  expiresAt?: string;
+  isActive: boolean;
+}
+
+export interface RoleTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: 'admin' | 'recruiter' | 'hiring_manager' | 'interviewer' | 'viewer' | 'custom';
+  permissions: string[];
+  dataAccess: 'all' | 'organization' | 'team' | 'own';
+  isSystem: boolean;
+  isDefault?: boolean;
+  userCount?: number;
+}
+
+export interface CustomRole {
+  id: string;
+  name: string;
+  description?: string;
+  baseTemplateId?: string;
+  permissions: string[];
+  restrictions?: string[];
+  dataAccess: 'all' | 'organization' | 'team' | 'own';
+  userCount: number;
+  createdBy: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface AccessReview {
+  id: string;
+  name: string;
+  description?: string;
+  reviewType: 'periodic' | 'triggered' | 'certification';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  scope: 'all_users' | 'role' | 'department' | 'custom';
+  reviewerId: string;
+  reviewerName?: string;
+  totalItems: number;
+  reviewedItems: number;
+  approvedItems?: number;
+  revokedItems?: number;
+  dueDate: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface UserActivityLog {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  resourceName?: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  status: 'success' | 'failure' | 'blocked';
+  timestamp: string;
+}
+
+// Batch 45: Billing & Subscriptions (13.3)
+export interface Subscription {
+  id: string;
+  tenantId: string;
+  planName: string;
+  planTier: 'starter' | 'professional' | 'enterprise' | 'custom';
+  status: 'active' | 'past_due' | 'cancelled' | 'trialing' | 'paused';
+  billingCycle: 'monthly' | 'annual';
+  amount: number;
+  currency: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd?: boolean;
+  cancelReason?: string;
+  trialEndsAt?: string;
+  paymentMethod?: PaymentMethod;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  type: 'card' | 'bank_account' | 'invoice';
+  brand?: string;
+  last4: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  isDefault: boolean;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  subscriptionId: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  subtotal: number;
+  tax: number;
+  total: number;
+  amountDue: number;
+  amountPaid: number;
+  currency: string;
+  invoiceDate: string;
+  dueDate?: string;
+  paidAt?: string;
+  pdfUrl?: string;
+  lineItems: InvoiceLineItem[];
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  period?: { start: string; end: string };
+}
+
+export interface UsageRecord {
+  id?: string;
+  metricName: string;
+  metricValue: number;
+  unit: string;
+  limit?: number;
+  percentUsed?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  recordedAt?: string;
+}
+
+export interface Quota {
+  id?: string;
+  quotaType: string;
+  quotaLimit: number;
+  currentUsage: number;
+  unit: string;
+  percentUsed?: number;
+  resetDate?: string;
+  warningThreshold?: number;
+  isExceeded?: boolean;
+}
+
+export interface EnterpriseContract {
+  id: string;
+  contractNumber: string;
+  name: string;
+  status: 'draft' | 'active' | 'expired' | 'terminated';
+  contractValue: number;
+  currency: string;
+  startDate: string;
+  endDate: string;
+  autoRenew: boolean;
+  terms?: string;
+  signedBy?: string;
+  signedAt?: string;
+  documentUrl?: string;
+  createdAt: string;
+}
+
+export interface AdminDashboard {
+  tenant: {
+    name: string;
+    plan: string;
+    status: string;
+  };
+  users: {
+    total: number;
+    active: number;
+    admins: number;
+    pendingInvites: number;
+  };
+  licenses: {
+    total: number;
+    used: number;
+    available: number;
+  };
+  billing: {
+    currentPlan: string;
+    mrr: number;
+    nextInvoice: string;
+    paymentStatus: string;
+  };
+  usage: {
+    jobsPosted: number;
+    candidatesProcessed: number;
+    storageUsed: number;
+    apiCalls: number;
+  };
+  recentActivity: Array<{
+    action: string;
+    user: string;
+    time: string;
+  }>;
+}
+
+// ==========================================
+// Batch 46-49: Technical Infrastructure Types (14.1-14.4)
+// ==========================================
+
+// Batch 46: API Infrastructure (14.1)
+export interface APIKey {
+  id: string;
+  name: string;
+  description?: string;
+  keyPrefix: string;
+  key?: string; // Only shown on creation
+  scopes: string[];
+  permissions?: Record<string, string[]>;
+  ipWhitelist?: string[];
+  rateLimit: number;
+  dailyLimit?: number;
+  monthlyLimit?: number;
+  totalRequests: number;
+  lastUsedAt?: string;
+  lastRequestIp?: string;
+  status: 'active' | 'revoked' | 'expired';
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export interface RateLimitRule {
+  id: string;
+  name: string;
+  description?: string;
+  ruleType: 'global' | 'tenant' | 'user' | 'endpoint' | 'ip';
+  priority: number;
+  targetType: string;
+  targetId?: string;
+  endpoint?: string;
+  method?: string;
+  requestsPerSecond?: number;
+  requestsPerMinute?: number;
+  requestsPerHour?: number;
+  requestsPerDay?: number;
+  burstLimit?: number;
+  responseCode: number;
+  retryAfter?: number;
+  isActive: boolean;
+}
+
+export interface CacheStats {
+  totalEntries: number;
+  hitRate: number;
+  missRate: number;
+  memoryUsed: number;
+  memoryLimit: number;
+  avgTTL: number;
+  evictions: number;
+  byNamespace: Record<string, {
+    entries: number;
+    hitRate: number;
+    size: number;
+  }>;
+}
+
+export interface APIDocumentation {
+  id: string;
+  title: string;
+  description?: string;
+  version: string;
+  apiVersion: string;
+  category?: string;
+  status: 'draft' | 'published' | 'deprecated';
+  endpoints: Array<{
+    method: string;
+    path: string;
+    description: string;
+  }>;
+}
+
+export interface Webhook {
+  id: string;
+  name: string;
+  description?: string;
+  url: string;
+  secret?: string;
+  events: string[];
+  isActive: boolean;
+  maxRetries: number;
+  timeoutMs: number;
+  totalDeliveries: number;
+  successCount: number;
+  failureCount: number;
+  lastDeliveryAt?: string;
+  lastStatus?: string;
+  createdAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  eventType: string;
+  eventId: string;
+  payload?: Record<string, unknown>;
+  attempt: number;
+  status: 'pending' | 'success' | 'failed';
+  responseCode?: number;
+  responseBody?: string;
+  responseTime?: number;
+  error?: string;
+  deliveredAt?: string;
+}
+
+// Batch 47: Testing & Quality (14.2)
+export interface TestSuite {
+  id: string;
+  name: string;
+  description?: string;
+  suiteType: 'unit' | 'integration' | 'e2e' | 'performance' | 'security';
+  framework: string;
+  configPath?: string;
+  testPattern?: string;
+  timeout: number;
+  retries: number;
+  parallel: boolean;
+  totalTests: number;
+  passingTests: number;
+  failingTests: number;
+  skippedTests: number;
+  isActive: boolean;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+export interface TestCase {
+  id: string;
+  suiteId: string;
+  name: string;
+  description?: string;
+  testPath: string;
+  testLine?: number;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  category?: string;
+  tags?: string[];
+  runCount: number;
+  passCount: number;
+  failCount: number;
+  avgDuration?: number;
+  isActive: boolean;
+  isFlaky: boolean;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+export interface TestRun {
+  id: string;
+  suiteId?: string;
+  runType: 'manual' | 'scheduled' | 'ci' | 'pre-commit';
+  branch?: string;
+  commit?: string;
+  triggeredBy?: string;
+  environment: string;
+  status: 'pending' | 'running' | 'passed' | 'failed' | 'error' | 'cancelled';
+  totalTests: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  errors: number;
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  coveragePercent?: number;
+  coverageReport?: Record<string, unknown>;
+  failureDetails?: Array<{
+    test: string;
+    error: string;
+    file: string;
+  }>;
+  reportUrl?: string;
+}
+
+export interface CodeQualityReport {
+  id: string;
+  reportType: 'linting' | 'security' | 'complexity' | 'dependencies';
+  tool: string;
+  version?: string;
+  branch?: string;
+  commit?: string;
+  overallScore?: number;
+  grade?: string;
+  totalIssues: number;
+  criticalIssues: number;
+  majorIssues: number;
+  minorIssues: number;
+  infoIssues: number;
+  issues?: Array<Record<string, unknown>>;
+  previousScore?: number;
+  scoreDelta?: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface CIPipeline {
+  id: string;
+  name: string;
+  description?: string;
+  provider: 'github' | 'gitlab' | 'jenkins' | 'circleci';
+  configPath?: string;
+  triggers: string[];
+  branches?: string[];
+  stages: string[];
+  timeout: number;
+  concurrency: number;
+  isActive: boolean;
+  totalRuns: number;
+  successRuns: number;
+  failedRuns: number;
+  avgDuration?: number;
+  lastRunId?: string;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+// Batch 48: Monitoring & Logging (14.3)
+export interface SystemMetrics {
+  cpu: { current: number; avg: number; max: number; unit: string };
+  memory: { current: number; total: number; used: number; unit: string };
+  disk: { current: number; total: number; used: number; unit: string };
+  network: { inbound: number; outbound: number; unit: string };
+  requests: { perSecond: number; avgLatency: number; p95Latency: number; p99Latency: number };
+  database: { connections: number; maxConnections: number; queryTime: number };
+  cache: { hitRate: number; memoryUsed: number; keys: number };
+}
+
+export interface ErrorLog {
+  id: string;
+  errorType: 'exception' | 'validation' | 'timeout' | 'network';
+  errorCode?: string;
+  message: string;
+  stackTrace?: string;
+  service?: string;
+  endpoint?: string;
+  method?: string;
+  userId?: string;
+  tenantId?: string;
+  requestId?: string;
+  environment: string;
+  severity: 'debug' | 'info' | 'warning' | 'error' | 'critical';
+  fingerprint?: string;
+  occurrences: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  status: 'open' | 'acknowledged' | 'resolved' | 'ignored';
+  resolvedAt?: string;
+  resolution?: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  action: string;
+  actionType: 'user' | 'system' | 'api' | 'scheduled';
+  resourceType: string;
+  resourceId?: string;
+  resourceName?: string;
+  previousValue?: Record<string, unknown>;
+  newValue?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  status: 'success' | 'failure' | 'blocked';
+  timestamp: string;
+}
+
+export interface PerformanceTrace {
+  id: string;
+  traceId: string;
+  spanId?: string;
+  parentSpanId?: string;
+  operationName: string;
+  operationType: 'http' | 'database' | 'cache' | 'queue' | 'external';
+  startTime: string;
+  endTime?: string;
+  duration?: number;
+  service: string;
+  endpoint?: string;
+  status: 'success' | 'error' | 'timeout';
+  statusCode?: number;
+  spans?: Array<{
+    spanId: string;
+    name: string;
+    duration: number;
+  }>;
+}
+
+export interface AlertRule {
+  id: string;
+  name: string;
+  description?: string;
+  severity: 'info' | 'warning' | 'critical';
+  metricName: string;
+  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  threshold: number;
+  duration?: number;
+  aggregation?: string;
+  channels: string[];
+  isActive: boolean;
+  lastTriggeredAt?: string;
+  triggerCount: number;
+  lastStatus?: string;
+}
+
+export interface AlertIncident {
+  id: string;
+  ruleId: string;
+  title: string;
+  description?: string;
+  severity: string;
+  status: 'firing' | 'acknowledged' | 'resolved';
+  startedAt: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  triggerValue?: number;
+  threshold: number;
+  notificationsSent: number;
+}
+
+// Batch 49: DevOps & Deployment (14.4)
+export interface Deployment {
+  id: string;
+  name?: string;
+  version: string;
+  environment: string;
+  branch?: string;
+  commit?: string;
+  commitMessage?: string;
+  tag?: string;
+  triggeredBy?: string;
+  triggerType: 'manual' | 'auto' | 'rollback' | 'scheduled';
+  status: 'pending' | 'in_progress' | 'success' | 'failed' | 'cancelled' | 'rolled_back';
+  startedAt?: string;
+  completedAt?: string;
+  duration?: number;
+  steps?: Array<{ name: string; status: string; duration?: number }>;
+  artifactUrl?: string;
+  dockerImage?: string;
+  healthStatus?: string;
+  canRollback: boolean;
+  previousDeploymentId?: string;
+  createdAt: string;
+}
+
+export interface DeploymentEnvironment {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  type: 'development' | 'staging' | 'production' | 'preview';
+  provider?: string;
+  region?: string;
+  cluster?: string;
+  url?: string;
+  apiUrl?: string;
+  variables?: Record<string, string>;
+  isProtected: boolean;
+  requiresApproval: boolean;
+  approvers?: string[];
+  maxInstances?: number;
+  autoScale: boolean;
+  status: 'active' | 'maintenance' | 'inactive';
+  lastDeploymentId?: string;
+  lastDeployedAt?: string;
+}
+
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  name: string;
+  description?: string;
+  flagType: 'boolean' | 'string' | 'number' | 'json';
+  defaultValue: unknown;
+  isEnabled: boolean;
+  targetingRules?: Array<Record<string, unknown>>;
+  rolloutPercentage: number;
+  rolloutStrategy: 'random' | 'user_id' | 'gradual';
+  startsAt?: string;
+  endsAt?: string;
+  evaluations: number;
+  uniqueUsers: number;
+  lastEvaluatedAt?: string;
+  status: 'active' | 'archived';
+  lastModifiedBy?: string;
+  createdAt: string;
+}
+
+export interface ServiceHealth {
+  id: string;
+  serviceName: string;
+  serviceType: 'api' | 'database' | 'cache' | 'queue' | 'external' | 'search';
+  environment: string;
+  healthUrl?: string;
+  checkInterval: number;
+  timeout: number;
+  status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+  lastCheckAt?: string;
+  lastHealthy?: string;
+  responseTime?: number;
+  uptime?: number;
+  dependencies?: string[];
+  activeIncidents: number;
+  slaTarget?: number;
+  slaActual?: number;
+}
+
+export interface BackupRecord {
+  id: string;
+  name?: string;
+  backupType: 'full' | 'incremental' | 'differential';
+  source: 'database' | 'files' | 'config';
+  destination: string;
+  path: string;
+  sizeBytes?: number;
+  compressedSize?: number;
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  errorMessage?: string;
+  verified: boolean;
+  verifiedAt?: string;
+  checksum?: string;
+  retentionDays: number;
+  expiresAt: string;
+  isEncrypted: boolean;
+  isScheduled: boolean;
+}
+
+export interface TechnicalDashboard {
+  api: {
+    activeKeys: number;
+    totalRequests: number;
+    avgResponseTime: number;
+    errorRate: number;
+    webhooksActive: number;
+  };
+  testing: {
+    totalSuites: number;
+    totalTests: number;
+    passRate: number;
+    coveragePercent: number;
+    lastRunStatus: string;
+  };
+  monitoring: {
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    activeAlerts: number;
+    openErrors: number;
+  };
+  devops: {
+    activeEnvironments: number;
+    recentDeployments: number;
+    featureFlags: number;
+    healthyServices: number;
+    backupsCompleted: number;
+  };
+  recentEvents: Array<{
+    type: string;
+    message: string;
+    time: string;
+  }>;
+}
