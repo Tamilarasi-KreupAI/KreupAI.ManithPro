@@ -16842,3 +16842,473 @@ export interface AdminDashboard {
     time: string;
   }>;
 }
+
+// ==========================================
+// Batch 46-49: Technical Infrastructure Types (14.1-14.4)
+// ==========================================
+
+// Batch 46: API Infrastructure (14.1)
+export interface APIKey {
+  id: string;
+  name: string;
+  description?: string;
+  keyPrefix: string;
+  key?: string; // Only shown on creation
+  scopes: string[];
+  permissions?: Record<string, string[]>;
+  ipWhitelist?: string[];
+  rateLimit: number;
+  dailyLimit?: number;
+  monthlyLimit?: number;
+  totalRequests: number;
+  lastUsedAt?: string;
+  lastRequestIp?: string;
+  status: 'active' | 'revoked' | 'expired';
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export interface RateLimitRule {
+  id: string;
+  name: string;
+  description?: string;
+  ruleType: 'global' | 'tenant' | 'user' | 'endpoint' | 'ip';
+  priority: number;
+  targetType: string;
+  targetId?: string;
+  endpoint?: string;
+  method?: string;
+  requestsPerSecond?: number;
+  requestsPerMinute?: number;
+  requestsPerHour?: number;
+  requestsPerDay?: number;
+  burstLimit?: number;
+  responseCode: number;
+  retryAfter?: number;
+  isActive: boolean;
+}
+
+export interface CacheStats {
+  totalEntries: number;
+  hitRate: number;
+  missRate: number;
+  memoryUsed: number;
+  memoryLimit: number;
+  avgTTL: number;
+  evictions: number;
+  byNamespace: Record<string, {
+    entries: number;
+    hitRate: number;
+    size: number;
+  }>;
+}
+
+export interface APIDocumentation {
+  id: string;
+  title: string;
+  description?: string;
+  version: string;
+  apiVersion: string;
+  category?: string;
+  status: 'draft' | 'published' | 'deprecated';
+  endpoints: Array<{
+    method: string;
+    path: string;
+    description: string;
+  }>;
+}
+
+export interface Webhook {
+  id: string;
+  name: string;
+  description?: string;
+  url: string;
+  secret?: string;
+  events: string[];
+  isActive: boolean;
+  maxRetries: number;
+  timeoutMs: number;
+  totalDeliveries: number;
+  successCount: number;
+  failureCount: number;
+  lastDeliveryAt?: string;
+  lastStatus?: string;
+  createdAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  eventType: string;
+  eventId: string;
+  payload?: Record<string, unknown>;
+  attempt: number;
+  status: 'pending' | 'success' | 'failed';
+  responseCode?: number;
+  responseBody?: string;
+  responseTime?: number;
+  error?: string;
+  deliveredAt?: string;
+}
+
+// Batch 47: Testing & Quality (14.2)
+export interface TestSuite {
+  id: string;
+  name: string;
+  description?: string;
+  suiteType: 'unit' | 'integration' | 'e2e' | 'performance' | 'security';
+  framework: string;
+  configPath?: string;
+  testPattern?: string;
+  timeout: number;
+  retries: number;
+  parallel: boolean;
+  totalTests: number;
+  passingTests: number;
+  failingTests: number;
+  skippedTests: number;
+  isActive: boolean;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+export interface TestCase {
+  id: string;
+  suiteId: string;
+  name: string;
+  description?: string;
+  testPath: string;
+  testLine?: number;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  category?: string;
+  tags?: string[];
+  runCount: number;
+  passCount: number;
+  failCount: number;
+  avgDuration?: number;
+  isActive: boolean;
+  isFlaky: boolean;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+export interface TestRun {
+  id: string;
+  suiteId?: string;
+  runType: 'manual' | 'scheduled' | 'ci' | 'pre-commit';
+  branch?: string;
+  commit?: string;
+  triggeredBy?: string;
+  environment: string;
+  status: 'pending' | 'running' | 'passed' | 'failed' | 'error' | 'cancelled';
+  totalTests: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  errors: number;
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  coveragePercent?: number;
+  coverageReport?: Record<string, unknown>;
+  failureDetails?: Array<{
+    test: string;
+    error: string;
+    file: string;
+  }>;
+  reportUrl?: string;
+}
+
+export interface CodeQualityReport {
+  id: string;
+  reportType: 'linting' | 'security' | 'complexity' | 'dependencies';
+  tool: string;
+  version?: string;
+  branch?: string;
+  commit?: string;
+  overallScore?: number;
+  grade?: string;
+  totalIssues: number;
+  criticalIssues: number;
+  majorIssues: number;
+  minorIssues: number;
+  infoIssues: number;
+  issues?: Array<Record<string, unknown>>;
+  previousScore?: number;
+  scoreDelta?: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface CIPipeline {
+  id: string;
+  name: string;
+  description?: string;
+  provider: 'github' | 'gitlab' | 'jenkins' | 'circleci';
+  configPath?: string;
+  triggers: string[];
+  branches?: string[];
+  stages: string[];
+  timeout: number;
+  concurrency: number;
+  isActive: boolean;
+  totalRuns: number;
+  successRuns: number;
+  failedRuns: number;
+  avgDuration?: number;
+  lastRunId?: string;
+  lastRunAt?: string;
+  lastStatus?: string;
+}
+
+// Batch 48: Monitoring & Logging (14.3)
+export interface SystemMetrics {
+  cpu: { current: number; avg: number; max: number; unit: string };
+  memory: { current: number; total: number; used: number; unit: string };
+  disk: { current: number; total: number; used: number; unit: string };
+  network: { inbound: number; outbound: number; unit: string };
+  requests: { perSecond: number; avgLatency: number; p95Latency: number; p99Latency: number };
+  database: { connections: number; maxConnections: number; queryTime: number };
+  cache: { hitRate: number; memoryUsed: number; keys: number };
+}
+
+export interface ErrorLog {
+  id: string;
+  errorType: 'exception' | 'validation' | 'timeout' | 'network';
+  errorCode?: string;
+  message: string;
+  stackTrace?: string;
+  service?: string;
+  endpoint?: string;
+  method?: string;
+  userId?: string;
+  tenantId?: string;
+  requestId?: string;
+  environment: string;
+  severity: 'debug' | 'info' | 'warning' | 'error' | 'critical';
+  fingerprint?: string;
+  occurrences: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  status: 'open' | 'acknowledged' | 'resolved' | 'ignored';
+  resolvedAt?: string;
+  resolution?: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  action: string;
+  actionType: 'user' | 'system' | 'api' | 'scheduled';
+  resourceType: string;
+  resourceId?: string;
+  resourceName?: string;
+  previousValue?: Record<string, unknown>;
+  newValue?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  status: 'success' | 'failure' | 'blocked';
+  timestamp: string;
+}
+
+export interface PerformanceTrace {
+  id: string;
+  traceId: string;
+  spanId?: string;
+  parentSpanId?: string;
+  operationName: string;
+  operationType: 'http' | 'database' | 'cache' | 'queue' | 'external';
+  startTime: string;
+  endTime?: string;
+  duration?: number;
+  service: string;
+  endpoint?: string;
+  status: 'success' | 'error' | 'timeout';
+  statusCode?: number;
+  spans?: Array<{
+    spanId: string;
+    name: string;
+    duration: number;
+  }>;
+}
+
+export interface AlertRule {
+  id: string;
+  name: string;
+  description?: string;
+  severity: 'info' | 'warning' | 'critical';
+  metricName: string;
+  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  threshold: number;
+  duration?: number;
+  aggregation?: string;
+  channels: string[];
+  isActive: boolean;
+  lastTriggeredAt?: string;
+  triggerCount: number;
+  lastStatus?: string;
+}
+
+export interface AlertIncident {
+  id: string;
+  ruleId: string;
+  title: string;
+  description?: string;
+  severity: string;
+  status: 'firing' | 'acknowledged' | 'resolved';
+  startedAt: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  triggerValue?: number;
+  threshold: number;
+  notificationsSent: number;
+}
+
+// Batch 49: DevOps & Deployment (14.4)
+export interface Deployment {
+  id: string;
+  name?: string;
+  version: string;
+  environment: string;
+  branch?: string;
+  commit?: string;
+  commitMessage?: string;
+  tag?: string;
+  triggeredBy?: string;
+  triggerType: 'manual' | 'auto' | 'rollback' | 'scheduled';
+  status: 'pending' | 'in_progress' | 'success' | 'failed' | 'cancelled' | 'rolled_back';
+  startedAt?: string;
+  completedAt?: string;
+  duration?: number;
+  steps?: Array<{ name: string; status: string; duration?: number }>;
+  artifactUrl?: string;
+  dockerImage?: string;
+  healthStatus?: string;
+  canRollback: boolean;
+  previousDeploymentId?: string;
+  createdAt: string;
+}
+
+export interface DeploymentEnvironment {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  type: 'development' | 'staging' | 'production' | 'preview';
+  provider?: string;
+  region?: string;
+  cluster?: string;
+  url?: string;
+  apiUrl?: string;
+  variables?: Record<string, string>;
+  isProtected: boolean;
+  requiresApproval: boolean;
+  approvers?: string[];
+  maxInstances?: number;
+  autoScale: boolean;
+  status: 'active' | 'maintenance' | 'inactive';
+  lastDeploymentId?: string;
+  lastDeployedAt?: string;
+}
+
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  name: string;
+  description?: string;
+  flagType: 'boolean' | 'string' | 'number' | 'json';
+  defaultValue: unknown;
+  isEnabled: boolean;
+  targetingRules?: Array<Record<string, unknown>>;
+  rolloutPercentage: number;
+  rolloutStrategy: 'random' | 'user_id' | 'gradual';
+  startsAt?: string;
+  endsAt?: string;
+  evaluations: number;
+  uniqueUsers: number;
+  lastEvaluatedAt?: string;
+  status: 'active' | 'archived';
+  lastModifiedBy?: string;
+  createdAt: string;
+}
+
+export interface ServiceHealth {
+  id: string;
+  serviceName: string;
+  serviceType: 'api' | 'database' | 'cache' | 'queue' | 'external' | 'search';
+  environment: string;
+  healthUrl?: string;
+  checkInterval: number;
+  timeout: number;
+  status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+  lastCheckAt?: string;
+  lastHealthy?: string;
+  responseTime?: number;
+  uptime?: number;
+  dependencies?: string[];
+  activeIncidents: number;
+  slaTarget?: number;
+  slaActual?: number;
+}
+
+export interface BackupRecord {
+  id: string;
+  name?: string;
+  backupType: 'full' | 'incremental' | 'differential';
+  source: 'database' | 'files' | 'config';
+  destination: string;
+  path: string;
+  sizeBytes?: number;
+  compressedSize?: number;
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  errorMessage?: string;
+  verified: boolean;
+  verifiedAt?: string;
+  checksum?: string;
+  retentionDays: number;
+  expiresAt: string;
+  isEncrypted: boolean;
+  isScheduled: boolean;
+}
+
+export interface TechnicalDashboard {
+  api: {
+    activeKeys: number;
+    totalRequests: number;
+    avgResponseTime: number;
+    errorRate: number;
+    webhooksActive: number;
+  };
+  testing: {
+    totalSuites: number;
+    totalTests: number;
+    passRate: number;
+    coveragePercent: number;
+    lastRunStatus: string;
+  };
+  monitoring: {
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    activeAlerts: number;
+    openErrors: number;
+  };
+  devops: {
+    activeEnvironments: number;
+    recentDeployments: number;
+    featureFlags: number;
+    healthyServices: number;
+    backupsCompleted: number;
+  };
+  recentEvents: Array<{
+    type: string;
+    message: string;
+    time: string;
+  }>;
+}

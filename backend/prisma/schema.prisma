@@ -17490,3 +17490,973 @@ model EnterpriseContract {
   @@index([endDate])
   @@map("enterprise_contracts")
 }
+
+// ==========================================
+// Batch 46-49: Technical Infrastructure (14.1-14.4)
+// ==========================================
+
+// Batch 46: API Infrastructure (14.1)
+model APIKey {
+  id            String   @id @default(uuid())
+  tenantId      String?
+  userId        String?
+
+  // Key details
+  name          String
+  description   String?
+  keyHash       String   @unique // hashed key for security
+  keyPrefix     String   // first 8 chars for identification
+
+  // Permissions
+  scopes        Json     // array of allowed scopes
+  permissions   Json?    // specific endpoint permissions
+  ipWhitelist   Json?    // allowed IP addresses
+
+  // Limits
+  rateLimit     Int      @default(1000) // requests per hour
+  dailyLimit    Int?     // requests per day
+  monthlyLimit  Int?     // requests per month
+
+  // Usage tracking
+  lastUsedAt    DateTime?
+  totalRequests Int      @default(0)
+  lastRequestIp String?
+
+  // Status
+  status        String   @default("active") // active, revoked, expired
+  expiresAt     DateTime?
+  revokedAt     DateTime?
+  revokedReason String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([keyPrefix])
+  @@index([status])
+  @@map("api_keys")
+}
+
+model RateLimitRule {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Rule definition
+  name          String
+  description   String?
+  ruleType      String   // global, tenant, user, endpoint, ip
+  priority      Int      @default(0) // higher = more important
+
+  // Target
+  targetType    String   // all, tenant, user, api_key, ip
+  targetId      String?  // specific ID if not "all"
+  endpoint      String?  // specific endpoint pattern
+  method        String?  // GET, POST, etc.
+
+  // Limits
+  requestsPerSecond Int?
+  requestsPerMinute Int?
+  requestsPerHour   Int?
+  requestsPerDay    Int?
+  burstLimit        Int? // max requests in burst
+
+  // Response
+  responseCode  Int      @default(429) // HTTP status when limited
+  retryAfter    Int?     // suggested retry after seconds
+
+  // Status
+  isActive      Boolean  @default(true)
+  startsAt      DateTime?
+  endsAt        DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([ruleType])
+  @@index([isActive])
+  @@map("rate_limit_rules")
+}
+
+model CacheEntry {
+  id            String   @id @default(uuid())
+
+  // Cache key
+  cacheKey      String   @unique
+  namespace     String   // cache namespace/category
+
+  // Value
+  value         Json     // cached data
+  valueType     String   @default("json") // json, string, binary
+  sizeBytes     Int?     // size of cached value
+
+  // Metadata
+  hitCount      Int      @default(0)
+  lastHitAt     DateTime?
+
+  // TTL
+  ttlSeconds    Int      @default(3600)
+  expiresAt     DateTime
+
+  // Tags for invalidation
+  tags          Json?    // array of tags for group invalidation
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([namespace])
+  @@index([expiresAt])
+  @@map("cache_entries")
+}
+
+model APIDocumentation {
+  id            String   @id @default(uuid())
+
+  // Document info
+  title         String
+  description   String?
+  version       String
+  apiVersion    String   // v1, v2, etc.
+
+  // Content
+  openApiSpec   Json?    // OpenAPI/Swagger spec
+  endpoints     Json     // array of endpoint docs
+  schemas       Json?    // data schemas
+  examples      Json?    // request/response examples
+
+  // Categories
+  category      String?  // auth, jobs, candidates, etc.
+  tags          Json?    // array of tags
+
+  // Status
+  status        String   @default("published") // draft, published, deprecated
+  publishedAt   DateTime?
+  deprecatedAt  DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([apiVersion])
+  @@index([status])
+  @@map("api_documentation")
+}
+
+model Webhook {
+  id            String   @id @default(uuid())
+  tenantId      String
+
+  // Webhook config
+  name          String
+  description   String?
+  url           String
+  secret        String?  // for signature verification
+
+  // Events
+  events        Json     // array of event types to subscribe
+  eventFilters  Json?    // additional filters
+
+  // Settings
+  isActive      Boolean  @default(true)
+  version       String   @default("1.0") // webhook payload version
+  contentType   String   @default("application/json")
+
+  // Retry config
+  maxRetries    Int      @default(3)
+  retryDelayMs  Int      @default(1000)
+  timeoutMs     Int      @default(30000)
+
+  // Stats
+  totalDeliveries Int    @default(0)
+  successCount    Int    @default(0)
+  failureCount    Int    @default(0)
+  lastDeliveryAt  DateTime?
+  lastStatus      String? // success, failed
+
+  // Security
+  signingAlgorithm String @default("sha256") // hmac algorithm
+  ipWhitelist   Json?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id            String   @id @default(uuid())
+  webhookId     String
+
+  // Event
+  eventType     String
+  eventId       String   // unique event identifier
+  payload       Json     // sent payload
+
+  // Delivery
+  attempt       Int      @default(1)
+  status        String   // pending, success, failed
+
+  // Response
+  responseCode  Int?
+  responseBody  String?
+  responseTime  Int?     // ms
+
+  // Error
+  error         String?
+
+  // Timestamps
+  scheduledAt   DateTime
+  deliveredAt   DateTime?
+  nextRetryAt   DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([eventType])
+  @@map("webhook_deliveries")
+}
+
+// Batch 47: Testing & Quality (14.2)
+model TestSuite {
+  id            String   @id @default(uuid())
+
+  // Suite info
+  name          String
+  description   String?
+  suiteType     String   // unit, integration, e2e, performance, security
+
+  // Configuration
+  framework     String   // jest, mocha, cypress, playwright
+  configPath    String?
+  testPattern   String?  // file pattern for tests
+  setupScript   String?
+  teardownScript String?
+
+  // Execution
+  timeout       Int      @default(30000) // ms
+  retries       Int      @default(0)
+  parallel      Boolean  @default(true)
+
+  // Stats
+  totalTests    Int      @default(0)
+  passingTests  Int      @default(0)
+  failingTests  Int      @default(0)
+  skippedTests  Int      @default(0)
+
+  // Status
+  isActive      Boolean  @default(true)
+  lastRunAt     DateTime?
+  lastStatus    String?  // passed, failed, error
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([suiteType])
+  @@index([isActive])
+  @@map("test_suites")
+}
+
+model TestCase {
+  id            String   @id @default(uuid())
+  suiteId       String
+
+  // Test info
+  name          String
+  description   String?
+  testPath      String   // file path
+  testLine      Int?     // line number
+
+  // Classification
+  priority      String   @default("medium") // critical, high, medium, low
+  category      String?
+  tags          Json?
+
+  // Expected behavior
+  expectedResult String?
+  timeout       Int?     // ms override
+
+  // Stats
+  runCount      Int      @default(0)
+  passCount     Int      @default(0)
+  failCount     Int      @default(0)
+  avgDuration   Float?   // ms
+
+  // Status
+  isActive      Boolean  @default(true)
+  isFlaky       Boolean  @default(false)
+  lastRunAt     DateTime?
+  lastStatus    String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([suiteId])
+  @@index([isActive])
+  @@map("test_cases")
+}
+
+model TestRun {
+  id            String   @id @default(uuid())
+  suiteId       String?
+
+  // Run info
+  runType       String   // manual, scheduled, ci, pre-commit
+  branch        String?
+  commit        String?
+  triggeredBy   String?
+
+  // Environment
+  environment   String   @default("test") // test, staging, ci
+  nodeVersion   String?
+  osInfo        String?
+
+  // Results
+  status        String   @default("running") // pending, running, passed, failed, error, cancelled
+  totalTests    Int      @default(0)
+  passed        Int      @default(0)
+  failed        Int      @default(0)
+  skipped       Int      @default(0)
+  errors        Int      @default(0)
+
+  // Timing
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  duration      Int?     // ms
+
+  // Coverage
+  coveragePercent Float?
+  coverageReport Json?   // detailed coverage
+
+  // Artifacts
+  logs          Json?    // test logs
+  screenshots   Json?    // e2e screenshots
+  videos        Json?    // e2e video recordings
+  reportUrl     String?
+
+  // Failures
+  failureDetails Json?   // array of failure info
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([suiteId])
+  @@index([status])
+  @@index([runType])
+  @@index([startedAt])
+  @@map("test_runs")
+}
+
+model CodeQualityReport {
+  id            String   @id @default(uuid())
+
+  // Report info
+  reportType    String   // linting, security, complexity, dependencies
+  tool          String   // eslint, sonarqube, snyk, etc.
+  version       String?
+
+  // Target
+  branch        String?
+  commit        String?
+  targetPath    String?
+
+  // Scores
+  overallScore  Float?   // 0-100
+  grade         String?  // A, B, C, D, F
+
+  // Issues
+  totalIssues   Int      @default(0)
+  criticalIssues Int     @default(0)
+  majorIssues   Int      @default(0)
+  minorIssues   Int      @default(0)
+  infoIssues    Int      @default(0)
+
+  // Details
+  issues        Json?    // array of issue details
+  metrics       Json?    // code metrics
+  duplications  Json?    // code duplications
+
+  // Comparisons
+  previousScore Float?
+  scoreDelta    Float?
+  newIssues     Int?
+  fixedIssues   Int?
+
+  // Status
+  status        String   @default("completed") // running, completed, failed
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([reportType])
+  @@index([branch])
+  @@index([createdAt])
+  @@map("code_quality_reports")
+}
+
+model CIPipeline {
+  id            String   @id @default(uuid())
+
+  // Pipeline info
+  name          String
+  description   String?
+  provider      String   // github, gitlab, jenkins, circleci
+
+  // Configuration
+  configPath    String?  // .github/workflows, .gitlab-ci.yml
+  configContent Json?    // parsed config
+
+  // Triggers
+  triggers      Json     // push, pr, schedule, manual
+  branches      Json?    // branch patterns
+
+  // Stages
+  stages        Json     // array of stage definitions
+
+  // Settings
+  timeout       Int      @default(3600) // seconds
+  concurrency   Int      @default(1)
+  isActive      Boolean  @default(true)
+
+  // Stats
+  totalRuns     Int      @default(0)
+  successRuns   Int      @default(0)
+  failedRuns    Int      @default(0)
+  avgDuration   Float?   // seconds
+
+  // Status
+  lastRunId     String?
+  lastRunAt     DateTime?
+  lastStatus    String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([provider])
+  @@index([isActive])
+  @@map("ci_pipelines")
+}
+
+// Batch 48: Monitoring & Logging (14.3)
+model SystemMetric {
+  id            String   @id @default(uuid())
+
+  // Metric info
+  metricName    String
+  metricType    String   // counter, gauge, histogram, summary
+  category      String   // system, application, business
+
+  // Value
+  value         Float
+  unit          String?  // ms, bytes, percent, count
+
+  // Dimensions
+  service       String?
+  host          String?
+  instance      String?
+  tags          Json?
+
+  // Timestamp
+  timestamp     DateTime @default(now())
+
+  // Aggregation info
+  aggregation   String?  // sum, avg, min, max, p50, p95, p99
+  period        Int?     // seconds
+
+  @@index([metricName])
+  @@index([category])
+  @@index([timestamp])
+  @@map("system_metrics")
+}
+
+model ErrorLog {
+  id            String   @id @default(uuid())
+
+  // Error info
+  errorType     String   // exception, validation, timeout, network
+  errorCode     String?
+  message       String
+  stackTrace    String?
+
+  // Context
+  service       String?
+  endpoint      String?
+  method        String?
+  userId        String?
+  tenantId      String?
+  requestId     String?
+
+  // Request info
+  requestBody   Json?
+  requestHeaders Json?
+  queryParams   Json?
+
+  // Environment
+  environment   String   // development, staging, production
+  version       String?
+  host          String?
+
+  // Severity
+  severity      String   @default("error") // debug, info, warning, error, critical
+
+  // Grouping
+  fingerprint   String?  // error grouping hash
+  occurrences   Int      @default(1)
+  firstSeenAt   DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+
+  // Status
+  status        String   @default("open") // open, acknowledged, resolved, ignored
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  resolution    String?
+
+  // Additional
+  browserInfo   Json?
+  deviceInfo    Json?
+  metadata      Json?
+
+  timestamp     DateTime @default(now())
+
+  @@index([errorType])
+  @@index([severity])
+  @@index([status])
+  @@index([fingerprint])
+  @@index([timestamp])
+  @@map("error_logs")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  tenantId      String?
+  userId        String?
+
+  // Action
+  action        String   // create, read, update, delete, login, etc.
+  actionType    String   // user, system, api, scheduled
+
+  // Resource
+  resourceType  String
+  resourceId    String?
+  resourceName  String?
+
+  // Changes
+  previousValue Json?
+  newValue      Json?
+  changes       Json?    // detailed field changes
+
+  // Context
+  ipAddress     String?
+  userAgent     String?
+  sessionId     String?
+  requestId     String?
+
+  // Outcome
+  status        String   @default("success") // success, failure, blocked
+  errorMessage  String?
+
+  // Compliance
+  dataCategory  String?  // pii, financial, healthcare
+  retentionDays Int?
+
+  metadata      Json?
+  timestamp     DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model PerformanceTrace {
+  id            String   @id @default(uuid())
+  traceId       String   // distributed trace ID
+  spanId        String?  // span within trace
+  parentSpanId  String?
+
+  // Operation
+  operationName String
+  operationType String   // http, database, cache, queue, external
+
+  // Timing
+  startTime     DateTime
+  endTime       DateTime?
+  duration      Int?     // ms
+
+  // Context
+  service       String
+  endpoint      String?
+  method        String?
+
+  // Status
+  status        String   @default("success") // success, error, timeout
+  statusCode    Int?
+  errorMessage  String?
+
+  // Metrics
+  requestSize   Int?     // bytes
+  responseSize  Int?     // bytes
+
+  // Tags
+  tags          Json?
+
+  // Nested spans
+  childCount    Int      @default(0)
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([traceId])
+  @@index([service])
+  @@index([operationType])
+  @@index([startTime])
+  @@map("performance_traces")
+}
+
+model AlertRule {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Rule info
+  name          String
+  description   String?
+  severity      String   @default("warning") // info, warning, critical
+
+  // Condition
+  metricName    String
+  condition     String   // gt, lt, eq, gte, lte
+  threshold     Float
+  duration      Int?     // seconds for condition to persist
+
+  // Aggregation
+  aggregation   String?  // avg, sum, max, min, count
+  groupBy       Json?    // dimensions to group by
+
+  // Notification
+  channels      Json     // array of notification channels
+  notifyOnResolve Boolean @default(true)
+  cooldownMinutes Int    @default(5)
+
+  // Schedule
+  isActive      Boolean  @default(true)
+  schedule      String?  // cron for check frequency
+
+  // Stats
+  lastTriggeredAt DateTime?
+  triggerCount  Int      @default(0)
+  lastStatus    String?  // ok, alerting
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([severity])
+  @@map("alert_rules")
+}
+
+model AlertIncident {
+  id            String   @id @default(uuid())
+  ruleId        String
+
+  // Incident info
+  title         String
+  description   String?
+  severity      String
+
+  // Status
+  status        String   @default("firing") // firing, acknowledged, resolved
+
+  // Timeline
+  startedAt     DateTime @default(now())
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  resolvedAt    DateTime?
+  resolvedBy    String?
+
+  // Value
+  triggerValue  Float?
+  threshold     Float
+
+  // Notifications
+  notificationsSent Int   @default(0)
+  lastNotifiedAt DateTime?
+
+  // Notes
+  notes         Json?    // array of notes/updates
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ruleId])
+  @@index([status])
+  @@index([severity])
+  @@index([startedAt])
+  @@map("alert_incidents")
+}
+
+// Batch 49: DevOps & Deployment (14.4)
+model Deployment {
+  id            String   @id @default(uuid())
+
+  // Deployment info
+  name          String?
+  version       String
+  environment   String   // development, staging, production
+
+  // Source
+  branch        String?
+  commit        String?
+  commitMessage String?
+  tag           String?
+
+  // Trigger
+  triggeredBy   String?  // user ID or "system"
+  triggerType   String   // manual, auto, rollback, scheduled
+
+  // Status
+  status        String   @default("pending") // pending, in_progress, success, failed, cancelled, rolled_back
+
+  // Timing
+  startedAt     DateTime?
+  completedAt   DateTime?
+  duration      Int?     // seconds
+
+  // Steps
+  steps         Json?    // array of deployment steps
+  currentStep   Int?
+
+  // Artifacts
+  artifactUrl   String?
+  artifactSize  Int?     // bytes
+  dockerImage   String?
+
+  // Health
+  healthCheckUrl String?
+  healthStatus  String?
+
+  // Rollback
+  previousDeploymentId String?
+  canRollback   Boolean  @default(true)
+
+  // Notes
+  notes         String?
+  changelog     Json?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([environment])
+  @@index([status])
+  @@index([version])
+  @@index([createdAt])
+  @@map("deployments")
+}
+
+model Environment {
+  id            String   @id @default(uuid())
+
+  // Environment info
+  name          String   @unique
+  displayName   String
+  description   String?
+  type          String   // development, staging, production, preview
+
+  // Infrastructure
+  provider      String?  // aws, gcp, azure, vercel
+  region        String?
+  cluster       String?
+  namespace     String?
+
+  // URLs
+  url           String?
+  apiUrl        String?
+
+  // Configuration
+  variables     Json?    // environment variables (encrypted)
+  secrets       Json?    // secret references
+
+  // Protection
+  isProtected   Boolean  @default(false)
+  requiresApproval Boolean @default(false)
+  approvers     Json?    // user IDs who can approve
+
+  // Limits
+  maxInstances  Int?
+  autoScale     Boolean  @default(false)
+  scaleConfig   Json?
+
+  // Status
+  status        String   @default("active") // active, maintenance, inactive
+  lastDeploymentId String?
+  lastDeployedAt DateTime?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@map("environments")
+}
+
+model FeatureFlag {
+  id            String   @id @default(uuid())
+  tenantId      String?
+
+  // Flag info
+  key           String   @unique
+  name          String
+  description   String?
+
+  // Value
+  flagType      String   @default("boolean") // boolean, string, number, json
+  defaultValue  Json
+
+  // Targeting
+  isEnabled     Boolean  @default(false)
+  targetingRules Json?   // array of targeting rules
+
+  // Rollout
+  rolloutPercentage Int  @default(100) // 0-100
+  rolloutStrategy String @default("random") // random, user_id, gradual
+
+  // Segments
+  enabledSegments Json?  // user segments with flag enabled
+  disabledSegments Json? // user segments with flag disabled
+
+  // Schedule
+  startsAt      DateTime?
+  endsAt        DateTime?
+
+  // Stats
+  evaluations   Int      @default(0)
+  uniqueUsers   Int      @default(0)
+  lastEvaluatedAt DateTime?
+
+  // Status
+  status        String   @default("active") // active, archived
+  archivedAt    DateTime?
+
+  // History
+  lastModifiedBy String?
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([key])
+  @@index([status])
+  @@map("feature_flags")
+}
+
+model ServiceHealth {
+  id            String   @id @default(uuid())
+
+  // Service info
+  serviceName   String
+  serviceType   String   // api, database, cache, queue, external
+  environment   String
+
+  // Health check
+  healthUrl     String?
+  checkInterval Int      @default(60) // seconds
+  timeout       Int      @default(10) // seconds
+
+  // Current status
+  status        String   @default("unknown") // healthy, degraded, unhealthy, unknown
+  lastCheckAt   DateTime?
+  lastHealthy   DateTime?
+
+  // Metrics
+  responseTime  Int?     // ms
+  uptime        Float?   // percentage
+
+  // Dependencies
+  dependencies  Json?    // array of dependent services
+
+  // Incidents
+  activeIncidents Int    @default(0)
+  totalIncidents  Int    @default(0)
+
+  // SLA
+  slaTarget     Float?   // uptime percentage target
+  slaActual     Float?   // actual uptime
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([serviceName])
+  @@index([status])
+  @@index([environment])
+  @@map("service_health")
+}
+
+model BackupRecord {
+  id            String   @id @default(uuid())
+
+  // Backup info
+  name          String?
+  backupType    String   // full, incremental, differential
+  source        String   // database, files, config
+
+  // Target
+  destination   String   // s3, gcs, azure-blob
+  path          String
+
+  // Size
+  sizeBytes     BigInt?
+  compressedSize BigInt?
+
+  // Timing
+  startedAt     DateTime
+  completedAt   DateTime?
+  duration      Int?     // seconds
+
+  // Status
+  status        String   @default("in_progress") // pending, in_progress, completed, failed
+  errorMessage  String?
+
+  // Verification
+  verified      Boolean  @default(false)
+  verifiedAt    DateTime?
+  checksum      String?
+
+  // Retention
+  retentionDays Int      @default(30)
+  expiresAt     DateTime
+  isArchived    Boolean  @default(false)
+
+  // Encryption
+  isEncrypted   Boolean  @default(true)
+  encryptionKey String?  // reference to key, not actual key
+
+  // Schedule
+  scheduleId    String?
+  isScheduled   Boolean  @default(false)
+
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([backupType])
+  @@index([source])
+  @@index([status])
+  @@index([createdAt])
+  @@map("backup_records")
+}

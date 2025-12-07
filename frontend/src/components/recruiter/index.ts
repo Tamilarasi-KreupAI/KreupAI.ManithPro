@@ -69,3 +69,6 @@ export { default as MobileAccessibilityHub } from './MobileAccessibilityHub';
 
 // Recruiter Components - Batch 43-45: Enterprise Administration
 export { default as EnterpriseAdminHub } from './EnterpriseAdminHub';
+
+// Recruiter Components - Batch 46-49: Technical Infrastructure
+export { default as TechnicalInfraHub } from './TechnicalInfraHub';
