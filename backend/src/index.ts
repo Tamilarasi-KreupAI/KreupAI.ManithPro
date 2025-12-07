@@ -54,6 +54,7 @@ import batch35JobBoardIntegrationsRoutes from './routes/batch35JobBoardIntegrati
 import batch36DeveloperToolsRoutes from './routes/batch36DeveloperTools.routes';
 import batch37_39WorkflowAutomationRoutes from './routes/batch37_39WorkflowAutomation.routes';
 import batch40_42MobileAccessibilityRoutes from './routes/batch40_42MobileAccessibility.routes';
+import batch43_45EnterpriseAdminRoutes from './routes/batch43_45EnterpriseAdmin.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -134,6 +135,7 @@ app.get('/', (req, res) => {
       batch36DeveloperTools: '/api/developer',
       batch37_39WorkflowAutomation: '/api/workflow-automation',
       batch40_42MobileAccessibility: '/api/mobile',
+      batch43_45EnterpriseAdmin: '/api/admin-enterprise',
     },
   });
 });
@@ -189,6 +191,7 @@ app.use('/api/job-boards', batch35JobBoardIntegrationsRoutes);
 app.use('/api/developer', batch36DeveloperToolsRoutes);
 app.use('/api/workflow-automation', batch37_39WorkflowAutomationRoutes);
 app.use('/api/mobile', batch40_42MobileAccessibilityRoutes);
+app.use('/api/admin-enterprise', batch43_45EnterpriseAdminRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

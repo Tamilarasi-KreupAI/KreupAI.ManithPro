@@ -16536,3 +16536,309 @@ export interface MobileAccessibilityDashboard {
     byType: Record<string, number>;
   };
 }
+
+// ==========================================
+// Batch 43-45: Enterprise Administration Types (13.1-13.3)
+// ==========================================
+
+// Batch 43: Multi-Tenant & Organization (13.1)
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  domain?: string;
+  plan: 'starter' | 'professional' | 'enterprise' | 'custom';
+  status: 'active' | 'suspended' | 'trial' | 'cancelled';
+  maxUsers: number;
+  maxJobs: number;
+  storageLimit: number;
+  dataRegion: string;
+  settings?: TenantSettings;
+  features?: TenantFeatures;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface TenantSettings {
+  sso?: boolean;
+  mfa?: boolean;
+  ipWhitelist?: string[];
+  customDomain?: boolean;
+  branding?: {
+    logo?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  };
+}
+
+export interface TenantFeatures {
+  ai: boolean;
+  analytics: boolean;
+  api: boolean;
+  customIntegrations: boolean;
+  advancedReporting: boolean;
+  dedicatedSupport: boolean;
+}
+
+export interface Organization {
+  id: string;
+  tenantId: string;
+  parentId?: string;
+  name: string;
+  type: 'company' | 'division' | 'department' | 'team' | 'branch';
+  code?: string;
+  isActive: boolean;
+  level: number;
+  headId?: string;
+  headName?: string;
+  children?: Organization[];
+  createdAt?: string;
+}
+
+export interface CostCenter {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  organizationId?: string;
+  managerId?: string;
+  annualBudget: number;
+  currentSpend: number;
+  currency: string;
+  isActive: boolean;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  code: string;
+  parentId?: string;
+  headId?: string;
+  headName?: string;
+  level: number;
+  employeeCount?: number;
+  isActive: boolean;
+}
+
+// Batch 44: User & License Management (13.2)
+export interface License {
+  id: string;
+  name: string;
+  licenseType: 'seat' | 'feature' | 'usage' | 'module';
+  totalSeats: number;
+  usedSeats: number;
+  availableSeats: number;
+  pricePerSeat?: number;
+  features?: string[];
+  validFrom?: string;
+  validUntil?: string;
+  autoRenew: boolean;
+  isActive: boolean;
+}
+
+export interface LicenseAllocation {
+  id: string;
+  licenseId: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  allocatedAt: string;
+  allocatedBy: string;
+  expiresAt?: string;
+  isActive: boolean;
+}
+
+export interface RoleTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: 'admin' | 'recruiter' | 'hiring_manager' | 'interviewer' | 'viewer' | 'custom';
+  permissions: string[];
+  dataAccess: 'all' | 'organization' | 'team' | 'own';
+  isSystem: boolean;
+  isDefault?: boolean;
+  userCount?: number;
+}
+
+export interface CustomRole {
+  id: string;
+  name: string;
+  description?: string;
+  baseTemplateId?: string;
+  permissions: string[];
+  restrictions?: string[];
+  dataAccess: 'all' | 'organization' | 'team' | 'own';
+  userCount: number;
+  createdBy: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface AccessReview {
+  id: string;
+  name: string;
+  description?: string;
+  reviewType: 'periodic' | 'triggered' | 'certification';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  scope: 'all_users' | 'role' | 'department' | 'custom';
+  reviewerId: string;
+  reviewerName?: string;
+  totalItems: number;
+  reviewedItems: number;
+  approvedItems?: number;
+  revokedItems?: number;
+  dueDate: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface UserActivityLog {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  resourceName?: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  status: 'success' | 'failure' | 'blocked';
+  timestamp: string;
+}
+
+// Batch 45: Billing & Subscriptions (13.3)
+export interface Subscription {
+  id: string;
+  tenantId: string;
+  planName: string;
+  planTier: 'starter' | 'professional' | 'enterprise' | 'custom';
+  status: 'active' | 'past_due' | 'cancelled' | 'trialing' | 'paused';
+  billingCycle: 'monthly' | 'annual';
+  amount: number;
+  currency: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd?: boolean;
+  cancelReason?: string;
+  trialEndsAt?: string;
+  paymentMethod?: PaymentMethod;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  type: 'card' | 'bank_account' | 'invoice';
+  brand?: string;
+  last4: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  isDefault: boolean;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  subscriptionId: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  subtotal: number;
+  tax: number;
+  total: number;
+  amountDue: number;
+  amountPaid: number;
+  currency: string;
+  invoiceDate: string;
+  dueDate?: string;
+  paidAt?: string;
+  pdfUrl?: string;
+  lineItems: InvoiceLineItem[];
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  period?: { start: string; end: string };
+}
+
+export interface UsageRecord {
+  id?: string;
+  metricName: string;
+  metricValue: number;
+  unit: string;
+  limit?: number;
+  percentUsed?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  recordedAt?: string;
+}
+
+export interface Quota {
+  id?: string;
+  quotaType: string;
+  quotaLimit: number;
+  currentUsage: number;
+  unit: string;
+  percentUsed?: number;
+  resetDate?: string;
+  warningThreshold?: number;
+  isExceeded?: boolean;
+}
+
+export interface EnterpriseContract {
+  id: string;
+  contractNumber: string;
+  name: string;
+  status: 'draft' | 'active' | 'expired' | 'terminated';
+  contractValue: number;
+  currency: string;
+  startDate: string;
+  endDate: string;
+  autoRenew: boolean;
+  terms?: string;
+  signedBy?: string;
+  signedAt?: string;
+  documentUrl?: string;
+  createdAt: string;
+}
+
+export interface AdminDashboard {
+  tenant: {
+    name: string;
+    plan: string;
+    status: string;
+  };
+  users: {
+    total: number;
+    active: number;
+    admins: number;
+    pendingInvites: number;
+  };
+  licenses: {
+    total: number;
+    used: number;
+    available: number;
+  };
+  billing: {
+    currentPlan: string;
+    mrr: number;
+    nextInvoice: string;
+    paymentStatus: string;
+  };
+  usage: {
+    jobsPosted: number;
+    candidatesProcessed: number;
+    storageUsed: number;
+    apiCalls: number;
+  };
+  recentActivity: Array<{
+    action: string;
+    user: string;
+    time: string;
+  }>;
+}

@@ -16894,3 +16894,599 @@ model AccessibilityAudit {
   @@index([score])
   @@map("accessibility_audits")
 }
+
+// ==========================================
+// Batch 43-45: Enterprise Administration (13.1-13.3)
+// ==========================================
+
+// Batch 43: Multi-Tenant & Organization (13.1)
+model Tenant {
+  id              String   @id @default(uuid())
+
+  // Tenant info
+  name            String
+  slug            String   @unique
+  domain          String?  @unique
+  logo            String?
+
+  // Plan & Status
+  plan            String   @default("free") // free, starter, professional, enterprise
+  status          String   @default("active") // active, suspended, cancelled
+
+  // Settings
+  settings        Json?
+  features        Json?    // enabled features for this tenant
+
+  // Limits
+  maxUsers        Int      @default(5)
+  maxJobs         Int      @default(10)
+  storageLimit    Int      @default(1024) // MB
+
+  // Billing
+  billingEmail    String?
+  billingAddress  Json?
+  stripeCustomerId String?
+
+  // Trial
+  trialEndsAt     DateTime?
+  isTrialActive   Boolean  @default(false)
+
+  // Data isolation
+  dataRegion      String   @default("us-east-1")
+  encryptionKey   String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organizations   Organization[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([plan])
+  @@map("tenants")
+}
+
+model Organization {
+  id              String   @id @default(uuid())
+  tenantId        String
+  parentId        String?  // for hierarchical orgs
+
+  // Org info
+  name            String
+  code            String?  // internal code
+  type            String   @default("company") // company, department, team, subsidiary
+  logo            String?
+  description     String?
+
+  // Hierarchy
+  level           Int      @default(0)
+  path            String?  // materialized path for hierarchy
+
+  // Settings
+  settings        Json?
+  timezone        String   @default("UTC")
+  locale          String   @default("en")
+  currency        String   @default("USD")
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  costCenters     CostCenter[]
+  departments     Department[]
+
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([type])
+  @@index([isActive])
+  @@map("organizations")
+}
+
+model CostCenter {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Cost center info
+  code            String
+  name            String
+  description     String?
+
+  // Budget
+  annualBudget    Float?
+  currentSpend    Float    @default(0)
+  currency        String   @default("USD")
+
+  // Owner
+  ownerId         String?
+  ownerName       String?
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  // Tracking
+  allocatedHeadcount Int   @default(0)
+  currentHeadcount Int     @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([code])
+  @@map("cost_centers")
+}
+
+model Department {
+  id              String   @id @default(uuid())
+  organizationId  String
+  parentId        String?
+
+  // Department info
+  name            String
+  code            String?
+  description     String?
+
+  // Hierarchy
+  level           Int      @default(0)
+  path            String?
+
+  // Head
+  headId          String?
+  headName        String?
+
+  // Settings
+  settings        Json?
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([parentId])
+  @@map("departments")
+}
+
+// Batch 44: User & License Management (13.2)
+model License {
+  id              String   @id @default(uuid())
+  tenantId        String
+
+  // License info
+  licenseType     String   // seat, usage, feature
+  name            String
+  description     String?
+
+  // Quantity
+  totalSeats      Int
+  usedSeats       Int      @default(0)
+  availableSeats  Int
+
+  // Pricing
+  pricePerSeat    Float?
+  currency        String   @default("USD")
+  billingCycle    String   @default("monthly") // monthly, annual
+
+  // Validity
+  startsAt        DateTime
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+
+  // Features
+  features        String[]
+  restrictions    Json?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  allocations     LicenseAllocation[]
+
+  @@index([tenantId])
+  @@index([licenseType])
+  @@index([isActive])
+  @@map("licenses")
+}
+
+model LicenseAllocation {
+  id              String   @id @default(uuid())
+  licenseId       String
+  userId          String
+  organizationId  String
+
+  // Allocation info
+  allocatedAt     DateTime @default(now())
+  allocatedBy     String?
+  expiresAt       DateTime?
+
+  // Status
+  isActive        Boolean  @default(true)
+  revokedAt       DateTime?
+  revokedBy       String?
+  revokeReason    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  license         License  @relation(fields: [licenseId], references: [id])
+
+  @@unique([licenseId, userId])
+  @@index([licenseId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("license_allocations")
+}
+
+model RoleTemplate {
+  id              String   @id @default(uuid())
+  tenantId        String?  // null for system templates
+
+  // Template info
+  name            String
+  description     String?
+  category        String?  // admin, recruiter, hiring_manager, viewer
+
+  // Permissions
+  permissions     String[]
+  featureAccess   Json?
+
+  // Restrictions
+  restrictions    Json?
+  dataAccess      String   @default("own") // own, team, department, all
+
+  // Status
+  isSystem        Boolean  @default(false)
+  isActive        Boolean  @default(true)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([isSystem])
+  @@map("role_templates")
+}
+
+model CustomRole {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+
+  // Role info
+  name            String
+  description     String?
+  baseTemplateId  String?  // based on template
+
+  // Permissions
+  permissions     String[]
+  featureAccess   Json?
+  dataAccess      String   @default("own")
+
+  // Settings
+  canBeAssigned   Boolean  @default(true)
+  isActive        Boolean  @default(true)
+
+  // Stats
+  userCount       Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([tenantId])
+  @@index([organizationId])
+  @@map("custom_roles")
+}
+
+model AccessReview {
+  id              String   @id @default(uuid())
+  organizationId  String
+  initiatedBy     String
+
+  // Review info
+  name            String
+  description     String?
+  reviewType      String   // periodic, ad_hoc, compliance
+
+  // Scope
+  targetUsers     String[] // specific users or 'all'
+  targetRoles     String[] // specific roles or 'all'
+
+  // Schedule
+  startDate       DateTime
+  dueDate         DateTime
+  completedAt     DateTime?
+
+  // Status
+  status          String   @default("pending") // pending, in_progress, completed, cancelled
+  totalItems      Int      @default(0)
+  reviewedItems   Int      @default(0)
+  approvedItems   Int      @default(0)
+  revokedItems    Int      @default(0)
+
+  // Results
+  results         Json?    // detailed review results
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("access_reviews")
+}
+
+model UserActivityLog {
+  id              String   @id @default(uuid())
+  userId          String
+  organizationId  String
+
+  // Activity info
+  action          String   // login, logout, create, update, delete, view, download, export
+  resourceType    String   // job, candidate, application, report, etc.
+  resourceId      String?
+  resourceName    String?
+
+  // Details
+  details         Json?
+  changes         Json?    // before/after for updates
+
+  // Context
+  ipAddress       String?
+  userAgent       String?
+  sessionId       String?
+  location        String?
+
+  // Result
+  status          String   @default("success") // success, failed, blocked
+  errorMessage    String?
+
+  timestamp       DateTime @default(now())
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([timestamp])
+  @@map("user_activity_logs")
+}
+
+// Batch 45: Billing & Subscriptions (13.3)
+model Subscription {
+  id              String   @id @default(uuid())
+  tenantId        String   @unique
+  organizationId  String
+
+  // Stripe info
+  stripeSubscriptionId String? @unique
+  stripeCustomerId String?
+  stripePriceId   String?
+
+  // Plan
+  planId          String
+  planName        String
+  planTier        String   // free, starter, professional, enterprise
+
+  // Status
+  status          String   @default("active") // active, past_due, cancelled, trialing
+  cancelAtPeriodEnd Boolean @default(false)
+  cancelReason    String?
+
+  // Billing
+  billingCycle    String   @default("monthly") // monthly, annual
+  amount          Float
+  currency        String   @default("USD")
+  discount        Float?
+  discountType    String?  // percentage, fixed
+
+  // Period
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  trialStart      DateTime?
+  trialEnd        DateTime?
+
+  // Usage
+  usageThisMonth  Json?    // usage-based metrics
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoices        Invoice[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([planTier])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id              String   @id @default(uuid())
+  subscriptionId  String
+  tenantId        String
+
+  // Stripe info
+  stripeInvoiceId String?  @unique
+
+  // Invoice details
+  invoiceNumber   String   @unique
+  status          String   @default("draft") // draft, open, paid, void, uncollectible
+
+  // Amounts
+  subtotal        Float
+  tax             Float    @default(0)
+  discount        Float    @default(0)
+  total           Float
+  amountPaid      Float    @default(0)
+  amountDue       Float
+  currency        String   @default("USD")
+
+  // Dates
+  invoiceDate     DateTime @default(now())
+  dueDate         DateTime
+  paidAt          DateTime?
+
+  // Line items
+  lineItems       Json     // array of invoice line items
+
+  // Payment
+  paymentMethod   String?
+  paymentIntentId String?
+
+  // PDF
+  pdfUrl          String?
+  hostedUrl       String?
+
+  // Notes
+  notes           String?
+  memo            String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@map("invoices")
+}
+
+model UsageRecord {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+  subscriptionId  String?
+
+  // Usage info
+  metricName      String   // jobs_posted, candidates_processed, interviews, api_calls, storage
+  metricValue     Float
+  unit            String   // count, gb, minutes, requests
+
+  // Period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Billing
+  isBillable      Boolean  @default(true)
+  pricePerUnit    Float?
+  totalCost       Float?
+  currency        String   @default("USD")
+
+  // Context
+  resourceId      String?
+  resourceType    String?
+  userId          String?
+
+  recordedAt      DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([subscriptionId])
+  @@index([metricName])
+  @@index([periodStart])
+  @@map("usage_records")
+}
+
+model Quota {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String?
+
+  // Quota info
+  quotaType       String   // users, jobs, storage, api_calls, candidates
+  quotaLimit      Int
+  currentUsage    Int      @default(0)
+  unit            String   // count, gb, requests
+
+  // Alerts
+  warningThreshold Float   @default(0.8) // 80%
+  criticalThreshold Float  @default(0.95) // 95%
+  alertsSent      Int      @default(0)
+  lastAlertAt     DateTime?
+
+  // Overage
+  allowOverage    Boolean  @default(false)
+  overagePrice    Float?
+  overageUsage    Int      @default(0)
+
+  // Period
+  resetFrequency  String?  // daily, weekly, monthly, never
+  lastResetAt     DateTime?
+  nextResetAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, quotaType])
+  @@index([tenantId])
+  @@index([organizationId])
+  @@map("quotas")
+}
+
+model EnterpriseContract {
+  id              String   @id @default(uuid())
+  tenantId        String
+  organizationId  String
+
+  // Contract info
+  contractNumber  String   @unique
+  name            String
+  description     String?
+
+  // Terms
+  startDate       DateTime
+  endDate         DateTime
+  autoRenew       Boolean  @default(false)
+  renewalTermMonths Int?
+
+  // Pricing
+  contractValue   Float
+  currency        String   @default("USD")
+  paymentTerms    String   @default("net30") // net30, net60, upfront
+  billingFrequency String  @default("annual") // monthly, quarterly, annual
+
+  // Custom terms
+  customPricing   Json?    // custom pricing overrides
+  customFeatures  Json?    // custom feature access
+  slaTerms        Json?    // SLA commitments
+
+  // Status
+  status          String   @default("active") // draft, pending, active, expired, cancelled
+  signedAt        DateTime?
+  signedBy        String?
+
+  // Documents
+  contractDocument String?
+  amendments      Json?    // array of amendments
+
+  // Account manager
+  accountManagerId String?
+  accountManagerName String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([endDate])
+  @@map("enterprise_contracts")
+}

@@ -66,3 +66,6 @@ export { default as WorkflowAutomationHub } from './WorkflowAutomationHub';
 
 // Recruiter Components - Batch 40-42: Mobile & Accessibility
 export { default as MobileAccessibilityHub } from './MobileAccessibilityHub';
+
+// Recruiter Components - Batch 43-45: Enterprise Administration
+export { default as EnterpriseAdminHub } from './EnterpriseAdminHub';
