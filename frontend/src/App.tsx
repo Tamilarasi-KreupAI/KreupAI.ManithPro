@@ -1,7 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { queryClient } from './lib/queryClient';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -62,16 +67,18 @@ import Invoices from './pages/b2b/Invoices';
 
 function App() {
   return (
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-            <a href="#main-content" className="skip-link">
-              Skip to main content
-            </a>
-            <Navbar />
-            <main id="main-content" role="main" tabIndex={-1}>
-              <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <ThemeProvider>
+            <AuthProvider>
+              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+                <a href="#main-content" className="skip-link">
+                  Skip to main content
+                </a>
+                <Navbar />
+                <main id="main-content" role="main" tabIndex={-1}>
+                  <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -424,14 +431,39 @@ function App() {
                   <Route path="settings" element={<div className="p-6">Settings Page (Coming Soon)</div>} />
                 </Route>
 
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-            <PWAInstallPrompt />
-          </div>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
+                <PWAInstallPrompt />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: 'var(--toast-bg, #fff)',
+                      color: 'var(--toast-color, #363636)',
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: '#10B981',
+                        secondary: '#fff',
+                      },
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: '#EF4444',
+                        secondary: '#fff',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </AuthProvider>
+          </ThemeProvider>
+        </Router>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
