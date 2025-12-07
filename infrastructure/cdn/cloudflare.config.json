@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json.schemastore.org/cloudflare-workers.json",
+  "name": "manithpro-cdn",
+  "description": "Cloudflare CDN configuration for ManithPro",
+
+  "zones": [
+    {
+      "name": "manithpro.com",
+      "settings": {
+        "ssl": "full_strict",
+        "min_tls_version": "1.2",
+        "automatic_https_rewrites": "on",
+        "always_use_https": "on",
+        "http2": "on",
+        "http3": "on",
+        "0rtt": "on",
+        "brotli": "on",
+        "minify": {
+          "css": "on",
+          "js": "on",
+          "html": "on"
+        },
+        "polish": "lossless",
+        "webp": "on",
+        "mirage": "on",
+        "rocket_loader": "on",
+        "early_hints": "on",
+        "cache_level": "aggressive",
+        "browser_cache_ttl": 14400,
+        "edge_cache_ttl": 86400,
+        "development_mode": "off",
+        "security_level": "medium",
+        "challenge_ttl": 1800,
+        "browser_check": "on",
+        "email_obfuscation": "on",
+        "server_side_exclude": "on",
+        "hotlink_protection": "on",
+        "ip_geolocation": "on",
+        "true_client_ip_header": "on",
+        "waf": "on"
+      }
+    }
+  ],
+
+  "page_rules": [
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*manithpro.com/api/*"
+          }
+        }
+      ],
+      "actions": [
+        { "id": "cache_level", "value": "bypass" },
+        { "id": "browser_cache_ttl", "value": 0 },
+        { "id": "security_level", "value": "high" }
+      ],
+      "status": "active",
+      "priority": 1
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*manithpro.com/static/*"
+          }
+        }
+      ],
+      "actions": [
+        { "id": "cache_level", "value": "cache_everything" },
+        { "id": "edge_cache_ttl", "value": 2592000 },
+        { "id": "browser_cache_ttl", "value": 31536000 }
+      ],
+      "status": "active",
+      "priority": 2
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*manithpro.com/assets/*"
+          }
+        }
+      ],
+      "actions": [
+        { "id": "cache_level", "value": "cache_everything" },
+        { "id": "edge_cache_ttl", "value": 2592000 },
+        { "id": "browser_cache_ttl", "value": 31536000 }
+      ],
+      "status": "active",
+      "priority": 3
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*manithpro.com/*.js"
+          }
+        }
+      ],
+      "actions": [
+        { "id": "cache_level", "value": "cache_everything" },
+        { "id": "edge_cache_ttl", "value": 604800 }
+      ],
+      "status": "active",
+      "priority": 4
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*manithpro.com/*.css"
+          }
+        }
+      ],
+      "actions": [
+        { "id": "cache_level", "value": "cache_everything" },
+        { "id": "edge_cache_ttl", "value": 604800 }
+      ],
+      "status": "active",
+      "priority": 5
+    }
+  ],
+
+  "firewall_rules": [
+    {
+      "description": "Block known bad bots",
+      "expression": "(cf.client.bot) or (http.user_agent contains \"scanner\") or (http.user_agent contains \"crawler\" and not cf.client.bot)",
+      "action": "challenge"
+    },
+    {
+      "description": "Rate limit API requests",
+      "expression": "(http.request.uri.path contains \"/api/\") and (cf.threat_score gt 10)",
+      "action": "challenge"
+    },
+    {
+      "description": "Block suspicious countries for admin",
+      "expression": "(http.request.uri.path contains \"/admin/\") and (ip.geoip.country in {\"RU\" \"CN\" \"KP\" \"IR\"})",
+      "action": "block"
+    }
+  ],
+
+  "rate_limiting": [
+    {
+      "description": "API rate limit",
+      "match": {
+        "request": {
+          "url_pattern": "*manithpro.com/api/*"
+        }
+      },
+      "threshold": 100,
+      "period": 60,
+      "action": {
+        "mode": "simulate",
+        "timeout": 60,
+        "response": {
+          "content_type": "application/json",
+          "body": "{\"error\":\"Rate limit exceeded\",\"message\":\"Too many requests. Please try again later.\"}"
+        }
+      }
+    },
+    {
+      "description": "Login rate limit",
+      "match": {
+        "request": {
+          "url_pattern": "*manithpro.com/api/auth/login"
+        }
+      },
+      "threshold": 5,
+      "period": 300,
+      "action": {
+        "mode": "ban",
+        "timeout": 900
+      }
+    }
+  ],
+
+  "cache_rules": {
+    "default_ttl": 3600,
+    "respect_strong_etags": true,
+    "cache_by_device_type": true,
+    "bypass_cache_on_cookie": ["auth_token", "session_id"],
+    "cache_key_include_query_string": ["page", "limit", "sort", "filter"],
+    "cache_key_ignore_query_string": ["utm_source", "utm_medium", "utm_campaign", "fbclid", "gclid"]
+  },
+
+  "workers": {
+    "enabled": false,
+    "routes": []
+  },
+
+  "transform_rules": {
+    "request_headers": [
+      {
+        "expression": "true",
+        "action": {
+          "set": [
+            { "name": "X-Forwarded-Proto", "value": "https" },
+            { "name": "X-Real-IP", "expression": "ip.src" }
+          ]
+        }
+      }
+    ],
+    "response_headers": [
+      {
+        "expression": "true",
+        "action": {
+          "set": [
+            { "name": "X-Content-Type-Options", "value": "nosniff" },
+            { "name": "X-Frame-Options", "value": "DENY" },
+            { "name": "X-XSS-Protection", "value": "1; mode=block" },
+            { "name": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+          ],
+          "remove": ["Server", "X-Powered-By"]
+        }
+      }
+    ]
+  },
+
+  "origin_rules": {
+    "host_header_override": null,
+    "resolve_override": null,
+    "disable_apps": false,
+    "disable_railgun": true
+  }
+}

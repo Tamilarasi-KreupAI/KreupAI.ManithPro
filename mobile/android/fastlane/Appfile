@@ -1,0 +1,32 @@
+# ManithPro Android App Configuration
+# ============================================================
+#
+# This file contains the app-specific configuration for fastlane.
+# Update these values with your actual Google Play Console details.
+# ============================================================
+
+# Package Name (Application ID)
+package_name ENV["ANDROID_PACKAGE_NAME"] || "com.kreupai.manithpro"
+
+# Google Play Console JSON Key for authentication
+# Generate at: https://play.google.com/console -> Setup -> API access
+#
+# For CI/CD, set the PLAY_STORE_JSON_KEY environment variable with the
+# contents of the JSON key file (base64 encoded).
+#
+# For local development, you can set the path to the JSON key file:
+json_key_file ENV["PLAY_STORE_JSON_KEY_PATH"] || "./play-store-credentials.json"
+
+# If using base64 encoded JSON key content directly
+if ENV["PLAY_STORE_JSON_KEY"]
+  require 'base64'
+  require 'tempfile'
+
+  # Create a temporary file with the decoded JSON key
+  json_content = Base64.decode64(ENV["PLAY_STORE_JSON_KEY"])
+  temp_file = Tempfile.new(['play-store-key', '.json'])
+  temp_file.write(json_content)
+  temp_file.close
+
+  json_key_file(temp_file.path)
+end
