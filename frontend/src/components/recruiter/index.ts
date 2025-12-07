@@ -60,3 +60,6 @@ export { default as MarketIntelligenceHub } from './MarketIntelligenceHub';
 
 // Recruiter Components - Batch 33-36: Platform Integrations
 export { default as PlatformIntegrationsHub } from './PlatformIntegrationsHub';
+
+// Recruiter Components - Batch 37-39: Workflow Automation
+export { default as WorkflowAutomationHub } from './WorkflowAutomationHub';

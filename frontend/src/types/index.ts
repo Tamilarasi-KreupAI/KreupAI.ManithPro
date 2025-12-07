@@ -15958,3 +15958,308 @@ export interface DeveloperDashboard {
     time: string;
   }>;
 }
+
+// ==========================================
+// Batch 37-39: Workflow Automation Types (11.1-11.3)
+// ==========================================
+
+// Batch 37: Automation Engine
+export interface WorkflowAutomation {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  category?: string;
+  triggerType: 'event' | 'schedule' | 'manual' | 'condition';
+  triggerEvent?: string;
+  triggerSchedule?: string;
+  triggerConditions?: Record<string, unknown>;
+  steps: WorkflowStep[];
+  conditionalLogic?: Record<string, unknown>;
+  delayEnabled: boolean;
+  delayDuration?: number;
+  delayType?: 'fixed' | 'business_hours' | 'smart';
+  status: 'draft' | 'active' | 'paused' | 'archived';
+  isActive: boolean;
+  version: number;
+  executionCount: number;
+  successCount: number;
+  failureCount: number;
+  lastExecutedAt?: string;
+  avgExecutionTime?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowStep {
+  id?: string;
+  action: string;
+  params?: Record<string, unknown>;
+  order?: number;
+  configurable?: boolean;
+}
+
+export interface WorkflowExecution {
+  id: string;
+  workflowId: string;
+  organizationId: string;
+  triggeredBy: 'system' | 'user' | 'schedule' | 'event';
+  triggerEvent?: string;
+  triggerData?: Record<string, unknown>;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  startedAt?: string;
+  completedAt?: string;
+  duration?: number;
+  currentStep: number;
+  totalSteps: number;
+  stepsCompleted: number;
+  stepResults?: Record<string, unknown>;
+  errorMessage?: string;
+  errorStep?: number;
+  retryCount: number;
+  maxRetries: number;
+  contextData?: Record<string, unknown>;
+  outputData?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  useCase?: string;
+  icon?: string;
+  triggerType: string;
+  triggerEvent?: string;
+  steps: WorkflowStep[];
+  conditionalLogic?: Record<string, unknown>;
+  isPublic: boolean;
+  isFeatured: boolean;
+  usageCount: number;
+  rating?: number;
+  variables?: string[];
+  requiredFields?: string[];
+  tags: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduledJob {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  jobType: string;
+  schedule: string;
+  timezone: string;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  configuration?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
+  status: 'active' | 'paused' | 'disabled';
+  isActive: boolean;
+  runCount: number;
+  successCount: number;
+  failureCount: number;
+  lastStatus?: string;
+  lastError?: string;
+  lastDuration?: number;
+  retryOnFailure: boolean;
+  maxRetries: number;
+  retryDelay: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BulkAction {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name?: string;
+  actionType: string;
+  targetType: string;
+  targetIds: string[];
+  totalCount: number;
+  processedCount: number;
+  successCount: number;
+  failureCount: number;
+  actionData: Record<string, unknown>;
+  filters?: Record<string, unknown>;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  startedAt?: string;
+  completedAt?: string;
+  results?: Record<string, unknown>;
+  errors?: Record<string, unknown>;
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TriggerEvent {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+}
+
+export interface WorkflowAction {
+  id: string;
+  name: string;
+  category: string;
+  params: string[];
+}
+
+// Batch 39: Approval Workflows
+export interface ApprovalWorkflow {
+  id: string;
+  organizationId: string;
+  createdBy: string;
+  name: string;
+  description?: string;
+  workflowType: 'job_requisition' | 'offer_approval' | 'budget_approval' | 'exception_approval';
+  steps: ApprovalStep[];
+  escalationRules?: Record<string, unknown>;
+  requireAllApprovers: boolean;
+  allowParallelApproval: boolean;
+  autoApproveOnTimeout: boolean;
+  timeoutHours?: number;
+  delegationEnabled: boolean;
+  delegationRules?: Record<string, unknown>;
+  isActive: boolean;
+  version: number;
+  avgApprovalTime?: number;
+  approvalRate?: number;
+  totalRequests: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalStep {
+  step: number;
+  name: string;
+  approverType: 'user' | 'role' | 'department' | 'manager';
+  approverId?: string;
+  approverRole?: string;
+  condition?: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  workflowId: string;
+  organizationId: string;
+  requestedBy: string;
+  requestedByName?: string;
+  requestType: string;
+  title: string;
+  description?: string;
+  referenceType?: string;
+  referenceId?: string;
+  requestData: Record<string, unknown>;
+  attachments?: Record<string, unknown>;
+  currentStep: number;
+  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'cancelled';
+  approvalSteps: ApprovalStepStatus[];
+  approvedBy: string[];
+  rejectedBy?: string;
+  submittedAt: string;
+  dueDate?: string;
+  decidedAt?: string;
+  decision?: 'approved' | 'rejected';
+  decisionNotes?: string;
+  conditions?: Record<string, unknown>;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  isEscalated: boolean;
+  escalatedAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalStepStatus {
+  step: number;
+  status: 'pending' | 'approved' | 'rejected' | 'skipped' | 'delegated';
+  approver?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface ApprovalAnalytics {
+  summary: {
+    totalRequests: number;
+    pendingRequests: number;
+    approvedRequests: number;
+    rejectedRequests: number;
+    avgApprovalTime: number;
+    approvalRate: number;
+  };
+  byWorkflowType: Array<{
+    type: string;
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    avgTime: number;
+  }>;
+  bottlenecks: Array<{
+    step: string;
+    avgWaitTime: number;
+    pendingCount: number;
+  }>;
+  trends: {
+    daily: Array<{
+      date: string;
+      submitted: number;
+      completed: number;
+    }>;
+  };
+}
+
+export interface AutomationDashboard {
+  workflowAutomations: {
+    total: number;
+    active: number;
+    paused: number;
+    draft: number;
+    executionsToday: number;
+    successRate: number;
+  };
+  scheduledJobs: {
+    total: number;
+    active: number;
+    paused: number;
+    nextRunIn: number;
+    jobsRunToday: number;
+  };
+  bulkActions: {
+    inProgress: number;
+    completedToday: number;
+    recordsProcessedToday: number;
+  };
+  approvalWorkflows: {
+    total: number;
+    active: number;
+    pendingApprovals: number;
+    urgentApprovals: number;
+    avgApprovalTime: number;
+  };
+  recentExecutions: Array<{
+    id: string;
+    workflowName: string;
+    status: string;
+    time: string;
+  }>;
+  recentApprovals: Array<{
+    id: string;
+    title: string;
+    status: string;
+    requester: string;
+  }>;
+}

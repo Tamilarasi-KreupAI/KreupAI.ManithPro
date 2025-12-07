@@ -16179,3 +16179,384 @@ model APIUsageLog {
   @@index([timestamp])
   @@map("api_usage_logs")
 }
+
+// ==========================================
+// Batch 37-39: Workflow Automation (11.1-11.3)
+// ==========================================
+
+// Batch 37: Automation Engine (11.1)
+model WorkflowAutomation {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Workflow details
+  name            String
+  description     String?
+  category        String?  // candidate_management, communication, scheduling, etc.
+
+  // Trigger configuration
+  triggerType     String   // event, schedule, manual, condition
+  triggerEvent    String?  // candidate_applied, interview_scheduled, offer_sent, etc.
+  triggerSchedule String?  // cron expression for scheduled triggers
+  triggerConditions Json?  // conditions that must be met
+
+  // Workflow steps
+  steps           Json     // array of workflow steps
+
+  // Conditional logic
+  conditionalLogic Json?   // if/then/else branching rules
+
+  // Delay settings
+  delayEnabled    Boolean  @default(false)
+  delayDuration   Int?     // minutes
+  delayType       String?  // fixed, business_hours, smart
+
+  // Status
+  status          String   @default("draft") // draft, active, paused, archived
+  isActive        Boolean  @default(false)
+  version         Int      @default(1)
+
+  // Analytics
+  executionCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  lastExecutedAt  DateTime?
+  avgExecutionTime Int?    // ms
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  executions      WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([triggerType])
+  @@index([triggerEvent])
+  @@index([isActive])
+  @@map("workflow_automations")
+}
+
+// Workflow Execution Log
+model WorkflowExecution {
+  id              String   @id @default(uuid())
+  workflowId      String
+  organizationId  String
+
+  // Trigger info
+  triggeredBy     String   // system, user, schedule, event
+  triggerEvent    String?
+  triggerData     Json?
+
+  // Execution status
+  status          String   @default("pending") // pending, running, completed, failed, cancelled
+  startedAt       DateTime?
+  completedAt     DateTime?
+  duration        Int?     // ms
+
+  // Step tracking
+  currentStep     Int      @default(0)
+  totalSteps      Int
+  stepsCompleted  Int      @default(0)
+  stepResults     Json?    // results of each step
+
+  // Error handling
+  errorMessage    String?
+  errorStep       Int?
+  retryCount      Int      @default(0)
+  maxRetries      Int      @default(3)
+
+  // Context
+  contextData     Json?    // candidate, job, application context
+  outputData      Json?    // final output
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workflow        WorkflowAutomation @relation(fields: [workflowId], references: [id])
+
+  @@index([workflowId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("workflow_executions")
+}
+
+// Workflow Template
+model WorkflowTemplate {
+  id              String   @id @default(uuid())
+
+  // Template info
+  name            String
+  description     String?
+  category        String   // onboarding, screening, scheduling, communication, rejection
+  useCase         String?  // specific use case description
+  icon            String?
+
+  // Template configuration
+  triggerType     String
+  triggerEvent    String?
+  steps           Json     // array of step templates
+  conditionalLogic Json?
+
+  // Template meta
+  isPublic        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  usageCount      Int      @default(0)
+  rating          Float?
+
+  // Customization
+  variables       Json?    // customizable variables
+  requiredFields  Json?    // fields that must be configured
+
+  tags            String[]
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+  @@index([isFeatured])
+  @@map("workflow_templates")
+}
+
+// Scheduled Job
+model ScheduledJob {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Job details
+  name            String
+  description     String?
+  jobType         String   // report_generation, data_cleanup, notification, sync, etc.
+
+  // Schedule
+  schedule        String   // cron expression
+  timezone        String   @default("UTC")
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+
+  // Configuration
+  configuration   Json?    // job-specific config
+  parameters      Json?    // runtime parameters
+
+  // Status
+  status          String   @default("active") // active, paused, disabled
+  isActive        Boolean  @default(true)
+
+  // Execution tracking
+  runCount        Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  lastStatus      String?  // success, failed, skipped
+  lastError       String?
+  lastDuration    Int?     // ms
+
+  // Retry settings
+  retryOnFailure  Boolean  @default(true)
+  maxRetries      Int      @default(3)
+  retryDelay      Int      @default(5) // minutes
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([nextRunAt])
+  @@index([jobType])
+  @@map("scheduled_jobs")
+}
+
+// Bulk Action
+model BulkAction {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Action details
+  name            String?
+  actionType      String   // update_status, send_email, move_stage, assign_recruiter, add_tag, etc.
+  targetType      String   // candidates, applications, jobs, etc.
+
+  // Targets
+  targetIds       String[] // IDs of target records
+  totalCount      Int
+  processedCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+
+  // Action configuration
+  actionData      Json     // action-specific data (new status, email template, etc.)
+  filters         Json?    // filters used to select targets
+
+  // Status
+  status          String   @default("pending") // pending, processing, completed, failed, cancelled
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Results
+  results         Json?    // per-record results
+  errors          Json?    // error details
+
+  // Progress
+  progress        Float    @default(0) // 0-100
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([actionType])
+  @@index([createdBy])
+  @@map("bulk_actions")
+}
+
+// Batch 38: Common Automation Use Cases - handled by WorkflowAutomation with specific triggerEvents
+
+// Batch 39: Approval Workflows (11.3)
+model ApprovalWorkflow {
+  id              String   @id @default(uuid())
+  organizationId  String
+  createdBy       String
+
+  // Workflow details
+  name            String
+  description     String?
+  workflowType    String   // job_requisition, offer_approval, budget_approval, exception_approval
+
+  // Approval chain
+  steps           Json     // array of approval steps with approvers and conditions
+  escalationRules Json?    // escalation on timeout
+
+  // Configuration
+  requireAllApprovers Boolean @default(false) // all must approve vs any can approve
+  allowParallelApproval Boolean @default(false)
+  autoApproveOnTimeout Boolean @default(false)
+  timeoutHours    Int?
+
+  // Delegation
+  delegationEnabled Boolean @default(true)
+  delegationRules Json?    // backup approver rules
+
+  // Status
+  isActive        Boolean  @default(true)
+  version         Int      @default(1)
+
+  // Analytics
+  avgApprovalTime Int?     // hours
+  approvalRate    Float?
+  totalRequests   Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requests        ApprovalRequest[]
+
+  @@index([organizationId])
+  @@index([workflowType])
+  @@index([isActive])
+  @@map("approval_workflows")
+}
+
+// Approval Request
+model ApprovalRequest {
+  id              String   @id @default(uuid())
+  workflowId      String
+  organizationId  String
+  requestedBy     String
+
+  // Request details
+  requestType     String   // job_requisition, offer, budget, exception
+  title           String
+  description     String?
+
+  // Reference
+  referenceType   String?  // job, offer, candidate, etc.
+  referenceId     String?
+
+  // Request data
+  requestData     Json     // full request details
+  attachments     Json?    // supporting documents
+
+  // Current state
+  currentStep     Int      @default(0)
+  status          String   @default("pending") // pending, in_review, approved, rejected, cancelled
+
+  // Approval tracking
+  approvalSteps   Json     // status of each approval step
+  approvedBy      String[]
+  rejectedBy      String?
+
+  // Timing
+  submittedAt     DateTime @default(now())
+  dueDate         DateTime?
+  decidedAt       DateTime?
+
+  // Response
+  decision        String?  // approved, rejected
+  decisionNotes   String?
+  conditions      Json?    // approval conditions
+
+  // Priority
+  priority        String   @default("normal") // low, normal, high, urgent
+  isEscalated     Boolean  @default(false)
+  escalatedAt     DateTime?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workflow        ApprovalWorkflow @relation(fields: [workflowId], references: [id])
+
+  @@index([workflowId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([requestedBy])
+  @@index([requestType])
+  @@map("approval_requests")
+}
+
+// Approval Step Record (individual step within a request)
+model ApprovalStepRecord {
+  id              String   @id @default(uuid())
+  requestId       String
+
+  // Step info
+  stepNumber      Int
+  stepName        String?
+
+  // Approver(s)
+  approverType    String   // user, role, department, manager
+  approverId      String?  // specific user ID if user type
+  approverRole    String?  // role name if role type
+
+  // Status
+  status          String   @default("pending") // pending, approved, rejected, skipped, delegated
+
+  // Response
+  respondedBy     String?
+  respondedAt     DateTime?
+  decision        String?  // approved, rejected
+  comments        String?
+
+  // Delegation
+  delegatedTo     String?
+  delegatedAt     DateTime?
+  delegationReason String?
+
+  // Timing
+  dueDate         DateTime?
+  reminderSentAt  DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([requestId])
+  @@index([status])
+  @@index([approverId])
+  @@map("approval_step_records")
+}
