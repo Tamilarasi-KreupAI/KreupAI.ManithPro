@@ -1,0 +1,84 @@
+# KreupAI ManithPro - Development Docker Compose Override
+# Run with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+      DEBUG: "manithpro:*"
+      LOG_LEVEL: debug
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    command: ["npm", "run", "dev"]
+
+  frontend:
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+  # pgAdmin for database management (dev only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: manithpro-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@manithpro.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - manithpro-network
+
+  # Redis Commander for cache inspection (dev only)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: manithpro-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-redis_secret}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - manithpro-network
+
+  # Mailhog for email testing (dev only)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: manithpro-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - manithpro-network
+
+volumes:
+  pgadmin_data:
+    driver: local
