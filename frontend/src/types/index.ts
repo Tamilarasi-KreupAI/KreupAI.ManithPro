@@ -15636,3 +15636,325 @@ export interface MarketSnapshot {
   createdAt: string;
   updatedAt: string;
 }
+
+// ==========================================
+// Batch 33: HR & Payroll Integrations Types (10.1.1-10.1.7)
+// ==========================================
+
+export interface HRIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  provider: string;
+  integrationType: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  syncEnabled: boolean;
+  syncFrequency: string;
+  syncSchedule?: Record<string, unknown>;
+  syncPositions: boolean;
+  syncCandidates: boolean;
+  syncHires: boolean;
+  syncEmployees: boolean;
+  fieldMapping?: Record<string, unknown>;
+  statusMapping?: Record<string, unknown>;
+  status: string;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+  errorMessage?: string;
+  errorCount: number;
+  webhookEnabled: boolean;
+  webhookUrl?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HRSyncLog {
+  id: string;
+  integrationId: string;
+  syncType: string;
+  direction: string;
+  startedAt: string;
+  completedAt?: string;
+  status: string;
+  recordsProcessed: number;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsDeleted: number;
+  recordsFailed: number;
+  errors?: Array<{ type: string; message: string; count: number }>;
+  warnings?: Array<{ type: string; message: string; count: number }>;
+  summary?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface HRProvider {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authTypes: string[];
+  features: string[];
+  complexity: string;
+  setupTime: string;
+}
+
+// ==========================================
+// Batch 34: Communication Platform Types (10.2.1-10.2.6)
+// ==========================================
+
+export interface CommunicationIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  integrationType: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  workspaceId?: string;
+  workspaceName?: string;
+  defaultChannel?: string;
+  notificationsEnabled: boolean;
+  approvalsEnabled: boolean;
+  messagingEnabled: boolean;
+  threadingEnabled: boolean;
+  notificationTypes?: string[];
+  notificationChannels?: Record<string, string[]>;
+  status: string;
+  lastActivityAt?: string;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  organizationId: string;
+  name: string;
+  templateType: string;
+  platform?: string;
+  eventType?: string;
+  subject?: string;
+  content: string;
+  contentHtml?: string;
+  variables?: string[];
+  isActive: boolean;
+  isDefault: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunicationPlatform {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authType: string;
+  features: string[];
+  setupTime: string;
+  providers?: string[];
+}
+
+// ==========================================
+// Batch 35: Job Boards & Sourcing Types (10.3.1-10.3.8)
+// ==========================================
+
+export interface JobBoardIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  platformSubtype?: string;
+  connectionSettings?: Record<string, unknown>;
+  authType: string;
+  autoPostEnabled: boolean;
+  postingRules?: Record<string, unknown>;
+  defaultBudget?: number;
+  applicationImport: boolean;
+  applicationMapping?: Record<string, string>;
+  deduplication: boolean;
+  companyPageUrl?: string;
+  brandingEnabled: boolean;
+  status: string;
+  lastSyncAt?: string;
+  errorMessage?: string;
+  totalPostings: number;
+  activePostings: number;
+  totalApplications: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobBoardPosting {
+  id: string;
+  integrationId: string;
+  jobId: string;
+  externalId?: string;
+  externalUrl?: string;
+  title: string;
+  status: string;
+  postedAt?: string;
+  expiresAt?: string;
+  isSponsored: boolean;
+  budget?: number;
+  budgetSpent?: number;
+  impressions: number;
+  clicks: number;
+  applications: number;
+  costPerApply?: number;
+  errorMessage?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobBoard {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authType: string;
+  features: string[];
+  pricing: string;
+}
+
+// ==========================================
+// Batch 36: Developer Tools & API Types (10.4.1-10.4.8)
+// ==========================================
+
+export interface APIKey {
+  id: string;
+  organizationId: string;
+  userId?: string;
+  name: string;
+  keyPrefix: string;
+  keyValue?: string; // Only on creation
+  scopes: string[];
+  permissions?: Record<string, boolean>;
+  rateLimit: number;
+  rateLimitPeriod: string;
+  allowedIPs?: string[];
+  ipRestricted: boolean;
+  isActive: boolean;
+  expiresAt?: string;
+  lastUsedAt?: string;
+  usageCount: number;
+  description?: string;
+  environment: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebhookConfig {
+  id: string;
+  organizationId: string;
+  name: string;
+  url: string;
+  secret?: string; // Only on creation
+  events: string[];
+  eventFilters?: Record<string, unknown>;
+  httpMethod: string;
+  headers?: Record<string, string>;
+  retryPolicy?: { maxRetries: number; retryInterval: number };
+  timeout: number;
+  isActive: boolean;
+  lastTriggeredAt?: string;
+  lastResponseCode?: number;
+  failureCount: number;
+  totalSent: number;
+  totalSuccess: number;
+  totalFailed: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  eventType: string;
+  eventId?: string;
+  payload?: Record<string, unknown>;
+  attemptNumber: number;
+  requestUrl: string;
+  requestHeaders?: Record<string, string>;
+  requestBody?: string;
+  responseCode?: number;
+  responseBody?: string;
+  responseHeaders?: Record<string, string>;
+  status: string;
+  deliveredAt?: string;
+  duration?: number;
+  errorMessage?: string;
+  nextRetryAt?: string;
+  createdAt: string;
+}
+
+export interface AutomationIntegration {
+  id: string;
+  organizationId: string;
+  name: string;
+  platform: string;
+  connectionId?: string;
+  triggers?: Record<string, unknown>;
+  triggerCount: number;
+  actions?: Record<string, unknown>;
+  actionCount: number;
+  isActive: boolean;
+  lastActivityAt?: string;
+  executionCount: number;
+  successCount: number;
+  failureCount: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface APIScope {
+  name: string;
+  description: string;
+}
+
+export interface APIEvent {
+  name: string;
+  description: string;
+}
+
+export interface DeveloperDashboard {
+  organization: {
+    name: string;
+    plan: string;
+    apiVersion: string;
+  };
+  apiKeys: {
+    total: number;
+    active: number;
+    expired: number;
+  };
+  webhooks: {
+    total: number;
+    active: number;
+    failureRate: number;
+  };
+  usage: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    rateLimit: number;
+    rateLimitUsed: number;
+  };
+  recentActivity: Array<{
+    type: string;
+    endpoint?: string;
+    event?: string;
+    method?: string;
+    status?: string;
+    time: string;
+  }>;
+}

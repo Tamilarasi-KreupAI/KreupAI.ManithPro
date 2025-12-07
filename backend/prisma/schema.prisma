@@ -15720,3 +15720,462 @@ model MarketIntelligenceSnapshot {
   @@index([snapshotType])
   @@map("market_intelligence_snapshots")
 }
+
+// ==========================================
+// Batch 33: HR & Payroll Integrations (10.1.1-10.1.7)
+// ==========================================
+
+// HR Integration Configuration
+model HRIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  provider        String   // workday, successfactors, bamboohr, adp, gusto, deel, custom
+  integrationType String   @default("bidirectional") // inbound, outbound, bidirectional
+
+  // Connection settings
+  connectionSettings Json  // Provider-specific config (encrypted)
+  authType        String   // oauth2, api_key, saml, basic
+  authCredentials Json?    // Encrypted credentials
+
+  // Sync configuration
+  syncEnabled     Boolean  @default(true)
+  syncFrequency   String   @default("hourly") // realtime, hourly, daily, weekly
+  syncSchedule    Json?    // Custom schedule
+
+  // Sync scope
+  syncPositions   Boolean  @default(true)
+  syncCandidates  Boolean  @default(true)
+  syncHires       Boolean  @default(true)
+  syncEmployees   Boolean  @default(false)
+
+  // Mapping configuration
+  fieldMapping    Json?    // Field mapping between systems
+  statusMapping   Json?    // Status code mapping
+  customTransforms Json?   // Data transformation rules
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastSyncAt      DateTime?
+  lastSyncStatus  String?
+  errorMessage    String?
+  errorCount      Int      @default(0)
+
+  // Webhook configuration
+  webhookUrl      String?
+  webhookSecret   String?
+  webhookEnabled  Boolean  @default(false)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  syncLogs        HRSyncLog[]
+
+  @@index([organizationId])
+  @@index([provider])
+  @@index([status])
+  @@map("hr_integrations")
+}
+
+// HR Sync Log
+model HRSyncLog {
+  id              String   @id @default(uuid())
+  integrationId   String
+  integration     HRIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  syncType        String   // full, incremental, positions, candidates, hires
+  direction       String   // inbound, outbound
+
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  status          String   @default("running") // running, completed, failed, partial
+
+  // Statistics
+  recordsProcessed Int     @default(0)
+  recordsCreated  Int      @default(0)
+  recordsUpdated  Int      @default(0)
+  recordsDeleted  Int      @default(0)
+  recordsFailed   Int      @default(0)
+
+  // Details
+  errors          Json?    // Array of error details
+  warnings        Json?    // Array of warnings
+  summary         Json?    // Sync summary
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([integrationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("hr_sync_logs")
+}
+
+// ==========================================
+// Batch 34: Communication Platform Integrations (10.2.1-10.2.6)
+// ==========================================
+
+// Communication Integration Configuration
+model CommunicationIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  platform        String   // slack, teams, gmail, outlook, whatsapp, sms, discord
+  integrationType String   @default("notification") // notification, messaging, sync
+
+  // Connection settings
+  connectionSettings Json  // Platform-specific config
+  authType        String   // oauth2, api_key, webhook
+  authCredentials Json?    // Encrypted credentials
+
+  // Workspace/Team settings
+  workspaceId     String?  // Slack workspace, Teams tenant, etc.
+  defaultChannel  String?  // Default channel for notifications
+
+  // Features enabled
+  notificationsEnabled Boolean @default(true)
+  approvalsEnabled  Boolean @default(false)
+  messagingEnabled  Boolean @default(false)
+  threadingEnabled  Boolean @default(false)
+
+  // Notification settings
+  notificationTypes Json?  // Which events trigger notifications
+  notificationChannels Json? // Channel routing rules
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastActivityAt  DateTime?
+  errorMessage    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([status])
+  @@map("communication_integrations")
+}
+
+// Message Template
+model MessageTemplate {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  templateType    String   // notification, email, sms, chat
+  platform        String?  // Platform-specific templates
+  eventType       String?  // Trigger event
+
+  subject         String?  // Email subject
+  content         String   // Template content
+  contentHtml     String?  // HTML version
+  variables       Json?    // Available variables
+
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([templateType])
+  @@index([platform])
+  @@map("message_templates")
+}
+
+// ==========================================
+// Batch 35: Job Boards & Sourcing Integrations (10.3.1-10.3.8)
+// ==========================================
+
+// Job Board Integration Configuration
+model JobBoardIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  // Integration identification
+  name            String
+  platform        String   // indeed, linkedin, glassdoor, ziprecruiter, google_jobs, angellist, niche, university
+  platformSubtype String?  // For niche boards: tech, healthcare, finance, etc.
+
+  // Connection settings
+  connectionSettings Json  // Platform-specific config
+  authType        String   // oauth2, api_key, xml_feed
+  authCredentials Json?    // Encrypted credentials
+
+  // Posting configuration
+  autoPostEnabled Boolean  @default(false)
+  postingRules    Json?    // Which jobs to auto-post
+  defaultBudget   Float?   // Default sponsored budget
+
+  // Application handling
+  applicationImport Boolean @default(true)
+  applicationMapping Json? // Field mapping for applications
+  deduplication   Boolean  @default(true)
+
+  // Branding
+  companyPageUrl  String?
+  brandingEnabled Boolean  @default(true)
+
+  // Status
+  status          String   @default("pending") // pending, connected, error, disabled
+  lastSyncAt      DateTime?
+  errorMessage    String?
+
+  // Statistics
+  totalPostings   Int      @default(0)
+  activePostings  Int      @default(0)
+  totalApplications Int    @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  postings        JobBoardPosting[]
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([status])
+  @@map("job_board_integrations")
+}
+
+// Job Board Posting
+model JobBoardPosting {
+  id              String   @id @default(uuid())
+  integrationId   String
+  integration     JobBoardIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  jobId           String   // Reference to internal job
+
+  // External reference
+  externalId      String?  // Job board's posting ID
+  externalUrl     String?  // URL on job board
+
+  // Posting details
+  title           String
+  status          String   @default("pending") // pending, active, expired, closed, error
+  postedAt        DateTime?
+  expiresAt       DateTime?
+
+  // Sponsorship
+  isSponsored     Boolean  @default(false)
+  budget          Float?
+  budgetSpent     Float?
+
+  // Performance
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  applications    Int      @default(0)
+  costPerApply    Float?
+
+  errorMessage    String?
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([integrationId])
+  @@index([jobId])
+  @@index([status])
+  @@index([externalId])
+  @@map("job_board_postings")
+}
+
+// ==========================================
+// Batch 36: Developer Tools & API (10.4.1-10.4.8)
+// ==========================================
+
+// API Key
+model APIKey {
+  id              String   @id @default(uuid())
+  organizationId  String
+  userId          String?  // Optional user association
+
+  name            String
+  keyHash         String   // Hashed API key
+  keyPrefix       String   // First few chars for identification
+
+  // Permissions
+  scopes          Json     // Array of API scopes
+  permissions     Json?    // Detailed permissions
+
+  // Rate limiting
+  rateLimit       Int      @default(1000) // Requests per hour
+  rateLimitPeriod String   @default("hour")
+
+  // IP restrictions
+  allowedIPs      Json?    // Array of allowed IPs/CIDR ranges
+  ipRestricted    Boolean  @default(false)
+
+  // Status
+  isActive        Boolean  @default(true)
+  expiresAt       DateTime?
+  lastUsedAt      DateTime?
+  usageCount      Int      @default(0)
+
+  // Metadata
+  description     String?
+  environment     String   @default("production") // production, staging, development
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+// Webhook Configuration
+model WebhookConfig {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  url             String
+  secret          String?  // Webhook signing secret
+
+  // Events
+  events          Json     // Array of event types to send
+  eventFilters    Json?    // Additional filtering rules
+
+  // Configuration
+  httpMethod      String   @default("POST")
+  headers         Json?    // Custom headers
+  retryPolicy     Json?    // Retry configuration
+  timeout         Int      @default(30000) // ms
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  lastResponseCode Int?
+  failureCount    Int      @default(0)
+
+  // Statistics
+  totalSent       Int      @default(0)
+  totalSuccess    Int      @default(0)
+  totalFailed     Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveries      WebhookDelivery[]
+
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("webhook_configs")
+}
+
+// Webhook Delivery Log
+model WebhookDelivery {
+  id              String   @id @default(uuid())
+  webhookId       String
+  webhook         WebhookConfig @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  eventType       String
+  eventId         String?  // Reference to source event
+  payload         Json     // Event payload
+
+  // Delivery details
+  attemptNumber   Int      @default(1)
+  requestUrl      String
+  requestHeaders  Json?
+  requestBody     String?
+
+  // Response
+  responseCode    Int?
+  responseBody    String?
+  responseHeaders Json?
+
+  // Status
+  status          String   @default("pending") // pending, success, failed, retrying
+  deliveredAt     DateTime?
+  duration        Int?     // ms
+
+  errorMessage    String?
+  nextRetryAt     DateTime?
+
+  createdAt       DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+// Zapier/Automation Integration
+model AutomationIntegration {
+  id              String   @id @default(uuid())
+  organizationId  String
+
+  name            String
+  platform        String   // zapier, make, n8n, custom
+  connectionId    String?  // External connection ID
+
+  // Triggers
+  triggers        Json?    // Configured triggers
+  triggerCount    Int      @default(0)
+
+  // Actions
+  actions         Json?    // Configured actions
+  actionCount     Int      @default(0)
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastActivityAt  DateTime?
+
+  // Statistics
+  executionCount  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("automation_integrations")
+}
+
+// API Usage Log
+model APIUsageLog {
+  id              String   @id @default(uuid())
+  organizationId  String
+  apiKeyId        String?
+
+  // Request details
+  endpoint        String
+  method          String
+  path            String
+  queryParams     Json?
+
+  // Response
+  statusCode      Int
+  responseTime    Int      // ms
+
+  // Client info
+  clientIP        String?
+  userAgent       String?
+
+  // Rate limiting
+  rateLimitRemaining Int?
+  rateLimitReset  DateTime?
+
+  timestamp       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([apiKeyId])
+  @@index([endpoint])
+  @@index([timestamp])
+  @@map("api_usage_logs")
+}

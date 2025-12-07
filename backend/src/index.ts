@@ -48,6 +48,10 @@ import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
 import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
 import batch31ExecutiveDashboardsRoutes from './routes/batch31ExecutiveDashboards.routes';
 import batch32MarketIntelligenceRoutes from './routes/batch32MarketIntelligence.routes';
+import batch33HRIntegrationsRoutes from './routes/batch33HRIntegrations.routes';
+import batch34CommunicationIntegrationsRoutes from './routes/batch34CommunicationIntegrations.routes';
+import batch35JobBoardIntegrationsRoutes from './routes/batch35JobBoardIntegrations.routes';
+import batch36DeveloperToolsRoutes from './routes/batch36DeveloperTools.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -122,6 +126,10 @@ app.get('/', (req, res) => {
       batch30RecruitmentAnalytics: '/api/recruitment-analytics',
       batch31ExecutiveDashboards: '/api/executive',
       batch32MarketIntelligence: '/api/market-intelligence',
+      batch33HRIntegrations: '/api/hr-integrations',
+      batch34CommunicationIntegrations: '/api/communication-integrations',
+      batch35JobBoardIntegrations: '/api/job-boards',
+      batch36DeveloperTools: '/api/developer',
     },
   });
 });
@@ -171,6 +179,10 @@ app.use('/api/compliance', batch29ComplianceRoutes);
 app.use('/api/recruitment-analytics', batch30RecruitmentAnalyticsRoutes);
 app.use('/api/executive', batch31ExecutiveDashboardsRoutes);
 app.use('/api/market-intelligence', batch32MarketIntelligenceRoutes);
+app.use('/api/hr-integrations', batch33HRIntegrationsRoutes);
+app.use('/api/communication-integrations', batch34CommunicationIntegrationsRoutes);
+app.use('/api/job-boards', batch35JobBoardIntegrationsRoutes);
+app.use('/api/developer', batch36DeveloperToolsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

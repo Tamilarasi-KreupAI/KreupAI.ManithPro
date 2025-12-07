@@ -57,3 +57,6 @@ export { default as ExecutiveDashboardsHub } from './ExecutiveDashboardsHub';
 
 // Recruiter Components - Batch 32: Market Intelligence
 export { default as MarketIntelligenceHub } from './MarketIntelligenceHub';
+
+// Recruiter Components - Batch 33-36: Platform Integrations
+export { default as PlatformIntegrationsHub } from './PlatformIntegrationsHub';
