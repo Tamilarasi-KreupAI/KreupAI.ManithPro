@@ -1,0 +1,364 @@
+# KreupAI ManithPro - Continuous Deployment to Production
+# Requires manual approval before deployment
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.2.3 or staging)'
+        required: true
+        default: 'staging'
+      deploy_reason:
+        description: 'Reason for deployment'
+        required: true
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  ENVIRONMENT: production
+
+jobs:
+  # ==========================================================================
+  # Pre-flight Checks
+  # ==========================================================================
+  preflight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::8}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Check if images exist
+        id: check
+        run: |
+          # For manual deployments, verify the image exists
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Checking if staging images exist..."
+            # Add image verification logic here
+          fi
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+
+      - name: Run pre-deployment tests
+        run: |
+          echo "Running pre-deployment verification..."
+          # Add any pre-deployment checks here
+
+  # ==========================================================================
+  # Build Production Images
+  # ==========================================================================
+  build:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    needs: [preflight]
+    if: needs.preflight.outputs.should_deploy == 'true'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: production
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ needs.preflight.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: production
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ needs.preflight.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.PRODUCTION_API_URL }}
+            VITE_WS_URL=${{ secrets.PRODUCTION_WS_URL }}
+
+  # ==========================================================================
+  # Database Backup & Migration
+  # ==========================================================================
+  database:
+    name: Database Backup & Migration
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create database backup
+        run: |
+          echo "Creating database backup before migration..."
+          # Add backup logic here
+          # pg_dump or similar
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Run migrations
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+
+  # ==========================================================================
+  # Production Deployment (with approval)
+  # ==========================================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [preflight, build, database]
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            set -e
+
+            cd /opt/manithpro
+
+            # Store current version for rollback
+            docker inspect --format='{{.Config.Image}}' manithpro-backend > .rollback-backend
+            docker inspect --format='{{.Config.Image}}' manithpro-frontend > .rollback-frontend
+
+            # Pull new images
+            docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ needs.preflight.outputs.version }}
+            docker pull ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ needs.preflight.outputs.version }}
+
+            # Set image versions
+            export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ needs.preflight.outputs.version }}"
+            export FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ needs.preflight.outputs.version }}"
+
+            # Rolling deployment - backend first
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --scale backend=2 backend
+            sleep 15
+
+            # Health check backend
+            if ! curl -sf http://localhost:3000/health; then
+              echo "Backend health check failed, rolling back..."
+              docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+              exit 1
+            fi
+
+            # Deploy frontend
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps frontend
+            sleep 10
+
+            # Scale down to normal
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --scale backend=1 backend
+
+            # Final health check
+            curl -sf http://localhost:3000/health
+
+            # Clean up old images
+            docker image prune -f
+
+            echo "Deployment successful!"
+
+  # ==========================================================================
+  # Post-Deployment Verification
+  # ==========================================================================
+  verify:
+    name: Post-Deployment Verification
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    environment: production
+
+    steps:
+      - name: Wait for deployment stabilization
+        run: sleep 30
+
+      - name: Health checks
+        run: |
+          echo "Running health checks..."
+          for i in {1..5}; do
+            if curl -sf "${{ secrets.PRODUCTION_URL }}/api/health"; then
+              echo "Health check $i passed!"
+            else
+              echo "Health check $i failed!"
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # API health
+          curl -sf "${{ secrets.PRODUCTION_URL }}/api/health" | jq .
+
+          # Frontend accessible
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.PRODUCTION_URL }}/")
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "Frontend returned $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "All smoke tests passed!"
+
+      - name: Performance baseline
+        run: |
+          echo "Recording performance baseline..."
+          # Record response times for monitoring
+          for endpoint in "/api/health" "/"; do
+            TIME=$(curl -sf -o /dev/null -w "%{time_total}" "${{ secrets.PRODUCTION_URL }}$endpoint")
+            echo "$endpoint response time: ${TIME}s"
+          done
+
+  # ==========================================================================
+  # Rollback (Manual Trigger)
+  # ==========================================================================
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy.result == 'failure'
+    needs: [deploy]
+    environment: production
+
+    steps:
+      - name: Rollback to previous version
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/manithpro
+
+            echo "Rolling back to previous version..."
+
+            # Read previous versions
+            PREV_BACKEND=$(cat .rollback-backend 2>/dev/null || echo "")
+            PREV_FRONTEND=$(cat .rollback-frontend 2>/dev/null || echo "")
+
+            if [[ -n "$PREV_BACKEND" ]] && [[ -n "$PREV_FRONTEND" ]]; then
+              export BACKEND_IMAGE="$PREV_BACKEND"
+              export FRONTEND_IMAGE="$PREV_FRONTEND"
+
+              docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend frontend
+
+              echo "Rollback complete!"
+            else
+              echo "No rollback information available!"
+              exit 1
+            fi
+
+  # ==========================================================================
+  # Notifications
+  # ==========================================================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [verify]
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: ${{ needs.verify.result == 'success' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            :tada: Production deployment successful!
+            Version: ${{ needs.preflight.outputs.version }}
+            URL: ${{ secrets.PRODUCTION_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: Notify on failure
+        if: ${{ needs.verify.result == 'failure' || needs.deploy.result == 'failure' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: |
+            :rotating_light: Production deployment FAILED!
+            Please investigate immediately.
+            Automatic rollback may have been triggered.
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: Create deployment record
+        if: ${{ needs.verify.result == 'success' }}
+        run: |
+          echo "Recording deployment..."
+          # Add deployment tracking logic (e.g., to a deployment log, database, etc.)

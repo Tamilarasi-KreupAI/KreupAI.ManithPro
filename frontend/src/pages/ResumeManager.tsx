@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { userAPI } from '../services/api';
 
 interface Resume {
   id: string;
@@ -140,25 +139,30 @@ const ResumeManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full px-4 py-8">
-        <div className="text-center">Loading resumes...</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold mb-2">Resume Manager</h1>
-        <p className="text-gray-600 mb-8">
-          Upload and manage your resumes. Use them when applying for jobs.
-        </p>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Resume Manager</h1>
+          <p className="text-slate-500 mt-2">
+            Upload and manage your resumes. Use them when applying for jobs.
+          </p>
+        </div>
 
         {/* Upload Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upload New Resume</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6">Upload New Resume</h2>
 
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors">
+          <div className="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center hover:border-blue-500 hover:bg-blue-50/30 transition-all group">
             <input
               type="file"
               accept=".pdf,.doc,.docx"
@@ -168,109 +172,111 @@ const ResumeManager: React.FC = () => {
             />
 
             {selectedFile ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-4xl">{getFileIcon(selectedFile.name)}</span>
+              <div className="space-y-6 animate-fadeIn">
+                <div className="flex items-center justify-center gap-4">
+                  <span className="text-5xl bg-white p-3 rounded-xl shadow-sm">{getFileIcon(selectedFile.name)}</span>
                   <div className="text-left">
-                    <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
+                    <p className="font-bold text-slate-900 text-lg">{selectedFile.name}</p>
+                    <p className="text-sm text-slate-500">{formatFileSize(selectedFile.size)}</p>
                   </div>
                 </div>
                 <div className="flex gap-3 justify-center">
                   <button
                     onClick={handleUpload}
                     disabled={uploading}
-                    className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-400"
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                   >
                     {uploading ? 'Uploading...' : 'Upload Resume'}
                   </button>
                   <button
                     onClick={() => setSelectedFile(null)}
-                    className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300"
+                    className="bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <label htmlFor="resume-upload" className="cursor-pointer">
-                <div className="text-6xl mb-4">📤</div>
-                <p className="text-lg font-medium text-gray-900 mb-2">
+              <label htmlFor="resume-upload" className="cursor-pointer block">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">📤</span>
+                </div>
+                <p className="text-lg font-bold text-slate-900 mb-2">
                   Click to upload or drag and drop
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-500">
                   PDF, DOC, or DOCX (max 5MB)
                 </p>
               </label>
             )}
           </div>
 
-          <div className="mt-4 text-sm text-gray-600">
-            <p className="font-medium mb-2">Tips for a great resume:</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Keep it to 1-2 pages</li>
-              <li>Use a clean, professional format</li>
-              <li>Include relevant keywords from job descriptions</li>
-              <li>Highlight achievements with metrics</li>
-              <li>Proofread for errors</li>
-            </ul>
+          <div className="mt-6 flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <span className="text-blue-600 text-xl">💡</span>
+            <div className="text-sm text-blue-900">
+              <p className="font-bold mb-1">Tips for a great resume:</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-800 ml-1">
+                <li>Keep it to 1-2 pages</li>
+                <li>Use a clean, professional format</li>
+                <li>Include relevant keywords from job descriptions</li>
+              </ul>
+            </div>
           </div>
         </div>
 
         {/* Resumes List */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-semibold mb-6">Your Resumes ({resumes.length})</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6">Your Resumes ({resumes.length})</h2>
 
           {resumes.length > 0 ? (
             <div className="space-y-4">
               {resumes.map((resume) => (
                 <div
                   key={resume.id}
-                  className={`border rounded-lg p-6 transition-all ${
-                    resume.isDefault
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`border rounded-xl p-6 transition-all hover:shadow-md ${resume.isDefault
+                    ? 'border-blue-200 bg-blue-50/30'
+                    : 'border-slate-200 hover:border-blue-200 bg-white'
+                    }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <span className="text-4xl">{getFileIcon(resume.fileName)}</span>
-                      <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <span className="text-4xl bg-white p-2 rounded-lg shadow-sm border border-slate-100">{getFileIcon(resume.fileName)}</span>
+                      <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">{resume.fileName}</h3>
+                          <h3 className="font-bold text-slate-900">{resume.fileName}</h3>
                           {resume.isDefault && (
-                            <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                            <span className="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-200">
                               Default
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                          <span>📊 {formatFileSize(resume.fileSize)}</span>
-                          <span>📅 {new Date(resume.uploadedAt).toLocaleDateString()}</span>
+                        <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                          <span className="flex items-center gap-1">📊 {formatFileSize(resume.fileSize)}</span>
+                          <span className="flex items-center gap-1">📅 {new Date(resume.uploadedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 sm:ml-auto">
                       <a
-                        href={`http://localhost:5000${resume.filePath}`}
+                        href={`http://localhost:5001${resume.filePath}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium"
+                        className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-colors"
                       >
                         Preview
                       </a>
                       {!resume.isDefault && (
                         <button
                           onClick={() => handleSetDefault(resume.id)}
-                          className="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 text-sm font-medium"
+                          className="px-4 py-2 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 transition-colors"
                         >
                           Set Default
                         </button>
                       )}
                       <button
                         onClick={() => handleDelete(resume.id)}
-                        className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 text-sm font-medium"
+                        className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors"
                       >
                         Delete
                       </button>
@@ -278,30 +284,34 @@ const ResumeManager: React.FC = () => {
                   </div>
 
                   {resume.isDefault && (
-                    <div className="mt-4 pt-4 border-t border-primary-200">
-                      <p className="text-sm text-primary-800">
-                        ✨ This resume will be used by default when applying for jobs
-                      </p>
+                    <div className="mt-4 pt-4 border-t border-blue-100 flex items-center gap-2 text-sm text-blue-700">
+                      <span>✨</span>
+                      This resume will be used by default when applying for jobs
                     </div>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📁</div>
-              <p className="text-lg font-medium mb-2">No resumes uploaded yet</p>
-              <p className="text-sm">Upload your first resume to get started!</p>
+            <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <div className="text-6xl mb-4 opacity-50">📁</div>
+              <p className="text-lg font-bold text-slate-900 mb-2">No resumes uploaded yet</p>
+              <p className="text-slate-500">Upload your first resume to get started!</p>
             </div>
           )}
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-2">💡 Pro Tip</h3>
-          <p className="text-sm text-blue-800">
-            Keep multiple versions of your resume tailored for different types of jobs. Set your most general resume as default, and select specific ones when applying to specialized positions.
-          </p>
+        <div className="mt-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+          <div className="flex items-start gap-4">
+            <span className="text-3xl bg-white/20 p-2 rounded-lg backdrop-blur-sm">💡</span>
+            <div>
+              <h3 className="font-bold text-lg mb-1">Pro Tip</h3>
+              <p className="text-blue-100 leading-relaxed">
+                Keep multiple versions of your resume tailored for different types of jobs. Set your most general resume as default, and select specific ones when applying to specialized positions.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

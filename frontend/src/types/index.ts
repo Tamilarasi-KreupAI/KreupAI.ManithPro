@@ -1,122 +1,283 @@
-export type UserRole = 'CANDIDATE' | 'RECRUITER' | 'ADMIN' | 'B2B' | 'BUSINESS_CLIENT' | 'BUSINESS_VENDOR';
+// ============================================================
+// KREUPAI MANITHPRO - TYPE DEFINITIONS
+// ============================================================
+// This file serves as the barrel export for all type definitions.
+// Types are organized into domain-specific modules for better
+// maintainability and code organization.
+// ============================================================
 
-export type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'REMOTE';
+// ============================================
+// COMMON TYPES
+// ============================================
+export type {
+  UserRole,
+  JobType,
+  JobStatus,
+  ApplicationStatus,
+  VerificationStatus,
+  IntegrationStatus,
+  SkillProficiencyLevel,
+  EmploymentType,
+  TrustScoreTier,
+  VerificationRequestStatus,
+  ReferenceRequestStatus,
+  EndorsementRequestStatus,
+  EndorserRelationship,
+  ReferenceRelationship,
+  DesignPlatformType,
+  BlogPlatformType,
+  CodingPlatformType,
+  OnlineCoursePlatform,
+  AcademicPlatform,
+  PortfolioLinkType,
+  KaggleTier,
+  PaginationMeta,
+  PaginatedResponse,
+  APIResponse,
+  FilterBase,
+  DateRange,
+  TimestampedRecord,
+  DisplayOrderable,
+} from './common.types';
 
-export type JobStatus = 'OPEN' | 'CLOSED' | 'DRAFT';
+// ============================================
+// AUTH TYPES
+// ============================================
+export type {
+  User,
+  AuthResponse,
+  Session,
+  LoginRequest,
+  RegisterRequest,
+  PasswordResetRequest,
+  PasswordResetConfirm,
+  ChangePasswordRequest,
+  TwoFactorAuth,
+  TwoFactorSetup,
+  TwoFactorVerifyRequest,
+  SSOConfig,
+  PasswordPolicy,
+  SessionSettings,
+  TrustedDevice,
+  IPWhitelistEntry,
+  LoginAnomaly,
+  APIKey,
+} from './auth.types';
 
-export type ApplicationStatus =
-  | 'PENDING'
-  | 'REVIEWING'
-  | 'SHORTLISTED'
-  | 'INTERVIEW_SCHEDULED'
-  | 'REJECTED'
-  | 'ACCEPTED'
-  | 'WITHDRAWN';
+// ============================================
+// JOB TYPES
+// ============================================
+export type {
+  Job,
+  Company,
+  SavedJob,
+  JobFilters,
+  JobStats,
+  JobCreateRequest,
+  JobUpdateRequest,
+  JobTemplate,
+} from './job.types';
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  phone?: string;
-  bio?: string;
-  skills?: string[];
-  experience?: number;
-  education?: string;
-  location?: string;
-  linkedIn?: string;
-  portfolio?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// ============================================
+// APPLICATION TYPES
+// ============================================
+export type {
+  Application,
+  ApplicationFilters,
+  ApplicationCreateRequest,
+  ApplicationUpdateRequest,
+  ApplicationTimelineEvent,
+  PipelineStage,
+  DashboardStats,
+  ApplicationBulkAction,
+  ApplicationSource,
+  ApplicationScore,
+} from './application.types';
 
-export interface Job {
-  id: string;
-  title: string;
-  description: string;
-  requirements: string[];
-  responsibilities: string[];
-  location: string;
-  type: JobType;
-  salary?: string;
-  salaryMin?: number;
-  salaryMax?: number;
-  benefits: string[];
-  skills: string[];
-  experience?: string;
-  education?: string;
-  status: JobStatus;
-  positions: number;
-  deadline?: string;
-  companyName: string;
-  companyDescription?: string;
-  companyWebsite?: string;
-  companyLogo?: string;
-  companySize?: string;
-  companyIndustry?: string;
-  postedById: string;
-  postedBy?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    applications: number;
-  };
-}
+// ============================================
+// CANDIDATE TYPES
+// ============================================
+export type {
+  CandidateProfile,
+  WorkExperience,
+  Education,
+  Certification,
+  CandidateSkill,
+  SkillEndorsement,
+  Project,
+  Achievement,
+  ProfileCompleteness,
+  SkillsMatrix,
+  ExperienceTimelineSummary,
+  PortfolioSummary,
+  CustomPortfolioLink,
+} from './candidate.types';
 
-export interface Application {
-  id: string;
-  jobId: string;
-  candidateId: string;
-  resume: string;
-  coverLetter?: string;
-  status: ApplicationStatus;
-  notes?: string;
-  appliedAt: string;
-  updatedAt: string;
-  job?: {
-    id: string;
-    title: string;
-    location: string;
-    type: JobType;
-  };
-  candidate?: User;
-}
+// ============================================
+// INTEGRATION TYPES
+// ============================================
+export type {
+  // GitHub
+  GithubProfile,
+  GithubRepository,
+  // LinkedIn
+  LinkedInProfile,
+  LinkedInPosition,
+  LinkedInEducation,
+  LinkedInCertification,
+  LinkedInSkill,
+  // Stack Overflow
+  StackOverflowProfile,
+  StackOverflowTag,
+  StackOverflowAnswer,
+  StackOverflowQuestion,
+  // GitLab
+  GitLabProfile,
+  GitLabLanguage,
+  GitLabProject,
+  GitLabGroup,
+  // Design Portfolio
+  DesignPortfolio,
+  DesignProject,
+  DesignProjectImage,
+  // Blog Platform
+  BlogPlatform,
+  BlogTag,
+  BlogPost,
+  BlogPublication,
+  // Kaggle
+  KaggleProfile,
+  KaggleCompetition,
+  KaggleNotebook,
+  // Coding Platform
+  CodingPlatformProfile,
+  CodingBadge,
+  LanguageStat,
+  CodingSkill,
+  CodingSubmission,
+  CodingContest,
+  CodingCertificate,
+  // Online Courses
+  OnlineCourseProfile,
+  Specialization,
+  OnlineCourse,
+  // Academic
+  AcademicProfile,
+  CoAuthor,
+  Publication,
+  // Status
+  IntegrationStatusResponse,
+} from './integration.types';
 
-export interface AuthResponse {
-  message: string;
-  user: User;
-  token: string;
-}
+// ============================================
+// INTERVIEW TYPES
+// ============================================
+export type {
+  InterviewStatus,
+  InterviewType,
+  VideoRoomStatus,
+  VideoQuality,
+  ParticipantRole,
+  ParticipantStatus,
+  Interview,
+  InterviewParticipant,
+  InterviewFeedback,
+  InterviewScheduleRequest,
+  InterviewRescheduleRequest,
+  InterviewCalendarEvent,
+  VideoRoom,
+  VideoParticipant,
+  VideoRoomSettings,
+  VideoRecording,
+  InterviewScorecard,
+  ScorecardSection,
+  ScorecardCriterion,
+  ScorecardTemplate as InterviewScorecardTemplate,
+  InterviewAvailability,
+  AvailableTimeSlot,
+  InterviewPrepMaterial,
+} from './interview.types';
 
-export interface DashboardStats {
-  totalJobs?: number;
-  openJobs?: number;
-  totalApplications: number;
-  pendingApplications: number;
-  acceptedApplications?: number;
-  recentApplications: Application[];
-}
+// ============================================
+// ANALYTICS TYPES
+// ============================================
+export type {
+  FunnelAnalytics,
+  FunnelStage,
+  ConversionRate,
+  DropOffPoint,
+  TimeToHireAnalytics,
+  CostPerHireAnalytics,
+  SourceEffectiveness,
+  SourceMetric,
+  RecruiterPerformance,
+  PipelineHealth,
+  DashboardWidget,
+  Dashboard,
+  DashboardFilter,
+  ScheduledReport,
+  HiringSuccessPrediction,
+  PredictionFactor,
+  OfferAcceptancePrediction,
+  RetentionRiskScore,
+  RiskFactor,
+  SalaryMarketData,
+  TalentPoolAnalysis,
+  SkillsDemandTrends,
+  SkillDemand,
+  DiversityAnalytics,
+  DemographicBreakdown,
+  DiversityGoal,
+  AnalyticsReport,
+  ReportExport,
+} from './analytics.types';
 
-export interface SavedJob {
-  id: string;
-  userId: string;
-  jobId: string;
-  savedAt: string;
-  job: Job;
-}
+// ============================================
+// NOTIFICATION TYPES
+// ============================================
+export type {
+  NotificationType,
+  NotificationPriority,
+  NotificationChannel,
+  Notification,
+  NotificationAction,
+  NotificationPreferences,
+  PushSubscription,
+  NotificationFilters,
+  NotificationGroup,
+  Conversation,
+  ConversationParticipant,
+  Message,
+  MessageAttachment,
+  MessageReaction,
+  MessageTemplate,
+  ScheduledMessage,
+  UserPresence,
+  TypingIndicator,
+  WebSocketEvent,
+} from './notification.types';
 
-export interface Company {
-  name: string;
-  description?: string;
-  website?: string;
-  logo?: string;
-  size?: string;
-  industry?: string;
-  totalJobs?: number;
-  openJobs?: number;
-}
+// ============================================
+// TEAM TYPES
+// ============================================
+export type {
+  TeamRole,
+  Permission,
+  HiringTeam,
+  TeamMember,
+  TeamSettings,
+  AutoAssignmentRule,
+  TeamInvitation,
+  Workload,
+  CoverageSchedule,
+  ScorecardTemplate,
+  Evaluation,
+  EvaluationScore,
+  FeedbackAggregation,
+  CalibrationSession,
+  CalibrationOutcome,
+  DecisionVote,
+  DecisionSummary,
+  ActivityLog,
+  AuditTrail,
+} from './team.types';

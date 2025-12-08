@@ -145,24 +145,34 @@ const JobForm: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full px-4 py-8">
-        <div className="text-center">Loading job details...</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold mb-8">{isEdit ? 'Edit Job' : 'Post New Job'}</h1>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">{isEdit ? 'Edit Job Posting' : 'Post a New Job'}</h1>
+          <p className="mt-2 text-slate-500">
+            Create a compelling job post to attract the best talent
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Job Information */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Job Information</h2>
-            <div className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">📝</span> Job Details
+            </h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
                   Job Title *
                 </label>
                 <input
@@ -172,12 +182,12 @@ const JobForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   placeholder="e.g., Senior React Developer"
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
                   Job Description *
                 </label>
                 <textarea
@@ -187,13 +197,13 @@ const JobForm: React.FC = () => {
                   required
                   rows={6}
                   placeholder="Describe the role, team, and what makes this opportunity great..."
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Location *
                   </label>
                   <input
@@ -203,31 +213,34 @@ const JobForm: React.FC = () => {
                     onChange={handleChange}
                     required
                     placeholder="e.g., New York, NY or Remote"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Job Type *
                   </label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
-                  >
-                    <option value="FULL_TIME">Full Time</option>
-                    <option value="PART_TIME">Part Time</option>
-                    <option value="CONTRACT">Contract</option>
-                    <option value="INTERNSHIP">Internship</option>
-                    <option value="REMOTE">Remote</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="type"
+                      value={formData.type}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
+                    >
+                      <option value="FULL_TIME">Full Time</option>
+                      <option value="PART_TIME">Part Time</option>
+                      <option value="CONTRACT">Contract</option>
+                      <option value="INTERNSHIP">Internship</option>
+                      <option value="REMOTE">Remote</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Experience Required
                   </label>
                   <input
@@ -236,12 +249,12 @@ const JobForm: React.FC = () => {
                     value={formData.experience}
                     onChange={handleChange}
                     placeholder="e.g., 3-5 years"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Education
                   </label>
                   <input
@@ -250,12 +263,12 @@ const JobForm: React.FC = () => {
                     value={formData.education}
                     onChange={handleChange}
                     placeholder="e.g., Bachelor's Degree"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Number of Positions
                   </label>
                   <input
@@ -264,12 +277,12 @@ const JobForm: React.FC = () => {
                     value={formData.positions}
                     onChange={handleChange}
                     min="1"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Application Deadline
                   </label>
                   <input
@@ -277,33 +290,38 @@ const JobForm: React.FC = () => {
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
-                  >
-                    <option value="DRAFT">Draft</option>
-                    <option value="OPEN">Open</option>
-                    <option value="CLOSED">Closed</option>
-                  </select>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+                  <div className="relative">
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
+                    >
+                      <option value="DRAFT">Draft</option>
+                      <option value="OPEN">Open</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Salary Information */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Salary Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">💰</span> Salary & Compensation
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
                   Salary Range (Text)
                 </label>
                 <input
@@ -312,38 +330,40 @@ const JobForm: React.FC = () => {
                   value={formData.salary}
                   onChange={handleChange}
                   placeholder="e.g., $80,000 - $120,000"
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Min Salary ($)</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Min Salary ($)</label>
                 <input
                   type="number"
                   name="salaryMin"
                   value={formData.salaryMin}
                   onChange={handleChange}
                   placeholder="80000"
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Max Salary ($)</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Max Salary ($)</label>
                 <input
                   type="number"
                   name="salaryMax"
                   value={formData.salaryMax}
                   onChange={handleChange}
                   placeholder="120000"
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
             </div>
           </div>
 
           {/* Skills */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Required Skills</h2>
-            <div className="flex gap-2 mb-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">🎯</span> Required Skills
+            </h2>
+            <div className="flex gap-3 mb-4">
               <input
                 type="text"
                 value={skillInput}
@@ -356,8 +376,8 @@ const JobForm: React.FC = () => {
                     }
                   }
                 }}
-                placeholder="Add a skill..."
-                className="flex-1 border border-gray-300 rounded-md px-4 py-2"
+                placeholder="Add a skill (e.g. React, TypeScript)..."
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
               <button
                 type="button"
@@ -366,7 +386,7 @@ const JobForm: React.FC = () => {
                     setSkillInput('');
                   }
                 }}
-                className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700"
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               >
                 Add
               </button>
@@ -375,25 +395,30 @@ const JobForm: React.FC = () => {
               {formData.skills.map((skill, index) => (
                 <span
                   key={index}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                  className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-blue-100 flex items-center gap-2"
                 >
                   {skill}
                   <button
                     type="button"
                     onClick={() => handleRemoveItem('skills', index)}
-                    className="text-blue-600 hover:text-blue-800 font-bold"
+                    className="text-blue-400 hover:text-blue-600 font-bold"
                   >
                     ×
                   </button>
                 </span>
               ))}
+              {formData.skills.length === 0 && (
+                <p className="text-slate-400 text-sm italic">No skills added yet</p>
+              )}
             </div>
           </div>
 
           {/* Requirements */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Requirements</h2>
-            <div className="flex gap-2 mb-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">📋</span> Requirements
+            </h2>
+            <div className="flex gap-3 mb-4">
               <input
                 type="text"
                 value={requirementInput}
@@ -407,7 +432,7 @@ const JobForm: React.FC = () => {
                   }
                 }}
                 placeholder="Add a requirement..."
-                className="flex-1 border border-gray-300 rounded-md px-4 py-2"
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
               <button
                 type="button"
@@ -416,31 +441,36 @@ const JobForm: React.FC = () => {
                     setRequirementInput('');
                   }
                 }}
-                className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700"
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               >
                 Add
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {formData.requirements.map((req, index) => (
-                <li key={index} className="flex items-start gap-2 bg-gray-50 p-3 rounded">
-                  <span className="flex-1">{req}</span>
+                <li key={index} className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 group">
+                  <span className="flex-1 text-slate-700">{req}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveItem('requirements', index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-slate-400 hover:text-red-500 transition-colors"
                   >
                     Remove
                   </button>
                 </li>
               ))}
+              {formData.requirements.length === 0 && (
+                <p className="text-slate-400 text-sm italic">No requirements added yet</p>
+              )}
             </ul>
           </div>
 
           {/* Responsibilities */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Responsibilities</h2>
-            <div className="flex gap-2 mb-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">⚡</span> Responsibilities
+            </h2>
+            <div className="flex gap-3 mb-4">
               <input
                 type="text"
                 value={responsibilityInput}
@@ -454,7 +484,7 @@ const JobForm: React.FC = () => {
                   }
                 }}
                 placeholder="Add a responsibility..."
-                className="flex-1 border border-gray-300 rounded-md px-4 py-2"
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
               <button
                 type="button"
@@ -463,31 +493,36 @@ const JobForm: React.FC = () => {
                     setResponsibilityInput('');
                   }
                 }}
-                className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700"
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               >
                 Add
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {formData.responsibilities.map((resp, index) => (
-                <li key={index} className="flex items-start gap-2 bg-gray-50 p-3 rounded">
-                  <span className="flex-1">{resp}</span>
+                <li key={index} className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 group">
+                  <span className="flex-1 text-slate-700">{resp}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveItem('responsibilities', index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-slate-400 hover:text-red-500 transition-colors"
                   >
                     Remove
                   </button>
                 </li>
               ))}
+              {formData.responsibilities.length === 0 && (
+                <p className="text-slate-400 text-sm italic">No responsibilities added yet</p>
+              )}
             </ul>
           </div>
 
           {/* Benefits */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Benefits</h2>
-            <div className="flex gap-2 mb-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">🎁</span> Benefits & Perks
+            </h2>
+            <div className="flex gap-3 mb-4">
               <input
                 type="text"
                 value={benefitInput}
@@ -501,7 +536,7 @@ const JobForm: React.FC = () => {
                   }
                 }}
                 placeholder="Add a benefit..."
-                className="flex-1 border border-gray-300 rounded-md px-4 py-2"
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
               <button
                 type="button"
@@ -510,7 +545,7 @@ const JobForm: React.FC = () => {
                     setBenefitInput('');
                   }
                 }}
-                className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700"
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               >
                 Add
               </button>
@@ -519,27 +554,32 @@ const JobForm: React.FC = () => {
               {formData.benefits.map((benefit, index) => (
                 <span
                   key={index}
-                  className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                  className="bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-green-100 flex items-center gap-2"
                 >
                   {benefit}
                   <button
                     type="button"
                     onClick={() => handleRemoveItem('benefits', index)}
-                    className="text-green-600 hover:text-green-800 font-bold"
+                    className="text-green-400 hover:text-green-600 font-bold"
                   >
                     ×
                   </button>
                 </span>
               ))}
+              {formData.benefits.length === 0 && (
+                <p className="text-slate-400 text-sm italic">No benefits added yet</p>
+              )}
             </div>
           </div>
 
           {/* Company Information */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Company Information</h2>
-            <div className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">🏢</span> Company Information
+            </h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
                   Company Name *
                 </label>
                 <input
@@ -549,12 +589,12 @@ const JobForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   placeholder="e.g., TechCorp Inc."
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
                   Company Description
                 </label>
                 <textarea
@@ -563,13 +603,13 @@ const JobForm: React.FC = () => {
                   onChange={handleChange}
                   rows={4}
                   placeholder="Tell candidates about your company, culture, and mission..."
-                  className="w-full border border-gray-300 rounded-md px-4 py-2"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Company Website
                   </label>
                   <input
@@ -578,12 +618,12 @@ const JobForm: React.FC = () => {
                     value={formData.companyWebsite}
                     onChange={handleChange}
                     placeholder="https://example.com"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Company Logo URL
                   </label>
                   <input
@@ -592,39 +632,42 @@ const JobForm: React.FC = () => {
                     value={formData.companyLogo}
                     onChange={handleChange}
                     placeholder="https://example.com/logo.png"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Company Size
                   </label>
-                  <select
-                    name="companySize"
-                    value={formData.companySize}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
-                  >
-                    <option value="">Select size</option>
-                    <option value="1-10">1-10 employees</option>
-                    <option value="11-50">11-50 employees</option>
-                    <option value="51-200">51-200 employees</option>
-                    <option value="201-500">201-500 employees</option>
-                    <option value="501-1000">501-1000 employees</option>
-                    <option value="1000+">1000+ employees</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="companySize"
+                      value={formData.companySize}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
+                    >
+                      <option value="">Select size</option>
+                      <option value="1-10">1-10 employees</option>
+                      <option value="11-50">11-50 employees</option>
+                      <option value="51-200">51-200 employees</option>
+                      <option value="201-500">201-500 employees</option>
+                      <option value="501-1000">501-1000 employees</option>
+                      <option value="1000+">1000+ employees</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Industry</label>
                   <input
                     type="text"
                     name="companyIndustry"
                     value={formData.companyIndustry}
                     onChange={handleChange}
                     placeholder="e.g., Technology, Finance, Healthcare"
-                    className="w-full border border-gray-300 rounded-md px-4 py-2"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
               </div>
@@ -632,18 +675,18 @@ const JobForm: React.FC = () => {
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-4">
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-primary-600 text-white px-8 py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 font-semibold"
+              className="flex-1 bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed font-bold text-lg shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
             >
-              {submitting ? 'Saving...' : isEdit ? 'Update Job' : 'Post Job'}
+              {submitting ? 'Saving...' : isEdit ? 'Update Job Posting' : 'Post Job Now'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/jobs')}
-              className="px-8 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 font-bold text-lg transition-all"
             >
               Cancel
             </button>

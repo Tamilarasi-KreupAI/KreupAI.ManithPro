@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { applicationAPI } from '../services/api';
 import type { Application, User } from '../types';
-import { CandidateCardSkeleton } from '../components/SkeletonLoader';
 
 interface CandidateProfile {
   user: User;
@@ -149,279 +148,281 @@ const CandidateSearch: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Candidate Search</h1>
-          <p className="text-gray-600 mt-1">Loading candidates...</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <CandidateCardSkeleton key={i} />
-          ))}
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Candidate Search</h1>
-        <p className="text-gray-600 mt-1">
-          {filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? 's' : ''} found
-        </p>
-      </div>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Search by name, email, or bio..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="col-span-full md:col-span-2 border border-gray-300 rounded-md px-4 py-2"
-          />
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="border border-gray-300 rounded-md px-4 py-2"
-          >
-            <option value="recent">Most Recent Activity</option>
-            <option value="experience">Most Experience</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="applications">Most Applications</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Skills (comma separated)..."
-            value={filters.skills}
-            onChange={(e) => setFilters({ ...filters, skills: e.target.value })}
-            className="border border-gray-300 rounded-md px-4 py-2"
-          />
-
-          <input
-            type="number"
-            placeholder="Min. years of experience..."
-            value={filters.experience}
-            onChange={(e) => setFilters({ ...filters, experience: e.target.value })}
-            className="border border-gray-300 rounded-md px-4 py-2"
-          />
-
-          <input
-            type="text"
-            placeholder="Location..."
-            value={filters.location}
-            onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-            className="border border-gray-300 rounded-md px-4 py-2"
-          />
-
-          <input
-            type="text"
-            placeholder="Education..."
-            value={filters.education}
-            onChange={(e) => setFilters({ ...filters, education: e.target.value })}
-            className="col-span-full md:col-span-2 border border-gray-300 rounded-md px-4 py-2"
-          />
-
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
-            >
-              Clear all filters
-            </button>
-          )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Candidate Search</h1>
+          <p className="text-slate-500 mt-1">
+            {filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? 's' : ''} found
+          </p>
         </div>
-      </div>
 
-      {/* Candidates Grid */}
-      {filteredCandidates.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCandidates.map((candidate) => (
-            <div key={candidate.user.id} className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary-600">
-                        {candidate.user.firstName.charAt(0)}
-                        {candidate.user.lastName.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">
-                        {candidate.user.firstName} {candidate.user.lastName}
-                      </h3>
-                      <p className="text-sm text-gray-600">{candidate.user.email}</p>
-                    </div>
-                  </div>
-                </div>
+        {/* Search and Filters */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="col-span-full md:col-span-2 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+              <input
+                type="text"
+                placeholder="Search by name, email, or bio..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
 
-                {/* Bio */}
-                {candidate.user.bio && (
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{candidate.user.bio}</p>
-                )}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-slate-200 rounded-xl px-4 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+              <option value="recent">Most Recent Activity</option>
+              <option value="experience">Most Experience</option>
+              <option value="name">Name (A-Z)</option>
+              <option value="applications">Most Applications</option>
+            </select>
 
-                {/* Details */}
-                <div className="space-y-2 mb-4 text-sm">
-                  {candidate.user.location && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span>📍</span>
-                      <span>{candidate.user.location}</span>
-                    </div>
-                  )}
-                  {candidate.user.experience !== undefined && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span>💼</span>
-                      <span>{candidate.user.experience} years experience</span>
-                    </div>
-                  )}
-                  {candidate.user.education && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span>🎓</span>
-                      <span>{candidate.user.education}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <span>📄</span>
-                    <span>{candidate.totalApplications} application{candidate.totalApplications !== 1 ? 's' : ''}</span>
-                  </div>
-                </div>
+            <input
+              type="text"
+              placeholder="Skills (comma separated)..."
+              value={filters.skills}
+              onChange={(e) => setFilters({ ...filters, skills: e.target.value })}
+              className="border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
 
-                {/* Skills */}
-                {candidate.skills.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-500 mb-2">SKILLS</p>
-                    <div className="flex flex-wrap gap-1">
-                      {candidate.skills.slice(0, 4).map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
-                        >
-                          {skill}
+            <input
+              type="number"
+              placeholder="Min. years of experience..."
+              value={filters.experience}
+              onChange={(e) => setFilters({ ...filters, experience: e.target.value })}
+              className="border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
+
+            <input
+              type="text"
+              placeholder="Location..."
+              value={filters.location}
+              onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+              className="border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
+
+            <input
+              type="text"
+              placeholder="Education..."
+              value={filters.education}
+              onChange={(e) => setFilters({ ...filters, education: e.target.value })}
+              className="col-span-full md:col-span-2 border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
+
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-slate-500 hover:text-blue-600 underline transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Candidates Grid */}
+        {filteredCandidates.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCandidates.map((candidate) => (
+              <div key={candidate.user.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center shadow-inner">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {candidate.user.firstName.charAt(0)}
+                          {candidate.user.lastName.charAt(0)}
                         </span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                          {candidate.user.firstName} {candidate.user.lastName}
+                        </h3>
+                        <p className="text-sm text-slate-500">{candidate.user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  {candidate.user.bio && (
+                    <p className="text-sm text-slate-600 mb-4 line-clamp-2">{candidate.user.bio}</p>
+                  )}
+
+                  {/* Details */}
+                  <div className="space-y-2 mb-4 text-sm">
+                    {candidate.user.location && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <span>📍</span>
+                        <span>{candidate.user.location}</span>
+                      </div>
+                    )}
+                    {candidate.user.experience !== undefined && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <span>💼</span>
+                        <span>{candidate.user.experience} years experience</span>
+                      </div>
+                    )}
+                    {candidate.user.education && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <span>🎓</span>
+                        <span>{candidate.user.education}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <span>📄</span>
+                      <span>{candidate.totalApplications} application{candidate.totalApplications !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+
+                  {/* Skills */}
+                  {candidate.skills.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Skills</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {candidate.skills.slice(0, 4).map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {candidate.skills.length > 4 && (
+                          <span className="text-xs text-slate-400 px-1">+{candidate.skills.length - 4}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Links */}
+                  <div className="flex gap-3 mb-6 text-sm">
+                    {candidate.user.linkedIn && (
+                      <a
+                        href={candidate.user.linkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                      >
+                        LinkedIn →
+                      </a>
+                    )}
+                    {candidate.user.portfolio && (
+                      <a
+                        href={candidate.user.portfolio}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-800 font-medium hover:underline"
+                      >
+                        Portfolio →
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Applications */}
+                  <div className="border-t border-slate-100 pt-4">
+                    <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Recent Applications</p>
+                    <div className="space-y-2">
+                      {candidate.applications.slice(0, 2).map((app) => (
+                        <Link
+                          key={app.id}
+                          to={`/applications/${app.id}`}
+                          className="block text-sm hover:bg-slate-50 p-2 rounded-lg transition-colors -mx-2"
+                        >
+                          <p className="font-medium text-slate-900">{app.job?.title}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs text-slate-500">
+                              {new Date(app.appliedAt).toLocaleDateString()}
+                            </span>
+                            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                              {app.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                        </Link>
                       ))}
-                      {candidate.skills.length > 4 && (
-                        <span className="text-xs text-gray-500">+{candidate.skills.length - 4}</span>
+                      {candidate.applications.length > 2 && (
+                        <p className="text-xs text-slate-400 text-center">
+                          +{candidate.applications.length - 2} more
+                        </p>
                       )}
                     </div>
                   </div>
-                )}
 
-                {/* Links */}
-                <div className="flex gap-2 mb-4 text-sm">
-                  {candidate.user.linkedIn && (
+                  {/* Contact */}
+                  <div className="mt-6 pt-4 border-t border-slate-100">
                     <a
-                      href={candidate.user.linkedIn}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800"
+                      href={`mailto:${candidate.user.email}`}
+                      className="block w-full text-center bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                     >
-                      LinkedIn →
+                      Contact Candidate
                     </a>
-                  )}
-                  {candidate.user.portfolio && (
-                    <a
-                      href={candidate.user.portfolio}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-600 hover:text-purple-800"
-                    >
-                      Portfolio →
-                    </a>
-                  )}
-                </div>
-
-                {/* Applications */}
-                <div className="border-t pt-4">
-                  <p className="text-xs font-medium text-gray-500 mb-2">RECENT APPLICATIONS</p>
-                  <div className="space-y-2">
-                    {candidate.applications.slice(0, 2).map((app) => (
-                      <Link
-                        key={app.id}
-                        to={`/applications/${app.id}`}
-                        className="block text-sm hover:bg-gray-50 p-2 rounded"
-                      >
-                        <p className="font-medium text-gray-900">{app.job?.title}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-gray-500">
-                            {new Date(app.appliedAt).toLocaleDateString()}
-                          </span>
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                            {app.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                    {candidate.applications.length > 2 && (
-                      <p className="text-xs text-gray-500 text-center">
-                        +{candidate.applications.length - 2} more
-                      </p>
-                    )}
                   </div>
                 </div>
-
-                {/* Contact */}
-                <div className="mt-4 pt-4 border-t">
-                  <a
-                    href={`mailto:${candidate.user.email}`}
-                    className="block w-full text-center bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 font-medium"
-                  >
-                    Contact Candidate
-                  </a>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-          <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Candidates Found</h2>
-          <p className="text-gray-600 mb-6">
-            {hasActiveFilters
-              ? 'Try adjusting your search filters'
-              : 'No candidates have applied to your jobs yet'}
-          </p>
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+            <div className="text-6xl mb-4">🔍</div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">No Candidates Found</h2>
+            <p className="text-slate-500 mb-6">
+              {hasActiveFilters
+                ? 'Try adjusting your search filters'
+                : 'No candidates have applied to your jobs yet'}
+            </p>
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
 
-      {/* Tips */}
-      {filteredCandidates.length > 0 && (
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-3">💡 Search Tips</h3>
-          <ul className="space-y-2 text-sm text-blue-800">
-            <li className="flex items-start gap-2">
-              <span>•</span>
-              <span>Use comma-separated skills to find candidates with specific expertise</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span>•</span>
-              <span>Filter by experience level to find candidates matching your requirements</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span>•</span>
-              <span>Check their application history to see their interest in your company</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span>•</span>
-              <span>View their portfolio or LinkedIn to learn more about their work</span>
-            </li>
-          </ul>
-        </div>
-      )}
+        {/* Tips */}
+        {filteredCandidates.length > 0 && (
+          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6">
+            <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+              <span>💡</span> Search Tips
+            </h3>
+            <ul className="space-y-2 text-sm text-blue-800">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Use comma-separated skills to find candidates with specific expertise</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Filter by experience level to find candidates matching your requirements</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Check their application history to see their interest in your company</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">•</span>
+                <span>View their portfolio or LinkedIn to learn more about their work</span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

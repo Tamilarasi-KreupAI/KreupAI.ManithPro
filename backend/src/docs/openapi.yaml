@@ -1,0 +1,1203 @@
+openapi: 3.1.0
+info:
+  title: ManithPro API
+  description: |
+    ManithPro - Professional HR Management & Recruitment Platform API
+
+    ## Authentication
+    Most endpoints require authentication via JWT Bearer token.
+    Include the token in the Authorization header: `Bearer <token>`
+
+    ## Rate Limiting
+    - General API: 100 requests per 15 minutes
+    - Authentication endpoints: 5 requests per 15 minutes
+    - File uploads: 50 requests per hour
+
+    ## Error Responses
+    All errors follow a consistent format with `error` and `message` fields.
+  version: 1.0.0
+  contact:
+    name: KreupAI Technologies
+    email: support@kreupai.com
+  license:
+    name: Proprietary
+    url: https://kreupai.com/license
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.manithpro.com/api
+    description: Production server
+  - url: https://staging-api.manithpro.com/api
+    description: Staging server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Users
+    description: User management operations
+  - name: Jobs
+    description: Job posting and management
+  - name: Applications
+    description: Job application operations
+  - name: Interviews
+    description: Interview scheduling and management
+  - name: Organizations
+    description: Organization/company management
+  - name: Analytics
+    description: Analytics and reporting
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  # ============================================================
+  # AUTHENTICATION
+  # ============================================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and receive JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get a new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Invalidate the current session
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send password reset email
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent (if account exists)
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset password using token from email
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ============================================================
+  # USERS
+  # ============================================================
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      description: Get the authenticated user's profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - Users
+      summary: Update current user
+      description: Update the authenticated user's profile
+      operationId: updateCurrentUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Get a paginated list of users (admin only)
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, recruiter, candidate, employee]
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Get a specific user's profile
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # JOBS
+  # ============================================================
+  /jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List jobs
+      description: Get a paginated list of job postings
+      operationId: listJobs
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, closed, archived]
+        - name: department
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [full-time, part-time, contract, internship]
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobs'
+
+    post:
+      tags:
+        - Jobs
+      summary: Create job
+      description: Create a new job posting
+      operationId: createJob
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /jobs/{id}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job by ID
+      description: Get a specific job posting
+      operationId: getJobById
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Jobs
+      summary: Update job
+      description: Update a job posting
+      operationId: updateJob
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJobRequest'
+      responses:
+        '200':
+          description: Job updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Jobs
+      summary: Delete job
+      description: Delete a job posting
+      operationId: deleteJob
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Job deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # APPLICATIONS
+  # ============================================================
+  /applications:
+    get:
+      tags:
+        - Applications
+      summary: List applications
+      description: Get applications for the current user or job
+      operationId: listApplications
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: jobId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, reviewing, shortlisted, rejected, hired]
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApplications'
+
+    post:
+      tags:
+        - Applications
+      summary: Submit application
+      description: Apply for a job
+      operationId: createApplication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationRequest'
+      responses:
+        '201':
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Already applied
+
+  /applications/{id}:
+    get:
+      tags:
+        - Applications
+      summary: Get application
+      description: Get application details
+      operationId: getApplication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Applications
+      summary: Update application status
+      description: Update the status of an application
+      operationId: updateApplication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, reviewing, shortlisted, rejected, hired]
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Application updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+
+  # ============================================================
+  # INTERVIEWS
+  # ============================================================
+  /interviews:
+    get:
+      tags:
+        - Interviews
+      summary: List interviews
+      description: Get scheduled interviews
+      operationId: listInterviews
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: applicationId
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of interviews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInterviews'
+
+    post:
+      tags:
+        - Interviews
+      summary: Schedule interview
+      description: Schedule a new interview
+      operationId: createInterview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInterviewRequest'
+      responses:
+        '201':
+          description: Interview scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+
+  /interviews/{id}:
+    get:
+      tags:
+        - Interviews
+      summary: Get interview
+      description: Get interview details
+      operationId: getInterview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Interview details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+
+    patch:
+      tags:
+        - Interviews
+      summary: Update interview
+      description: Update interview details
+      operationId: updateInterview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInterviewRequest'
+      responses:
+        '200':
+          description: Interview updated
+
+    delete:
+      tags:
+        - Interviews
+      summary: Cancel interview
+      description: Cancel a scheduled interview
+      operationId: cancelInterview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Interview cancelled
+
+  # ============================================================
+  # HEALTH
+  # ============================================================
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Comprehensive health status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Service unhealthy
+
+  /live:
+    get:
+      tags:
+        - Health
+      summary: Liveness check
+      description: Check if service is running
+      operationId: livenessCheck
+      responses:
+        '200':
+          description: Service alive
+
+  /ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      description: Check if service is ready
+      operationId: readinessCheck
+      responses:
+        '200':
+          description: Service ready
+        '503':
+          description: Service not ready
+
+components:
+  # ============================================================
+  # SECURITY SCHEMES
+  # ============================================================
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+
+  # ============================================================
+  # PARAMETERS
+  # ============================================================
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Resource ID
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Items per page
+
+    SearchParam:
+      name: search
+      in: query
+      schema:
+        type: string
+      description: Search query
+
+  # ============================================================
+  # RESPONSES
+  # ============================================================
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  # ============================================================
+  # SCHEMAS
+  # ============================================================
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrevious:
+          type: boolean
+
+    # Authentication
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [candidate, recruiter]
+          default: candidate
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+
+    # User
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [admin, recruiter, candidate, employee]
+        avatar:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatar:
+          type: string
+        phone:
+          type: string
+        bio:
+          type: string
+
+    PaginatedUsers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Job
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        department:
+          type: string
+        location:
+          type: string
+        type:
+          type: string
+          enum: [full-time, part-time, contract, internship]
+        salary:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            currency:
+              type: string
+        status:
+          type: string
+          enum: [draft, published, closed, archived]
+        requirements:
+          type: array
+          items:
+            type: string
+        benefits:
+          type: array
+          items:
+            type: string
+        applicationCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    CreateJobRequest:
+      type: object
+      required:
+        - title
+        - description
+        - department
+        - location
+        - type
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        department:
+          type: string
+        location:
+          type: string
+        type:
+          type: string
+          enum: [full-time, part-time, contract, internship]
+        salary:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            currency:
+              type: string
+              default: USD
+        requirements:
+          type: array
+          items:
+            type: string
+        benefits:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    UpdateJobRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, published, closed, archived]
+
+    PaginatedJobs:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Application
+    Application:
+      type: object
+      properties:
+        id:
+          type: string
+        jobId:
+          type: string
+        candidateId:
+          type: string
+        status:
+          type: string
+          enum: [pending, reviewing, shortlisted, rejected, hired]
+        resume:
+          type: string
+          format: uri
+        coverLetter:
+          type: string
+        appliedAt:
+          type: string
+          format: date-time
+        job:
+          $ref: '#/components/schemas/Job'
+        candidate:
+          $ref: '#/components/schemas/User'
+
+    CreateApplicationRequest:
+      type: object
+      required:
+        - jobId
+      properties:
+        jobId:
+          type: string
+        resume:
+          type: string
+          format: uri
+        coverLetter:
+          type: string
+
+    PaginatedApplications:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Application'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Interview
+    Interview:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationId:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in minutes
+        type:
+          type: string
+          enum: [phone, video, in-person, technical]
+        location:
+          type: string
+        meetingLink:
+          type: string
+          format: uri
+        interviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum: [scheduled, completed, cancelled, no-show]
+        feedback:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CreateInterviewRequest:
+      type: object
+      required:
+        - applicationId
+        - scheduledAt
+        - type
+      properties:
+        applicationId:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          default: 60
+        type:
+          type: string
+          enum: [phone, video, in-person, technical]
+        location:
+          type: string
+        meetingLink:
+          type: string
+          format: uri
+        interviewerIds:
+          type: array
+          items:
+            type: string
+
+    UpdateInterviewRequest:
+      type: object
+      properties:
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [scheduled, completed, cancelled, no-show]
+        feedback:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    PaginatedInterviews:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interview'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Health
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        uptime:
+          type: integer
+        checks:
+          type: object
+          properties:
+            database:
+              type: object
+              properties:
+                status:
+                  type: string
+                latency:
+                  type: number
+            cache:
+              type: object
+              properties:
+                status:
+                  type: string
+                latency:
+                  type: number
+            memory:
+              type: object
+              properties:
+                status:
+                  type: string
+                percentUsed:
+                  type: number

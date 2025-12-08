@@ -1,7 +1,6 @@
 import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useTheme } from '../context/ThemeContext';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export interface MessageBubbleProps {
   id: string;
@@ -27,12 +26,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onReply,
   onDelete,
 }) => {
-  const { actualTheme } = useTheme();
   const [showActions, setShowActions] = React.useState(false);
 
   // Parse code snippets from message content
   const parseCodeSnippets = (text: string) => {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const codeBlockRegex = /```(\w +) ?\n([\s\S] *?)```/g;
     const parts: Array<{ type: 'text' | 'code'; content: string; language?: string }> = [];
     let lastIndex = 0;
     let match;
@@ -112,11 +110,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <div
-      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 group`}
+      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb - 4 group`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+      <div className={`max - w - [70 %] ${isOwn ? 'items-end' : 'items-start'} flex flex - col`}>
         {!isOwn && (
           <span className="text-xs text-gray-600 dark:text-gray-400 mb-1 px-2">
             {senderName}
@@ -124,14 +122,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
 
         <div
-          className={`rounded-2xl px-4 py-2 ${isOwn
-            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-            : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
+          className={`rounded - 2xl px - 4 py - 2 ${isOwn
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+              : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
             } relative`}
         >
           {/* Message Actions */}
           {showActions && (
-            <div className={`absolute top-0 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} flex items-center gap-1 px-2`}>
+            <div className={`absolute top - 0 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} flex items - center gap - 1 px - 2`}>
               {onReply && (
                 <button
                   onClick={() => onReply(id)}
@@ -203,8 +201,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center gap-2 text-sm ${isOwn ? 'text-white hover:underline' : 'text-primary-600 dark:text-primary-400 hover:underline'
-                    }`}
+                  className={`flex items - center gap - 2 text - sm ${isOwn ? 'text-white hover:underline' : 'text-primary-600 dark:text-primary-400 hover:underline'
+                    } `}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -217,7 +215,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
 
         {/* Timestamp and Status */}
-        <div className={`flex items-center gap-1 mt-1 px-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex items - center gap - 1 mt - 1 px - 2 ${isOwn ? 'flex-row-reverse' : 'flex-row'} `}>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {formattedTime}
           </span>

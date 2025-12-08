@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Package managers
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Generated files
+*.generated.ts
+*.min.js
+*.min.css
+
+# Prisma
+prisma/migrations/
+
+# Mobile builds
+mobile/android/
+mobile/ios/
+mobile/.expo/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env*
+!.env.example
+
+# Docker
+*.sql
+
+# Documentation
+docs/api/

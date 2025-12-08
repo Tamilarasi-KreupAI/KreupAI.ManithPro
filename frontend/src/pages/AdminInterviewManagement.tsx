@@ -223,380 +223,400 @@ const AdminInterviewManagement: React.FC = () => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'SCHEDULED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-700 border-green-200';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-700 border-red-200';
       case 'NO_SHOW':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
       case 'PHONE':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-700';
       case 'VIDEO':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-indigo-100 text-indigo-700';
       case 'IN_PERSON':
-        return 'bg-teal-100 text-teal-800';
+        return 'bg-teal-100 text-teal-700';
       case 'TECHNICAL':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-700';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
   if (loading && interviews.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading interviews...</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Interview Management</h1>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Background Gradient Blob */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
 
-      {/* Statistics Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-sm text-gray-600">Total Interviews</div>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg shadow">
-            <div className="text-sm text-blue-600">Scheduled</div>
-            <div className="text-2xl font-bold text-blue-700">{stats.scheduled}</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg shadow">
-            <div className="text-sm text-green-600">Completed</div>
-            <div className="text-2xl font-bold text-green-700">{stats.completed}</div>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg shadow">
-            <div className="text-sm text-red-600">Cancelled</div>
-            <div className="text-2xl font-bold text-red-700">{stats.cancelled}</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg shadow">
-            <div className="text-sm text-yellow-600">No Show</div>
-            <div className="text-2xl font-bold text-yellow-700">{stats.noShow}</div>
-          </div>
-        </div>
-      )}
+      <div className="p-8 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Interview Management</h1>
+        <p className="text-slate-500 mb-8">Schedule, track, and manage all candidate interviews</p>
 
-      {/* Upcoming Interviews */}
-      {upcomingInterviews.length > 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg mb-6">
-          <h2 className="text-lg font-semibold mb-3">Upcoming Interviews (Next 7 Days)</h2>
-          <div className="space-y-2">
-            {upcomingInterviews.map(interview => (
-              <div key={interview.id} className="bg-white p-3 rounded flex justify-between items-center">
-                <div>
-                  <div className="font-medium">
-                    {interview.candidate.firstName} {interview.candidate.lastName} - {interview.application.job.title}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {new Date(interview.scheduledAt).toLocaleString()} • {interview.type}
-                  </div>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs ${getTypeBadgeClass(interview.type)}`}>
-                  {interview.type}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="">All Status</option>
-              <option value="SCHEDULED">Scheduled</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-              <option value="NO_SHOW">No Show</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="">All Types</option>
-              <option value="PHONE">Phone</option>
-              <option value="VIDEO">Video</option>
-              <option value="IN_PERSON">In Person</option>
-              <option value="TECHNICAL">Technical</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">From Date</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => {
-                setDateFrom(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">To Date</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Search</label>
-            <input
-              type="text"
-              placeholder="Search candidate, job..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Bulk Actions */}
-      {selectedInterviews.length > 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg mb-4 flex justify-between items-center">
-          <div className="font-medium">{selectedInterviews.length} interviews selected</div>
-          <div className="space-x-2">
-            <button
-              onClick={handleBulkUpdateStatus}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Update Status
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Delete Selected
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={handleExport}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Export to CSV
-        </button>
-      </div>
-
-      {/* Interviews Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedInterviews.length === interviews.length && interviews.length > 0}
-                    onChange={handleSelectAll}
-                  />
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidate</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Scheduled At</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {interviews.map(interview => (
-                <tr key={interview.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedInterviews.includes(interview.id)}
-                      onChange={() => handleSelectInterview(interview.id)}
-                    />
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="font-medium">
-                      {interview.candidate.firstName} {interview.candidate.lastName}
-                    </div>
-                    <div className="text-sm text-gray-500">{interview.candidate.email}</div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm">{interview.application.job.title}</div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs ${getTypeBadgeClass(interview.type)}`}>
-                      {interview.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-sm">
-                    {new Date(interview.scheduledAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-4 text-sm">
-                    {interview.duration} min
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(interview.status)}`}>
-                      {interview.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    {interview.rating ? (
-                      <div className="flex items-center">
-                        <span className="text-yellow-500 mr-1">★</span>
-                        <span>{interview.rating}/5</span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditStatus(interview)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(interview.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 border-t flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Interviews</div>
+              <div className="text-3xl font-bold text-slate-900">{stats.total}</div>
             </div>
-            <div className="flex space-x-2">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Scheduled</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.scheduled}</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Completed</div>
+              <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cancelled</div>
+              <div className="text-3xl font-bold text-red-600">{stats.cancelled}</div>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">No Show</div>
+              <div className="text-3xl font-bold text-yellow-600">{stats.noShow}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Upcoming Interviews */}
+        {upcomingInterviews.length > 0 && (
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-8">
+            <h2 className="text-lg font-bold text-blue-900 mb-4">Upcoming Interviews (Next 7 Days)</h2>
+            <div className="space-y-3">
+              {upcomingInterviews.map(interview => (
+                <div key={interview.id} className="bg-white p-4 rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                  <div>
+                    <div className="font-bold text-slate-900">
+                      {interview.candidate.firstName} {interview.candidate.lastName} <span className="text-slate-400 font-normal mx-2">•</span> {interview.application.job.title}
+                    </div>
+                    <div className="text-sm text-slate-500 mt-1 font-medium">
+                      {new Date(interview.scheduledAt).toLocaleString()} • {interview.type}
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeClass(interview.type)}`}>
+                    {interview.type}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="">All Status</option>
+                  <option value="SCHEDULED">Scheduled</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="NO_SHOW">No Show</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Type</label>
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="">All Types</option>
+                  <option value="PHONE">Phone</option>
+                  <option value="VIDEO">Video</option>
+                  <option value="IN_PERSON">In Person</option>
+                  <option value="TECHNICAL">Technical</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">From Date</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">To Date</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Search</label>
+              <input
+                type="text"
+                placeholder="Search candidate, job..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bulk Actions */}
+        {selectedInterviews.length > 0 && (
+          <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 flex justify-between items-center shadow-sm">
+            <div className="font-bold text-blue-900 flex items-center gap-2">
+              <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">{selectedInterviews.length}</span>
+              interviews selected
+            </div>
+            <div className="flex gap-3">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50"
+                onClick={handleBulkUpdateStatus}
+                className="bg-white text-blue-600 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50 font-bold text-sm transition-colors"
               >
-                Previous
+                Update Status
               </button>
               <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50"
+                onClick={handleBulkDelete}
+                className="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 font-bold text-sm transition-colors"
               >
-                Next
+                Delete Selected
               </button>
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={handleExport}
+            className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 font-bold shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 flex items-center gap-2"
+          >
+            <span>📥</span> Export to CSV
+          </button>
+        </div>
+
+        {/* Interviews Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-4 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedInterviews.length === interviews.length && interviews.length > 0}
+                      onChange={handleSelectAll}
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                    />
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Candidate</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Job</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Scheduled At</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Duration</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {interviews.map(interview => (
+                  <tr key={interview.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedInterviews.includes(interview.id)}
+                        onChange={() => handleSelectInterview(interview.id)}
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-900">
+                        {interview.candidate.firstName} {interview.candidate.lastName}
+                      </div>
+                      <div className="text-sm text-slate-500">{interview.candidate.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-slate-700">{interview.application.job.title}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeClass(interview.type)}`}>
+                        {interview.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                      {new Date(interview.scheduledAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {interview.duration} min
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadgeClass(interview.status)}`}>
+                        {interview.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {interview.rating ? (
+                        <div className="flex items-center font-bold text-slate-700">
+                          <span className="text-yellow-400 mr-1 text-lg">★</span>
+                          <span>{interview.rating}/5</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => handleEditStatus(interview)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-bold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(interview.id)}
+                          className="text-red-500 hover:text-red-700 text-sm font-bold"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="text-sm text-slate-600 font-medium">
+                Page <span className="font-bold text-slate-900">{currentPage}</span> of <span className="font-bold text-slate-900">{totalPages}</span>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-slate-200 rounded-lg disabled:opacity-50 hover:bg-slate-50 font-bold text-sm text-slate-600 transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-slate-200 rounded-lg disabled:opacity-50 hover:bg-slate-50 font-bold text-sm text-slate-600 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Edit Status Modal */}
       {showEditModal && editingInterview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Update Interview Status</h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Update Interview Status</h2>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <select
-                value={editStatus}
-                onChange={(e) => setEditStatus(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="SCHEDULED">Scheduled</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="NO_SHOW">No Show</option>
-              </select>
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+              <div className="relative">
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="SCHEDULED">Scheduled</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="NO_SHOW">No Show</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+              </div>
             </div>
 
             {editStatus === 'COMPLETED' && (
               <>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Rating (1-5)</label>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Rating (1-5)</label>
                   <input
                     type="number"
                     min="1"
                     max="5"
                     value={editRating || ''}
                     onChange={(e) => setEditRating(parseInt(e.target.value))}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Feedback</label>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Feedback</label>
                   <textarea
                     value={editFeedback}
                     onChange={(e) => setEditFeedback(e.target.value)}
                     rows={4}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                     placeholder="Enter interview feedback..."
                   />
                 </div>
               </>
             )}
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
+                className="px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveStatus}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               >
                 Save
               </button>
