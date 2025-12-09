@@ -1,0 +1,385 @@
+# ManithPro Android Fastlane Configuration
+# ============================================================
+#
+# This file contains the fastlane configuration for Android builds,
+# testing, and deployment to Google Play Store.
+#
+# Usage:
+#   fastlane android beta      - Deploy to internal testing
+#   fastlane android release   - Deploy to production
+#   fastlane android test      - Run tests
+#   fastlane android build     - Build the app
+# ============================================================
+
+default_platform(:android)
+
+# ============================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================
+
+PACKAGE_NAME = ENV["ANDROID_PACKAGE_NAME"] || "com.kreupai.manithpro"
+KEYSTORE_PATH = ENV["ANDROID_KEYSTORE_PATH"] || "../app/release.keystore"
+KEY_ALIAS = ENV["ANDROID_KEY_ALIAS"] || "manithpro"
+
+# ============================================================
+# BEFORE ALL
+# ============================================================
+
+before_all do
+  # Ensure we have the Play Store credentials
+  if is_ci? && !ENV["PLAY_STORE_JSON_KEY"]
+    UI.user_error!("PLAY_STORE_JSON_KEY environment variable is required for CI")
+  end
+end
+
+# ============================================================
+# ANDROID PLATFORM
+# ============================================================
+
+platform :android do
+  # ============================================================
+  # TESTING
+  # ============================================================
+
+  desc "Run all unit tests"
+  lane :test do
+    gradle(
+      task: "test",
+      build_type: "Debug"
+    )
+  end
+
+  desc "Run instrumentation tests"
+  lane :instrumentation_test do
+    gradle(
+      task: "connectedAndroidTest",
+      build_type: "Debug"
+    )
+  end
+
+  desc "Run lint checks"
+  lane :lint do
+    gradle(
+      task: "lint",
+      build_type: "Release"
+    )
+  end
+
+  # ============================================================
+  # BUILDING
+  # ============================================================
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(
+      task: "assemble",
+      build_type: "Debug"
+    )
+  end
+
+  desc "Build release APK"
+  lane :build_apk do
+    # Increment version code
+    increment_version_code
+
+    gradle(
+      task: "assemble",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => KEYSTORE_PATH,
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => KEY_ALIAS,
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+  end
+
+  desc "Build release AAB (Android App Bundle)"
+  lane :build do
+    # Increment version code
+    increment_version_code
+
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => KEYSTORE_PATH,
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => KEY_ALIAS,
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+  end
+
+  # ============================================================
+  # DEPLOYMENT
+  # ============================================================
+
+  desc "Deploy to internal testing track"
+  lane :internal do
+    # Run tests first
+    test
+    lint
+
+    # Build AAB
+    build
+
+    # Upload to Play Store internal track
+    upload_to_play_store(
+      track: "internal",
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    # Notify team
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🚀 New ManithPro Android build deployed to internal testing!",
+        slack_url: ENV["SLACK_URL"],
+        payload: {
+          "Version Code" => android_get_version_code,
+          "Version Name" => android_get_version_name
+        }
+      )
+    end
+  end
+
+  desc "Deploy to beta/closed testing track"
+  lane :beta do
+    # Run tests
+    test
+    lint
+
+    # Build AAB
+    build
+
+    # Upload to Play Store beta track
+    upload_to_play_store(
+      track: "beta",
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      skip_upload_metadata: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: "completed"
+    )
+
+    # Create git tag
+    version_name = android_get_version_name
+    version_code = android_get_version_code
+
+    add_git_tag(
+      tag: "android/v#{version_name}-#{version_code}"
+    )
+
+    push_git_tags unless is_ci?
+
+    # Notify team
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🚀 New ManithPro Android beta deployed!",
+        slack_url: ENV["SLACK_URL"]
+      )
+    end
+  end
+
+  desc "Deploy to production"
+  lane :release do
+    # Ensure clean git status
+    ensure_git_status_clean unless is_ci?
+
+    # Run all checks
+    test
+    lint
+
+    # Build AAB
+    build
+
+    # Upload to Play Store production track
+    upload_to_play_store(
+      track: "production",
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      release_status: "completed",
+      rollout: "0.1" # 10% rollout initially
+    )
+
+    # Create release tag
+    version_name = android_get_version_name
+    version_code = android_get_version_code
+
+    add_git_tag(
+      tag: "android/release/v#{version_name}"
+    )
+
+    push_git_tags
+
+    # Notify team
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🎉 ManithPro Android v#{version_name} released to production!",
+        slack_url: ENV["SLACK_URL"]
+      )
+    end
+  end
+
+  desc "Promote beta to production"
+  lane :promote do |options|
+    rollout = options[:rollout] || "1.0"
+
+    upload_to_play_store(
+      track: "beta",
+      track_promote_to: "production",
+      rollout: rollout,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🎉 ManithPro Android promoted to production with #{(rollout.to_f * 100).to_i}% rollout!",
+        slack_url: ENV["SLACK_URL"]
+      )
+    end
+  end
+
+  desc "Increase rollout percentage"
+  lane :rollout do |options|
+    percentage = options[:percentage] || "0.5"
+
+    upload_to_play_store(
+      track: "production",
+      rollout: percentage,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  # ============================================================
+  # VERSION MANAGEMENT
+  # ============================================================
+
+  desc "Increment version code"
+  lane :increment_version_code do
+    # Get current version code from Play Store
+    begin
+      current_version = google_play_track_version_codes(
+        track: "internal"
+      ).max || 0
+    rescue
+      current_version = android_get_version_code.to_i - 1
+    end
+
+    new_version_code = current_version + 1
+
+    android_set_version_code(
+      version_code: new_version_code
+    )
+
+    UI.success("Version code incremented to #{new_version_code}")
+  end
+
+  desc "Bump version name"
+  lane :bump_version do |options|
+    bump_type = options[:type] || "patch"
+    current = android_get_version_name
+
+    # Parse current version
+    major, minor, patch = current.split(".").map(&:to_i)
+
+    case bump_type
+    when "major"
+      major += 1
+      minor = 0
+      patch = 0
+    when "minor"
+      minor += 1
+      patch = 0
+    when "patch"
+      patch += 1
+    end
+
+    new_version = "#{major}.#{minor}.#{patch}"
+
+    android_set_version_name(
+      version_name: new_version
+    )
+
+    git_commit(
+      path: ["app/build.gradle"],
+      message: "chore(android): bump version to #{new_version} [skip ci]"
+    )
+
+    UI.success("Version bumped to #{new_version}")
+  end
+
+  # ============================================================
+  # SCREENSHOTS
+  # ============================================================
+
+  desc "Capture Play Store screenshots"
+  lane :screenshots do
+    capture_android_screenshots(
+      app_package_name: PACKAGE_NAME,
+      use_tests_in_packages: ["com.kreupai.manithpro.screenshots"],
+      app_apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+      tests_apk_path: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      locales: ["en-US"],
+      output_directory: "./fastlane/screenshots",
+      clear_previous_screenshots: true
+    )
+  end
+
+  # ============================================================
+  # UTILITIES
+  # ============================================================
+
+  desc "Upload ProGuard mapping to Sentry"
+  lane :upload_symbols do
+    if ENV["SENTRY_AUTH_TOKEN"]
+      # Sentry CLI upload
+      sh("sentry-cli upload-proguard " \
+         "--org #{ENV['SENTRY_ORG']} " \
+         "--project #{ENV['SENTRY_PROJECT']} " \
+         "app/build/outputs/mapping/release/mapping.txt")
+    end
+  end
+
+  desc "Clean build artifacts"
+  lane :clean do
+    gradle(
+      task: "clean"
+    )
+  end
+
+  desc "Validate Play Store metadata"
+  lane :validate_metadata do
+    validate_play_store_json_key(
+      json_key: ENV["PLAY_STORE_JSON_KEY_PATH"]
+    )
+  end
+end
+
+# ============================================================
+# ERROR HANDLING
+# ============================================================
+
+error do |lane, exception, options|
+  if ENV["SLACK_URL"]
+    slack(
+      message: "❌ Fastlane error in lane #{lane}",
+      slack_url: ENV["SLACK_URL"],
+      success: false,
+      payload: {
+        "Error" => exception.message
+      }
+    )
+  end
+end

@@ -1,0 +1,312 @@
+# ManithPro iOS Fastlane Configuration
+# ============================================================
+#
+# This file contains the fastlane configuration for iOS builds,
+# testing, and deployment to the App Store.
+#
+# Usage:
+#   fastlane ios beta      - Deploy to TestFlight
+#   fastlane ios release   - Deploy to App Store
+#   fastlane ios test      - Run tests
+#   fastlane ios build     - Build the app
+# ============================================================
+
+default_platform(:ios)
+
+# ============================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================
+
+TEAM_ID = ENV["APPLE_TEAM_ID"] || "YOUR_TEAM_ID"
+APP_IDENTIFIER = ENV["IOS_APP_IDENTIFIER"] || "com.kreupai.manithpro"
+APP_NAME = "ManithPro"
+
+# ============================================================
+# BEFORE ALL
+# ============================================================
+
+before_all do
+  # Ensure we're on the right branch for releases
+  if is_ci?
+    setup_ci
+  end
+end
+
+# ============================================================
+# iOS PLATFORM
+# ============================================================
+
+platform :ios do
+  # ============================================================
+  # TESTING
+  # ============================================================
+
+  desc "Run all unit and UI tests"
+  lane :test do
+    scan(
+      scheme: "ManithPro",
+      devices: ["iPhone 15 Pro"],
+      clean: true,
+      code_coverage: true,
+      output_types: "html,junit",
+      output_directory: "./fastlane/test_output"
+    )
+  end
+
+  # ============================================================
+  # CODE SIGNING
+  # ============================================================
+
+  desc "Sync certificates and provisioning profiles"
+  lane :sync_certs do
+    match(
+      type: "appstore",
+      app_identifier: APP_IDENTIFIER,
+      team_id: TEAM_ID,
+      readonly: is_ci?
+    )
+    match(
+      type: "development",
+      app_identifier: APP_IDENTIFIER,
+      team_id: TEAM_ID,
+      readonly: is_ci?
+    )
+  end
+
+  desc "Register new devices"
+  lane :register_device do |options|
+    device_name = options[:name]
+    device_udid = options[:udid]
+
+    register_devices(
+      devices: {
+        device_name => device_udid
+      }
+    )
+
+    # Regenerate profiles
+    match(
+      type: "development",
+      app_identifier: APP_IDENTIFIER,
+      force_for_new_devices: true
+    )
+  end
+
+  # ============================================================
+  # BUILDING
+  # ============================================================
+
+  desc "Build the app for development"
+  lane :build_dev do
+    sync_certs
+
+    gym(
+      scheme: "ManithPro",
+      configuration: "Debug",
+      export_method: "development",
+      output_directory: "./build",
+      output_name: "ManithPro-dev.ipa"
+    )
+  end
+
+  desc "Build the app for release"
+  lane :build do
+    sync_certs
+
+    # Increment build number
+    increment_build_number(
+      build_number: latest_testflight_build_number + 1
+    )
+
+    gym(
+      scheme: "ManithPro",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "ManithPro.ipa",
+      include_bitcode: false,
+      include_symbols: true
+    )
+  end
+
+  # ============================================================
+  # DEPLOYMENT
+  # ============================================================
+
+  desc "Deploy to TestFlight for beta testing"
+  lane :beta do
+    # Ensure clean git status
+    ensure_git_status_clean unless is_ci?
+
+    # Run tests first
+    test
+
+    # Build
+    build
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: changelog_from_git_commits(
+        commits_count: 10,
+        pretty: "- %s"
+      )
+    )
+
+    # Notify team
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🚀 New ManithPro iOS beta deployed to TestFlight!",
+        slack_url: ENV["SLACK_URL"],
+        payload: {
+          "Build Number" => get_build_number,
+          "Version" => get_version_number
+        }
+      )
+    end
+
+    # Commit version bump
+    unless is_ci?
+      commit_version_bump(
+        message: "chore(ios): bump build number [skip ci]"
+      )
+      push_to_git_remote
+    end
+  end
+
+  desc "Deploy to App Store for production release"
+  lane :release do
+    # Ensure clean git status
+    ensure_git_status_clean unless is_ci?
+
+    # Run tests
+    test
+
+    # Build
+    build
+
+    # Upload to App Store Connect
+    upload_to_app_store(
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false
+    )
+
+    # Create git tag
+    version = get_version_number
+    build = get_build_number
+
+    add_git_tag(
+      tag: "ios/v#{version}-#{build}"
+    )
+
+    push_git_tags
+
+    # Notify team
+    if ENV["SLACK_URL"]
+      slack(
+        message: "🎉 ManithPro iOS v#{version} submitted to App Store!",
+        slack_url: ENV["SLACK_URL"]
+      )
+    end
+  end
+
+  # ============================================================
+  # VERSION MANAGEMENT
+  # ============================================================
+
+  desc "Bump version number"
+  lane :bump_version do |options|
+    bump_type = options[:type] || "patch"
+
+    increment_version_number(
+      bump_type: bump_type
+    )
+
+    commit_version_bump(
+      message: "chore(ios): bump version [skip ci]"
+    )
+  end
+
+  # ============================================================
+  # SCREENSHOTS
+  # ============================================================
+
+  desc "Capture App Store screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      scheme: "ManithProUITests",
+      devices: [
+        "iPhone 15 Pro Max",
+        "iPhone 15 Pro",
+        "iPhone SE (3rd generation)",
+        "iPad Pro (12.9-inch) (6th generation)",
+        "iPad Pro (11-inch) (4th generation)"
+      ],
+      languages: ["en-US"],
+      output_directory: "./fastlane/screenshots",
+      clear_previous_screenshots: true
+    )
+
+    frame_screenshots(
+      path: "./fastlane/screenshots"
+    )
+  end
+
+  # ============================================================
+  # UTILITIES
+  # ============================================================
+
+  desc "Download dSYMs from App Store Connect"
+  lane :dsyms do
+    download_dsyms(
+      app_identifier: APP_IDENTIFIER,
+      version: "latest"
+    )
+
+    # Upload to Sentry if configured
+    if ENV["SENTRY_AUTH_TOKEN"]
+      sentry_upload_dsym(
+        org_slug: ENV["SENTRY_ORG"],
+        project_slug: ENV["SENTRY_PROJECT"],
+        dsym_path: "./ManithPro.app.dSYM.zip"
+      )
+    end
+
+    clean_build_artifacts
+  end
+
+  desc "Refresh provisioning profiles"
+  lane :refresh_profiles do
+    match(
+      type: "appstore",
+      app_identifier: APP_IDENTIFIER,
+      force: true
+    )
+    match(
+      type: "development",
+      app_identifier: APP_IDENTIFIER,
+      force: true
+    )
+  end
+end
+
+# ============================================================
+# ERROR HANDLING
+# ============================================================
+
+error do |lane, exception, options|
+  if ENV["SLACK_URL"]
+    slack(
+      message: "❌ Fastlane error in lane #{lane}",
+      slack_url: ENV["SLACK_URL"],
+      success: false,
+      payload: {
+        "Error" => exception.message
+      }
+    )
+  end
+end

@@ -1,0 +1,268 @@
+# KreupAI ManithPro - Continuous Deployment to Staging
+# Automatically deploys to staging on push to develop branch
+
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      deploy_reason:
+        description: 'Reason for manual deployment'
+        required: false
+        default: 'Manual staging deployment'
+
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  ENVIRONMENT: staging
+
+jobs:
+  # ==========================================================================
+  # Build & Push Docker Images
+  # ==========================================================================
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend_image: ${{ steps.meta-backend.outputs.tags }}
+      frontend_image: ${{ steps.meta-frontend.outputs.tags }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::8}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract backend metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=raw,value=staging
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=sha,prefix=
+
+      - name: Extract frontend metadata
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=raw,value=staging
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=sha,prefix=
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.STAGING_API_URL }}
+            VITE_WS_URL=${{ secrets.STAGING_WS_URL }}
+
+  # ==========================================================================
+  # Database Migration
+  # ==========================================================================
+  migrate-database:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Run migrations
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+  # ==========================================================================
+  # Deploy to Staging
+  # ==========================================================================
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push, migrate-database]
+    environment:
+      name: staging
+      url: ${{ secrets.STAGING_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Option 1: Deploy to Kubernetes
+      # - name: Set up kubectl
+      #   uses: azure/setup-kubectl@v3
+
+      # - name: Configure kubectl
+      #   run: |
+      #     echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > kubeconfig
+      #     export KUBECONFIG=kubeconfig
+
+      # - name: Deploy to Kubernetes
+      #   run: |
+      #     kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ needs.build-and-push.outputs.version }} -n staging
+      #     kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ needs.build-and-push.outputs.version }} -n staging
+      #     kubectl rollout status deployment/backend -n staging --timeout=5m
+      #     kubectl rollout status deployment/frontend -n staging --timeout=5m
+
+      # Option 2: Deploy via SSH (for VPS/EC2)
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/manithpro
+
+            # Pull latest images
+            docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:staging
+            docker pull ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:staging
+
+            # Update docker-compose with new images
+            export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:staging"
+            export FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:staging"
+
+            # Deploy with zero downtime
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend frontend
+
+            # Wait for health checks
+            sleep 10
+
+            # Verify deployment
+            curl -f http://localhost:3000/health || exit 1
+
+            # Clean up old images
+            docker image prune -f
+
+  # ==========================================================================
+  # Post-Deployment Verification
+  # ==========================================================================
+  verify:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    environment: staging
+
+    steps:
+      - name: Health check
+        run: |
+          for i in {1..10}; do
+            if curl -sf "${{ secrets.STAGING_URL }}/api/health"; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying..."
+            sleep 10
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+      - name: Smoke tests
+        run: |
+          # Basic API smoke tests
+          curl -sf "${{ secrets.STAGING_URL }}/api/health" | jq .
+          curl -sf "${{ secrets.STAGING_URL }}/" | head -50
+
+  # ==========================================================================
+  # Notifications
+  # ==========================================================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [verify]
+    if: always()
+
+    steps:
+      - name: Notify Slack on success
+        if: ${{ needs.verify.result == 'success' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            :rocket: Staging deployment successful!
+            Version: ${{ needs.build-and-push.outputs.version }}
+            URL: ${{ secrets.STAGING_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: Notify Slack on failure
+        if: ${{ needs.verify.result == 'failure' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: |
+            :x: Staging deployment failed!
+            Please check the workflow logs.
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

@@ -1,0 +1,56 @@
+# Frontend Docker Ignore
+
+# Dependencies (will be installed in container)
+node_modules
+
+# Build outputs (will be generated in container)
+dist
+build
+
+# Environment files (use Docker env vars)
+.env
+.env.local
+.env.*.local
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+
+# Test files
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage
+.nyc_output
+
+# Documentation
+*.md
+docs
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Misc
+.eslintcache
+.prettierignore
+Dockerfile
+.dockerignore
+
+# Storybook (if exists)
+.storybook
+storybook-static

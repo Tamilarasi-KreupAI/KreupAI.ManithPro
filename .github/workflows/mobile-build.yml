@@ -1,0 +1,305 @@
+# KreupAI ManithPro - Mobile App Build Workflow
+# Builds iOS and Android apps for testing and release
+
+name: Mobile Build
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-build.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ==========================================================================
+  # Detect Changes
+  # ==========================================================================
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      mobile_changed: ${{ steps.changes.outputs.mobile }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for mobile changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            mobile:
+              - 'mobile/**'
+
+  # ==========================================================================
+  # Lint & Test
+  # ==========================================================================
+  lint-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.mobile_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./mobile
+        run: npm run lint
+
+      - name: Run TypeScript check
+        working-directory: ./mobile
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        working-directory: ./mobile
+        run: npm test -- --passWithNoTests
+
+  # ==========================================================================
+  # Android Build
+  # ==========================================================================
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [lint-test]
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'both')) ||
+      (github.event_name != 'workflow_dispatch')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Decode keystore
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > mobile/android/app/release.keystore
+        continue-on-error: true
+
+      - name: Build Android (Debug)
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'development')
+        working-directory: ./mobile/android
+        run: ./gradlew assembleDebug
+
+      - name: Build Android (Release)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type != 'development')
+        working-directory: ./mobile/android
+        run: ./gradlew assembleRelease
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        continue-on-error: true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: |
+            mobile/android/app/build/outputs/apk/debug/*.apk
+            mobile/android/app/build/outputs/apk/release/*.apk
+          retention-days: 14
+
+      - name: Upload to Play Store (Internal)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.kreupai.manithpro
+          releaseFiles: mobile/android/app/build/outputs/apk/release/*.apk
+          track: internal
+        continue-on-error: true
+
+  # ==========================================================================
+  # iOS Build
+  # ==========================================================================
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    needs: [lint-test]
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'both')) ||
+      (github.event_name != 'workflow_dispatch')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ./mobile/ios
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Install CocoaPods
+        working-directory: ./mobile/ios
+        run: |
+          bundle install
+          bundle exec pod install
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Import certificates
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATES_P12_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATES_PASSWORD }}
+        continue-on-error: true
+
+      - name: Import provisioning profile
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+        continue-on-error: true
+
+      - name: Build iOS (Debug)
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'development')
+        working-directory: ./mobile/ios
+        run: |
+          xcodebuild -workspace ManithPro.xcworkspace \
+            -scheme ManithPro \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            build
+
+      - name: Build iOS (Release)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type != 'development')
+        working-directory: ./mobile/ios
+        run: |
+          xcodebuild -workspace ManithPro.xcworkspace \
+            -scheme ManithPro \
+            -configuration Release \
+            -archivePath build/ManithPro.xcarchive \
+            archive
+        continue-on-error: true
+
+      - name: Export IPA
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: ./mobile/ios
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/ManithPro.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist ExportOptions.plist
+        continue-on-error: true
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: mobile/ios/build/export/*.ipa
+          retention-days: 14
+        continue-on-error: true
+
+      - name: Upload to TestFlight
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: mobile/ios/build/export/ManithPro.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+        continue-on-error: true
+
+  # ==========================================================================
+  # Notify
+  # ==========================================================================
+  notify:
+    name: Notify Build Status
+    runs-on: ubuntu-latest
+    needs: [build-android, build-ios]
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Mobile build completed!
+            Android: ${{ needs.build-android.result }}
+            iOS: ${{ needs.build-ios.result }}
+          fields: repo,workflow,ref
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
