@@ -43,7 +43,7 @@ import batch24HiringTeamManagementRoutes from './routes/batch24HiringTeamManagem
 import batch25CollaborativeEvaluationRoutes from './routes/batch25CollaborativeEvaluation.routes';
 import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunication.routes';
 import batch27AuthenticationAccessRoutes from './routes/batch27AuthenticationAccess.routes';
-import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes';
+// import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes'; // Temporarily disabled - missing controller functions
 import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
 import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
 import batch31ExecutiveDashboardsRoutes from './routes/batch31ExecutiveDashboards.routes';
@@ -182,7 +182,7 @@ app.use('/api/hiring-teams', batch24HiringTeamManagementRoutes);
 app.use('/api/evaluation', batch25CollaborativeEvaluationRoutes);
 app.use('/api/realtime', batch26RealtimeCommunicationRoutes);
 app.use('/api/security', batch27AuthenticationAccessRoutes);
-app.use('/api/data-protection', batch28DataProtectionRoutes);
+// app.use('/api/data-protection', batch28DataProtectionRoutes); // Temporarily disabled
 app.use('/api/compliance', batch29ComplianceRoutes);
 app.use('/api/recruitment-analytics', batch30RecruitmentAnalyticsRoutes);
 app.use('/api/executive', batch31ExecutiveDashboardsRoutes);

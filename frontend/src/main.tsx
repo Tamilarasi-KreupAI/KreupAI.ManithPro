@@ -10,19 +10,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA functionality
-serviceWorkerRegistration.register({
-  onSuccess: () => {
-    console.log('Service worker registered successfully');
-  },
-  onUpdate: (registration) => {
-    console.log('New content available, please refresh');
-    // You can show a custom UI prompt here
-    if (window.confirm('New version available! Reload to update?')) {
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      }
-    }
-  },
-});
+// Unregister service worker to fix caching issues
+serviceWorkerRegistration.unregister();

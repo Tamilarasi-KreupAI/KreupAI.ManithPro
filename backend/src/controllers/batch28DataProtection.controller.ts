@@ -1431,3 +1431,109 @@ export const getDataProtectionAuditLogs = async (req: Request, res: Response) =>
     res.status(500).json({ error: 'Failed to get data protection audit logs' });
   }
 };
+
+// ============================================================================
+// MISSING STUB FUNCTIONS
+// ============================================================================
+
+export const getEncryptionKey = async (req: Request, res: Response) => {
+  try {
+    const { keyId } = req.params;
+    const key = await prisma.encryptionKey.findUnique({ where: { id: keyId } });
+    if (!key) return res.status(404).json({ error: 'Key not found' });
+    res.json(key);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get encryption key' });
+  }
+};
+
+export const updateEncryptionKey = async (req: Request, res: Response) => {
+  try {
+    const { keyId } = req.params;
+    const key = await prisma.encryptionKey.update({
+      where: { id: keyId },
+      data: req.body,
+    });
+    res.json(key);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update encryption key' });
+  }
+};
+
+export const getKeyRotationSchedules = async (req: Request, res: Response) => {
+  try {
+    const schedules = await prisma.keyRotationSchedule.findMany();
+    res.json(schedules);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get rotation schedules' });
+  }
+};
+
+export const createKeyRotationSchedule = async (req: Request, res: Response) => {
+  try {
+    const schedule = await prisma.keyRotationSchedule.create({ data: req.body });
+    res.json(schedule);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create rotation schedule' });
+  }
+};
+
+export const updateKeyRotationSchedule = async (req: Request, res: Response) => {
+  try {
+    const { scheduleId } = req.params;
+    const schedule = await prisma.keyRotationSchedule.update({
+      where: { id: scheduleId },
+      data: req.body,
+    });
+    res.json(schedule);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update rotation schedule' });
+  }
+};
+
+export const deleteKeyRotationSchedule = async (req: Request, res: Response) => {
+  try {
+    const { scheduleId } = req.params;
+    await prisma.keyRotationSchedule.delete({ where: { id: scheduleId } });
+    res.json({ message: 'Schedule deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete rotation schedule' });
+  }
+};
+
+export const getTLSCertificateInfo = async (req: Request, res: Response) => {
+  res.json({ message: 'TLS certificate info not implemented' });
+};
+
+export const renewTLSCertificate = async (req: Request, res: Response) => {
+  res.json({ message: 'TLS certificate renewal not implemented' });
+};
+
+export const getPIIDetectionConfigs = async (req: Request, res: Response) => {
+  try {
+    const configs = await prisma.pIIDetectionConfig.findMany();
+    res.json(configs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get PII detection configs' });
+  }
+};
+
+export const createPIIDetectionConfig = async (req: Request, res: Response) => {
+  try {
+    const config = await prisma.pIIDetectionConfig.create({ data: req.body });
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create PII detection config' });
+  }
+};
+
+export const deletePIIDetectionConfig = async (req: Request, res: Response) => {
+  try {
+    const { configId } = req.params;
+    await prisma.pIIDetectionConfig.delete({ where: { id: configId } });
+    res.json({ message: 'Config deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete PII detection config' });
+  }
+};
+}
