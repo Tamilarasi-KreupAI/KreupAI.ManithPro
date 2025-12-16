@@ -11,7 +11,7 @@ const unlinkAsync = promisify(fs.unlink);
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = path.join(__dirname, '../../uploads/resumes');
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
     const nameWithoutExt = path.basename(file.originalname, ext);
@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedMimeTypes = [
     'application/pdf',
     'application/msword',
@@ -54,13 +54,13 @@ export const upload = multer({
  */
 export const getResumes = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
+    if (!req.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const resumes = await prisma.resume.findMany({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
       },
       orderBy: [
         { isDefault: 'desc' },
@@ -80,7 +80,7 @@ export const getResumes = async (req: AuthRequest, res: Response) => {
  */
 export const uploadResume = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
+    if (!req.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -92,7 +92,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
 
     // Check if this is the first resume for the user
     const existingResumes = await prisma.resume.findMany({
-      where: { userId: req.user.id },
+      where: { userId: req.user.userId },
     });
 
     const isFirstResume = existingResumes.length === 0;
@@ -100,7 +100,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
     // Create resume record
     const resume = await prisma.resume.create({
       data: {
-        userId: req.user.id,
+        userId: req.user.userId,
         fileName: file.originalname,
         filePath: `/uploads/resumes/${file.filename}`,
         fileSize: file.size,
@@ -135,7 +135,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
  */
 export const setDefaultResume = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
+    if (!req.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -150,7 +150,7 @@ export const setDefaultResume = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Resume not found' });
     }
 
-    if (resume.userId !== req.user.id) {
+    if (resume.userId !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -158,7 +158,7 @@ export const setDefaultResume = async (req: AuthRequest, res: Response) => {
     await prisma.$transaction([
       // Set all user's resumes to non-default
       prisma.resume.updateMany({
-        where: { userId: req.user.id },
+        where: { userId: req.user.userId },
         data: { isDefault: false },
       }),
       // Set the selected resume as default
@@ -180,7 +180,7 @@ export const setDefaultResume = async (req: AuthRequest, res: Response) => {
  */
 export const deleteResume = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
+    if (!req.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -195,7 +195,7 @@ export const deleteResume = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Resume not found' });
     }
 
-    if (resume.userId !== req.user.id) {
+    if (resume.userId !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -218,7 +218,7 @@ export const deleteResume = async (req: AuthRequest, res: Response) => {
     // If the deleted resume was the default, set another resume as default
     if (resume.isDefault) {
       const remainingResumes = await prisma.resume.findMany({
-        where: { userId: req.user.id },
+        where: { userId: req.user.userId },
         orderBy: { uploadedAt: 'desc' },
         take: 1,
       });
@@ -243,7 +243,7 @@ export const deleteResume = async (req: AuthRequest, res: Response) => {
  */
 export const downloadResume = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user?.id) {
+    if (!req.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -258,7 +258,7 @@ export const downloadResume = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Resume not found' });
     }
 
-    if (resume.userId !== req.user.id) {
+    if (resume.userId !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -271,11 +271,11 @@ export const downloadResume = async (req: AuthRequest, res: Response) => {
     }
 
     // Send the file
-    res.download(filePath, resume.fileName, (err) => {
+    return res.download(filePath, resume.fileName, (err) => {
       if (err) {
         console.error('Error downloading file:', err);
         if (!res.headersSent) {
-          return res.status(500).json({ error: 'Failed to download resume' });
+          res.status(500).json({ error: 'Failed to download resume' });
         }
       }
     });
