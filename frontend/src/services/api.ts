@@ -215,6 +215,19 @@ export const userAPI = {
   },
 };
 
+// Recruiter Profile APIs
+export const recruiterProfileAPI = {
+  getProfile: () => {
+    return api.get('/recruiter-profile').then((res) => res.data);
+  },
+  updateProfile: (data: any) => {
+    return api.put('/recruiter-profile', data).then((res) => res.data);
+  },
+  updateStats: (data: { activeJobs?: number; totalHires?: number; successRate?: number }) => {
+    return api.put('/recruiter-profile/stats', data).then((res) => res.data);
+  },
+};
+
 // Saved Jobs APIs
 export const savedJobAPI = {
   getAll: (params?: any) => {

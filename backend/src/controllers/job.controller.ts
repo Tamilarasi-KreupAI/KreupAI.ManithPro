@@ -97,6 +97,7 @@ export const getAllJobs = async (req: AuthRequest, res: Response): Promise<void>
       location,
       search,
       skills,
+      postedBy,
       page = '1',
       limit = '10',
     } = req.query;
@@ -108,11 +109,16 @@ export const getAllJobs = async (req: AuthRequest, res: Response): Promise<void>
     // Build filters
     const where: any = {};
 
+    // Filter by posted by (for recruiters to see their own jobs)
+    if (postedBy === 'me' && req.user) {
+      where.postedById = req.user.userId;
+    }
+
     if (status) {
       where.status = status;
     } else {
-      // By default, only show OPEN jobs to candidates
-      if (req.user?.role === 'CANDIDATE') {
+      // By default, only show OPEN jobs to candidates (unless filtering by postedBy)
+      if (req.user?.role === 'CANDIDATE' && postedBy !== 'me') {
         where.status = 'OPEN';
       }
     }

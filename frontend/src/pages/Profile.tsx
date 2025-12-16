@@ -47,6 +47,12 @@ const Profile: React.FC = () => {
   const loadProfile = async () => {
     try {
       const data = await userAPI.getProfile();
+
+      // Redirect recruiters to their specialized profile page
+      if (data.role === 'RECRUITER') {
+        navigate('/profile/recruiter', { replace: true });
+        return;
+      }
       setUser(data);
       setFormData({
         firstName: data.firstName || '',

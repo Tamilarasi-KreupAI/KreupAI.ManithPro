@@ -105,18 +105,18 @@ const JobDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-500"></div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Job not found</h2>
-          <Link to="/jobs" className="text-blue-600 hover:text-blue-700 font-medium">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Job not found</h2>
+          <Link to="/jobs" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
             Return to Jobs
           </Link>
         </div>
@@ -128,32 +128,32 @@ const JobDetail: React.FC = () => {
   const canApply = user?.role === 'CANDIDATE' && job.status === 'OPEN';
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 relative overflow-hidden py-20">
       {/* Background Gradient Blob */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 dark:from-blue-950/30 to-transparent -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header Card */}
-        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-100 p-8 mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -z-10 opacity-50" />
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-8 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-full blur-3xl -z-10 opacity-50" />
 
           <div className="flex flex-col md:flex-row justify-between items-start gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-green-50 text-green-700 border border-green-100' :
-                    job.status === 'CLOSED' ? 'bg-red-50 text-red-700 border border-red-100' :
-                      'bg-slate-100 text-slate-700 border border-slate-200'
+                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-700' :
+                    job.status === 'CLOSED' ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-700' :
+                      'bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-600'
                   }`}>
                   {job.status}
                 </span>
-                <span className="text-slate-400 text-sm">•</span>
-                <span className="text-slate-500 text-sm font-medium">Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                <span className="text-slate-400 dark:text-gray-500 text-sm">•</span>
+                <span className="text-slate-500 dark:text-gray-400 text-sm font-medium">Posted {new Date(job.createdAt).toLocaleDateString()}</span>
               </div>
 
-              <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tight">{job.title}</h1>
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">{job.title}</h1>
               <Link
                 to={`/companies/${encodeURIComponent(job.companyName)}`}
-                className="text-xl text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition-colors"
+                className="text-xl text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-2 transition-colors"
               >
                 {job.companyName}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,23 +161,23 @@ const JobDetail: React.FC = () => {
                 </svg>
               </Link>
 
-              <div className="flex flex-wrap gap-6 mt-6 text-slate-600">
-                <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+              <div className="flex flex-wrap gap-6 mt-6 text-slate-600 dark:text-gray-300">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-gray-600">
                   <span className="text-lg">📍</span>
                   <span className="font-medium">{job.location}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-gray-600">
                   <span className="text-lg">💼</span>
                   <span className="font-medium">{job.type.replace('_', ' ')}</span>
                 </div>
                 {job.salary && (
-                  <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-gray-600">
                     <span className="text-lg">💰</span>
                     <span className="font-medium">{job.salary}</span>
                   </div>
                 )}
                 {job._count && (
-                  <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 text-blue-700">
+                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300">
                     <span className="text-lg">👥</span>
                     <span className="font-medium">{job._count.applications} applicants</span>
                   </div>
@@ -191,15 +191,15 @@ const JobDetail: React.FC = () => {
                   <button
                     onClick={handleSaveToggle}
                     className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${isSaved
-                        ? 'bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100'
-                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                        ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'
+                        : 'bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-600 hover:border-slate-300 dark:hover:border-gray-500'
                       }`}
                   >
                     {isSaved ? '★ Saved' : '☆ Save Job'}
                   </button>
                   <button
                     onClick={() => setShowApplyModal(true)}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    className="bg-blue-600 dark:bg-blue-500 text-white px-8 py-3 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
                     <span>🚀</span> Apply Now
                   </button>
@@ -209,13 +209,13 @@ const JobDetail: React.FC = () => {
                 <>
                   <Link
                     to={`/jobs/${id}/edit`}
-                    className="bg-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl hover:bg-slate-50 font-medium transition-colors text-center"
+                    className="bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-600 px-6 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 font-medium transition-colors text-center"
                   >
                     Edit Job
                   </Link>
                   <button
                     onClick={handleDelete}
-                    className="bg-red-50 text-red-600 border border-red-100 px-6 py-3 rounded-xl hover:bg-red-100 font-medium transition-colors"
+                    className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 px-6 py-3 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 font-medium transition-colors"
                   >
                     Delete
                   </button>
@@ -229,27 +229,27 @@ const JobDetail: React.FC = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Description */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <span className="bg-blue-100 text-blue-600 p-2 rounded-lg text-lg">📝</span>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-8">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-lg text-lg">📝</span>
                 Job Description
               </h2>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-line">
+              <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
                 {job.description}
               </div>
             </div>
 
             {/* Responsibilities */}
             {job.responsibilities && job.responsibilities.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <span className="bg-green-100 text-green-600 p-2 rounded-lg text-lg">⚡</span>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-8">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                  <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2 rounded-lg text-lg">⚡</span>
                   Key Responsibilities
                 </h2>
                 <ul className="space-y-3">
                   {job.responsibilities.map((resp, index) => (
-                    <li key={index} className="flex items-start gap-3 text-slate-600">
-                      <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <li key={index} className="flex items-start gap-3 text-slate-600 dark:text-gray-300">
+                      <svg className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>{resp}</span>
@@ -261,15 +261,15 @@ const JobDetail: React.FC = () => {
 
             {/* Requirements */}
             {job.requirements && job.requirements.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <span className="bg-purple-100 text-purple-600 p-2 rounded-lg text-lg">🎯</span>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-8">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                  <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 p-2 rounded-lg text-lg">🎯</span>
                   Requirements
                 </h2>
                 <ul className="space-y-3">
                   {job.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start gap-3 text-slate-600">
-                      <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2.5 flex-shrink-0" />
+                    <li key={index} className="flex items-start gap-3 text-slate-600 dark:text-gray-300">
+                      <span className="w-1.5 h-1.5 bg-purple-500 dark:bg-purple-400 rounded-full mt-2.5 flex-shrink-0" />
                       <span>{req}</span>
                     </li>
                   ))}
@@ -279,15 +279,15 @@ const JobDetail: React.FC = () => {
 
             {/* Benefits */}
             {job.benefits && job.benefits.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <span className="bg-orange-100 text-orange-600 p-2 rounded-lg text-lg">🎁</span>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-8">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                  <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 p-2 rounded-lg text-lg">🎁</span>
                   Benefits
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {job.benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-center gap-3 bg-orange-50/50 p-3 rounded-xl border border-orange-100 text-slate-700">
-                      <span className="text-orange-500">✓</span>
+                    <div key={index} className="flex items-center gap-3 bg-orange-50/50 dark:bg-orange-900/20 p-3 rounded-xl border border-orange-100 dark:border-orange-800 text-slate-700 dark:text-gray-300">
+                      <span className="text-orange-500 dark:text-orange-400">✓</span>
                       {benefit}
                     </div>
                   ))}
@@ -300,13 +300,13 @@ const JobDetail: React.FC = () => {
           <div className="space-y-6">
             {/* Skills Required */}
             {job.skills && job.skills.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Required Skills</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Required Skills</h2>
                 <div className="flex flex-wrap gap-2">
                   {job.skills.map((skill, index) => (
                     <span
                       key={index}
-                      className="bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1 rounded-lg text-sm font-medium hover:bg-white hover:border-blue-300 hover:text-blue-600 transition-all cursor-default"
+                      className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-600 px-3 py-1 rounded-lg text-sm font-medium hover:bg-white dark:hover:bg-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-default"
                     >
                       {skill}
                     </span>
@@ -316,56 +316,56 @@ const JobDetail: React.FC = () => {
             )}
 
             {/* Job Details */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Overview</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Overview</h2>
               <div className="space-y-4">
                 {job.experience && (
                   <div className="flex items-start gap-3">
-                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Experience</p>
-                      <p className="text-slate-900 font-semibold">{job.experience}</p>
+                      <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Experience</p>
+                      <p className="text-slate-900 dark:text-white font-semibold">{job.experience}</p>
                     </div>
                   </div>
                 )}
                 {job.education && (
                   <div className="flex items-start gap-3">
-                    <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600 dark:text-indigo-400">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Education</p>
-                      <p className="text-slate-900 font-semibold">{job.education}</p>
+                      <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Education</p>
+                      <p className="text-slate-900 dark:text-white font-semibold">{job.education}</p>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-3">
-                  <div className="bg-purple-50 p-2 rounded-lg text-purple-600">
+                  <div className="bg-purple-50 dark:bg-purple-900/30 p-2 rounded-lg text-purple-600 dark:text-purple-400">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500 font-medium">Open Positions</p>
-                    <p className="text-slate-900 font-semibold">{job.positions}</p>
+                    <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Open Positions</p>
+                    <p className="text-slate-900 dark:text-white font-semibold">{job.positions}</p>
                   </div>
                 </div>
                 {job.deadline && (
                   <div className="flex items-start gap-3">
-                    <div className="bg-red-50 p-2 rounded-lg text-red-600">
+                    <div className="bg-red-50 dark:bg-red-900/30 p-2 rounded-lg text-red-600 dark:text-red-400">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 font-medium">Deadline</p>
-                      <p className="text-slate-900 font-semibold">{new Date(job.deadline).toLocaleDateString()}</p>
+                      <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">Deadline</p>
+                      <p className="text-slate-900 dark:text-white font-semibold">{new Date(job.deadline).toLocaleDateString()}</p>
                     </div>
                   </div>
                 )}
@@ -373,28 +373,28 @@ const JobDetail: React.FC = () => {
             </div>
 
             {/* Company Info */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-6 text-white">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-6 text-white">
               <h2 className="text-lg font-bold mb-4">About Company</h2>
               <div className="space-y-4">
                 <Link
                   to={`/companies/${encodeURIComponent(job.companyName)}`}
-                  className="text-xl font-bold hover:text-blue-300 transition-colors block"
+                  className="text-xl font-bold hover:text-blue-300 dark:hover:text-blue-400 transition-colors block"
                 >
                   {job.companyName}
                 </Link>
                 {job.companyDescription && (
-                  <p className="text-slate-300 text-sm leading-relaxed">{job.companyDescription}</p>
+                  <p className="text-slate-300 dark:text-gray-300 text-sm leading-relaxed">{job.companyDescription}</p>
                 )}
-                <div className="pt-4 border-t border-slate-700 space-y-2">
+                <div className="pt-4 border-t border-slate-700 dark:border-gray-700 space-y-2">
                   {job.companyIndustry && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Industry</span>
+                      <span className="text-slate-400 dark:text-gray-400">Industry</span>
                       <span className="font-medium">{job.companyIndustry}</span>
                     </div>
                   )}
                   {job.companySize && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Size</span>
+                      <span className="text-slate-400 dark:text-gray-400">Size</span>
                       <span className="font-medium">{job.companySize} employees</span>
                     </div>
                   )}
@@ -404,7 +404,7 @@ const JobDetail: React.FC = () => {
                     href={job.companyWebsite}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full text-center bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl py-2 text-sm font-medium transition-colors mt-4"
+                    className="block w-full text-center bg-white/10 hover:bg-white/20 dark:bg-white/5 dark:hover:bg-white/10 border border-white/10 dark:border-white/5 rounded-xl py-2 text-sm font-medium transition-colors mt-4"
                   >
                     Visit Website
                   </a>
@@ -417,37 +417,37 @@ const JobDetail: React.FC = () => {
 
       {/* Apply Modal */}
       {showApplyModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 transform transition-all scale-100">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Apply for {job.title}</h2>
-            <p className="text-slate-500 mb-6">Complete your application below</p>
+        <div className="fixed inset-0 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 dark:border-gray-700 transform transition-all scale-100">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Apply for {job.title}</h2>
+            <p className="text-slate-500 dark:text-gray-400 mb-6">Complete your application below</p>
 
             <form onSubmit={handleApply} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">
                   Resume (Required)
                 </label>
-                <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-blue-500 hover:bg-blue-50/30 transition-all">
+                <div className="border-2 border-dashed border-slate-200 dark:border-gray-600 rounded-xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition-all">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
                     onChange={(e) => setResume(e.target.files?.[0] || null)}
                     required
-                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Accepted formats: PDF, DOC, DOCX</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500 mt-2">Accepted formats: PDF, DOC, DOCX</p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">
                   Cover Letter (Optional)
                 </label>
                 <textarea
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
                   rows={5}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all resize-none"
                   placeholder="Tell us why you're a great fit for this role..."
                 />
               </div>
@@ -456,14 +456,14 @@ const JobDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowApplyModal(false)}
-                  className="flex-1 bg-white text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors"
+                  className="flex-1 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-600 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={applying}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                  className="flex-1 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-slate-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-medium shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
                 >
                   {applying ? 'Submitting...' : 'Submit Application'}
                 </button>
