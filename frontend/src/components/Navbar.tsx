@@ -42,11 +42,11 @@ const Navbar: React.FC = () => {
 
   // Dynamic classes based on scroll and page
   const navClasses = `fixed w-full z-50 transition-all duration-300 ${scrolled || !isHome
-      ? 'bg-white/80 backdrop-blur-md shadow-sm border-b border-blue-100 py-2'
+      ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm border-b border-blue-100 dark:border-gray-800 py-2'
       : 'bg-transparent py-4'
     }`;
 
-  const linkClasses = `font-medium transition-colors ${scrolled || !isHome ? 'text-slate-600 hover:text-blue-600' : 'text-slate-800 hover:text-blue-600'
+  const linkClasses = `font-medium transition-colors ${scrolled || !isHome ? 'text-slate-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400'
     }`;
 
   return (
@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
               M
             </div>
-            <span className={`text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600`}>
+            <span className={`text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-gray-300`}>
               ManithPro
             </span>
           </Link>
@@ -100,23 +100,23 @@ const Navbar: React.FC = () => {
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                     className="flex items-center gap-2 focus:outline-none"
                   >
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm ring-2 ring-white">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-gray-800">
                       {user.firstName?.charAt(0) || 'U'}
                     </div>
-                    <svg className={`w-4 h-4 text-slate-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`w-4 h-4 text-slate-500 dark:text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {profileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-slate-100">
-                        <p className="font-medium text-slate-800">{user.firstName} {user.lastName}</p>
-                        <p className="text-sm text-slate-500">{user.email}</p>
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-slate-200 dark:border-gray-700 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-gray-700">
+                        <p className="font-medium text-slate-800 dark:text-white">{user.firstName} {user.lastName}</p>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">{user.email}</p>
                       </div>
                       <Link
                         to="/profile"
                         onClick={closeProfileDropdown}
-                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                        className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                       >
                         <div className="flex items-center gap-3">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/profile/builder"
                         onClick={closeProfileDropdown}
-                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                        className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                       >
                         <div className="flex items-center gap-3">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,7 +140,7 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/profile/enhanced"
                         onClick={closeProfileDropdown}
-                        className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                        className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                       >
                         <div className="flex items-center gap-3">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,11 +149,11 @@ const Navbar: React.FC = () => {
                           Enhanced Profile
                         </div>
                       </Link>
-                      <div className="border-t border-slate-100 mt-2 pt-2">
+                      <div className="border-t border-slate-100 dark:border-gray-700 mt-2 pt-2">
                         <Link
                           to="/resumes"
                           onClick={closeProfileDropdown}
-                          className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                          className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                         >
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +165,7 @@ const Navbar: React.FC = () => {
                         <Link
                           to="/achievements"
                           onClick={closeProfileDropdown}
-                          className="block px-4 py-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                          className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                         >
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,7 +197,7 @@ const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none"
+            className="lg:hidden p-2 rounded-md text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 focus:outline-none"
           >
             {mobileMenuOpen ? (
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,14 +214,14 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-100 shadow-xl absolute w-full">
+        <div className="lg:hidden bg-white dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800 shadow-xl absolute w-full">
           <div className="px-4 pt-2 pb-6 space-y-2">
             {user ? (
               <>
                 <Link
                   to="/dashboard"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Dashboard
                 </Link>
@@ -229,28 +229,28 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/profile"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Profile
                 </Link>
                 <Link
                   to="/profile/builder"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Profile Builder
                 </Link>
                 <Link
                   to="/resumes"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Manage Resumes
                 </Link>
                 <Link
                   to="/achievements"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Achievements
                 </Link>
@@ -260,7 +260,7 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 text-slate-600 font-medium"
+                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                 >
                   Sign In
                 </Link>

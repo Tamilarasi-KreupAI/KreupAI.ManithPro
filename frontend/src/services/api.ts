@@ -31,7 +31,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only redirect to login if we get an actual 401 response from the server
+    // Don't redirect on network errors or other failures
+    if (error.response?.status === 401 && error.response?.data) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -42,7 +44,7 @@ api.interceptors.response.use(
 
 import { mockUsers, mockJobs, mockApplications } from './mockData';
 
-const USE_MOCK = true; // Force mock mode as requested
+const USE_MOCK = false; // Set to false to use real backend API
 
 // Helper to simulate network delay
 const mockDelay = <T>(data: T, ms = 500): Promise<T> => {
@@ -190,6 +192,12 @@ export const userAPI = {
     if (USE_MOCK) return mockDelay({ message: 'Password changed' });
     return api
       .post<{ message: string }>('/users/change-password', data)
+      .then((res) => res.data);
+  },
+  deleteAccount: (password: string) => {
+    if (USE_MOCK) return mockDelay({ message: 'Account deleted' });
+    return api
+      .delete<{ message: string }>('/users/account', { data: { password } })
       .then((res) => res.data);
   },
   getDashboardStats: () => {

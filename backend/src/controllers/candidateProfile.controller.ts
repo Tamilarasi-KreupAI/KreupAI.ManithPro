@@ -80,6 +80,7 @@ const getProficiencyLabel = (level: number): SkillProficiencyLevel => {
 /**
  * Get or create candidate profile
  */
+
 export const getCandidateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -162,6 +163,7 @@ export const getCandidateProfile = async (req: AuthRequest, res: Response): Prom
 /**
  * Get candidate profile by user ID (public view)
  */
+
 export const getCandidateProfileById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
@@ -369,6 +371,8 @@ export const updateCandidateProfile = async (req: AuthRequest, res: Response): P
 /**
  * Add work experience
  */
+
+
 export const addWorkExperience = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
