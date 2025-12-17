@@ -381,10 +381,18 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
         job: {
           select: {
             title: true,
+            postedBy: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
         candidate: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             email: true,
@@ -400,6 +408,50 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
       updatedApplication.job.title,
       status
     );
+
+    // Send automated message to candidate based on status
+    const statusMessages: Record<string, string> = {
+      UNDER_REVIEW: `Great news! Your application for the ${updatedApplication.job.title} position has been reviewed and is now under consideration. Our team is carefully evaluating your qualifications. We'll keep you updated on the next steps.`,
+      SHORTLISTED: `Congratulations! 🎉 You've been shortlisted for the ${updatedApplication.job.title} position. Your profile stood out among many applicants. We'll be reaching out soon to schedule the next steps in our interview process. Please keep an eye on your email and phone.`,
+      INTERVIEWED: `Thank you for taking the time to interview for the ${updatedApplication.job.title} position. We appreciate your interest in joining our team. We're currently reviewing all candidates and will get back to you with our decision soon.`,
+      OFFERED: `Congratulations! 🎊 We're thrilled to extend an offer for the ${updatedApplication.job.title} position. You'll receive a formal offer letter via email shortly with all the details including compensation, benefits, and start date. We're excited about the possibility of you joining our team!`,
+      REJECTED: `Thank you for your interest in the ${updatedApplication.job.title} position and for taking the time to apply. After careful consideration, we've decided to move forward with other candidates whose experience more closely matches our current needs. We appreciate your interest and encourage you to apply for future opportunities with us. We wish you all the best in your job search.`,
+      WITHDRAWN: `We've confirmed that your application for the ${updatedApplication.job.title} position has been withdrawn as per your request. Thank you for considering our opportunity, and we hope to see you apply for other positions in the future.`,
+    };
+
+    const messageContent = statusMessages[status] || `Your application status for ${updatedApplication.job.title} has been updated to: ${status.replace('_', ' ')}.`;
+
+    // Add notes from recruiter if provided
+    const fullMessage = notes
+      ? `${messageContent}\n\nRecruiter's Note: ${notes}`
+      : messageContent;
+
+    try {
+      // Create automated message from recruiter to candidate
+      await prisma.message.create({
+        data: {
+          content: fullMessage,
+          senderId: updatedApplication.job.postedBy.id,
+          receiverId: updatedApplication.candidate.id,
+          applicationId: id,
+          attachments: [],
+        },
+      });
+
+      // Create notification for candidate
+      await prisma.notification.create({
+        data: {
+          type: 'APPLICATION_STATUS_UPDATE',
+          title: `Application Status Updated: ${status.replace('_', ' ')}`,
+          message: `Your application for ${updatedApplication.job.title} has been updated`,
+          link: `/applications`,
+          userId: updatedApplication.candidate.id,
+        },
+      });
+    } catch (messageError) {
+      console.error('Failed to send automated message:', messageError);
+      // Don't fail the status update if message sending fails
+    }
 
     res.json({
       message: 'Application status updated successfully',

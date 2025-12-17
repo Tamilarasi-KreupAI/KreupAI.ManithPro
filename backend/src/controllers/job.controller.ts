@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
+import { sendJobMatchNotificationEmail } from '../utils/email';
 
 const prisma = new PrismaClient();
 
@@ -78,6 +79,68 @@ export const createJob = async (req: AuthRequest, res: Response): Promise<void> 
         },
       },
     });
+
+    // Send notifications to matching candidates
+    if (job.status === 'OPEN' && skills && skills.length > 0) {
+      try {
+        // Find candidates with matching skills
+        const candidates = await prisma.user.findMany({
+          where: {
+            role: 'CANDIDATE',
+            skills: {
+              hasSome: skills, // Find users who have at least one matching skill
+            },
+          },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            skills: true,
+          },
+        });
+
+        // Send email notifications to matching candidates
+        const notificationPromises = candidates.map(async (candidate) => {
+          // Find which skills match
+          const matchingSkills = candidate.skills.filter((candidateSkill: string) =>
+            skills.some((jobSkill: string) =>
+              candidateSkill.toLowerCase().includes(jobSkill.toLowerCase()) ||
+              jobSkill.toLowerCase().includes(candidateSkill.toLowerCase())
+            )
+          );
+
+          if (matchingSkills.length > 0) {
+            const salaryDisplay = salary ||
+              (salaryMin && salaryMax ? `$${salaryMin} - $${salaryMax}` : undefined);
+
+            await sendJobMatchNotificationEmail(
+              candidate.email,
+              `${candidate.firstName} ${candidate.lastName}`,
+              job.title,
+              job.id,
+              job.companyName,
+              job.location,
+              job.type,
+              matchingSkills,
+              salaryDisplay
+            );
+          }
+        });
+
+        // Execute all notifications in parallel (don't wait for them to complete)
+        Promise.allSettled(notificationPromises).then((results) => {
+          const successCount = results.filter((r) => r.status === 'fulfilled').length;
+          const failureCount = results.filter((r) => r.status === 'rejected').length;
+          console.log(
+            `Job match notifications sent: ${successCount} successful, ${failureCount} failed for job: ${job.title}`
+          );
+        });
+      } catch (notificationError) {
+        // Don't fail job creation if notifications fail
+        console.error('Failed to send job match notifications:', notificationError);
+      }
+    }
 
     res.status(201).json({
       message: 'Job created successfully',

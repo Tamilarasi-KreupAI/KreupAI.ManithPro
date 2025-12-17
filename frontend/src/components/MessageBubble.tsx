@@ -11,6 +11,7 @@ export interface MessageBubbleProps {
   status: 'SENT' | 'DELIVERED' | 'READ';
   isOwn: boolean;
   attachments?: string[];
+  applicationId?: string;
   onReply?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
 }
@@ -23,10 +24,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   status,
   isOwn,
   attachments = [],
+  applicationId,
   onReply,
   onDelete,
 }) => {
   const [showActions, setShowActions] = React.useState(false);
+
+  // Detect if this is an automated status update message
+  const isAutomatedMessage = applicationId && (content.includes('Congratulations') ||
+    content.includes('shortlisted') ||
+    content.includes('under consideration') ||
+    content.includes('status has been updated') ||
+    content.includes('offer letter') ||
+    content.includes('Thank you for your interest'));
 
   // Parse code snippets from message content
   const parseCodeSnippets = (text: string) => {
@@ -115,16 +125,28 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onMouseLeave={() => setShowActions(false)}
     >
       <div className={`max - w - [70 %] ${isOwn ? 'items-end' : 'items-start'} flex flex - col`}>
-        {!isOwn && (
-          <span className="text-xs text-gray-600 dark:text-gray-400 mb-1 px-2">
-            {senderName}
-          </span>
-        )}
+        <div className="flex items-center gap-2 mb-1">
+          {!isOwn && (
+            <span className="text-xs text-gray-600 dark:text-gray-400 px-2">
+              {senderName}
+            </span>
+          )}
+          {isAutomatedMessage && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full border border-purple-200 dark:border-purple-800">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              Status Update
+            </span>
+          )}
+        </div>
 
         <div
-          className={`rounded - 2xl px - 4 py - 2 ${isOwn
+          className={`rounded-2xl px-4 py-2 ${isOwn
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-              : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
+              : isAutomatedMessage
+                ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-200 dark:border-purple-800 text-slate-800 dark:text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-800 dark:text-white shadow-sm'
             } relative`}
         >
           {/* Message Actions */}
