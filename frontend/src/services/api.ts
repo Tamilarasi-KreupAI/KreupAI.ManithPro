@@ -171,6 +171,15 @@ export const applicationAPI = {
       .put<{ message: string; application: Application }>(`/applications/${id}/withdraw`)
       .then((res) => res.data);
   },
+  checkIfApplied: (jobId: string) => {
+    if (USE_MOCK) {
+      const hasApplied = mockApplications.some(a => a.jobId === jobId);
+      return mockDelay({ hasApplied, application: hasApplied ? mockApplications.find(a => a.jobId === jobId) : null });
+    }
+    return api
+      .get<{ hasApplied: boolean; application?: Application }>(`/applications/check/${jobId}`)
+      .then((res) => res.data);
+  },
 };
 
 // User APIs

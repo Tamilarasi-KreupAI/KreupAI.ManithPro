@@ -13,7 +13,6 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import ApplicationDetail from './pages/ApplicationDetail';
@@ -83,14 +82,6 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
                 <Route
                   path="/jobs"
                   element={

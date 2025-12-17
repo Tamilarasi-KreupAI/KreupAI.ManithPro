@@ -11,6 +11,7 @@ const JobDetail: React.FC = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [resume, setResume] = useState<File | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
@@ -21,6 +22,7 @@ const JobDetail: React.FC = () => {
       loadJob();
       if (user?.role === 'CANDIDATE') {
         checkIfSaved();
+        checkIfApplied();
       }
     }
   }, [id]);
@@ -45,6 +47,15 @@ const JobDetail: React.FC = () => {
       setIsSaved(isSaved);
     } catch (error) {
       console.error('Failed to check saved status:', error);
+    }
+  };
+
+  const checkIfApplied = async () => {
+    try {
+      const { hasApplied } = await applicationAPI.checkIfApplied(id!);
+      setHasApplied(hasApplied);
+    } catch (error) {
+      console.error('Failed to check application status:', error);
     }
   };
 
@@ -79,9 +90,10 @@ const JobDetail: React.FC = () => {
       }
 
       await applicationAPI.create(formData);
+      setHasApplied(true);
       alert('Application submitted successfully!');
       setShowApplyModal(false);
-      navigate('/dashboard');
+      navigate('/applications');
     } catch (error: any) {
       alert(error.response?.data?.error || 'Failed to submit application');
     } finally {
@@ -197,12 +209,21 @@ const JobDetail: React.FC = () => {
                   >
                     {isSaved ? '★ Saved' : '☆ Save Job'}
                   </button>
-                  <button
-                    onClick={() => setShowApplyModal(true)}
-                    className="bg-blue-600 dark:bg-blue-500 text-white px-8 py-3 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                  >
-                    <span>🚀</span> Apply Now
-                  </button>
+                  {hasApplied ? (
+                    <button
+                      disabled
+                      className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
+                    >
+                      <span>✓</span> Applied
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowApplyModal(true)}
+                      className="bg-blue-600 dark:bg-blue-500 text-white px-8 py-3 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    >
+                      <span>🚀</span> Apply Now
+                    </button>
+                  )}
                 </>
               )}
               {canEdit && (

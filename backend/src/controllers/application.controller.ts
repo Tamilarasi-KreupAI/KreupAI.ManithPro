@@ -5,6 +5,44 @@ import { sendApplicationSubmittedEmail, sendApplicationStatusEmail } from '../ut
 
 const prisma = new PrismaClient();
 
+export const checkIfApplied = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    if (req.user.role !== 'CANDIDATE') {
+      res.status(403).json({ error: 'Only candidates can check application status' });
+      return;
+    }
+
+    const { jobId } = req.params;
+
+    const application = await prisma.application.findUnique({
+      where: {
+        jobId_candidateId: {
+          jobId,
+          candidateId: req.user.userId,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        appliedAt: true,
+      },
+    });
+
+    res.json({
+      hasApplied: !!application,
+      application: application || null,
+    });
+  } catch (error) {
+    console.error('Error checking application status:', error);
+    res.status(500).json({ error: 'Failed to check application status' });
+  }
+};
+
 export const createApplication = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -155,7 +193,23 @@ export const getApplications = async (req: AuthRequest, res: Response): Promise<
           where: { postedById: req.user.userId },
           select: { id: true },
         });
-        where.jobId = { in: recruiterJobs.map(j => j.id) };
+        const jobIds = recruiterJobs.map(j => j.id);
+
+        // If recruiter has no jobs, return empty result instead of querying all
+        if (jobIds.length === 0) {
+          res.json({
+            applications: [],
+            pagination: {
+              total: 0,
+              page: pageNum,
+              limit: limitNum,
+              totalPages: 0,
+            },
+          });
+          return;
+        }
+
+        where.jobId = { in: jobIds };
       }
     }
 
@@ -173,7 +227,10 @@ export const getApplications = async (req: AuthRequest, res: Response): Promise<
               title: true,
               location: true,
               type: true,
-              company: true,
+              companyName: true,
+              companyLogo: true,
+              salary: true,
+              status: true,
             },
           },
           candidate: {

@@ -74,9 +74,6 @@ const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center space-x-8">
             {user ? (
               <>
-                <Link to="/dashboard" className={linkClasses}>
-                  Dashboard
-                </Link>
                 {user.role === 'CANDIDATE' ? (
                   <>
                     <Link to="/advanced-search" className={linkClasses}>
@@ -94,9 +91,7 @@ const Navbar: React.FC = () => {
                     <Link to="/recruiter/dashboard" className={linkClasses}>
                       Dashboard
                     </Link>
-                    <Link to="/jobs" className={linkClasses}>
-                      Jobs
-                    </Link>
+
                     <Link to="/candidates" className={linkClasses}>
                       Candidates
                     </Link>
@@ -248,14 +243,6 @@ const Navbar: React.FC = () => {
           <div className="px-4 pt-2 pb-6 space-y-2">
             {user ? (
               <>
-                <Link
-                  to="/dashboard"
-                  onClick={closeMobileMenu}
-                  className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
-                >
-                  Dashboard
-                </Link>
-                {/* Add other mobile links as needed */}
                 <Link
                   to="/profile"
                   onClick={closeMobileMenu}

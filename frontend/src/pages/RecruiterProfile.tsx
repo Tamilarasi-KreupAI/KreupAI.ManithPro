@@ -624,13 +624,13 @@ const RecruiterProfile: React.FC = () => {
                   Post New Job
                 </button>
                 <button
-                  onClick={() => navigate('/recruiter/applications')}
+                  onClick={() => navigate('/jobs')}
                   className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
                 >
                   View Applications
                 </button>
                 <button
-                  onClick={() => navigate('/recruiter/dashboard')}
+                  onClick={() => navigate('/dashboard')}
                   className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
                 >
                   Go to Dashboard
