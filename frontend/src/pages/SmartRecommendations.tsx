@@ -52,43 +52,43 @@ const SmartRecommendations: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center pt-20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600 font-medium">Analyzing your profile and generating recommendations...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 dark:border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-slate-600 dark:text-gray-400 font-medium">Analyzing your profile and generating recommendations...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 relative overflow-hidden pt-20">
       {/* Background Gradient Blob */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 dark:from-blue-950/30 to-transparent -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900">Smart Recommendations</h1>
-          <p className="mt-2 text-slate-500 text-lg">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Smart Recommendations</h1>
+          <p className="mt-2 text-slate-500 dark:text-gray-400 text-lg">
             AI-powered insights to accelerate your career journey
           </p>
         </div>
 
         {/* Profile Strength Alert */}
         {user && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 mb-8 shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 dark:from-blue-950/30 to-indigo-50 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-6 mb-8 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 bg-white p-2 rounded-xl shadow-sm">
-                <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm">
+                <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900 mb-1">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
                   Improve Your Recommendations
                 </h3>
-                <p className="text-slate-600 mb-4 font-medium">
+                <p className="text-slate-600 dark:text-gray-400 mb-4 font-medium">
                   Complete your profile with skills, experience, and preferences to get better job matches
                 </p>
                 <Link
@@ -106,14 +106,14 @@ const SmartRecommendations: React.FC = () => {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 mb-8 overflow-hidden">
-          <div className="border-b border-slate-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 mb-8 overflow-hidden">
+          <div className="border-b border-slate-100 dark:border-gray-700">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('jobs')}
                 className={`flex-1 py-5 text-center border-b-2 font-bold text-sm transition-colors ${activeTab === 'jobs'
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                    : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50'
                   }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -126,8 +126,8 @@ const SmartRecommendations: React.FC = () => {
               <button
                 onClick={() => setActiveTab('skills')}
                 className={`flex-1 py-5 text-center border-b-2 font-bold text-sm transition-colors ${activeTab === 'skills'
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                    : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50'
                   }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -140,8 +140,8 @@ const SmartRecommendations: React.FC = () => {
               <button
                 onClick={() => setActiveTab('career')}
                 className={`flex-1 py-5 text-center border-b-2 font-bold text-sm transition-colors ${activeTab === 'career'
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                    : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50'
                   }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -160,11 +160,11 @@ const SmartRecommendations: React.FC = () => {
               <div>
                 {jobRecommendations.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-3xl">📭</span>
                     </div>
-                    <h3 className="mt-2 text-lg font-bold text-slate-900">No recommendations yet</h3>
-                    <p className="mt-1 text-slate-500">
+                    <h3 className="mt-2 text-lg font-bold text-slate-900 dark:text-white">No recommendations yet</h3>
+                    <p className="mt-1 text-slate-500 dark:text-gray-400">
                       Complete your profile to get personalized job recommendations
                     </p>
                   </div>
@@ -173,12 +173,12 @@ const SmartRecommendations: React.FC = () => {
                     {jobRecommendations.map((rec, index) => (
                       <div
                         key={rec.job.id}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:bg-white hover:shadow-md transition-all group"
+                        className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-600 rounded-xl p-6 hover:bg-white dark:hover:bg-gray-700 hover:shadow-md transition-all group"
                       >
                         <div className="flex flex-col md:flex-row items-start justify-between mb-6 gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                              <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 {rec.job.title}
                               </h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getMatchScoreColor(rec.matchScore)}`}>
@@ -190,10 +190,10 @@ const SmartRecommendations: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-slate-600 font-medium mb-3">{rec.job.companyName}</p>
+                            <p className="text-slate-600 dark:text-gray-400 font-medium mb-3">{rec.job.companyName}</p>
                             <div className="flex flex-wrap gap-3 mb-4">
-                              <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-lg border border-slate-100">📍 {rec.job.location}</span>
-                              <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-lg border border-slate-100">💼 {rec.job.type.replace('_', ' ')}</span>
+                              <span className="text-sm font-medium text-slate-500 dark:text-gray-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg border border-slate-100 dark:border-gray-600">📍 {rec.job.location}</span>
+                              <span className="text-sm font-medium text-slate-500 dark:text-gray-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg border border-slate-100 dark:border-gray-600">💼 {rec.job.type.replace('_', ' ')}</span>
                               {rec.job.salaryMin && rec.job.salaryMax && (
                                 <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg border border-green-100">
                                   💰 ${rec.job.salaryMin.toLocaleString()} - ${rec.job.salaryMax.toLocaleString()}
@@ -205,20 +205,20 @@ const SmartRecommendations: React.FC = () => {
                           <div className="flex gap-3 w-full md:w-auto">
                             <Link
                               to={`/jobs/${rec.job.id}`}
-                              className="flex-1 md:flex-none text-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-500/30 hover:-translate-y-0.5"
+                              className="flex-1 md:flex-none text-center px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-all font-bold shadow-lg shadow-blue-500/30 hover:-translate-y-0.5"
                             >
                               View Details
                             </Link>
-                            <button className="px-4 py-3 border border-slate-200 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold">
+                            <button className="px-4 py-3 border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors font-bold">
                               Save
                             </button>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200 dark:border-gray-600">
                           {/* Match Reasons */}
                           <div>
-                            <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                               <span>🎯</span> Why this matches:
                             </h4>
                             <div className="flex flex-wrap gap-2">
@@ -273,39 +273,39 @@ const SmartRecommendations: React.FC = () => {
             {activeTab === 'skills' && (
               <div>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Skill Gap Analysis</h2>
-                  <p className="text-slate-500">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Skill Gap Analysis</h2>
+                  <p className="text-slate-500 dark:text-gray-400">
                     These skills are in high demand but missing from your profile. Learning them can open new opportunities.
                   </p>
                 </div>
 
                 {skillGaps.length === 0 ? (
-                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center py-12 bg-slate-50 dark:bg-gray-700/50 rounded-2xl border border-slate-100 dark:border-gray-600">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-3xl">🏆</span>
                     </div>
-                    <h3 className="mt-2 text-lg font-bold text-slate-900">Great job!</h3>
-                    <p className="mt-1 text-slate-500">
+                    <h3 className="mt-2 text-lg font-bold text-slate-900 dark:text-white">Great job!</h3>
+                    <p className="mt-1 text-slate-500 dark:text-gray-400">
                       Your skills cover most in-demand requirements
                     </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {skillGaps.map((gap, index) => (
-                      <div key={index} className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition-all">
+                      <div key={index} className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-6 hover:shadow-md transition-all">
                         <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900">{gap.skill}</h3>
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{gap.skill}</h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getImportanceBadge(gap.importance)}`}>
                             {gap.importance.toUpperCase()} Priority
                           </span>
                         </div>
 
-                        <p className="text-sm text-slate-600 mb-6 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="text-sm text-slate-600 dark:text-gray-400 mb-6 font-medium bg-slate-50 dark:bg-gray-700/50 p-3 rounded-xl border border-slate-100 dark:border-gray-600">
                           This skill appears in many job listings and could significantly improve your job prospects.
                         </p>
 
                         <div className="space-y-3">
-                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <span>🎓</span> Learning Resources:
                           </h4>
                           {gap.learningResources.map((resource: string, idx: number) => (
@@ -314,15 +314,15 @@ const SmartRecommendations: React.FC = () => {
                               href={resource}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-blue-50 transition-colors group border border-slate-100 hover:border-blue-100"
+                              className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group border border-slate-100 dark:border-gray-600 hover:border-blue-100 dark:hover:border-blue-800"
                             >
-                              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-lg shadow-sm group-hover:scale-110 transition-transform">
+                              <div className="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center text-lg shadow-sm group-hover:scale-110 transition-transform">
                                 {resource.includes('youtube') ? '📺' : '📚'}
                               </div>
-                              <span className="text-sm font-bold text-slate-700 group-hover:text-blue-700">
+                              <span className="text-sm font-bold text-slate-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-400">
                                 {resource.includes('udemy') ? 'Udemy Courses' : resource.includes('coursera') ? 'Coursera' : 'YouTube Tutorials'}
                               </span>
-                              <span className="ml-auto text-slate-400 group-hover:text-blue-500">→</span>
+                              <span className="ml-auto text-slate-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400">→</span>
                             </a>
                           ))}
                         </div>
@@ -337,16 +337,16 @@ const SmartRecommendations: React.FC = () => {
             {activeTab === 'career' && (
               <div>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Career Path Suggestions</h2>
-                  <p className="text-slate-500">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Career Path Suggestions</h2>
+                  <p className="text-slate-500 dark:text-gray-400">
                     Explore potential career trajectories and positions that align with your growth
                   </p>
                 </div>
 
                 <div className="space-y-8">
                   {careerPaths.map((path, index) => (
-                    <div key={index} className="bg-white border border-slate-200 rounded-2xl p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-all">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -z-0 opacity-50" />
+                    <div key={index} className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-all">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 dark:from-blue-950/30 to-indigo-50 dark:to-indigo-950/30 rounded-bl-full -z-0 opacity-50" />
 
                       <div className="relative z-10">
                         <div className="flex items-start gap-6 mb-8">
@@ -354,11 +354,11 @@ const SmartRecommendations: React.FC = () => {
                             📈
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                               From {path.currentRole}
                             </h3>
-                            <p className="text-slate-500 font-medium">
-                              Expected timeframe: <span className="text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-lg ml-2">{path.timeframe}</span>
+                            <p className="text-slate-500 dark:text-gray-400 font-medium">
+                              Expected timeframe: <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-lg ml-2">{path.timeframe}</span>
                             </p>
                           </div>
                         </div>
@@ -366,12 +366,12 @@ const SmartRecommendations: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           {/* Next Roles */}
                           <div>
-                            <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                               <span>🚀</span> Potential Next Roles
                             </h4>
                             <div className="flex flex-wrap gap-3">
                               {path.nextRoles.map((role: string, idx: number) => (
-                                <div key={idx} className="px-4 py-2 bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 shadow-sm">
+                                <div key={idx} className="px-4 py-2 bg-slate-50 dark:bg-gray-700/50 text-slate-700 dark:text-gray-300 rounded-xl font-bold border border-slate-200 dark:border-gray-600 shadow-sm">
                                   {role}
                                 </div>
                               ))}
@@ -380,7 +380,7 @@ const SmartRecommendations: React.FC = () => {
 
                           {/* Required Skills */}
                           <div>
-                            <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                               <span>🛠️</span> Skills to Develop
                             </h4>
                             <div className="flex flex-wrap gap-2">
@@ -395,8 +395,8 @@ const SmartRecommendations: React.FC = () => {
 
                         {/* Available Positions */}
                         {path.availablePositions > 0 && (
-                          <div className="mt-8 bg-green-50 border border-green-100 rounded-xl p-6">
-                            <p className="text-green-800 font-bold mb-4 flex items-center gap-2">
+                          <div className="mt-8 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-6">
+                            <p className="text-green-800 dark:text-green-400 font-bold mb-4 flex items-center gap-2">
                               <span>🎯</span> {path.availablePositions} related positions available now
                             </p>
                             {path.jobs && path.jobs.length > 0 && (
@@ -405,13 +405,13 @@ const SmartRecommendations: React.FC = () => {
                                   <Link
                                     key={job.id}
                                     to={`/jobs/${job.id}`}
-                                    className="flex items-center justify-between p-4 bg-white rounded-xl border border-green-100 hover:border-green-300 hover:shadow-sm transition-all group"
+                                    className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-green-100 dark:border-green-800 hover:border-green-300 dark:hover:border-green-600 hover:shadow-sm transition-all group"
                                   >
                                     <div>
-                                      <div className="font-bold text-slate-900 group-hover:text-green-700 transition-colors">{job.title}</div>
-                                      <div className="text-xs text-slate-500 font-medium">{job.companyName}</div>
+                                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{job.title}</div>
+                                      <div className="text-xs text-slate-500 dark:text-gray-400 font-medium">{job.companyName}</div>
                                     </div>
-                                    <span className="text-slate-300 group-hover:text-green-500 transition-colors">→</span>
+                                    <span className="text-slate-300 dark:text-gray-600 group-hover:text-green-500 dark:group-hover:text-green-400 transition-colors">→</span>
                                   </Link>
                                 ))}
                               </div>

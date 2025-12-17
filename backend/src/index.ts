@@ -15,6 +15,8 @@ import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
 import candidateProfileRoutes from './routes/candidateProfile.routes';
 import achievementsRoutes from './routes/achievements.routes';
+import resumeRoutes from './routes/resume.routes';
+import recruiterProfileRoutes from './routes/recruiterProfile.routes';
 import profileVersioningRoutes from './routes/profileVersioning.routes';
 import integrationsRoutes from './routes/integrations.routes';
 import additionalIntegrationsRoutes from './routes/additionalIntegrations.routes';
@@ -92,6 +94,7 @@ app.get('/', (req, res) => {
       savedJobs: '/api/saved-jobs',
       companies: '/api/companies',
       interviews: '/api/interviews',
+      resumes: '/api/resumes',
       messages: '/api/messages',
       notifications: '/api/notifications',
       admin: '/api/admin',
@@ -154,6 +157,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/candidate-profile', candidateProfileRoutes);
 app.use('/api/achievements', achievementsRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/recruiter-profile', recruiterProfileRoutes);
 app.use('/api/profile-versions', profileVersioningRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/additional-integrations', additionalIntegrationsRoutes);

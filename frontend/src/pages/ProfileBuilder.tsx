@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { candidateProfileAPI } from '../services/candidateProfileAPI';
 import type { CandidateProfile, ProfileCompleteness } from '../types';
@@ -23,6 +24,7 @@ type ProfileSection = 'overview' | 'basic' | 'experience' | 'education' | 'skill
 
 const ProfileBuilder: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
   const [activeSection, setActiveSection] = useState<ProfileSection>('overview');
@@ -99,7 +101,7 @@ const ProfileBuilder: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden pt-20">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -145,7 +147,10 @@ const ProfileBuilder: React.FC = () => {
                   <span className="text-sm text-gray-600 dark:text-gray-300">Complete</span>
                 </div>
               )}
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button
+                onClick={() => navigate('/profile/enhanced')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Preview Profile
               </button>
             </div>

@@ -132,22 +132,22 @@ const RecruiterApplications: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 relative overflow-hidden pt-20">
       {/* Background Gradient Blob */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 dark:from-blue-950/30 to-transparent -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Application Manager</h1>
-            <p className="text-slate-500 mt-1">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Application Manager</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">
               {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''}
               {selectedApplications.size > 0 && ` (${selectedApplications.size} selected)`}
             </p>
@@ -155,23 +155,23 @@ const RecruiterApplications: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500">🔍</span>
               <input
                 type="text"
                 placeholder="Search candidates or jobs..."
                 value={filter.search}
                 onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
               />
             </div>
 
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="border border-slate-200 rounded-xl px-4 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
             >
               <option value="">All Statuses</option>
               <option value="PENDING">Pending</option>
@@ -185,7 +185,7 @@ const RecruiterApplications: React.FC = () => {
             <select
               value={filter.jobId}
               onChange={(e) => setFilter({ ...filter, jobId: e.target.value })}
-              className="border border-slate-200 rounded-xl px-4 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
             >
               <option value="">All Jobs</option>
               {jobs.map((job) => (
@@ -198,7 +198,7 @@ const RecruiterApplications: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-slate-200 rounded-xl px-4 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
             >
               <option value="recent">Most Recent</option>
               <option value="oldest">Oldest First</option>
@@ -207,22 +207,22 @@ const RecruiterApplications: React.FC = () => {
           </div>
 
           {/* Bulk Actions */}
-          <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-4 pt-4 border-t border-slate-100 dark:border-gray-700">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedApplications.size === sortedApplications.length && sortedApplications.length > 0}
                 onChange={selectAll}
-                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded border-slate-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
               />
-              <span className="text-sm font-medium text-slate-700">Select All</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-gray-300">Select All</span>
             </label>
 
             {selectedApplications.size > 0 && (
               <>
                 <button
                   onClick={() => setShowBulkActions(!showBulkActions)}
-                  className="text-sm bg-blue-50 text-blue-700 px-4 py-2 rounded-xl hover:bg-blue-100 font-medium transition-colors"
+                  className="text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 font-medium transition-colors"
                 >
                   Bulk Actions ({selectedApplications.size})
                 </button>
@@ -232,7 +232,7 @@ const RecruiterApplications: React.FC = () => {
                     <select
                       value={bulkStatus}
                       onChange={(e) => setBulkStatus(e.target.value)}
-                      className="text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="text-sm border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 outline-none"
                     >
                       <option value="">Select Status</option>
                       <option value="REVIEWING">Reviewing</option>
@@ -244,13 +244,13 @@ const RecruiterApplications: React.FC = () => {
                     <button
                       onClick={handleBulkStatusUpdate}
                       disabled={bulkProcessing}
-                      className="text-sm bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
+                      className="text-sm bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-slate-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
                     >
                       {bulkProcessing ? 'Updating...' : 'Update Status'}
                     </button>
                     <button
                       onClick={handleDownloadResumes}
-                      className="text-sm bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-medium shadow-sm transition-all"
+                      className="text-sm bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 font-medium shadow-sm transition-all"
                     >
                       Download Resumes
                     </button>
@@ -263,11 +263,11 @@ const RecruiterApplications: React.FC = () => {
 
         {/* Applications Table */}
         {sortedApplications.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-100">
+              <thead className="bg-slate-50 dark:bg-gray-700/50 border-b border-slate-100 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     <input
                       type="checkbox"
                       checked={selectedApplications.size === sortedApplications.length}
@@ -275,26 +275,26 @@ const RecruiterApplications: React.FC = () => {
                       className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     Candidate
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     Job
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     Applied
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
                 {sortedApplications.map((application) => (
-                  <tr key={application.id} className="hover:bg-blue-50/50 transition-colors group">
+                  <tr key={application.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors group">
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
@@ -305,22 +305,22 @@ const RecruiterApplications: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        <p className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                           {application.candidate?.firstName} {application.candidate?.lastName}
                         </p>
-                        <p className="text-sm text-slate-500">{application.candidate?.email}</p>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">{application.candidate?.email}</p>
                         {application.candidate?.skills && application.candidate.skills.length > 0 && (
                           <div className="flex gap-1 mt-1.5">
                             {application.candidate.skills.slice(0, 3).map((skill, idx) => (
                               <span
                                 key={idx}
-                                className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100"
+                                className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800"
                               >
                                 {skill}
                               </span>
                             ))}
                             {application.candidate.skills.length > 3 && (
-                              <span className="text-xs text-slate-400 px-1">
+                              <span className="text-xs text-slate-400 dark:text-gray-500 px-1">
                                 +{application.candidate.skills.length - 3}
                               </span>
                             )}
@@ -331,12 +331,12 @@ const RecruiterApplications: React.FC = () => {
                     <td className="px-6 py-4">
                       <Link
                         to={`/jobs/${application.jobId}`}
-                        className="text-slate-700 hover:text-blue-600 font-medium transition-colors"
+                        className="text-slate-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
                       >
                         {application.job?.title}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-gray-400">
                       {new Date(application.appliedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
@@ -352,7 +352,7 @@ const RecruiterApplications: React.FC = () => {
                       <div className="flex gap-2">
                         <Link
                           to={`/applications/${application.id}`}
-                          className="text-sm bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all font-medium shadow-sm"
+                          className="text-sm bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-600 hover:border-slate-300 dark:hover:border-gray-500 transition-all font-medium shadow-sm"
                         >
                           View
                         </Link>
@@ -360,7 +360,7 @@ const RecruiterApplications: React.FC = () => {
                           href={`http://localhost:5001/${application.resume}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 hover:border-blue-200 transition-all font-medium"
+                          className="text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-700 transition-all font-medium"
                         >
                           Resume
                         </a>
@@ -372,10 +372,10 @@ const RecruiterApplications: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">No Applications Found</h2>
-            <p className="text-slate-500">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">No Applications Found</h2>
+            <p className="text-slate-500 dark:text-gray-400">
               {filter.status || filter.jobId || filter.search
                 ? 'Try adjusting your filters'
                 : 'Post jobs to start receiving applications'}

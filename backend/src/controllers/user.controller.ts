@@ -276,3 +276,46 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 };
+
+export const deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { password } = req.body;
+
+    if (!password) {
+      res.status(400).json({ error: 'Password is required to delete account' });
+      return;
+    }
+
+    // Get user with password
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      res.status(401).json({ error: 'Incorrect password' });
+      return;
+    }
+
+    // Delete user (cascade will handle related records)
+    await prisma.user.delete({
+      where: { id: req.user.userId },
+    });
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+};

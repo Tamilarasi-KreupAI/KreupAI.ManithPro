@@ -31,7 +31,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only redirect to login if we get an actual 401 response from the server
+    // Don't redirect on network errors or other failures
+    if (error.response?.status === 401 && error.response?.data) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -42,7 +44,7 @@ api.interceptors.response.use(
 
 import { mockUsers, mockJobs, mockApplications } from './mockData';
 
-const USE_MOCK = true; // Force mock mode as requested
+const USE_MOCK = false; // Set to false to use real backend API
 
 // Helper to simulate network delay
 const mockDelay = <T>(data: T, ms = 500): Promise<T> => {
@@ -169,6 +171,15 @@ export const applicationAPI = {
       .put<{ message: string; application: Application }>(`/applications/${id}/withdraw`)
       .then((res) => res.data);
   },
+  checkIfApplied: (jobId: string) => {
+    if (USE_MOCK) {
+      const hasApplied = mockApplications.some(a => a.jobId === jobId);
+      return mockDelay({ hasApplied, application: hasApplied ? mockApplications.find(a => a.jobId === jobId) : null });
+    }
+    return api
+      .get<{ hasApplied: boolean; application?: Application }>(`/applications/check/${jobId}`)
+      .then((res) => res.data);
+  },
 };
 
 // User APIs
@@ -192,6 +203,12 @@ export const userAPI = {
       .post<{ message: string }>('/users/change-password', data)
       .then((res) => res.data);
   },
+  deleteAccount: (password: string) => {
+    if (USE_MOCK) return mockDelay({ message: 'Account deleted' });
+    return api
+      .delete<{ message: string }>('/users/account', { data: { password } })
+      .then((res) => res.data);
+  },
   getDashboardStats: () => {
     if (USE_MOCK) {
       return mockDelay({
@@ -204,6 +221,19 @@ export const userAPI = {
       });
     }
     return api.get<DashboardStats>('/users/dashboard-stats').then((res) => res.data);
+  },
+};
+
+// Recruiter Profile APIs
+export const recruiterProfileAPI = {
+  getProfile: () => {
+    return api.get('/recruiter-profile').then((res) => res.data);
+  },
+  updateProfile: (data: any) => {
+    return api.put('/recruiter-profile', data).then((res) => res.data);
+  },
+  updateStats: (data: { activeJobs?: number; totalHires?: number; successRate?: number }) => {
+    return api.put('/recruiter-profile/stats', data).then((res) => res.data);
   },
 };
 

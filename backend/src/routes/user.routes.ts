@@ -4,6 +4,7 @@ import {
   updateProfile,
   changePassword,
   getDashboardStats,
+  deleteAccount,
 } from '../controllers/user.controller';
 import { authenticate } from '../middleware/auth';
 
@@ -13,5 +14,6 @@ router.get('/profile', authenticate, getProfile);
 router.put('/profile', authenticate, updateProfile);
 router.post('/change-password', authenticate, changePassword);
 router.get('/dashboard-stats', authenticate, getDashboardStats);
+router.delete('/account', authenticate, deleteAccount);
 
 export default router;

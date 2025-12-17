@@ -74,12 +74,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
+    console.log(email,password);
+
 
     // Validate input
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' });
       return;
     }
+    console.log("here1");
 
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
@@ -87,6 +90,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
+    console.log("here2");
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -94,6 +98,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
+    console.log("here3");
 
     // Generate token
     const token = generateToken({
@@ -101,6 +106,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       email: user.email,
       role: user.role,
     });
+    console.log("here4");
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;

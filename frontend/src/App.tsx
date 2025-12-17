@@ -13,11 +13,11 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import ApplicationDetail from './pages/ApplicationDetail';
 import Profile from './pages/Profile';
+import RecruiterProfile from './pages/RecruiterProfile';
 import SavedJobs from './pages/SavedJobs';
 import CompanyProfile from './pages/CompanyProfile';
 import Applications from './pages/Applications';
@@ -83,14 +83,6 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
                   path="/jobs"
                   element={
                     <ProtectedRoute>
@@ -119,6 +111,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/recruiter"
+                  element={
+                    <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN']}>
+                      <RecruiterProfile />
                     </ProtectedRoute>
                   }
                 />
