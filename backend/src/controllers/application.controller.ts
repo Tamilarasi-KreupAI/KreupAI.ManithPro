@@ -441,7 +441,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
       // Create notification for candidate
       await prisma.notification.create({
         data: {
-          type: 'APPLICATION_STATUS_UPDATE',
+          type: 'APPLICATION_STATUS',
           title: `Application Status Updated: ${status.replace('_', ' ')}`,
           message: `Your application for ${updatedApplication.job.title} has been updated`,
           link: `/applications`,

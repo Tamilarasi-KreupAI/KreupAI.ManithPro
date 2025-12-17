@@ -4,6 +4,15 @@ import App from './App.tsx';
 import './index.css';
 import * as serviceWorkerRegistration from './utils/serviceWorkerRegistration';
 
+// Debug helpers (available in console)
+if (import.meta.env.DEV) {
+  import('./utils/authDebug').then(({ checkAuthStatus, testMessageAPI }) => {
+    (window as any).checkAuth = checkAuthStatus;
+    (window as any).testMessages = testMessageAPI;
+    console.log('🛠️ Debug helpers loaded. Try: checkAuth() or testMessages()');
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

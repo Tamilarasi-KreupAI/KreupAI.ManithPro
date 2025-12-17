@@ -10,13 +10,30 @@ const api = axios.create({
 });
 
 // Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Handle errors (don't auto-redirect, let components handle it)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Authentication failed in messageAPI:', error.response?.data);
+      // Don't auto-redirect, let the component handle it
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface Message {
   id: string;
@@ -46,82 +63,71 @@ export interface Conversation {
   unreadCount: number;
 }
 
-import { mockMessages, mockUsers } from './mockData';
-
-const USE_MOCK = true;
-
-const mockDelay = <T>(data: T, ms = 500): Promise<T> => {
-  return new Promise((resolve) => setTimeout(() => resolve(data), ms));
-};
-
 export const messageAPI = {
   // Send message
   send: async (data: SendMessageData): Promise<Message> => {
-    if (USE_MOCK) {
-      const newMessage = {
-        id: Math.random().toString(),
-        ...data,
-        status: 'SENT' as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        senderId: '1', // Mock sender
-        sender: mockUsers[0],
-        receiver: mockUsers[1],
-        attachments: data.attachments || []
-      };
-      return mockDelay(newMessage);
+    try {
+      const response = await api.post('/', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error sending message:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'Failed to send message');
     }
-    const response = await api.post('/', data);
-    return response.data;
   },
 
   // Get conversation with a user
   getConversation: async (userId: string): Promise<Message[]> => {
-    if (USE_MOCK) {
-      return mockDelay(mockMessages as unknown as Message[]);
+    try {
+      const response = await api.get(`/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching conversation:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'Failed to fetch conversation');
     }
-    const response = await api.get(`/${userId}`);
-    return response.data;
   },
 
   // Get all conversations
   getConversations: async (): Promise<Conversation[]> => {
-    if (USE_MOCK) {
-      return mockDelay([{
-        user: mockUsers[1],
-        lastMessage: mockMessages[1] as Message,
-        unreadCount: 1
-      }]);
+    try {
+      const response = await api.get('/conversations');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching conversations:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'Failed to fetch conversations');
     }
-    const response = await api.get('/conversations');
-    return response.data;
   },
 
   // Get messages for an application
   getApplicationMessages: async (applicationId: string): Promise<Message[]> => {
-    if (USE_MOCK) {
-      return mockDelay(mockMessages as unknown as Message[]);
+    try {
+      const response = await api.get(`/application/${applicationId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching application messages:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'Failed to fetch application messages');
     }
-    const response = await api.get(`/application/${applicationId}`);
-    return response.data;
   },
 
   // Mark message as read
   markAsRead: async (id: string): Promise<Message> => {
-    if (USE_MOCK) {
-      const msg = mockMessages.find(m => m.id === id);
-      if (msg) (msg as any).status = 'READ';
-      return mockDelay(msg as unknown as Message);
+    try {
+      const response = await api.put(`/${id}/read`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error marking message as read:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error || 'Failed to mark message as read');
     }
-    const response = await api.put(`/${id}/read`);
-    return response.data;
   },
 
   // Get unread message count
   getUnreadCount: async (): Promise<number> => {
-    if (USE_MOCK) return mockDelay(2);
-    const response = await api.get('/unread-count');
-    return response.data.count;
+    try {
+      const response = await api.get('/unread-count');
+      return response.data.count;
+    } catch (error: any) {
+      console.error('Error fetching unread count:', error.response?.data || error.message);
+      return 0;
+    }
   },
 };
 
