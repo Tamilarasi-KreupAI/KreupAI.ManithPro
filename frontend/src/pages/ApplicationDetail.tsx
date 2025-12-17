@@ -89,16 +89,16 @@ const ApplicationDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full px-4 py-8">
-        <div className="text-center">Loading application details...</div>
+      <div className="w-full px-4 py-8 dark:bg-gray-900 min-h-screen">
+        <div className="text-center text-gray-600 dark:text-gray-400">Loading application details...</div>
       </div>
     );
   }
 
   if (!application) {
     return (
-      <div className="w-full px-4 py-8">
-        <div className="text-center">Application not found</div>
+      <div className="w-full px-4 py-8 dark:bg-gray-900 min-h-screen">
+        <div className="text-center text-gray-600 dark:text-gray-400">Application not found</div>
       </div>
     );
   }
@@ -107,16 +107,16 @@ const ApplicationDetail: React.FC = () => {
   const isCandidate = user && application.candidateId === user.id;
 
   return (
-    <div className="w-full px-4 py-8">
+    <div className="w-full px-4 py-8 dark:bg-gray-900 overflow-hidden min-h-screen relative pt-20">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Application for {application.job?.title}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Submitted on {new Date(application.appliedAt).toLocaleDateString()}
               </p>
             </div>
@@ -127,14 +127,14 @@ const ApplicationDetail: React.FC = () => {
 
           {/* Job Info */}
           {application.job && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h2 className="font-semibold text-lg mb-2">Job Details</h2>
-              <div className="space-y-2 text-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-6">
+              <h2 className="font-semibold text-lg mb-2 dark:text-white">Job Details</h2>
+              <div className="space-y-2 text-gray-700 dark:text-gray-300">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Position:</span>
                   <Link
                     to={`/jobs/${application.job.id}`}
-                    className="text-primary-600 hover:text-primary-800"
+                    className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
                   >
                     {application.job.title}
                   </Link>
@@ -164,9 +164,9 @@ const ApplicationDetail: React.FC = () => {
 
           {/* Candidate Info (for recruiters) */}
           {isRecruiter && application.candidate && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h2 className="font-semibold text-lg mb-2">Candidate Information</h2>
-              <div className="space-y-2 text-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-6">
+              <h2 className="font-semibold text-lg mb-2 dark:text-white">Candidate Information</h2>
+              <div className="space-y-2 text-gray-700 dark:text-gray-300">
                 <div>
                   <span className="font-medium">Name:</span> {application.candidate.firstName}{' '}
                   {application.candidate.lastName}
@@ -175,7 +175,7 @@ const ApplicationDetail: React.FC = () => {
                   <span className="font-medium">Email:</span>{' '}
                   <a
                     href={`mailto:${application.candidate.email}`}
-                    className="text-primary-600 hover:text-primary-800"
+                    className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
                   >
                     {application.candidate.email}
                   </a>
@@ -202,7 +202,7 @@ const ApplicationDetail: React.FC = () => {
                       {application.candidate.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm"
                         >
                           {skill}
                         </span>
@@ -217,7 +217,7 @@ const ApplicationDetail: React.FC = () => {
                       href={application.candidate.linkedIn}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-800"
+                      className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
                     >
                       View Profile
                     </a>
@@ -229,12 +229,12 @@ const ApplicationDetail: React.FC = () => {
 
           {/* Resume */}
           <div className="mb-6">
-            <h2 className="font-semibold text-lg mb-2">Resume</h2>
+            <h2 className="font-semibold text-lg mb-2 dark:text-white">Resume</h2>
             <a
               href={`http://localhost:5001/${application.resume}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
+              className="inline-flex items-center gap-2 bg-primary-600 dark:bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600"
             >
               📄 Download Resume
             </a>
@@ -243,26 +243,26 @@ const ApplicationDetail: React.FC = () => {
           {/* Cover Letter */}
           {application.coverLetter && (
             <div className="mb-6">
-              <h2 className="font-semibold text-lg mb-2">Cover Letter</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-gray-700 whitespace-pre-line">{application.coverLetter}</p>
+              <h2 className="font-semibold text-lg mb-2 dark:text-white">Cover Letter</h2>
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{application.coverLetter}</p>
               </div>
             </div>
           )}
 
           {/* Recruiter Notes */}
           {isRecruiter && (
-            <div className="border-t pt-6">
-              <h2 className="font-semibold text-lg mb-4">Update Application</h2>
+            <div className="border-t dark:border-gray-700 pt-6">
+              <h2 className="font-semibold text-lg mb-4 dark:text-white">Update Application</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Status
                   </label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="PENDING">Pending</option>
                     <option value="REVIEWING">Reviewing</option>
@@ -274,14 +274,14 @@ const ApplicationDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Notes (Internal)
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={4}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                     placeholder="Add internal notes about this application..."
                   />
                 </div>
@@ -289,7 +289,7 @@ const ApplicationDetail: React.FC = () => {
                 <button
                   onClick={handleStatusUpdate}
                   disabled={updating}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-400"
+                  className="bg-primary-600 dark:bg-primary-500 text-white px-6 py-2 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:bg-gray-400 dark:disabled:bg-gray-600"
                 >
                   {updating ? 'Updating...' : 'Update Application'}
                 </button>
@@ -299,10 +299,10 @@ const ApplicationDetail: React.FC = () => {
 
           {/* Candidate Actions */}
           {isCandidate && application.status !== 'WITHDRAWN' && (
-            <div className="border-t pt-6">
+            <div className="border-t dark:border-gray-700 pt-6">
               <button
                 onClick={handleWithdraw}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+                className="bg-red-600 dark:bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600"
               >
                 Withdraw Application
               </button>
@@ -311,10 +311,10 @@ const ApplicationDetail: React.FC = () => {
 
           {/* Show Notes to Candidate (if any) */}
           {isCandidate && application.notes && (
-            <div className="border-t pt-6">
-              <h2 className="font-semibold text-lg mb-2">Recruiter Notes</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-gray-700 whitespace-pre-line">{application.notes}</p>
+            <div className="border-t dark:border-gray-700 pt-6">
+              <h2 className="font-semibold text-lg mb-2 dark:text-white">Recruiter Notes</h2>
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{application.notes}</p>
               </div>
             </div>
           )}
@@ -324,7 +324,7 @@ const ApplicationDetail: React.FC = () => {
         <div className="text-center">
           <button
             onClick={() => navigate(-1)}
-            className="text-primary-600 hover:text-primary-800 font-medium"
+            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium"
           >
             ← Back
           </button>

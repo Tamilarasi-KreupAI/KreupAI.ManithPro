@@ -158,22 +158,22 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading jobs...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 dark:border-primary-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading jobs...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 overflow-hidden relative pt-20">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Advanced Job Search</h1>
-          <p className="mt-2 text-gray-600">Find your perfect opportunity with powerful filters</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Advanced Job Search</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Find your perfect opportunity with powerful filters</p>
         </div>
 
         {/* Search Bar */}
@@ -184,9 +184,9 @@ const SuperAdvancedJobSearch: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by title, company, or skills..."
-              className="w-full px-6 py-4 pl-12 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm"
+              className="w-full px-6 py-4 pl-12 text-lg border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             />
-            <svg className="absolute left-4 top-5 h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-4 top-5 h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -195,13 +195,13 @@ const SuperAdvancedJobSearch: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Filters</h2>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="text-sm text-red-600 hover:text-red-700"
+                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                   >
                     Clear All ({activeFiltersCount})
                   </button>
@@ -209,7 +209,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
               </div>
 
               {/* Remote Only Toggle */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -217,13 +217,13 @@ const SuperAdvancedJobSearch: React.FC = () => {
                     onChange={(e) => setRemoteOnly(e.target.checked)}
                     className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
                   />
-                  <span className="ml-3 font-semibold text-gray-900">Remote Jobs Only</span>
+                  <span className="ml-3 font-semibold text-gray-900 dark:text-white">Remote Jobs Only</span>
                 </label>
               </div>
 
               {/* Salary Range */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Salary Range</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Salary Range</h3>
                 <div className="space-y-3">
                   <input
                     type="range"
@@ -243,7 +243,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                     onChange={(e) => setSalaryRange([salaryRange[0], parseInt(e.target.value)])}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                     <span>${salaryRange[0].toLocaleString()}</span>
                     <span>${salaryRange[1].toLocaleString()}</span>
                   </div>
@@ -252,7 +252,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
               {/* Job Type */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Job Type</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Job Type</h3>
                 <div className="space-y-2">
                   {jobTypes.map(type => (
                     <label key={type} className="flex items-center cursor-pointer">
@@ -262,7 +262,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                         onChange={() => toggleFilter(type, selectedTypes, setSelectedTypes)}
                         className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                       />
-                      <span className="ml-2 text-sm text-gray-700">{type.replace('_', ' ')}</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{type.replace('_', ' ')}</span>
                     </label>
                   ))}
                 </div>
@@ -270,11 +270,11 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
               {/* Experience Level */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Experience Level</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Experience Level</h3>
                 <select
                   value={experienceLevel}
                   onChange={(e) => setExperienceLevel(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">All Levels</option>
                   {experienceLevels.map(level => (
@@ -285,7 +285,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
               {/* Location */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Location</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Location</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {availableLocations.slice(0, 10).map(location => (
                     <label key={location} className="flex items-center cursor-pointer">
@@ -295,7 +295,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                         onChange={() => toggleFilter(location, selectedLocations, setSelectedLocations)}
                         className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                       />
-                      <span className="ml-2 text-sm text-gray-700">{location}</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{location}</span>
                     </label>
                   ))}
                 </div>
@@ -303,7 +303,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
               {/* Skills */}
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Skills</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Skills</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {availableSkills.slice(0, 15).map(skill => (
                     <label key={skill} className="flex items-center cursor-pointer">
@@ -313,7 +313,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                         onChange={() => toggleFilter(skill, selectedSkills, setSelectedSkills)}
                         className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                       />
-                      <span className="ml-2 text-sm text-gray-700">{skill}</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{skill}</span>
                     </label>
                   ))}
                 </div>
@@ -324,24 +324,24 @@ const SuperAdvancedJobSearch: React.FC = () => {
           {/* Job Results */}
           <div className="lg:col-span-3">
             {/* Results Header */}
-            <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {filteredJobs.length} Jobs Found
                   </p>
                   {activeFiltersCount > 0 && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Filtered from {jobs.length} total jobs
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
                   {/* View Toggle */}
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`px-3 py-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
+                      className={`px-3 py-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}
                     >
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -349,7 +349,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`px-3 py-1.5 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
+                      className={`px-3 py-1.5 rounded-md ${viewMode === 'list' ? 'bg-white dark:bg-gray-600 shadow-sm' : ''}`}
                     >
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -361,7 +361,7 @@ const SuperAdvancedJobSearch: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="recent">Most Recent</option>
                     <option value="salary-high">Highest Salary</option>
@@ -374,12 +374,12 @@ const SuperAdvancedJobSearch: React.FC = () => {
 
             {/* Job Cards */}
             {filteredJobs.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-12 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <p className="text-lg text-gray-600">No jobs match your criteria</p>
-                <button onClick={clearAllFilters} className="mt-4 text-primary-600 hover:text-primary-700">
+                <p className="text-lg text-gray-600 dark:text-gray-400">No jobs match your criteria</p>
+                <button onClick={clearAllFilters} className="mt-4 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
                   Clear filters and try again
                 </button>
               </div>
@@ -389,19 +389,19 @@ const SuperAdvancedJobSearch: React.FC = () => {
                   <div
                     key={job.id}
                     onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-all cursor-pointer border border-transparent hover:border-primary-500"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all cursor-pointer border border-transparent hover:border-primary-500 dark:hover:border-primary-400"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">{job.title}</h3>
-                        <p className="text-gray-600">{job.companyName}</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{job.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">{job.companyName}</p>
                       </div>
-                      <span className="text-xs px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      <span className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
                         {job.type.replace('_', ' ')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <div className="flex items-center gap-1">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -422,12 +422,12 @@ const SuperAdvancedJobSearch: React.FC = () => {
                     {job.skills.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {job.skills.slice(0, 4).map((skill, idx) => (
-                          <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                          <span key={idx} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                             {skill}
                           </span>
                         ))}
                         {job.skills.length > 4 && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                          <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                             +{job.skills.length - 4} more
                           </span>
                         )}
