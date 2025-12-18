@@ -32,16 +32,42 @@ const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-<<<<<<< Updated upstream
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [eligibleCandidates, setEligibleCandidates] = useState<EligibleCandidate[]>([]);
+  const [showEligibleCandidates, setShowEligibleCandidates] = useState(false);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchConversations();
+    const token = localStorage.getItem('token');
+    if (token && user) {
+      fetchConversations();
+      if (user?.role === 'RECRUITER') {
+        fetchEligibleCandidates();
+      }
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
-    // Handle starting a new conversation from location state
-    if (location.state?.startConversation) {
-      const newUser = location.state.startConversation;
+  // Handle incoming candidate from navigation state
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.candidate && state?.applicationId) {
+      // Auto-start conversation with the candidate
+      const conversation: Conversation = {
+        user: state.candidate,
+        lastMessage: { content: '', createdAt: new Date().toISOString() } as Message,
+        unreadCount: 0,
+      };
+      setSelectedConversation(conversation);
+      setSelectedApplicationId(state.applicationId);
+      setShowEligibleCandidates(false);
+      fetchMessages(state.candidate.id);
+      // Clear the navigation state
+      window.history.replaceState({}, document.title);
+    } else if (state?.startConversation) {
+      const newUser = state.startConversation;
       // Check if conversation already exists
       const existingConv = conversations.find(c => c.user.id === newUser.id);
       if (existingConv) {
@@ -66,63 +92,7 @@ const Messages: React.FC = () => {
       // Clear the location state
       window.history.replaceState({}, document.title);
     }
-
-    // Poll for new messages every 5 seconds
-    const interval = setInterval(() => {
-      if (selectedConversation) {
-        fetchMessages(selectedConversation.user.id, true);
-      }
-      fetchConversations();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [selectedConversation, location.state]);
-=======
-  const [eligibleCandidates, setEligibleCandidates] = useState<EligibleCandidate[]>([]);
-  const [showEligibleCandidates, setShowEligibleCandidates] = useState(false);
-  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Debug: Check authentication state
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    console.log('=== Authentication Debug ===');
-    console.log('Token exists:', !!token);
-    console.log('Token value:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('User from context:', user);
-    console.log('User from localStorage:', storedUser ? JSON.parse(storedUser) : 'null');
-    console.log('========================');
-
-    if (token && user) {
-      fetchConversations();
-      if (user?.role === 'RECRUITER') {
-        fetchEligibleCandidates();
-      }
-    } else {
-      console.error('Not authenticated: Token or user missing');
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Handle incoming candidate from navigation state
-  useEffect(() => {
-    const state = location.state as any;
-    if (state?.candidate && state?.applicationId) {
-      // Auto-start conversation with the candidate
-      const conversation: Conversation = {
-        user: state.candidate,
-        lastMessage: { content: '', createdAt: new Date().toISOString() } as Message,
-        unreadCount: 0,
-      };
-      setSelectedConversation(conversation);
-      setSelectedApplicationId(state.applicationId);
-      setShowEligibleCandidates(false);
-      fetchMessages(state.candidate.id);
-      // Clear the navigation state
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
->>>>>>> Stashed changes
+  }, [location, conversations, user]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -132,65 +102,34 @@ const Messages: React.FC = () => {
 
   const fetchConversations = async () => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Fetching conversations with token:', token ? 'Present' : 'Missing');
       const data = await messageAPI.getConversations();
-      console.log('Conversations fetched:', data);
       setConversations(data);
-<<<<<<< Updated upstream
       setError(null);
     } catch (err: any) {
       console.error('Failed to fetch conversations:', err);
       setError(err.message || 'Failed to load conversations');
-=======
-    } catch (err: any) {
-      console.error('Failed to fetch conversations:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
->>>>>>> Stashed changes
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< Updated upstream
-  const fetchMessages = async (userId: string, silent = false) => {
-=======
   const fetchEligibleCandidates = async () => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Fetching eligible candidates with token:', token ? 'Present' : 'Missing');
       const data = await messageAPI.getEligibleCandidates();
-      console.log('Eligible candidates fetched:', data);
       setEligibleCandidates(data.eligibleCandidates || []);
     } catch (err: any) {
       console.error('Failed to fetch eligible candidates:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
     }
   };
 
   const fetchMessages = async (userId: string) => {
->>>>>>> Stashed changes
     try {
-      const token = localStorage.getItem('token');
-      console.log('Fetching messages for user:', userId, 'with token:', token ? 'Present' : 'Missing');
       const data = await messageAPI.getConversation(userId);
-      console.log('Messages fetched:', data);
       setMessages(data);
-<<<<<<< Updated upstream
       setError(null);
     } catch (err: any) {
-      if (!silent) {
-        console.error('Failed to fetch messages:', err);
-        setError(err.message || 'Failed to load messages');
-      }
-=======
-    } catch (err: any) {
       console.error('Failed to fetch messages:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
->>>>>>> Stashed changes
+      setError(err.message || 'Failed to load messages');
     }
   };
 
@@ -199,21 +138,9 @@ const Messages: React.FC = () => {
 
     setSending(true);
     try {
-<<<<<<< Updated upstream
-      const sentMessage = await messageAPI.send({
-        receiverId: selectedConversation.user.id,
-        content: newMessage.trim(),
-      });
-
-      // Optimistically add message to UI
-      setMessages(prev => [...prev, sentMessage]);
-=======
-      const token = localStorage.getItem('token');
-      console.log('Sending message with token:', token ? 'Present' : 'Missing');
-
       const messageData: any = {
         receiverId: selectedConversation.user.id,
-        content: newMessage,
+        content: newMessage.trim(),
       };
 
       // Include applicationId if messaging an eligible candidate
@@ -221,30 +148,21 @@ const Messages: React.FC = () => {
         messageData.applicationId = selectedApplicationId;
       }
 
-      console.log('Sending message data:', messageData);
-      const response = await messageAPI.send(messageData);
-      console.log('Message sent successfully:', response);
+      const sentMessage = await messageAPI.send(messageData);
 
->>>>>>> Stashed changes
+      // Optimistically add message to UI
+      setMessages(prev => [...prev, sentMessage]);
       setNewMessage('');
 
       // Refresh conversations to update last message
       fetchConversations();
-<<<<<<< Updated upstream
+      setSelectedApplicationId(null);
       setError(null);
     } catch (err: any) {
       console.error('Failed to send message:', err);
-      setError(err.message || 'Failed to send message. Please try again.');
+      setError(err.response?.data?.error || err.message || 'Failed to send message. Please try again.');
     } finally {
       setSending(false);
-=======
-      setSelectedApplicationId(null);
-    } catch (err: any) {
-      console.error('Failed to send message:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      alert(err.response?.data?.error || 'Failed to send message. Please try again.');
->>>>>>> Stashed changes
     }
   };
 
@@ -331,11 +249,11 @@ const Messages: React.FC = () => {
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                         : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                     }`}>
-                      {candidate.status === 'SHORTLISTED' ? '✨ Shortlisted' : '📅 Interview'}
+                      {candidate.status === 'SHORTLISTED' ? 'Shortlisted' : 'Interview'}
                     </span>
                   </div>
                   {candidate.candidate.location && (
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-2">📍 {candidate.candidate.location}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-2">{candidate.candidate.location}</p>
                   )}
                   {candidate.candidate.skills && candidate.candidate.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-3">
@@ -353,26 +271,19 @@ const Messages: React.FC = () => {
                     onClick={() => startConversationWithCandidate(candidate)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                   >
-                    💬 Message Candidate
+                    Message Candidate
                   </button>
                 </div>
               ))
             )}
           </div>
         ) : conversations.length === 0 ? (
-<<<<<<< Updated upstream
           <div className="text-center p-8">
             <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <p className="text-slate-500 dark:text-gray-400">No conversations yet</p>
             <p className="text-sm text-slate-400 dark:text-gray-500 mt-1">Start messaging recruiters or candidates</p>
-=======
-          <div className="text-center p-8 text-slate-500 dark:text-gray-400">
-            <div className="text-5xl mb-4">💬</div>
-            <p className="font-medium text-lg">No conversations yet</p>
-            <p className="text-sm mt-2">Start messaging with eligible candidates</p>
->>>>>>> Stashed changes
           </div>
         ) : (
           <div>
@@ -524,13 +435,8 @@ const Messages: React.FC = () => {
                 </div>
                 <button
                   onClick={handleSendMessage}
-<<<<<<< Updated upstream
                   disabled={!newMessage.trim() || sending}
-                  className="px-6 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed self-end transition-colors"
-=======
-                  disabled={!newMessage.trim()}
                   className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 transition-all transform active:scale-95 shadow-lg hover:shadow-xl"
->>>>>>> Stashed changes
                   aria-label="Send message"
                   title="Send message (Enter)"
                 >

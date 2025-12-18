@@ -68,7 +68,6 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         return;
       }
 
-      applicationData = application;
       companyName = application.job.companyName || 'Company';
 
       // Verify user is either candidate or recruiter for this application
@@ -144,11 +143,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       data: {
         type: 'MESSAGE_RECEIVED',
         title: 'New Message',
-<<<<<<< Updated upstream
-        message: `You have a new message`,
-=======
         message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
->>>>>>> Stashed changes
         link: `/messages`,
         userId: receiverId,
       },
