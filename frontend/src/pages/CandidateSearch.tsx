@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { applicationAPI } from '../services/api';
 import type { Application, User } from '../types';
 
@@ -11,6 +11,7 @@ interface CandidateProfile {
 }
 
 const CandidateSearch: React.FC = () => {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [filteredCandidates, setFilteredCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -364,12 +365,24 @@ const CandidateSearch: React.FC = () => {
                   </div>
 
                   {/* Contact */}
-                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-gray-700">
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-gray-700 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => navigate('/messages', { state: { startConversation: candidate.user } })}
+                      className="flex items-center justify-center gap-2 bg-blue-600 dark:bg-primary-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 dark:hover:bg-primary-700 font-medium shadow-lg shadow-blue-500/30 dark:shadow-primary-500/30 transition-all hover:-translate-y-0.5"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Message
+                    </button>
                     <a
                       href={`mailto:${candidate.user.email}`}
-                      className="block w-full text-center bg-blue-600 dark:bg-primary-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 dark:hover:bg-primary-700 font-medium shadow-lg shadow-blue-500/30 dark:shadow-primary-500/30 transition-all hover:-translate-y-0.5"
+                      className="flex items-center justify-center gap-2 bg-gray-600 dark:bg-gray-700 text-white px-4 py-2.5 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-600 font-medium transition-all hover:-translate-y-0.5"
                     >
-                      Contact Candidate
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Email
                     </a>
                   </div>
                 </div>

@@ -1,13 +1,22 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+// Extend Request type to include user
+interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+    role: string;
+  };
+}
+
 const prisma = new PrismaClient();
 
 // Send a message
-export const sendMessage = async (req: Request, res: Response): Promise<void> => {
+export const sendMessage = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { receiverId, content, applicationId, attachments } = req.body;
-    const senderId = req.user?.id;
+    const senderId = req.user?.userId;
 
     if (!senderId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -97,7 +106,7 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       data: {
         type: 'MESSAGE_RECEIVED',
         title: 'New Message',
-        message: `You have a new message from ${req.user?.firstName} ${req.user?.lastName}`,
+        message: `You have a new message`,
         link: `/messages`,
         userId: receiverId,
       },
@@ -111,10 +120,10 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Get conversation between two users
-export const getConversation = async (req: Request, res: Response): Promise<void> => {
+export const getConversation = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user?.id;
+    const currentUserId = req.user?.userId;
 
     if (!currentUserId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -185,9 +194,9 @@ export const getConversation = async (req: Request, res: Response): Promise<void
 };
 
 // Get all conversations for current user
-export const getConversations = async (req: Request, res: Response): Promise<void> => {
+export const getConversations = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -257,10 +266,10 @@ export const getConversations = async (req: Request, res: Response): Promise<voi
 };
 
 // Get messages for an application
-export const getApplicationMessages = async (req: Request, res: Response): Promise<void> => {
+export const getApplicationMessages = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { applicationId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -341,10 +350,10 @@ export const getApplicationMessages = async (req: Request, res: Response): Promi
 };
 
 // Mark message as read
-export const markAsRead = async (req: Request, res: Response): Promise<void> => {
+export const markAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -381,9 +390,9 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get unread message count
-export const getUnreadCount = async (req: Request, res: Response): Promise<void> => {
+export const getUnreadCount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });

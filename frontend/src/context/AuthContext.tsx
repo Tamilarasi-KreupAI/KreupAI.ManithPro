@@ -32,7 +32,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Token verification failed:', error);
+          console.log('Logging out due to invalid token');
           logout();
         })
         .finally(() => setLoading(false));

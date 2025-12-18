@@ -120,11 +120,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <div
-      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb - 4 group`}
+      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 group`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className={`max - w - [70 %] ${isOwn ? 'items-end' : 'items-start'} flex flex - col`}>
+      <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
         <div className="flex items-center gap-2 mb-1">
           {!isOwn && (
             <span className="text-xs text-gray-600 dark:text-gray-400 px-2">
