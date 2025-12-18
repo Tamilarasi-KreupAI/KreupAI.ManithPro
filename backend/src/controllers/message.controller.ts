@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { sendMessageNotificationEmail } from '../utils/email';
 
 // Extend Request type to include user
 interface AuthRequest extends Request {
@@ -23,6 +24,19 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Get sender details
+    const sender = await prisma.user.findUnique({
+      where: { id: senderId },
+      include: {
+        recruiterProfile: true,
+      },
+    });
+
+    if (!sender) {
+      res.status(404).json({ error: 'Sender not found' });
+      return;
+    }
+
     // Verify receiver exists
     const receiver = await prisma.user.findUnique({
       where: { id: receiverId },
@@ -33,7 +47,9 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // If applicationId is provided, verify access
+    let companyName = 'Company';
+
+    // If applicationId is provided, verify access and eligibility
     if (applicationId) {
       const application = await prisma.application.findUnique({
         where: { id: applicationId },
@@ -43,6 +59,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
               postedBy: true,
             },
           },
+          candidate: true,
         },
       });
 
@@ -51,6 +68,9 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         return;
       }
 
+      applicationData = application;
+      companyName = application.job.companyName || 'Company';
+
       // Verify user is either candidate or recruiter for this application
       const isCandidate = application.candidateId === senderId;
       const isRecruiter = application.job.postedById === senderId;
@@ -58,6 +78,24 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       if (!isCandidate && !isRecruiter) {
         res.status(403).json({ error: 'You do not have permission to send messages for this application' });
         return;
+      }
+
+      // Check if recruiter is messaging a candidate - verify eligibility
+      if (isRecruiter && receiver.role === 'CANDIDATE') {
+        const eligibleStatuses = ['SHORTLISTED', 'INTERVIEW_SCHEDULED'];
+        if (!eligibleStatuses.includes(application.status)) {
+          res.status(403).json({
+            error: 'You can only message candidates who are shortlisted or scheduled for an interview',
+            currentStatus: application.status,
+            eligibleStatuses
+          });
+          return;
+        }
+      }
+    } else {
+      // If no applicationId, get company name from recruiter profile if sender is recruiter
+      if (sender.role === 'RECRUITER' && sender.recruiterProfile) {
+        companyName = sender.recruiterProfile.companyName;
       }
     }
 
@@ -106,11 +144,36 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       data: {
         type: 'MESSAGE_RECEIVED',
         title: 'New Message',
+<<<<<<< Updated upstream
         message: `You have a new message`,
+=======
+        message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
+>>>>>>> Stashed changes
         link: `/messages`,
         userId: receiverId,
       },
     });
+
+    // Send email notification if recruiter is messaging a candidate
+    if (sender.role === 'RECRUITER' && receiver.role === 'CANDIDATE') {
+      try {
+        const recruiterName = `${sender.firstName} ${sender.lastName}`;
+        const candidateName = `${receiver.firstName} ${receiver.lastName}`;
+        const messagePreview = content.length > 200 ? content.substring(0, 200) + '...' : content;
+
+        await sendMessageNotificationEmail(
+          receiver.email,
+          candidateName,
+          recruiterName,
+          companyName,
+          messagePreview
+        );
+        console.log(`Email notification sent to ${receiver.email} from ${companyName}`);
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't fail the message sending if email fails
+      }
+    }
 
     res.status(201).json(message);
   } catch (error) {
@@ -412,5 +475,66 @@ export const getUnreadCount = async (req: AuthRequest, res: Response): Promise<v
   } catch (error) {
     console.error('Error fetching unread count:', error);
     res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+};
+
+// Get eligible candidates for messaging (recruiter only)
+export const getEligibleCandidates = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (userRole !== 'RECRUITER') {
+      res.status(403).json({ error: 'Only recruiters can access this endpoint' });
+      return;
+    }
+
+    // Get all applications for jobs posted by this recruiter where candidates are eligible
+    const eligibleApplications = await prisma.application.findMany({
+      where: {
+        job: {
+          postedById: userId,
+        },
+        status: {
+          in: ['SHORTLISTED', 'INTERVIEW_SCHEDULED'],
+        },
+      },
+      include: {
+        candidate: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            skills: true,
+            location: true,
+          },
+        },
+        job: {
+          select: {
+            id: true,
+            title: true,
+            companyName: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    res.json({
+      eligibleCandidates: eligibleApplications,
+      count: eligibleApplications.length,
+    });
+  } catch (error) {
+    console.error('Error fetching eligible candidates:', error);
+    res.status(500).json({ error: 'Failed to fetch eligible candidates' });
   }
 };

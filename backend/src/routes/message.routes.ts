@@ -6,6 +6,7 @@ import {
   getApplicationMessages,
   markAsRead,
   getUnreadCount,
+  getEligibleCandidates,
 } from '../controllers/message.controller';
 import { authenticate } from '../middleware/auth';
 
@@ -18,6 +19,7 @@ router.use(authenticate);
 router.post('/', sendMessage);
 router.get('/conversations', getConversations);
 router.get('/unread-count', getUnreadCount);
+router.get('/eligible-candidates', getEligibleCandidates);
 router.get('/application/:applicationId', getApplicationMessages);
 router.get('/:userId', getConversation);
 router.put('/:id/read', markAsRead);

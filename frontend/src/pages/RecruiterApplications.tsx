@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { applicationAPI, jobAPI } from '../services/api';
 import type { Application, Job } from '../types';
 
 const RecruiterApplications: React.FC = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -364,6 +365,21 @@ const RecruiterApplications: React.FC = () => {
                         >
                           Resume
                         </a>
+                        {(application.status === 'SHORTLISTED' || application.status === 'INTERVIEW_SCHEDULED') && (
+                          <button
+                            onClick={() => navigate('/messages', {
+                              state: {
+                                candidate: application.candidate,
+                                applicationId: application.id,
+                                jobTitle: application.job?.title
+                              }
+                            })}
+                            className="text-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 hover:border-green-200 dark:hover:border-green-700 transition-all font-medium flex items-center gap-1"
+                            title="Message this candidate"
+                          >
+                            💬 Message
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
