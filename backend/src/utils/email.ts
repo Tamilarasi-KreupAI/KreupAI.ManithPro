@@ -439,3 +439,114 @@ export const sendJobMatchNotificationEmail = async (
 
   await sendEmail({ to: candidateEmail, subject, html });
 };
+
+export const sendMessageNotificationEmail = async (
+  candidateEmail: string,
+  candidateName: string,
+  recruiterName: string,
+  companyName: string,
+  messagePreview: string
+): Promise<void> => {
+  const subject = `New Message from ${companyName} - KreupAI ManithPro`;
+  const messagesUrl = `${process.env.FRONTEND_URL}/messages`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; background-color: #f8fafc; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.95; }
+        .content { padding: 40px 30px; }
+        .greeting { font-size: 18px; color: #1e293b; margin-bottom: 20px; font-weight: 600; }
+        .message { font-size: 16px; color: #475569; margin-bottom: 20px; line-height: 1.8; }
+        .message-card { background: #f8fafc; border-left: 4px solid #2563eb; padding: 25px; margin: 25px 0; border-radius: 8px; }
+        .company-badge { display: inline-block; background: #eff6ff; color: #2563eb; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 16px; margin: 15px 0; border: 2px solid #bfdbfe; }
+        .recruiter-name { font-size: 18px; color: #1e293b; font-weight: 700; margin-bottom: 10px; }
+        .message-preview { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0; font-style: italic; color: #64748b; line-height: 1.6; }
+        .cta-button { display: inline-block; background: #2563eb; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 25px 0; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); transition: all 0.3s; }
+        .cta-button:hover { background: #1d4ed8; box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4); }
+        .info-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; margin: 25px 0; border-radius: 6px; }
+        .info-box-title { font-weight: 700; color: #1e293b; margin-bottom: 10px; font-size: 16px; }
+        .info-box ul { margin: 10px 0; padding-left: 20px; }
+        .info-box li { color: #475569; margin: 8px 0; }
+        .footer { background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+        .footer p { margin: 5px 0; font-size: 14px; color: #64748b; }
+        .divider { height: 1px; background: #e2e8f0; margin: 30px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>💬 New Message Received</h1>
+          <p>A recruiter has sent you a message</p>
+        </div>
+
+        <div class="content">
+          <p class="greeting">Dear ${candidateName},</p>
+
+          <p class="message">
+            Great news! You have received a new message from a recruiter regarding your job application.
+          </p>
+
+          <div class="message-card">
+            <div style="text-align: center;">
+              <span class="company-badge">${companyName}</span>
+            </div>
+
+            <div class="recruiter-name">
+              From: ${recruiterName}
+            </div>
+
+            <div class="message-preview">
+              "${messagePreview.length > 150 ? messagePreview.substring(0, 150) + '...' : messagePreview}"
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title">📋 Quick Actions:</div>
+            <ul>
+              <li><strong>View the full message</strong> in your message center</li>
+              <li><strong>Respond promptly</strong> to show your interest</li>
+              <li><strong>Ask questions</strong> about the role or interview process</li>
+              <li><strong>Keep the conversation professional</strong> and engaging</li>
+            </ul>
+          </div>
+
+          <p class="message">
+            <strong>Why is this important?</strong> Recruiters reach out when they find your profile interesting and want to discuss potential opportunities. A timely response shows professionalism and enthusiasm.
+          </p>
+
+          <div style="text-align: center;">
+            <a href="${messagesUrl}" class="cta-button">📩 View Message & Respond</a>
+          </div>
+
+          <div class="divider"></div>
+
+          <p class="message" style="font-size: 14px; color: #64748b;">
+            💡 <strong>Pro Tip:</strong> Make sure to check your messages regularly to not miss any opportunities.
+            Enable notifications in your dashboard to stay updated in real-time.
+          </p>
+        </div>
+
+        <div class="footer">
+          <p><strong>KreupAI ManithPro Recruitment Team</strong></p>
+          <p>Connecting talent with opportunities</p>
+          <p style="margin-top: 15px;">Email: support@kreupai.com | Website: kreupai.com</p>
+          <p style="margin-top: 15px; font-size: 12px; color: #94a3b8;">
+            This is an automated notification about a new message. Please do not reply directly to this email.
+            Use the messaging platform to respond to the recruiter.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({ to: candidateEmail, subject, html });
+};
