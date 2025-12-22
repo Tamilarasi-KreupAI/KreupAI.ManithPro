@@ -189,6 +189,8 @@ const AdminUserManagement = () => {
                 <option value="CANDIDATE">Candidate</option>
                 <option value="RECRUITER">Recruiter</option>
                 <option value="ADMIN">Admin</option>
+                <option value="CLIENT">Client</option>
+                <option value="VENDOR">Vendor</option>
               </select>
             </div>
             <div className="flex gap-2">

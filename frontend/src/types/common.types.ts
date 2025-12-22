@@ -3,7 +3,7 @@
 // ============================================================
 
 // User Roles
-export type UserRole = 'CANDIDATE' | 'RECRUITER' | 'ADMIN' | 'B2B' | 'BUSINESS_CLIENT' | 'BUSINESS_VENDOR';
+export type UserRole = 'CANDIDATE' | 'RECRUITER' | 'ADMIN' | 'B2B' | 'CLIENT' | 'VENDOR';
 
 // Job Types
 export type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'REMOTE';

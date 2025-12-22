@@ -11,7 +11,7 @@ export interface MessageTemplate {
 
 interface MessageTemplatesProps {
   onSelectTemplate: (content: string) => void;
-  userRole: 'CANDIDATE' | 'RECRUITER' | 'ADMIN';
+  userRole: 'CANDIDATE' | 'RECRUITER' | 'ADMIN' | 'CLIENT' | 'VENDOR';
 }
 
 const MessageTemplates: React.FC<MessageTemplatesProps> = ({ onSelectTemplate, userRole }) => {

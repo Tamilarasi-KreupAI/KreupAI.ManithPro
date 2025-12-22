@@ -46,9 +46,10 @@ const Login: React.FC = () => {
         navigate('/recruiter/dashboard');
       } else if (userRole === 'ADMIN') {
         navigate('/admin/dashboard');
-      } else {
+      }
+       else {
         // CANDIDATE or default
-        navigate('/jobs');
+        navigate('/profile');
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');

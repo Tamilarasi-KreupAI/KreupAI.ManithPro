@@ -88,7 +88,7 @@ const Navbar: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/recruiter/dashboard" className={linkClasses}>
+                    <Link to={user.role === 'CLIENT' || user.role === 'VENDOR' ? '/b2b/dashboard' : '/recruiter/dashboard'} className={linkClasses}>
                       Dashboard
                     </Link>
 
