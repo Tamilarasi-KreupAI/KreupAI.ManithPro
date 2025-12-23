@@ -140,15 +140,13 @@ export const applicationAPI = {
     }
     return api.get<Application>(`/applications/${id}`).then((res) => res.data);
   },
-  create: (formData: FormData) => {
+  create: (data: { jobId: string; coverLetter?: string }) => {
     if (USE_MOCK) {
       const newApp = { ...mockApplications[0], id: Math.random().toString() };
       return mockDelay({ message: 'Application submitted', application: newApp });
     }
     return api
-      .post<{ message: string; application: Application }>('/applications', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      .post<{ message: string; application: Application }>('/applications', data)
       .then((res) => res.data);
   },
   updateStatus: (id: string, data: { status: string; notes?: string }) => {
@@ -274,6 +272,35 @@ export const companyAPI = {
     return api
       .get<{ company: Company; jobs: Job[] }>(`/companies/${name}`)
       .then((res) => res.data);
+  },
+};
+
+// Notification Preference APIs
+export const notificationPreferenceAPI = {
+  get: () => {
+    return api.get<{
+      emailEnabled: boolean;
+      applicationUpdates: boolean;
+      interviewReminders: boolean;
+      messageAlerts: boolean;
+      jobAlerts: boolean;
+      systemAnnouncements: boolean;
+      marketingEmails: boolean;
+    }>('/notification-preferences').then((res) => res.data);
+  },
+  update: (data: {
+    emailEnabled?: boolean;
+    applicationUpdates?: boolean;
+    interviewReminders?: boolean;
+    messageAlerts?: boolean;
+    jobAlerts?: boolean;
+    systemAnnouncements?: boolean;
+    marketingEmails?: boolean;
+  }) => {
+    return api.put<{
+      message: string;
+      preferences: any;
+    }>('/notification-preferences', data).then((res) => res.data);
   },
 };
 

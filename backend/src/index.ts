@@ -47,6 +47,7 @@ import batch26RealtimeCommunicationRoutes from './routes/batch26RealtimeCommunic
 import batch27AuthenticationAccessRoutes from './routes/batch27AuthenticationAccess.routes';
 // import batch28DataProtectionRoutes from './routes/batch28DataProtection.routes'; // Temporarily disabled - missing controller functions
 import batch29ComplianceRoutes from './routes/batch29Compliance.routes';
+import notificationPreferenceRoutes from './routes/notificationPreference.routes';
 import batch30RecruitmentAnalyticsRoutes from './routes/batch30RecruitmentAnalytics.routes';
 import batch31ExecutiveDashboardsRoutes from './routes/batch31ExecutiveDashboards.routes';
 import batch32MarketIntelligenceRoutes from './routes/batch32MarketIntelligence.routes';
@@ -97,6 +98,7 @@ app.get('/', (req, res) => {
       resumes: '/api/resumes',
       messages: '/api/messages',
       notifications: '/api/notifications',
+      notificationPreferences: '/api/notification-preferences',
       admin: '/api/admin',
       candidateProfile: '/api/candidate-profile',
       achievements: '/api/achievements',
@@ -154,6 +156,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/notification-preferences', notificationPreferenceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/candidate-profile', candidateProfileRoutes);
 app.use('/api/achievements', achievementsRoutes);
