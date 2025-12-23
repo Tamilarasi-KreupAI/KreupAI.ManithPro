@@ -7280,6 +7280,14 @@ model CostCenter {
   @@map("cost_centers")
 }
 
+model Contract {
+  id           String   @id @default(uuid())
+  clientUserId String
+  vendorUserId String
+  status       String
+  createdAt    DateTime @default(now())
+}
+
 model Department {
   id             String       @id @default(uuid())
   organizationId String
