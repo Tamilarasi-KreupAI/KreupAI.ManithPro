@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { userAPI } from '../services/api';
+import { userAPI, notificationPreferenceAPI } from '../services/api';
 import ThemeToggle from '../components/ThemeToggle';
 import toast from 'react-hot-toast';
 import { getAvatarGradient, getUserInitials, getAvatarRingColor } from '../utils/avatarUtils';
@@ -39,9 +39,19 @@ const Profile: React.FC = () => {
   });
 
   const [skillInput, setSkillInput] = useState('');
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    emailEnabled: true,
+    applicationUpdates: true,
+    interviewReminders: true,
+    messageAlerts: true,
+    jobAlerts: false,
+    systemAnnouncements: true,
+    marketingEmails: false,
+  });
 
   useEffect(() => {
     loadProfile();
+    loadNotificationPreferences();
   }, []);
 
   const loadProfile = async () => {
@@ -98,6 +108,50 @@ const Profile: React.FC = () => {
       skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }));
   };
+
+  const loadNotificationPreferences = async () => {
+    try {
+      const preferences = await notificationPreferenceAPI.get();
+      setNotificationPreferences(preferences);
+    } catch (error: any) {
+      console.error('Failed to load notification preferences:', error);
+      // Keep default values if loading fails
+    }
+  };
+
+  const handleNotificationChange = async (key: keyof typeof notificationPreferences) => {
+    const updatedValue = !notificationPreferences[key];
+
+    // Optimistic update
+    setNotificationPreferences((prev) => ({
+      ...prev,
+      [key]: updatedValue,
+    }));
+
+    try {
+      await notificationPreferenceAPI.update({ [key]: updatedValue });
+      toast.success('Notification preference updated');
+    } catch (error: any) {
+      // Revert on error
+      setNotificationPreferences((prev) => ({
+        ...prev,
+        [key]: !updatedValue,
+      }));
+      toast.error(error.response?.data?.error || 'Failed to update preference');
+    }
+  };
+
+  useEffect(() => {
+    // Load notification preferences from localStorage
+    const saved = localStorage.getItem('notificationPreferences');
+    if (saved) {
+      try {
+        setNotificationPreferences(JSON.parse(saved));
+      } catch (error) {
+        console.error('Failed to parse notification preferences:', error);
+      }
+    }
+  }, []);
 
   const handleSave = async () => {
     // Validation
@@ -616,21 +670,82 @@ const Profile: React.FC = () => {
                     Notifications
                   </h3>
                   <div className="space-y-3">
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm">Email notifications for new messages</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-600 rounded" />
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Enable all email notifications
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.emailEnabled}
+                        onChange={() => handleNotificationChange('emailEnabled')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
                     </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm">Application status updates</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-600 rounded" />
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Application status updates
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.applicationUpdates}
+                        onChange={() => handleNotificationChange('applicationUpdates')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
                     </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm">Interview reminders</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-600 rounded" />
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Interview reminders
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.interviewReminders}
+                        onChange={() => handleNotificationChange('interviewReminders')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
                     </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm">Weekly job recommendations</span>
-                      <input type="checkbox" className="w-4 h-4 text-primary-600 rounded" />
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Message alerts
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.messageAlerts}
+                        onChange={() => handleNotificationChange('messageAlerts')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Job alerts & recommendations
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.jobAlerts}
+                        onChange={() => handleNotificationChange('jobAlerts')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        System announcements
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.systemAnnouncements}
+                        onChange={() => handleNotificationChange('systemAnnouncements')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        Marketing emails & newsletters
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={notificationPreferences.marketingEmails}
+                        onChange={() => handleNotificationChange('marketingEmails')}
+                        className="w-4 h-4 text-blue-600 dark:text-blue-500 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                      />
                     </label>
                   </div>
                 </div>

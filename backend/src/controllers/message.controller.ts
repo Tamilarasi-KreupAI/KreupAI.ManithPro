@@ -154,25 +154,28 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       },
     });
 
-    // Send email notification if recruiter is messaging a candidate
-    if (sender.role === 'RECRUITER' && receiver.role === 'CANDIDATE') {
-      try {
-        const recruiterName = `${sender.firstName} ${sender.lastName}`;
-        const candidateName = `${receiver.firstName} ${receiver.lastName}`;
-        const messagePreview = content.length > 200 ? content.substring(0, 200) + '...' : content;
+    // Send email notification to receiver
+    try {
+      const senderName = `${sender.firstName} ${sender.lastName}`;
+      const receiverName = `${receiver.firstName} ${receiver.lastName}`;
+      const messagePreview = content.length > 200 ? content.substring(0, 200) + '...' : content;
 
-        await sendMessageNotificationEmail(
-          receiver.email,
-          candidateName,
-          recruiterName,
-          companyName,
-          messagePreview
-        );
-        console.log(`Email notification sent to ${receiver.email} from ${companyName}`);
-      } catch (emailError) {
-        console.error('Failed to send email notification:', emailError);
-        // Don't fail the message sending if email fails
+      // Determine company name based on who is sending
+      let emailCompanyName = companyName;
+      if (sender.role === 'RECRUITER' && sender.recruiterProfile) {
+        emailCompanyName = sender.recruiterProfile.companyName;
       }
+
+      await sendMessageNotificationEmail(
+        receiver.email,
+        receiverName,
+        senderName,
+        emailCompanyName,
+        messagePreview
+      );
+    } catch (emailError) {
+      console.error('Failed to send email notification:', emailError);
+      // Don't fail the message sending if email fails
     }
 
     res.status(201).json(message);

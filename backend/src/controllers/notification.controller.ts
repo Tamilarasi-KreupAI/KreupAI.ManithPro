@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Get all notifications for current user
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const { isRead, limit } = req.query;
 
     if (!userId) {
@@ -39,7 +39,7 @@ export const getNotifications = async (req: Request, res: Response): Promise<voi
 export const markAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -78,7 +78,7 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
 // Mark all notifications as read
 export const markAllAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -106,7 +106,7 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
 export const deleteNotification = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -142,7 +142,7 @@ export const deleteNotification = async (req: Request, res: Response): Promise<v
 // Delete all read notifications
 export const deleteAllRead = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -166,7 +166,7 @@ export const deleteAllRead = async (req: Request, res: Response): Promise<void> 
 // Get unread notification count
 export const getUnreadCount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });

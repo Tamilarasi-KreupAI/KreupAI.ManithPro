@@ -13,7 +13,6 @@ const JobDetail: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
-  const [resume, setResume] = useState<File | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [applying, setApplying] = useState(false);
 
@@ -75,23 +74,17 @@ const JobDetail: React.FC = () => {
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resume) {
-      alert('Please select a resume file');
-      return;
-    }
 
     setApplying(true);
     try {
-      const formData = new FormData();
-      formData.append('jobId', id!);
-      formData.append('resume', resume);
-      if (coverLetter) {
-        formData.append('coverLetter', coverLetter);
-      }
+      const payload = {
+        jobId: id!,
+        coverLetter: coverLetter || undefined,
+      };
 
-      await applicationAPI.create(formData);
+      await applicationAPI.create(payload);
       setHasApplied(true);
-      alert('Application submitted successfully!');
+      alert('Application submitted successfully! Your profile resume has been sent to the recruiter.');
       setShowApplyModal(false);
       navigate('/applications');
     } catch (error: any) {
@@ -441,23 +434,21 @@ const JobDetail: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 dark:border-gray-700 transform transition-all scale-100">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Apply for {job.title}</h2>
-            <p className="text-slate-500 dark:text-gray-400 mb-6">Complete your application below</p>
+            <p className="text-slate-500 dark:text-gray-400 mb-6">Your profile resume will be automatically generated and sent to the recruiter</p>
 
             <form onSubmit={handleApply} className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">
-                  Resume (Required)
-                </label>
-                <div className="border-2 border-dashed border-slate-200 dark:border-gray-600 rounded-xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition-all">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => setResume(e.target.files?.[0] || null)}
-                    required
-                    className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
-                  />
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Auto-Generated Resume</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      We'll create a professional resume from your profile data and send it with your application.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400 dark:text-gray-500 mt-2">Accepted formats: PDF, DOC, DOCX</p>
               </div>
 
               <div>
@@ -467,7 +458,7 @@ const JobDetail: React.FC = () => {
                 <textarea
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
-                  rows={5}
+                  rows={6}
                   className="w-full px-4 py-3 border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all resize-none"
                   placeholder="Tell us why you're a great fit for this role..."
                 />
