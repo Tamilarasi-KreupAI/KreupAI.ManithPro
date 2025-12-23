@@ -1,4 +1,7 @@
 import * as nodemailer from 'nodemailer';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -16,6 +19,49 @@ export interface EmailOptions {
   text?: string;
   html?: string;
 }
+
+// Helper function to check if user has email notifications enabled
+const checkNotificationEnabled = async (
+  userEmail: string,
+  notificationType: 'applicationUpdates' | 'interviewReminders' | 'messageAlerts' | 'jobAlerts' | 'systemAnnouncements' | 'marketingEmails'
+): Promise<boolean> => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+      select: { id: true },
+    });
+
+    if (!user) {
+      console.log('User not found, skipping notification preference check');
+      return true; // Send email if user not found (shouldn't happen)
+    }
+
+    const preferences = await prisma.notificationPreference.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!preferences) {
+      console.log('No notification preferences found for user, using defaults');
+      return true; // Default to sending if no preferences set
+    }
+
+    // Check if email notifications are globally disabled
+    if (!preferences.emailEnabled) {
+      console.log('Email notifications globally disabled for user:', userEmail);
+      return false;
+    }
+
+    // Check the specific notification type
+    const isEnabled = preferences[notificationType];
+    if (!isEnabled) {
+      console.log(`${notificationType} notifications disabled for user:`, userEmail);
+    }
+    return isEnabled;
+  } catch (error) {
+    console.error('Error checking notification preferences:', error);
+    return true; // Default to sending on error
+  }
+};
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   try {
@@ -125,6 +171,13 @@ export const sendApplicationSubmittedEmail = async (
     </html>
   `;
 
+  // Check if user has application updates enabled
+  const canSend = await checkNotificationEnabled(candidateEmail, 'applicationUpdates');
+  if (!canSend) {
+    console.log('Application notification skipped - user preferences');
+    return;
+  }
+
   await sendEmail({ to: candidateEmail, subject, html });
 };
 
@@ -134,6 +187,12 @@ export const sendApplicationStatusEmail = async (
   jobTitle: string,
   status: string
 ): Promise<void> => {
+  // Check if user has application updates enabled
+  const canSend = await checkNotificationEnabled(candidateEmail, 'applicationUpdates');
+  if (!canSend) {
+    console.log('Application status notification skipped - user preferences');
+    return;
+  }
   // Status-specific configurations
   const statusConfig: Record<string, { color: string; bgColor: string; title: string; message: string; nextSteps: string[] }> = {
     UNDER_REVIEW: {
@@ -437,6 +496,13 @@ export const sendJobMatchNotificationEmail = async (
     </html>
   `;
 
+  // Check if user has job alerts enabled
+  const canSend = await checkNotificationEnabled(candidateEmail, 'jobAlerts');
+  if (!canSend) {
+    console.log('Job alert notification skipped - user preferences');
+    return;
+  }
+
   await sendEmail({ to: candidateEmail, subject, html });
 };
 
@@ -547,6 +613,13 @@ export const sendMessageNotificationEmail = async (
     </body>
     </html>
   `;
+
+  // Check if user has message alerts enabled
+  const canSend = await checkNotificationEnabled(candidateEmail, 'messageAlerts');
+  if (!canSend) {
+    console.log('Message notification skipped - user preferences');
+    return;
+  }
 
   await sendEmail({ to: candidateEmail, subject, html });
 };

@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import { sendApplicationSubmittedEmail, sendApplicationStatusEmail } from '../utils/email';
+import { generateResumeFromProfile } from '../utils/resumeGenerator';
 
 const prisma = new PrismaClient();
 
@@ -62,11 +63,6 @@ export const createApplication = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    if (!req.file) {
-      res.status(400).json({ error: 'Resume file is required' });
-      return;
-    }
-
     // Check if job exists and is open
     const job = await prisma.job.findUnique({
       where: { id: jobId },
@@ -102,12 +98,25 @@ export const createApplication = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
+    // Generate resume from profile
+    let resumePath: string;
+    try {
+      const resumeResult = await generateResumeFromProfile(req.user.userId);
+      resumePath = resumeResult.filePath;
+    } catch (error) {
+      console.error('Error generating resume from profile:', error);
+      res.status(400).json({
+        error: 'Unable to generate resume from your profile. Please ensure your profile is complete.'
+      });
+      return;
+    }
+
     // Create application
     const application = await prisma.application.create({
       data: {
         jobId,
         candidateId: req.user.userId,
-        resume: req.file.path,
+        resume: resumePath,
         coverLetter,
       },
       include: {
