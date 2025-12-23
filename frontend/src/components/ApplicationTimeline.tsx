@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface TimelineEvent {
   status: string;
   label: string;
@@ -69,7 +67,7 @@ const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
     });
   }
 
-  const getStepIcon = (step: TimelineEvent, index: number) => {
+  const getStepIcon = (step: TimelineEvent) => {
     if (step.completed && step.active && (isRejected || isWithdrawn)) {
       return (
         <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
@@ -156,7 +154,7 @@ const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric'
-                        })}
+                        } as Intl.DateTimeFormatOptions)}
                       </span>
                     )}
                   </div>

@@ -27,7 +27,7 @@ export const mockUsers: User[] = [
         email: 'client@manithpro.com',
         firstName: 'Business',
         lastName: 'Client',
-        role: 'BUSINESS_CLIENT',
+        role: 'CANDIDATE' as UserRole,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     },
@@ -36,7 +36,7 @@ export const mockUsers: User[] = [
         email: 'vendor@manithpro.com',
         firstName: 'Business',
         lastName: 'Vendor',
-        role: 'BUSINESS_VENDOR',
+        role: 'RECRUITER' as UserRole,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     }
@@ -98,6 +98,7 @@ export const mockApplications: Application[] = [
         candidateId: '1',
         resume: 'resume.pdf',
         status: 'PENDING',
+        createdAt: new Date().toISOString(),
         appliedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         job: {

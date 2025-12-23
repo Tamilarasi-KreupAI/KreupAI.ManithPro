@@ -330,7 +330,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Career Steps</h5>
             <div className="space-y-2">
-              {careerAdvice.recommendedPath.steps.map((step, idx) => (
+              {careerAdvice.recommendedPath.steps.map((step: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <span className="w-6 h-6 flex items-center justify-center bg-blue-600 text-white rounded-full text-xs">{step.step}</span>
                   <span className="text-sm text-gray-700 dark:text-gray-300">{step.role}</span>
@@ -343,7 +343,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Skill Gaps</h5>
             <div className="space-y-2">
-              {careerAdvice.skillGaps.map((gap, idx) => (
+              {careerAdvice.skillGaps.map((gap: any, idx: number) => (
                 <div key={idx} className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">{gap.skill}</span>
@@ -360,7 +360,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div>
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Immediate Actions</h5>
             <ul className="list-disc list-inside space-y-1">
-              {careerAdvice.immediateActions.map((action, idx) => (
+              {careerAdvice.immediateActions.map((action: any, idx: number) => (
                 <li key={idx} className="text-sm text-gray-600 dark:text-gray-400">{action}</li>
               ))}
             </ul>
@@ -485,7 +485,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div>
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Free Resources</h5>
             <ul className="list-disc list-inside space-y-1">
-              {learningRec.freeResources.map((resource, idx) => (
+              {learningRec.freeResources.map((resource: any, idx: number) => (
                 <li key={idx} className="text-sm text-gray-600 dark:text-gray-400">
                   {resource.title} ({resource.type})
                 </li>
@@ -558,7 +558,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Immediate Actions</h5>
             <ul className="list-disc list-inside space-y-1">
-              {applicationInsight.immediateActions.map((action, idx) => (
+              {applicationInsight.immediateActions.map((action: any, idx: number) => (
                 <li key={idx} className="text-sm text-gray-600 dark:text-gray-400">{action}</li>
               ))}
             </ul>
@@ -566,7 +566,7 @@ const ExtendedAINLPHub: React.FC = () => {
 
           <div>
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Positive Signals</h5>
-            {applicationInsight.positiveSignals.map((signal, idx) => (
+            {applicationInsight.positiveSignals.map((signal: any, idx: number) => (
               <div key={idx} className="p-2 bg-green-50 dark:bg-green-900/20 rounded mb-2">
                 <p className="text-sm font-medium text-green-800 dark:text-green-300">{signal.signal}</p>
                 <p className="text-xs text-green-600 dark:text-green-400">{signal.meaning}</p>
@@ -653,7 +653,7 @@ const ExtendedAINLPHub: React.FC = () => {
 
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Quick Wins</h5>
-            {portfolioFeedback.quickWins.map((win, idx) => (
+            {portfolioFeedback.quickWins.map((win: any, idx: number) => (
               <div key={idx} className="p-2 bg-green-50 dark:bg-green-900/20 rounded mb-2 flex justify-between">
                 <span className="text-sm text-green-800 dark:text-green-300">{win.action}</span>
                 <span className="text-xs text-green-600">{win.effort} | {win.impact} impact</span>
@@ -739,7 +739,7 @@ const ExtendedAINLPHub: React.FC = () => {
 
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Work Experience</h5>
-            {parsedDoc.workExperience.map((exp, idx) => (
+            {parsedDoc.workExperience.map((exp: any, idx: number) => (
               <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2">
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-800 dark:text-gray-200">{exp.title}</span>
@@ -753,7 +753,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Extracted Skills</h5>
             <div className="flex flex-wrap gap-2">
-              {Object.values(parsedDoc.skills).flat().map((skill, idx) => (
+              {Object.values(parsedDoc.skills).flat().map((skill: any, idx: number) => (
                 <span key={idx} className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs rounded-full">
                   {skill}
                 </span>
@@ -823,7 +823,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mb-4">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Top Skills</h5>
             <div className="space-y-2">
-              {skillExtraction.skills.slice(0, 10).map((skill, idx) => (
+              {skillExtraction.skills.slice(0, 10).map((skill: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{skill.skill}</span>
                   <div className="flex items-center gap-2">
@@ -839,7 +839,7 @@ const ExtendedAINLPHub: React.FC = () => {
             <div>
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Programming Languages</h5>
               <div className="flex flex-wrap gap-1">
-                {skillExtraction.programmingLanguages.map((lang, idx) => (
+                {skillExtraction.programmingLanguages.map((lang: any, idx: number) => (
                   <span key={idx} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
                     {lang}
                   </span>
@@ -849,7 +849,7 @@ const ExtendedAINLPHub: React.FC = () => {
             <div>
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Frameworks</h5>
               <div className="flex flex-wrap gap-1">
-                {skillExtraction.frameworks.map((fw, idx) => (
+                {skillExtraction.frameworks.map((fw: any, idx: number) => (
                   <span key={idx} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
                     {fw}
                   </span>
@@ -861,7 +861,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div>
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Trending Skills</h5>
             <div className="flex flex-wrap gap-2">
-              {skillExtraction.trendingSkills.map((skill, idx) => (
+              {skillExtraction.trendingSkills.map((skill: any, idx: number) => (
                 <span key={idx} className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded-full">
                   {skill}
                 </span>
@@ -942,7 +942,7 @@ const ExtendedAINLPHub: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{result.summary}</p>
                 <div className="flex flex-wrap gap-1">
-                  {result.skills?.slice(0, 5).map((skill, idx) => (
+                  {result.skills?.slice(0, 5).map((skill: any, idx: number) => (
                     <span key={idx} className="px-2 py-0.5 bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 text-xs rounded">
                       {skill}
                     </span>
@@ -1008,7 +1008,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Organizations</h5>
-              {entityResult.organizations.map((org, idx) => (
+              {entityResult.organizations.map((org: any, idx: number) => (
                 <div key={idx} className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {org.name} <span className="text-xs text-gray-500">({org.type})</span>
                 </div>
@@ -1018,7 +1018,7 @@ const ExtendedAINLPHub: React.FC = () => {
             <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Technologies</h5>
               <div className="flex flex-wrap gap-1">
-                {entityResult.technologies.map((tech, idx) => (
+                {entityResult.technologies.map((tech: any, idx: number) => (
                   <span key={idx} className="px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 text-xs rounded">
                     {tech.name}
                   </span>
@@ -1028,7 +1028,7 @@ const ExtendedAINLPHub: React.FC = () => {
 
             <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Job Titles</h5>
-              {entityResult.jobTitles.map((title, idx) => (
+              {entityResult.jobTitles.map((title: any, idx: number) => (
                 <div key={idx} className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {title.title} <span className="text-xs text-gray-500">→ {title.standardized}</span>
                 </div>
@@ -1037,12 +1037,12 @@ const ExtendedAINLPHub: React.FC = () => {
 
             <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Education</h5>
-              {entityResult.universities.map((uni, idx) => (
+              {entityResult.universities.map((uni: any, idx: number) => (
                 <div key={idx} className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {uni.name}
                 </div>
               ))}
-              {entityResult.degrees.map((degree, idx) => (
+              {entityResult.degrees.map((degree: any, idx: number) => (
                 <div key={idx} className="text-xs text-gray-500 mb-1">
                   {degree.degree} ({degree.level})
                 </div>
@@ -1053,7 +1053,7 @@ const ExtendedAINLPHub: React.FC = () => {
           <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <h5 className="font-medium mb-2 text-gray-900 dark:text-white">Timeline</h5>
             <div className="space-y-1">
-              {entityResult.timeline.map((event, idx) => (
+              {entityResult.timeline.map((event: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2 text-sm">
                   <span className="text-gray-500">{event.date}</span>
                   <span className="text-gray-600 dark:text-gray-400">{event.event}</span>

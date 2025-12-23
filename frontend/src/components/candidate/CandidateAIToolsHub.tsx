@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState} from 'react';
+// import { useAuth } from '../../context/AuthContext';
 import {
   ProfileEnhancement,
   ExperienceDescription,
@@ -23,7 +23,7 @@ import {
 type TabType = 'profile' | 'experience' | 'skills-gap' | 'cover-letter' | 'interview' | 'salary';
 
 const CandidateAIToolsHub: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -283,7 +283,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Suggestions</h4>
             <div className="space-y-2">
-              {enhancement.suggestions.map((s, idx) => (
+              {enhancement.suggestions.map((s: any, idx: number) => (
                 <div key={idx} className={`p-3 rounded-lg ${
                   s.priority === 'HIGH' ? 'bg-red-50 dark:bg-red-900/20' :
                   s.priority === 'MEDIUM' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
@@ -425,7 +425,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Bullet Points</h4>
             <ul className="space-y-2">
-              {experienceDesc.generatedBullets.map((bullet, idx) => (
+              {experienceDesc.generatedBullets.map((bullet: any, idx: number) => (
                 <li key={idx} className="flex items-start text-gray-700 dark:text-gray-300">
                   <span className="text-indigo-500 mr-2">*</span>
                   {bullet}
@@ -437,7 +437,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-4">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">ATS Keywords</h4>
             <div className="flex flex-wrap gap-2">
-              {experienceDesc.atsKeywords.map((kw, idx) => (
+              {experienceDesc.atsKeywords.map((kw: any, idx: number) => (
                 <span key={idx} className="px-2 py-1 bg-indigo-100 text-indigo-800 text-sm rounded">
                   {kw}
                 </span>
@@ -539,7 +539,7 @@ const CandidateAIToolsHub: React.FC = () => {
             <div>
               <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">Critical Gaps</h4>
               <div className="space-y-2">
-                {skillsAnalysis.criticalGaps.map((gap, idx) => (
+                {skillsAnalysis.criticalGaps.map((gap: any, idx: number) => (
                   <div key={idx} className="p-2 bg-red-50 dark:bg-red-900/20 rounded flex justify-between">
                     <span className="text-red-800 dark:text-red-200">{gap.skill}</span>
                     <span className="text-xs text-red-600">{gap.level}</span>
@@ -550,7 +550,7 @@ const CandidateAIToolsHub: React.FC = () => {
             <div>
               <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Important Gaps</h4>
               <div className="space-y-2">
-                {skillsAnalysis.importantGaps.map((gap, idx) => (
+                {skillsAnalysis.importantGaps.map((gap: any, idx: number) => (
                   <div key={idx} className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded flex justify-between">
                     <span className="text-yellow-800 dark:text-yellow-200">{gap.skill}</span>
                     <span className="text-xs text-yellow-600">{gap.level}</span>
@@ -585,7 +585,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div>
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Recommended Resources</h4>
             <div className="space-y-2">
-              {skillsAnalysis.resourceRecommendations.map((rec, idx) => (
+              {skillsAnalysis.resourceRecommendations.map((rec: any, idx: number) => (
                 <div key={idx} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-gray-900 dark:text-white">{rec.resource}</span>
@@ -678,7 +678,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Keywords Used</h4>
             <div className="flex flex-wrap gap-2">
-              {coverLetter.keywordsUsed.map((kw, idx) => (
+              {coverLetter.keywordsUsed.map((kw: any, idx: number) => (
                 <span key={idx} className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">{kw}</span>
               ))}
             </div>
@@ -765,7 +765,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Preparation Checklist</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {interviewPrep.preparationChecklist.map((item, idx) => (
+              {interviewPrep.preparationChecklist.map((item: any, idx: number) => (
                 <label key={idx} className="flex items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <input type="checkbox" className="mr-2 rounded" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
@@ -777,7 +777,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Common Questions</h4>
             <div className="space-y-3">
-              {interviewPrep.commonQuestions.slice(0, 5).map((q, idx) => (
+              {interviewPrep.commonQuestions.slice(0, 5).map((q: any, idx: number) => (
                 <div key={idx} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-indigo-600">{q.category}</span>
@@ -796,7 +796,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Questions to Ask</h4>
             <ul className="space-y-2">
-              {interviewPrep.questionsForInterviewer.map((q, idx) => (
+              {interviewPrep.questionsForInterviewer.map((q: any, idx: number) => (
                 <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                   <span className="text-indigo-500 mr-2">*</span>
                   {q}
@@ -808,7 +808,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-4">
             <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Things to Avoid</h4>
             <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-              {interviewPrep.thingsToAvoid.map((item, idx) => (
+              {interviewPrep.thingsToAvoid.map((item: any, idx: number) => (
                 <li key={idx}>* {item}</li>
               ))}
             </ul>
@@ -943,10 +943,10 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Negotiation Script</h4>
             <div className="space-y-3">
-              {Object.entries(salaryAdvice.negotiationScript).map(([key, value]) => (
+              {Object.entries(salaryAdvice.negotiationScript).map(([key, value]: [string, any]) => (
                 <div key={key} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="text-xs text-blue-600 font-medium mb-1">{key.toUpperCase()}</div>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">{value}</p>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">{String(value)}</p>
                 </div>
               ))}
             </div>
@@ -955,7 +955,7 @@ const CandidateAIToolsHub: React.FC = () => {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Leverage Points</h4>
             <ul className="space-y-1">
-              {salaryAdvice.leveragePoints.map((point, idx) => (
+              {salaryAdvice.leveragePoints.map((point: any, idx: number) => (
                 <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                   <span className="text-green-500 mr-2">+</span>
                   {point}
