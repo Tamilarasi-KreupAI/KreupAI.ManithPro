@@ -75,7 +75,7 @@ function App() {
                 <a href="#main-content" className="skip-link">
                   Skip to main content
                 </a>
-                {/* <Navbar /> */}
+                <Navbar />
                 <main id="main-content" role="main" tabIndex={-1}>
                   <Routes>
                     <Route path="/" element={<Home />} />

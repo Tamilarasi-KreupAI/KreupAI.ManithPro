@@ -1,45 +1,45 @@
 import { User, Job, Application, ApplicationStatus, JobType, JobStatus, UserRole } from '../types';
 
 export const mockUsers: User[] = [
-    {
-        id: '1',
-        email: 'candidate@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        role: 'CANDIDATE',
-        skills: ['React', 'TypeScript', 'Node.js'],
-        experience: 5,
-        location: 'New York, NY',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '2',
-        email: 'recruiter@example.com',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        role: 'RECRUITER',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '3',
-        email: 'client@manithpro.com',
-        firstName: 'Business',
-        lastName: 'Client',
-        role: 'CANDIDATE' as UserRole,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '4',
-        email: 'vendor@manithpro.com',
-        firstName: 'Business',
-        lastName: 'Vendor',
-        role: 'RECRUITER' as UserRole,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }
+  {
+    id: '1',
+    email: 'candidate@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    role: 'CANDIDATE',
+    skills: ['React', 'TypeScript', 'Node.js'],
+    experience: 5,
+    location: 'New York, NY',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    email: 'recruiter@example.com',
+    firstName: 'Jane',
+    lastName: 'Smith',
+    role: 'RECRUITER',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    email: 'client@manithpro.com',
+    firstName: 'Business',
+    lastName: 'Client',
+    role: 'CANDIDATE' as UserRole,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '4',
+    email: 'vendor@manithpro.com',
+    firstName: 'Business',
+    lastName: 'Vendor',
+    role: 'RECRUITER' as UserRole,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 export const mockJobs: Job[] = [
@@ -92,13 +92,13 @@ export const mockJobs: Job[] = [
 ];
 
 export const mockApplications: Application[] = [
-<<<<<<< HEAD
   {
     id: '1',
     jobId: '1',
     candidateId: '1',
     resume: 'resume.pdf',
     status: 'PENDING',
+    createdAt: new Date().toISOString(),
     appliedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     job: {
@@ -109,25 +109,6 @@ export const mockApplications: Application[] = [
     },
     candidate: mockUsers[0],
   },
-=======
-    {
-        id: '1',
-        jobId: '1',
-        candidateId: '1',
-        resume: 'resume.pdf',
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-        appliedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        job: {
-            id: '1',
-            title: 'Senior React Developer',
-            location: 'Remote',
-            type: 'FULL_TIME'
-        },
-        candidate: mockUsers[0]
-    }
->>>>>>> 89536b96c983e982d4f13655e669430c08230e2c
 ];
 
 export const mockMessages = [
