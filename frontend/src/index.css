@@ -683,3 +683,14 @@
     display: none !important;
   }
 }
+.input {
+  @apply w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white;
+}
+
+.btn-primary {
+  @apply bg-primary-600 text-white px-4 py-2 rounded;
+}
+
+.btn-secondary {
+  @apply border px-4 py-2 rounded;
+}

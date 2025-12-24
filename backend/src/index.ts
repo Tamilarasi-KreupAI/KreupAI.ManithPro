@@ -59,6 +59,7 @@ import batch37_39WorkflowAutomationRoutes from './routes/batch37_39WorkflowAutom
 import batch40_42MobileAccessibilityRoutes from './routes/batch40_42MobileAccessibility.routes';
 import batch43_45EnterpriseAdminRoutes from './routes/batch43_45EnterpriseAdmin.routes';
 import batch46_49TechnicalInfraRoutes from './routes/batch46_49TechnicalInfra.routes';
+import b2bRoutes from './routes/b2b.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -68,10 +69,12 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+);
 
 // Compression middleware for response optimization
 app.use(compression());
@@ -143,6 +146,7 @@ app.get('/', (req, res) => {
       batch40_42MobileAccessibility: '/api/mobile',
       batch43_45EnterpriseAdmin: '/api/admin-enterprise',
       batch46_49TechnicalInfra: '/api/infrastructure',
+      b2b: '/api/b2b',
     },
   });
 });
@@ -203,6 +207,7 @@ app.use('/api/workflow-automation', batch37_39WorkflowAutomationRoutes);
 app.use('/api/mobile', batch40_42MobileAccessibilityRoutes);
 app.use('/api/admin-enterprise', batch43_45EnterpriseAdminRoutes);
 app.use('/api/infrastructure', batch46_49TechnicalInfraRoutes);
+app.use('/api/b2b', b2bRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -25,9 +25,11 @@ export const createEncryptionKey = async (req: Request, res: Response) => {
     } = req.body;
 
     // Generate mock encrypted key material (in production, use actual crypto)
-    const encryptedKeyMaterial = 'ENC_' + Array.from({ length: 64 }, () =>
-      '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
-    ).join('');
+    const encryptedKeyMaterial =
+      'ENC_' +
+      Array.from({ length: 64 }, () =>
+        '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
+      ).join('');
 
     const keyCheckValue = encryptedKeyMaterial.slice(0, 6);
 
@@ -130,9 +132,11 @@ export const rotateEncryptionKey = async (req: Request, res: Response) => {
     });
 
     // Create new key version
-    const newKeyMaterial = 'ENC_' + Array.from({ length: 64 }, () =>
-      '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
-    ).join('');
+    const newKeyMaterial =
+      'ENC_' +
+      Array.from({ length: 64 }, () =>
+        '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
+      ).join('');
 
     const newKey = await prisma.encryptionKey.create({
       data: {
@@ -196,11 +200,13 @@ export const getKeyRotationSchedule = async (req: Request, res: Response) => {
       where: { keyId },
     });
 
-    res.json(schedule || {
-      rotationIntervalDays: 90,
-      autoRotate: false,
-      isEnabled: false,
-    });
+    res.json(
+      schedule || {
+        rotationIntervalDays: 90,
+        autoRotate: false,
+        isEnabled: false,
+      }
+    );
   } catch (error) {
     console.error('Error getting key rotation schedule:', error);
     res.status(500).json({ error: 'Failed to get key rotation schedule' });
@@ -263,24 +269,23 @@ export const getPIIDetectionConfig = async (req: Request, res: Response) => {
 
     const config = await prisma.pIIDetectionConfig.findFirst({
       where: {
-        OR: [
-          { organizationId: organizationId as string },
-          { organizationId: null },
-        ],
+        OR: [{ organizationId: organizationId as string }, { organizationId: null }],
       },
       orderBy: { organizationId: 'desc' },
     });
 
-    res.json(config || {
-      isEnabled: true,
-      scanFrequency: 'REALTIME',
-      detectEmail: true,
-      detectPhone: true,
-      detectSSN: true,
-      detectCreditCard: true,
-      detectAddress: true,
-      defaultAction: 'MASK',
-    });
+    res.json(
+      config || {
+        isEnabled: true,
+        scanFrequency: 'REALTIME',
+        detectEmail: true,
+        detectPhone: true,
+        detectSSN: true,
+        detectCreditCard: true,
+        detectAddress: true,
+        defaultAction: 'MASK',
+      }
+    );
   } catch (error) {
     console.error('Error getting PII detection config:', error);
     res.status(500).json({ error: 'Failed to get PII detection config' });
@@ -375,7 +380,13 @@ export const maskPII = async (req: Request, res: Response) => {
       /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
       (match: string, local: string, domain: string) => {
         if (preserveFormat) {
-          return local[0] + maskChar.repeat(local.length - 1) + '@' + domain[0] + maskChar.repeat(domain.length - 1);
+          return (
+            local[0] +
+            maskChar.repeat(local.length - 1) +
+            '@' +
+            domain[0] +
+            maskChar.repeat(domain.length - 1)
+          );
         }
         return maskChar.repeat(match.length);
       }
@@ -384,13 +395,17 @@ export const maskPII = async (req: Request, res: Response) => {
     // Mask phone
     masked = masked.replace(
       /\b(\d{3})[-.]?(\d{3})[-.]?(\d{4})\b/g,
-      preserveFormat ? `${maskChar}${maskChar}${maskChar}-${maskChar}${maskChar}${maskChar}-$3` : maskChar.repeat(12)
+      preserveFormat
+        ? `${maskChar}${maskChar}${maskChar}-${maskChar}${maskChar}${maskChar}-$3`
+        : maskChar.repeat(12)
     );
 
     // Mask SSN
     masked = masked.replace(
       /\b\d{3}-\d{2}-\d{4}\b/g,
-      preserveFormat ? `${maskChar}${maskChar}${maskChar}-${maskChar}${maskChar}-****` : maskChar.repeat(11)
+      preserveFormat
+        ? `${maskChar}${maskChar}${maskChar}-${maskChar}${maskChar}-****`
+        : maskChar.repeat(11)
     );
 
     res.json({
@@ -862,14 +877,16 @@ export const getDataResidencyConfig = async (req: Request, res: Response) => {
       where: { organizationId },
     });
 
-    res.json(config || {
-      primaryRegion: 'us-east-1',
-      primaryProvider: 'aws',
-      enableReplication: false,
-      gdprCompliant: false,
-      ccpaCompliant: false,
-      allowCrossBorderTransfer: true,
-    });
+    res.json(
+      config || {
+        primaryRegion: 'us-east-1',
+        primaryProvider: 'aws',
+        enableReplication: false,
+        gdprCompliant: false,
+        ccpaCompliant: false,
+        allowCrossBorderTransfer: true,
+      }
+    );
   } catch (error) {
     console.error('Error getting data residency config:', error);
     res.status(500).json({ error: 'Failed to get data residency config' });
@@ -1033,7 +1050,9 @@ export const triggerBackup = async (req: Request, res: Response) => {
             compressedSizeBytes: BigInt(Math.floor(Math.random() * 500000000)),
             recordCount: Math.floor(Math.random() * 100000),
             storagePath: `/backups/${backup.id}`,
-            checksum: Array.from({ length: 64 }, () => '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))).join(''),
+            checksum: Array.from({ length: 64 }, () =>
+              '0123456789abcdef'.charAt(Math.floor(Math.random() * 16))
+            ).join(''),
           },
         });
       }, 5000);
@@ -1066,11 +1085,13 @@ export const getBackups = async (req: Request, res: Response) => {
       take: parseInt(limit as string),
     });
 
-    res.json(backups.map(b => ({
-      ...b,
-      sizeBytes: b.sizeBytes?.toString(),
-      compressedSizeBytes: b.compressedSizeBytes?.toString(),
-    })));
+    res.json(
+      backups.map((b) => ({
+        ...b,
+        sizeBytes: b.sizeBytes?.toString(),
+        compressedSizeBytes: b.compressedSizeBytes?.toString(),
+      }))
+    );
   } catch (error) {
     console.error('Error getting backups:', error);
     res.status(500).json({ error: 'Failed to get backups' });
@@ -1289,23 +1310,22 @@ export const getTLSConfig = async (req: Request, res: Response) => {
 
     const config = await prisma.tLSConfig.findFirst({
       where: {
-        OR: [
-          { organizationId: organizationId as string },
-          { organizationId: null },
-        ],
+        OR: [{ organizationId: organizationId as string }, { organizationId: null }],
       },
       orderBy: { organizationId: 'desc' },
     });
 
-    res.json(config || {
-      minVersion: '1.2',
-      preferredVersion: '1.3',
-      hstsEnabled: true,
-      hstsMaxAge: 31536000,
-      hstsIncludeSubdomains: true,
-      enableCertTransparency: true,
-      enableOCSPStapling: true,
-    });
+    res.json(
+      config || {
+        minVersion: '1.2',
+        preferredVersion: '1.3',
+        hstsEnabled: true,
+        hstsMaxAge: 31536000,
+        hstsIncludeSubdomains: true,
+        enableCertTransparency: true,
+        enableOCSPStapling: true,
+      }
+    );
   } catch (error) {
     console.error('Error getting TLS config:', error);
     res.status(500).json({ error: 'Failed to get TLS config' });
@@ -1400,14 +1420,7 @@ export const getDataProtectionStats = async (req: Request, res: Response) => {
 // Get data protection audit logs
 export const getDataProtectionAuditLogs = async (req: Request, res: Response) => {
   try {
-    const {
-      organizationId,
-      eventType,
-      resourceType,
-      startDate,
-      endDate,
-      limit = 100,
-    } = req.query;
+    const { organizationId, eventType, resourceType, startDate, endDate, limit = 100 } = req.query;
 
     const where: any = {};
     if (organizationId) where.organizationId = organizationId;
@@ -1536,4 +1549,3 @@ export const deletePIIDetectionConfig = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to delete PII detection config' });
   }
 };
-}
