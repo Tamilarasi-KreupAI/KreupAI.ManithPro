@@ -54,6 +54,22 @@ export const getAllRequirements = async () => {
   const res = await api.get('/requirements');
   return res.data;
 };
+
+export const getRequirementById = async (id: string) => {
+  const res = await api.get(`/requirements/${id}`);
+  return res.data;
+};
+
+export const updateRequirement = async (id: string, data: any) => {
+  const res = await api.put(`/requirements/${id}`, data);
+  return res.data;
+};
+
+export const deleteRequirement = async (id: string) => {
+  const res = await api.delete(`/requirements/${id}`);
+  return res.data;
+};
+
 export const getAllContracts = async () => {
   const res = await api.get('/contracts');
   return res.data;

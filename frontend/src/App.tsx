@@ -59,6 +59,7 @@ import B2BLayout from './components/b2b/B2BLayout';
 import B2BDashboard from './pages/b2b/B2BDashboard';
 import BulkRequirements from './pages/b2b/BulkRequirements';
 import PostRequirement from './pages/b2b/PostRequirement';
+import EditRequirement from './pages/b2b/EditRequirement';
 import CandidateSupply from './pages/b2b/CandidateSupply';
 import UploadSupply from './pages/b2b/UploadSupply';
 import Contracts from './pages/b2b/Contracts';
@@ -430,6 +431,7 @@ function App() {
                       <Route path="dashboard" element={<B2BDashboard />} />
                       <Route path="requirements" element={<BulkRequirements />} />
                       <Route path="requirements/new" element={<PostRequirement />} />
+                      <Route path="requirements/edit/:id" element={<EditRequirement />} />
                       <Route path="supply" element={<CandidateSupply />} />
                       <Route path="supply/upload" element={<UploadSupply />} />
                       <Route path="contracts" element={<Contracts />} />

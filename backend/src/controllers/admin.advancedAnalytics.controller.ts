@@ -57,7 +57,7 @@ export const getComprehensiveAnalytics = async (req: AuthRequest, res: Response)
 const getUserGrowthData = async (startDate: Date) => {
   const usersByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
     SELECT DATE("createdAt") as date, COUNT(*)::int as count
-    FROM users
+    FROM "users"
     WHERE "createdAt" >= ${startDate}
     GROUP BY DATE("createdAt")
     ORDER BY date ASC
@@ -79,7 +79,7 @@ const getUserGrowthData = async (startDate: Date) => {
 const getJobTrendData = async (startDate: Date) => {
   const jobsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
     SELECT DATE("createdAt") as date, COUNT(*)::int as count
-    FROM jobs
+    FROM "jobs"
     WHERE "createdAt" >= ${startDate}
     GROUP BY DATE("createdAt")
     ORDER BY date ASC
@@ -107,7 +107,7 @@ const getJobTrendData = async (startDate: Date) => {
 const getApplicationTrendData = async (startDate: Date) => {
   const applicationsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
     SELECT DATE("appliedAt") as date, COUNT(*)::int as count
-    FROM applications
+    FROM "applications"
     WHERE "appliedAt" >= ${startDate}
     GROUP BY DATE("appliedAt")
     ORDER BY date ASC
@@ -128,7 +128,7 @@ const getApplicationTrendData = async (startDate: Date) => {
 const getInterviewTrendData = async (startDate: Date) => {
   const interviewsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
     SELECT DATE("scheduledAt") as date, COUNT(*)::int as count
-    FROM interviews
+    FROM "interviews"
     WHERE "scheduledAt" >= ${startDate}
     GROUP BY DATE("scheduledAt")
     ORDER BY date ASC
@@ -154,7 +154,7 @@ const getInterviewTrendData = async (startDate: Date) => {
 // Get conversion rates
 const getConversionRates = async () => {
   const [
-    totalJobs,
+    _totalJobs,
     totalApplications,
     shortlistedApplications,
     interviewScheduled,
@@ -268,7 +268,7 @@ const getTopPerformers = async () => {
 };
 
 // Get recruiter performance analytics
-export const getRecruiterPerformance = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getRecruiterPerformance = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const recruiters = await prisma.user.findMany({
       where: { role: 'RECRUITER' },
@@ -321,7 +321,7 @@ export const getRecruiterPerformance = async (req: AuthRequest, res: Response): 
 };
 
 // Get time-to-hire analytics
-export const getTimeToHireAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTimeToHireAnalytics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const acceptedApplications = await prisma.application.findMany({
       where: { status: 'ACCEPTED' },
@@ -382,7 +382,7 @@ export const getTimeToHireAnalytics = async (req: AuthRequest, res: Response): P
 };
 
 // Get source tracking analytics (where candidates come from)
-export const getSourceAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getSourceAnalytics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     // In a real application, you'd track sources. For now, we'll use location as a proxy
     const candidatesByLocation = await prisma.user.groupBy({
@@ -402,10 +402,8 @@ export const getSourceAnalytics = async (req: AuthRequest, res: Response): Promi
 
     const applicationsByLocation = await prisma.$queryRaw<Array<{ location: string; count: bigint }>>`
       SELECT u.location, COUNT(*)::int as count
-      FROM applications a
-      JOIN users u ON a."candidateId" = u.id
-      WHERE u.location IS NOT NULL
-      GROUP BY u.location
+      FROM "applications" a
+      JOIN "users" u ON a."candidateId" = u.id
       ORDER BY count DESC
       LIMIT 10
     `;
@@ -427,7 +425,7 @@ export const getSourceAnalytics = async (req: AuthRequest, res: Response): Promi
 };
 
 // Get skills demand analytics
-export const getSkillsDemandAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getSkillsDemandAnalytics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Get all jobs and their required skills
     const jobs = await prisma.job.findMany({
@@ -476,7 +474,7 @@ export const getSkillsDemandAnalytics = async (req: AuthRequest, res: Response):
 };
 
 // Get industry analytics
-export const getIndustryAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getIndustryAnalytics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const jobsByIndustry = await prisma.job.groupBy({
       by: ['companyIndustry'],
@@ -495,11 +493,8 @@ export const getIndustryAnalytics = async (req: AuthRequest, res: Response): Pro
     // Get applications by industry
     const applicationsByIndustry = await prisma.$queryRaw<Array<{ industry: string; count: bigint }>>`
       SELECT j."companyIndustry" as industry, COUNT(*)::int as count
-      FROM applications a
-      JOIN jobs j ON a."jobId" = j.id
-      WHERE j."companyIndustry" IS NOT NULL
-      GROUP BY j."companyIndustry"
-      ORDER BY count DESC
+      FROM "applications" a
+      JOIN "jobs" j ON a."jobId" = j.id
       LIMIT 10
     `;
 
@@ -520,7 +515,7 @@ export const getIndustryAnalytics = async (req: AuthRequest, res: Response): Pro
 };
 
 // Get engagement metrics
-export const getEngagementMetrics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getEngagementMetrics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const [
       activeUsers,
@@ -569,7 +564,7 @@ export const getEngagementMetrics = async (req: AuthRequest, res: Response): Pro
 };
 
 // Get revenue analytics (placeholder for future billing implementation)
-export const getRevenueAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getRevenueAnalytics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     // This is a placeholder implementation
     // When billing/subscription system is implemented, this will track:
