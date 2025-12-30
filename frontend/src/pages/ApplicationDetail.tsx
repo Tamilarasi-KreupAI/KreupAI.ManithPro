@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { applicationAPI } from '../services/api';
 import ApplicationTimeline from '../components/ApplicationTimeline';
 import type { Application } from '../types';
+import api from '../services/api';
 
 const ApplicationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,28 @@ const ApplicationDetail: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadResume = async () => {
+    if (!application) return;
+
+    try {
+      const response = await api.get(`/applications/${application.id}/resume/download`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${application.candidate.firstName}_${application.candidate.lastName}_Resume.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download resume:', error);
+      alert('Failed to download resume');
     }
   };
 
@@ -230,14 +253,12 @@ const ApplicationDetail: React.FC = () => {
           {/* Resume */}
           <div className="mb-6">
             <h2 className="font-semibold text-lg mb-2 dark:text-white">Resume</h2>
-            <a
-              href={`http://localhost:5001/${application.resume}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={handleDownloadResume}
               className="inline-flex items-center gap-2 bg-primary-600 dark:bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600"
             >
               📄 Download Resume
-            </a>
+            </button>
           </div>
 
           {/* Cover Letter */}
