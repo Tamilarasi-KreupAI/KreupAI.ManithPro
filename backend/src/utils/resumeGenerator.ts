@@ -16,7 +16,7 @@ interface ResumeGenerationResult {
  */
 export const generateResumeFromProfile = async (userId: string): Promise<ResumeGenerationResult> => {
   // Fetch complete profile data
-  const profile = await prisma.candidateProfile.findUnique({
+  let profile = await prisma.candidateProfile.findUnique({
     where: { userId },
     include: {
       user: {
@@ -34,7 +34,7 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         orderBy: { startDate: 'desc' },
       },
       skills: {
-        orderBy: { proficiency: 'desc' },
+        orderBy: { proficiencyLevel: 'desc' },
       },
       projects: {
         orderBy: { startDate: 'desc' },
@@ -45,8 +45,38 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
     },
   });
 
+  // Create profile if it doesn't exist
   if (!profile) {
-    throw new Error('Profile not found');
+    profile = await prisma.candidateProfile.create({
+      data: {
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        workExperiences: {
+          orderBy: { startDate: 'desc' },
+        },
+        educations: {
+          orderBy: { startDate: 'desc' },
+        },
+        skills: {
+          orderBy: { proficiencyLevel: 'desc' },
+        },
+        projects: {
+          orderBy: { startDate: 'desc' },
+        },
+        certifications: {
+          orderBy: { issueDate: 'desc' },
+        },
+      },
+    });
   }
 
   // Ensure uploads directory exists
@@ -92,7 +122,7 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
   } else if (profile.country) {
     contactInfo.push(`Location: ${profile.country}`);
   }
-  
+
   if (contactInfo.length > 0) {
     doc.text(contactInfo.join(' | '), { align: 'center' });
   }
@@ -102,7 +132,7 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
   if (profile.linkedin) socialLinks.push(`LinkedIn: ${profile.linkedin}`);
   if (profile.github) socialLinks.push(`GitHub: ${profile.github}`);
   if (profile.website) socialLinks.push(`Website: ${profile.website}`);
-  
+
   if (socialLinks.length > 0) {
     doc.text(socialLinks.join(' | '), { align: 'center' });
   }
@@ -122,14 +152,14 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
   // ===== WORK EXPERIENCE =====
   if (profile.workExperiences.length > 0) {
     addSectionHeader(doc, 'Work Experience');
-    
+
     profile.workExperiences.forEach((exp, index) => {
       doc.fontSize(11).font('Helvetica-Bold')
         .text(exp.position);
-      
+
       doc.fontSize(10).font('Helvetica')
         .text(`${exp.company} | ${formatDate(exp.startDate)} - ${exp.current ? 'Present' : formatDate(exp.endDate!)}`);
-      
+
       if (exp.location) {
         doc.text(exp.location);
       }
@@ -144,21 +174,21 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         doc.moveDown(0.8);
       }
     });
-    
+
     doc.moveDown(1);
   }
 
   // ===== EDUCATION =====
   if (profile.educations.length > 0) {
     addSectionHeader(doc, 'Education');
-    
+
     profile.educations.forEach((edu, index) => {
       doc.fontSize(11).font('Helvetica-Bold')
         .text(edu.degree);
-      
+
       doc.fontSize(10).font('Helvetica')
         .text(`${edu.institution} | ${formatDate(edu.startDate)} - ${edu.current ? 'Present' : formatDate(edu.endDate!)}`);
-      
+
       if (edu.fieldOfStudy) {
         doc.text(`Field of Study: ${edu.fieldOfStudy}`);
       }
@@ -176,23 +206,23 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         doc.moveDown(0.8);
       }
     });
-    
+
     doc.moveDown(1);
   }
 
   // ===== SKILLS =====
   if (profile.skills.length > 0) {
     addSectionHeader(doc, 'Skills');
-    
+
     // Group skills by category or list all
     const skillCategories = new Map<string, string[]>();
-    
+
     profile.skills.forEach(skill => {
       const category = skill.category || 'General';
       if (!skillCategories.has(category)) {
         skillCategories.set(category, []);
       }
-      skillCategories.get(category)!.push(`${skill.name} (${skill.proficiency})`);
+      skillCategories.get(category)!.push(`${skill.name} (${skill.proficiencyLabel})`);
     });
 
     skillCategories.forEach((skills, category) => {
@@ -206,18 +236,18 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
       }
       doc.moveDown(0.3);
     });
-    
+
     doc.moveDown(0.5);
   }
 
   // ===== PROJECTS =====
   if (profile.projects.length > 0) {
     addSectionHeader(doc, 'Projects');
-    
+
     profile.projects.forEach((proj, index) => {
       doc.fontSize(11).font('Helvetica-Bold')
         .text(proj.name);
-      
+
       if (proj.startDate) {
         doc.fontSize(10).font('Helvetica')
           .text(`${formatDate(proj.startDate)} - ${proj.current ? 'Present' : proj.endDate ? formatDate(proj.endDate) : 'Completed'}`);
@@ -242,21 +272,21 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         doc.moveDown(0.8);
       }
     });
-    
+
     doc.moveDown(1);
   }
 
   // ===== CERTIFICATIONS =====
   if (profile.certifications.length > 0) {
     addSectionHeader(doc, 'Certifications');
-    
+
     profile.certifications.forEach((cert, index) => {
       doc.fontSize(10).font('Helvetica-Bold')
         .text(cert.name, { continued: true });
-      
+
       doc.font('Helvetica')
         .text(` - ${cert.issuer}`);
-      
+
       if (cert.issueDate) {
         doc.text(`Issued: ${formatDate(cert.issueDate)}${cert.expiryDate ? ` | Expires: ${formatDate(cert.expiryDate)}` : ' | No Expiration'}`);
       }
@@ -273,7 +303,7 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         doc.moveDown(0.5);
       }
     });
-    
+
     doc.moveDown(1);
   }
 
@@ -310,7 +340,7 @@ function addSectionHeader(doc: typeof PDFDocument.prototype, title: string) {
   doc.fontSize(14).font('Helvetica-Bold')
     .fillColor('#2563eb') // Blue color
     .text(title.toUpperCase());
-  
+
   doc.fillColor('#000000'); // Reset to black
   doc.moveDown(0.5);
 }

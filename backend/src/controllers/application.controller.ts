@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import { sendApplicationSubmittedEmail, sendApplicationStatusEmail } from '../utils/email';
 import { generateResumeFromProfile } from '../utils/resumeGenerator';
+import path from 'path';
+import fs from 'fs';
 
 const prisma = new PrismaClient();
 
@@ -507,5 +509,81 @@ export const withdrawApplication = async (req: AuthRequest, res: Response): Prom
   } catch (error) {
     console.error('Withdraw application error:', error);
     res.status(500).json({ error: 'Failed to withdraw application' });
+  }
+};
+
+export const downloadApplicationResume = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+
+    // Find the application
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: {
+        job: {
+          select: {
+            postedById: true,
+          },
+        },
+        candidate: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!application) {
+      res.status(404).json({ error: 'Application not found' });
+      return;
+    }
+
+    // Check authorization - only recruiter who posted the job or admin can download
+    if (req.user.role !== 'ADMIN' &&
+        (req.user.role !== 'RECRUITER' || application.job.postedById !== req.user.userId)) {
+      res.status(403).json({ error: 'Not authorized to download this resume' });
+      return;
+    }
+
+    // Get the resume file path
+    const resumePath = application.resume;
+
+    // Handle both absolute and relative paths
+    let filePath: string;
+    if (path.isAbsolute(resumePath)) {
+      filePath = resumePath;
+    } else {
+      // Assume it's relative to the uploads/resumes directory
+      filePath = path.join(__dirname, '../../uploads/resumes', path.basename(resumePath));
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      console.error('Resume file not found:', filePath);
+      res.status(404).json({ error: 'Resume file not found' });
+      return;
+    }
+
+    // Generate a friendly filename
+    const fileName = `${application.candidate.firstName}_${application.candidate.lastName}_Resume.pdf`;
+
+    // Send the file
+    res.download(filePath, fileName, (err) => {
+      if (err) {
+        console.error('Error downloading resume:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to download resume' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Download application resume error:', error);
+    res.status(500).json({ error: 'Failed to download resume' });
   }
 };
