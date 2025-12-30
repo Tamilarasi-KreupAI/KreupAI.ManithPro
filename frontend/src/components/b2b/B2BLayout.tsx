@@ -17,17 +17,17 @@ const B2BLayout: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 relative overflow-hidden flex">
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-900 relative overflow-hidden flex mt-20 ">
             {/* Background Gradient Blob */}
-            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
+            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 dark:from-blue-950/30 to-transparent -z-10" />
 
             {/* Sidebar */}
             <div className="hidden md:flex md:w-64 md:flex-col z-10">
-                <div className="flex flex-col flex-grow pt-5 bg-white/80 backdrop-blur-md overflow-y-auto border-r border-slate-200">
+                <div className="flex flex-col flex-grow pt-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md overflow-y-auto border-r border-slate-200 dark:border-gray-700">
                     <div className="flex items-center flex-shrink-0 px-4 mb-6">
                         <Link to="/" className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">M</div>
-                            <span className="text-xl font-bold text-slate-900">ManithPro B2B</span>
+                            <span className="text-xl font-bold text-slate-900 dark:text-white">ManithPro B2B</span>
                         </Link>
                     </div>
                     <div className="mt-5 flex-grow flex flex-col">
@@ -39,14 +39,14 @@ const B2BLayout: React.FC = () => {
                                         key={item.name}
                                         to={item.href}
                                         className={`group flex items-center px-2 py-2 text-sm font-medium rounded-xl transition-all ${isActive
-                                            ? 'bg-blue-50 text-blue-700 shadow-sm'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                     >
                                         <svg
                                             className={`mr-3 flex-shrink-0 h-6 w-6 ${isActive
-                                                ? 'text-blue-600'
-                                                : 'text-slate-400 group-hover:text-slate-500'
+                                                ? 'text-blue-600 dark:text-blue-400'
+                                                : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400'
                                                 }`}
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -60,19 +60,19 @@ const B2BLayout: React.FC = () => {
                             })}
                         </nav>
                     </div>
-                    <div className="flex-shrink-0 flex border-t border-slate-200 p-4 bg-white/50 backdrop-blur-sm">
+                    <div className="flex-shrink-0 flex border-t border-slate-200 dark:border-gray-700 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                         <div className="flex-shrink-0 w-full group block">
                             <div className="flex items-center">
                                 <div>
-                                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold border border-blue-200">
+                                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-100 dark:from-blue-900/50 to-indigo-100 dark:to-indigo-900/50 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-700">
                                         {user?.firstName?.charAt(0)}
                                     </div>
                                 </div>
                                 <div className="ml-3">
-                                    <p className="text-sm font-medium text-slate-700">
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                         {user?.firstName} {user?.lastName}
                                     </p>
-                                    <p className="text-xs font-medium text-slate-500 group-hover:text-slate-700">
+                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300">
                                         View profile
                                     </p>
                                 </div>
@@ -81,7 +81,7 @@ const B2BLayout: React.FC = () => {
                                         logout();
                                         navigate('/login');
                                     }}
-                                    className="ml-auto text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                                    className="ml-auto text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                                 >
                                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

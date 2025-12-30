@@ -125,7 +125,7 @@ const AdminAdvancedAnalytics: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden mt-20">
       {/* Background Gradient Blob */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent -z-10" />
 

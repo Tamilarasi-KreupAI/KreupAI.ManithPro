@@ -195,8 +195,8 @@ import {
 
 const router = Router();
 
-// All admin routes require authentication and ADMIN role
-router.use(authenticate, authorize('ADMIN'));
+// All admin routes require authentication and ADMIN/CLIENT role
+router.use(authenticate, authorize('ADMIN', 'CLIENT', 'VENDOR'));
 
 // ==================== Analytics Routes ====================
 router.get('/analytics/dashboard', getDashboardStats);

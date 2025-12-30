@@ -8,6 +8,9 @@ import {
   getPendingContracts,
   createRequirement,
   getAllRequirements,
+  getRequirementById,
+  updateRequirement,
+  deleteRequirement,
   getAllContracts,
   downloadContract,
   viewContract,
@@ -40,6 +43,9 @@ router.get('/placements/recent', getRecentPlacements);
 router.get('/contracts/pending', getPendingContracts);
 router.post('/requirements', createRequirement);
 router.get('/requirements', getAllRequirements);
+router.get('/requirements/:id', getRequirementById);
+router.put('/requirements/:id', updateRequirement);
+router.delete('/requirements/:id', deleteRequirement);
 router.get('/contracts', getAllContracts);
 router.get('/contracts/:id/download', downloadContract);
 router.get('/contracts/:id/view', viewContract);
