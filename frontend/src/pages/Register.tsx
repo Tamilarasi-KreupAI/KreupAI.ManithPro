@@ -250,7 +250,7 @@ const Register: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <select
+              {/* <select
                 id="role"
                 name="role"
                 className="appearance-none relative block w-full pl-10 pr-10 px-3 py-3 border border-slate-200 dark:border-gray-600 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-700"
@@ -262,7 +262,7 @@ const Register: React.FC = () => {
                 <option value="ADMIN">Admin</option>
                 <option value="CLIENT">Client</option>
                 <option value="VENDOR">Vendor</option>
-              </select>
+              </select> */}
             </div>
 
             <div className="relative">
