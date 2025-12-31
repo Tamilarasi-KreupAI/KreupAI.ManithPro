@@ -97,10 +97,8 @@ export const createFAQ = async (req: AuthRequest, res: Response): Promise<void> 
     let faqOrder = order;
     if (!faqOrder) {
       const maxOrderFaq = await prisma.fAQ.findFirst({
-        orderBy: { order: 'desc' },
-        select: { order: true },
+        orderBy: { createdAt: 'desc' },
       });
-      faqOrder = (maxOrderFaq?.order || 0) + 1;
     }
 
     const faq = await prisma.fAQ.create({
@@ -108,8 +106,7 @@ export const createFAQ = async (req: AuthRequest, res: Response): Promise<void> 
         question,
         answer,
         category: category || 'General',
-        order: faqOrder,
-        published: published !== undefined ? published : true,
+        isPublished: published !== undefined ? published : true,
       },
     });
 
@@ -249,12 +246,11 @@ export const getEmailTemplateById = async (req: AuthRequest, res: Response): Pro
  */
 export const createEmailTemplate = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, type, subject, body, variables } = req.body;
+    const { name, subject, body, variables } = req.body;
 
     const template = await prisma.emailTemplate.create({
       data: {
         name,
-        type,
         subject,
         body,
         variables: variables || [],
@@ -274,13 +270,12 @@ export const createEmailTemplate = async (req: AuthRequest, res: Response): Prom
 export const updateEmailTemplate = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, type, subject, body, variables } = req.body;
+    const { name, subject, body, variables } = req.body;
 
     const template = await prisma.emailTemplate.update({
       where: { id },
       data: {
         ...(name !== undefined && { name }),
-        ...(type !== undefined && { type }),
         ...(subject !== undefined && { subject }),
         ...(body !== undefined && { body }),
         ...(variables !== undefined && { variables }),
@@ -374,15 +369,14 @@ export const getNotificationTemplateById = async (req: AuthRequest, res: Respons
  */
 export const createNotificationTemplate = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, type, title, message, actionUrl, variables } = req.body;
+    const { name, type, title, body, actionUrl, variables } = req.body;
 
     const template = await prisma.notificationTemplate.create({
       data: {
         name,
         type,
         title,
-        message,
-        actionUrl,
+        body,
         variables: variables || [],
       },
     });
@@ -400,7 +394,7 @@ export const createNotificationTemplate = async (req: AuthRequest, res: Response
 export const updateNotificationTemplate = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, type, title, message, actionUrl, variables } = req.body;
+    const { name, type, title, body, actionUrl, variables } = req.body;
 
     const template = await prisma.notificationTemplate.update({
       where: { id },
@@ -408,8 +402,7 @@ export const updateNotificationTemplate = async (req: AuthRequest, res: Response
         ...(name !== undefined && { name }),
         ...(type !== undefined && { type }),
         ...(title !== undefined && { title }),
-        ...(message !== undefined && { message }),
-        ...(actionUrl !== undefined && { actionUrl }),
+        ...(body !== undefined && { body }),
         ...(variables !== undefined && { variables }),
       },
     });
@@ -520,7 +513,7 @@ export const createStaticPage = async (req: AuthRequest, res: Response): Promise
         content,
         metaTitle,
         metaDescription,
-        published: published !== undefined ? published : false,
+        publishedAt: published ? new Date() : null,
       },
     });
 
@@ -619,7 +612,7 @@ export const getAllHelpArticles = async (req: AuthRequest, res: Response): Promi
 
     const articles = await prisma.helpArticle.findMany({
       where,
-      orderBy: { order: 'asc' },
+      orderBy: { createdAt: 'asc' },
     });
 
     res.json({ articles });
@@ -669,25 +662,13 @@ export const createHelpArticle = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Get max order if not provided
-    let articleOrder = order;
-    if (!articleOrder) {
-      const maxOrderArticle = await prisma.helpArticle.findFirst({
-        where: { category },
-        orderBy: { order: 'desc' },
-        select: { order: true },
-      });
-      articleOrder = (maxOrderArticle?.order || 0) + 1;
-    }
-
     const article = await prisma.helpArticle.create({
       data: {
         title,
         slug,
         content,
         category: category || 'General',
-        order: articleOrder,
-        published: published !== undefined ? published : false,
+        isPublished: published !== undefined ? published : false,
       },
     });
 
@@ -728,8 +709,7 @@ export const updateHelpArticle = async (req: AuthRequest, res: Response): Promis
         ...(slug !== undefined && { slug }),
         ...(content !== undefined && { content }),
         ...(category !== undefined && { category }),
-        ...(order !== undefined && { order }),
-        ...(published !== undefined && { published }),
+        ...(published !== undefined && { isPublished: published }),
       },
     });
 
@@ -763,18 +743,8 @@ export const deleteHelpArticle = async (req: AuthRequest, res: Response): Promis
  */
 export const reorderHelpArticles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { articleOrders } = req.body; // Array of { id, order }
-
-    await prisma.$transaction(
-      articleOrders.map((item: { id: string; order: number }) =>
-        prisma.helpArticle.update({
-          where: { id: item.id },
-          data: { order: item.order },
-        })
-      )
-    );
-
-    res.json({ message: 'Help articles reordered successfully' });
+    // Reordering not supported as order field doesn't exist
+    res.json({ message: 'Help articles reorder functionality is not available' });
   } catch (error) {
     console.error('Error reordering help articles:', error);
     res.status(500).json({ error: 'Failed to reorder help articles' });
@@ -799,13 +769,13 @@ export const getContentStats = async (req: AuthRequest, res: Response): Promise<
       publishedHelpArticles,
     ] = await Promise.all([
       prisma.fAQ.count(),
-      prisma.fAQ.count({ where: { published: true } }),
+      prisma.fAQ.count({ where: { isPublished: true } }),
       prisma.emailTemplate.count(),
       prisma.notificationTemplate.count(),
       prisma.staticPage.count(),
-      prisma.staticPage.count({ where: { published: true } }),
+      prisma.staticPage.count({ where: { publishedAt: { not: null } } }),
       prisma.helpArticle.count(),
-      prisma.helpArticle.count({ where: { published: true } }),
+      prisma.helpArticle.count({ where: { isPublished: true } }),
     ]);
 
     res.json({

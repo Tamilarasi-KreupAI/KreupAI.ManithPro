@@ -13,7 +13,6 @@ export const getAllSubscriptions = async (req: AuthRequest, res: Response): Prom
       limit = '20',
       status,
       plan,
-      search,
     } = req.query;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
@@ -29,30 +28,15 @@ export const getAllSubscriptions = async (req: AuthRequest, res: Response): Prom
       where.plan = plan;
     }
 
-    if (search) {
-      where.user = {
-        OR: [
-          { email: { contains: search as string, mode: 'insensitive' } },
-          { firstName: { contains: search as string, mode: 'insensitive' } },
-          { lastName: { contains: search as string, mode: 'insensitive' } },
-        ],
-      };
-    }
-
     const [subscriptions, total] = await Promise.all([
       prisma.subscription.findMany({
         where,
         skip,
         take,
         include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
+          payments: {
+            take: 5,
+            orderBy: { createdAt: 'desc' },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -85,15 +69,6 @@ export const getSubscriptionById = async (req: AuthRequest, res: Response): Prom
     const subscription = await prisma.subscription.findUnique({
       where: { id },
       include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
         payments: {
           orderBy: { createdAt: 'desc' },
           take: 10,
@@ -119,7 +94,7 @@ export const getSubscriptionById = async (req: AuthRequest, res: Response): Prom
 export const updateSubscription = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { plan, status, price, interval, startDate, endDate } = req.body;
+    const { plan, status, price, startDate, endDate } = req.body;
 
     const subscription = await prisma.subscription.update({
       where: { id },
@@ -127,19 +102,8 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
         ...(plan !== undefined && { plan }),
         ...(status !== undefined && { status }),
         ...(price !== undefined && { price }),
-        ...(interval !== undefined && { interval }),
         ...(startDate !== undefined && { startDate: new Date(startDate) }),
         ...(endDate !== undefined && { endDate: new Date(endDate) }),
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -156,23 +120,11 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
 export const cancelSubscription = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
 
     const subscription = await prisma.subscription.update({
       where: { id },
       data: {
         status: 'CANCELLED',
-        cancelledAt: new Date(),
-        cancellationReason: reason,
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -195,7 +147,6 @@ export const getSubscriptionStats = async (req: AuthRequest, res: Response): Pro
       cancelledSubscriptions,
       byPlan,
       monthlyRevenue,
-      annualRevenue,
     ] = await Promise.all([
       prisma.subscription.count(),
       prisma.subscription.count({ where: { status: 'ACTIVE' } }),
@@ -209,34 +160,13 @@ export const getSubscriptionStats = async (req: AuthRequest, res: Response): Pro
         where: { status: { in: ['ACTIVE', 'TRIAL'] } },
       }),
 
-      // Monthly recurring revenue
+      // Monthly recurring revenue (all active subscriptions)
       prisma.subscription.aggregate({
         where: {
           status: 'ACTIVE',
-          interval: 'MONTHLY',
         },
         _sum: { price: true },
       }),
-
-      // Annual recurring revenue (monthly subscriptions * 12 + annual subscriptions)
-      Promise.all([
-        prisma.subscription.aggregate({
-          where: {
-            status: 'ACTIVE',
-            interval: 'MONTHLY',
-          },
-          _sum: { price: true },
-        }),
-        prisma.subscription.aggregate({
-          where: {
-            status: 'ACTIVE',
-            interval: 'ANNUAL',
-          },
-          _sum: { price: true },
-        }),
-      ]).then(([monthly, annual]) => ({
-        _sum: { price: ((monthly._sum.price || 0) * 12) + (annual._sum.price || 0) },
-      })),
     ]);
 
     // Churn rate calculation (last 30 days)
@@ -252,7 +182,8 @@ export const getSubscriptionStats = async (req: AuthRequest, res: Response): Pro
       }),
       prisma.subscription.count({
         where: {
-          cancelledAt: { gte: thirtyDaysAgo },
+          status: 'CANCELLED',
+          updatedAt: { gte: thirtyDaysAgo },
         },
       }),
     ]);
@@ -269,7 +200,7 @@ export const getSubscriptionStats = async (req: AuthRequest, res: Response): Pro
       byPlan: byPlan.map(p => ({ plan: p.plan, count: p._count.plan })),
       revenue: {
         monthlyRecurring: monthlyRevenue._sum.price || 0,
-        annualRecurring: annualRevenue._sum.price || 0,
+        annualRecurring: (monthlyRevenue._sum.price || 0) * 12,
       },
       churnRate: parseFloat(churnRate as string),
     });
@@ -314,17 +245,7 @@ export const getAllPayments = async (req: AuthRequest, res: Response): Promise<v
         skip,
         take,
         include: {
-          subscription: {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                },
-              },
-            },
-          },
+          subscription: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -370,7 +291,6 @@ export const getPaymentStats = async (req: AuthRequest, res: Response): Promise<
       failedPayments,
       totalRevenue,
       averageTransactionValue,
-      revenueByDate,
     ] = await Promise.all([
       prisma.payment.count({
         where: { createdAt: { gte: startDate } },
@@ -405,15 +325,6 @@ export const getPaymentStats = async (req: AuthRequest, res: Response): Promise<
         },
         _avg: { amount: true },
       }),
-
-      // Revenue by date
-      prisma.$queryRaw`
-        SELECT DATE(created_at) as date, SUM(amount) as revenue
-        FROM payments
-        WHERE status = 'COMPLETED' AND created_at >= ${startDate}
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `,
     ]);
 
     res.json({
@@ -423,7 +334,6 @@ export const getPaymentStats = async (req: AuthRequest, res: Response): Promise<
       totalRevenue: totalRevenue._sum.amount || 0,
       averageTransactionValue: averageTransactionValue._avg.amount || 0,
       successRate: totalPayments > 0 ? ((successfulPayments / totalPayments) * 100).toFixed(2) : 0,
-      revenueByDate,
     });
   } catch (error) {
     console.error('Error fetching payment stats:', error);
@@ -466,18 +376,7 @@ export const getAllInvoices = async (req: AuthRequest, res: Response): Promise<v
         skip,
         take,
         include: {
-          subscription: {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  companyName: true,
-                },
-              },
-            },
-          },
+          subscription: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -508,7 +407,6 @@ export const generateInvoice = async (req: AuthRequest, res: Response): Promise<
 
     const subscription = await prisma.subscription.findUnique({
       where: { id: subscriptionId },
-      include: { user: true },
     });
 
     if (!subscription) {
@@ -523,18 +421,14 @@ export const generateInvoice = async (req: AuthRequest, res: Response): Promise<
     const invoice = await prisma.invoice.create({
       data: {
         invoiceNumber,
-        subscriptionId,
+        subscription: { connect: { id: subscriptionId } },
         amount,
         dueDate: new Date(dueDate),
         status: 'PENDING',
         items: items || [],
-      },
+      } as any,
       include: {
-        subscription: {
-          include: {
-            user: true,
-          },
-        },
+        subscription: true,
       },
     });
 
@@ -551,22 +445,16 @@ export const generateInvoice = async (req: AuthRequest, res: Response): Promise<
 export const markInvoiceAsPaid = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { paymentId, paidAmount } = req.body;
+    const { paidAmount } = req.body;
 
     const invoice = await prisma.invoice.update({
       where: { id },
       data: {
-        status: 'PAID',
+        status: 'PAID' as any,
         paidAt: new Date(),
-        paymentId,
-        paidAmount,
       },
       include: {
-        subscription: {
-          include: {
-            user: true,
-          },
-        },
+        subscription: true,
       },
     });
 
@@ -598,8 +486,6 @@ export const getRevenueAnalytics = async (req: AuthRequest, res: Response): Prom
     const [
       totalRevenue,
       mrr,
-      arr,
-      revenueByPlan,
       revenueGrowth,
     ] = await Promise.all([
       // Total revenue from completed payments
@@ -615,40 +501,9 @@ export const getRevenueAnalytics = async (req: AuthRequest, res: Response): Prom
       prisma.subscription.aggregate({
         where: {
           status: 'ACTIVE',
-          interval: 'MONTHLY',
         },
         _sum: { price: true },
       }),
-
-      // ARR - Annual Recurring Revenue
-      Promise.all([
-        prisma.subscription.aggregate({
-          where: {
-            status: 'ACTIVE',
-            interval: 'MONTHLY',
-          },
-          _sum: { price: true },
-        }),
-        prisma.subscription.aggregate({
-          where: {
-            status: 'ACTIVE',
-            interval: 'ANNUAL',
-          },
-          _sum: { price: true },
-        }),
-      ]).then(([monthly, annual]) => ({
-        _sum: { price: ((monthly._sum.price || 0) * 12) + (annual._sum.price || 0) },
-      })),
-
-      // Revenue by subscription plan
-      prisma.$queryRaw`
-        SELECT s.plan, SUM(p.amount) as revenue, COUNT(p.id) as payment_count
-        FROM payments p
-        JOIN subscriptions s ON p.subscription_id = s.id
-        WHERE p.status = 'COMPLETED' AND p.created_at >= ${startDate}
-        GROUP BY s.plan
-        ORDER BY revenue DESC
-      `,
 
       // Revenue growth (compare with previous period)
       calculateRevenueGrowth(startDate),
@@ -657,9 +512,8 @@ export const getRevenueAnalytics = async (req: AuthRequest, res: Response): Prom
     res.json({
       totalRevenue: totalRevenue._sum.amount || 0,
       monthlyRecurringRevenue: mrr._sum.price || 0,
-      annualRecurringRevenue: arr._sum.price || 0,
+      annualRecurringRevenue: (mrr._sum.price || 0) * 12,
       revenueGrowth,
-      byPlan: revenueByPlan,
     });
   } catch (error) {
     console.error('Error fetching revenue analytics:', error);
@@ -689,17 +543,7 @@ export const exportBillingData = async (req: AuthRequest, res: Response): Promis
       data = await prisma.payment.findMany({
         where,
         include: {
-          subscription: {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                },
-              },
-            },
-          },
+          subscription: true,
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -707,15 +551,6 @@ export const exportBillingData = async (req: AuthRequest, res: Response): Promis
     } else if (type === 'subscriptions') {
       data = await prisma.subscription.findMany({
         where,
-        include: {
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-        },
         orderBy: { createdAt: 'desc' },
       });
       filename = 'subscriptions-export.csv';
@@ -723,17 +558,7 @@ export const exportBillingData = async (req: AuthRequest, res: Response): Promis
       data = await prisma.invoice.findMany({
         where,
         include: {
-          subscription: {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                },
-              },
-            },
-          },
+          subscription: true,
         },
         orderBy: { createdAt: 'desc' },
       });

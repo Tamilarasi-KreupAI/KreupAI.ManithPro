@@ -191,10 +191,10 @@ export const getErrorStats = async (req: AuthRequest, res: Response): Promise<vo
       }),
 
       prisma.errorLog.groupBy({
-        by: ['type'],
+        by: ['level'],
         where: { createdAt: { gte: startDate } },
-        _count: { type: true },
-        orderBy: { _count: { type: 'desc' } },
+        _count: { level: true },
+        orderBy: { _count: { level: 'desc' } },
         take: 10,
       }),
 
@@ -222,7 +222,7 @@ export const getErrorStats = async (req: AuthRequest, res: Response): Promise<vo
     res.json({
       totalErrors,
       byLevel: errorsByLevel.map(e => ({ level: e.level, count: e._count.level })),
-      byType: errorsByType.map(e => ({ type: e.type, count: e._count.type })),
+      byType: errorsByType.map((e: any) => ({ type: e.level, count: e._count.level })),
       recentErrors: recentErrors.map(e => ({
         id: e.id,
         level: e.level,

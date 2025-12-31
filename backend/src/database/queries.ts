@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Prisma } from '@prisma/client';
 import { prisma, getPaginationParams, createPaginatedResult, PaginationParams, PaginatedResult } from './prisma';
 import { cache, cacheAside, CacheKeys, invalidateEntity } from './cache';

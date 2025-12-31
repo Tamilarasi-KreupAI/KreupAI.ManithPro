@@ -98,7 +98,6 @@ export const generateUserReport = async (req: AuthRequest, res: Response): Promi
           select: {
             applications: true,
             postedJobs: true,
-            interviews: true,
           },
         },
       },
@@ -120,9 +119,8 @@ export const generateUserReport = async (req: AuthRequest, res: Response): Promi
       data: users.map(user => ({
         ...user,
         fullName: `${user.firstName} ${user.lastName}`,
-        applicationsCount: user._count.applications,
-        jobsPostedCount: user._count.postedJobs,
-        interviewsCount: user._count.interviews,
+        applicationsCount: (user as any)._count?.applications || 0,
+        jobsPostedCount: (user as any)._count?.postedJobs || 0,
       })),
     };
 
@@ -475,7 +473,7 @@ export const generateConversionReport = async (req: AuthRequest, res: Response):
       }),
       prisma.application.count({
         where: {
-          status: 'HIRED',
+          status: 'ACCEPTED',
           appliedAt: dateFilter.createdAt,
         },
       }),

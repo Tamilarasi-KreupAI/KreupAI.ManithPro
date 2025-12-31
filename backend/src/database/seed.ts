@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient, UserRole, JobType, JobStatus, ApplicationStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 

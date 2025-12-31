@@ -3,12 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 const prisma = new PrismaClient();
 
-interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    role: string;
-  };
-}
+import { AuthRequest } from '../middleware/auth';
 export const getClientDashboardStats = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;

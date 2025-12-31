@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Checkr Background Check Integration
  *

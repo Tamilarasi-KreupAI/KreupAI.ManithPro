@@ -344,8 +344,8 @@ export const calculateCommunicationScore = async (req: Request, res: Response) =
     const { interviewId, benchmarkRole } = req.body;
 
     // Check if score already exists
-    const existing = await prisma.communicationScore.findUnique({
-      where: { interviewId },
+    const existing = await prisma.communicationScore.findFirst({
+      where: { interview: { id: interviewId } } as any,
     });
 
     const scoreData = {
@@ -378,15 +378,15 @@ export const calculateCommunicationScore = async (req: Request, res: Response) =
     let score;
     if (existing) {
       score = await prisma.communicationScore.update({
-        where: { interviewId },
-        data: scoreData,
+        where: { id: existing.id },
+        data: scoreData as any,
       });
     } else {
       score = await prisma.communicationScore.create({
         data: {
-          interviewId,
+          interview: { connect: { id: interviewId } },
           ...scoreData,
-        },
+        } as any,
       });
     }
 
@@ -402,8 +402,8 @@ export const getCommunicationScore = async (req: Request, res: Response) => {
   try {
     const { interviewId } = req.params;
 
-    const score = await prisma.communicationScore.findUnique({
-      where: { interviewId },
+    const score = await prisma.communicationScore.findFirst({
+      where: { interview: { id: interviewId } } as any,
     });
 
     if (!score) {
@@ -913,12 +913,12 @@ export const createComparison = async (req: Request, res: Response) => {
         weights,
         overallRanking,
         scores,
-        strengthsComparison: Object.fromEntries(
+        strengthsComparison: JSON.parse(JSON.stringify(Object.fromEntries(
           candidateIds.map((id: string) => [id, ['Technical skills', 'Communication']])
-        ),
-        weaknessesComparison: Object.fromEntries(
+        ))),
+        weaknessesComparison: JSON.parse(JSON.stringify(Object.fromEntries(
           candidateIds.map((id: string) => [id, ['System design', 'Leadership experience']])
-        ),
+        ))),
         topRecommendation: overallRanking[0]?.candidateId,
         recommendationReason: 'Highest overall score with strong technical and communication skills.',
         orderOfPreference: overallRanking.map(r => r.candidateId),
@@ -927,7 +927,7 @@ export const createComparison = async (req: Request, res: Response) => {
           communication: 'Candidate B articulates complex concepts better',
         },
         status: 'COMPLETED',
-      },
+      } as any,
     });
 
     res.status(201).json(comparison);
@@ -1034,7 +1034,7 @@ export const getFullAnalysis = async (req: Request, res: Response) => {
       prisma.answerAnalysis.findMany({ where: { interviewId } }),
       prisma.topicDetection.findMany({ where: { interviewId } }),
       prisma.sentimentAnalysis.findMany({ where: { interviewId } }),
-      prisma.communicationScore.findUnique({ where: { interviewId } }),
+      prisma.communicationScore.findFirst({ where: { interview: { id: interviewId } } as any }),
       prisma.technicalVerification.findMany({ where: { interviewId } }),
       prisma.redFlagAlert.findMany({ where: { interviewId } }),
       prisma.interviewSummary.findMany({ where: { interviewId } }),

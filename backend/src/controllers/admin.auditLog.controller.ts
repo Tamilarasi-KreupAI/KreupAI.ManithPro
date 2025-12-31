@@ -47,7 +47,6 @@ export const getAllAuditLogs = async (req: AuthRequest, res: Response): Promise<
       where.OR = [
         { action: { contains: search as string, mode: 'insensitive' } },
         { entity: { contains: search as string, mode: 'insensitive' } },
-        { description: { contains: search as string, mode: 'insensitive' } },
       ];
     }
 
@@ -56,17 +55,6 @@ export const getAllAuditLogs = async (req: AuthRequest, res: Response): Promise<
         where,
         skip,
         take,
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
-          },
-        },
         orderBy: { createdAt: 'desc' },
       }),
       prisma.auditLog.count({ where }),
@@ -96,17 +84,6 @@ export const getAuditLogById = async (req: AuthRequest, res: Response): Promise<
 
     const log = await prisma.auditLog.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
     });
 
     if (!log) {
@@ -140,20 +117,8 @@ export const createAuditLog = async (req: AuthRequest, res: Response): Promise<v
         action,
         entity,
         entityId,
-        description,
         metadata: metadata || {},
         ipAddress,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
       },
     });
 
@@ -288,17 +253,6 @@ export const getUserActivity = async (req: AuthRequest, res: Response): Promise<
       where: { userId },
       take: parseInt(limit as string),
       orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
     });
 
     res.json({ logs, count: logs.length });
@@ -329,38 +283,24 @@ export const exportAuditLogs = async (req: AuthRequest, res: Response): Promise<
 
     const logs = await prisma.auditLog.findMany({
       where,
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
       orderBy: { createdAt: 'desc' },
     });
 
     // Generate CSV
-    const headers = ['Date', 'Time', 'User', 'Email', 'Role', 'Action', 'Entity', 'Entity ID', 'Description', 'IP Address'];
+    const headers = ['Date', 'Time', 'User ID', 'Action', 'Entity', 'Entity ID', 'IP Address'];
     const csvRows = [headers.join(',')];
 
     logs.forEach(log => {
       const date = log.createdAt.toISOString().split('T')[0];
       const time = log.createdAt.toISOString().split('T')[1].split('.')[0];
-      const userName = `${log.user.firstName} ${log.user.lastName}`;
 
       const row = [
         date,
         time,
-        `"${userName}"`,
-        log.user.email,
-        log.user.role,
+        log.userId || '',
         log.action,
         log.entity,
         log.entityId || '',
-        `"${log.description || ''}"`,
         log.ipAddress || '',
       ];
       csvRows.push(row.join(','));

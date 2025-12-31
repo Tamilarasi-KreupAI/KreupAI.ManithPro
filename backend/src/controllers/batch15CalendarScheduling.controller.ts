@@ -691,7 +691,7 @@ export const getSchedulingLinkBySlug = async (req: Request, res: Response) => {
     const link = await prisma.schedulingLink.findUnique({
       where: { slug },
       include: {
-        user: { select: { name: true, email: true } }
+        user: { select: { firstName: true, lastName: true, email: true } }
       }
     });
 
@@ -751,7 +751,7 @@ export const getAvailableSlotsForLink = async (req: Request, res: Response) => {
     const workingHours = link.user.workingHours[0];
 
     if (workingHours) {
-      const daySchedule = (workingHours as any)[targetDate.toLocaleDateString('en-US', { weekday: 'lowercase' })];
+      const daySchedule = (workingHours as any)[targetDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()];
       if (daySchedule?.enabled) {
         for (const slot of daySchedule.slots || []) {
           const [startHour, startMin] = slot.start.split(':').map(Number);
@@ -911,7 +911,7 @@ export const generateAvailability = async (req: Request, res: Response) => {
     const currentDate = new Date(start);
 
     while (currentDate <= end) {
-      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'lowercase' });
+      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       const daySchedule = workingHours ? (workingHours as any)[dayName] : null;
 
       if (daySchedule?.enabled) {
@@ -1059,7 +1059,7 @@ export const createPanelSession = async (req: Request, res: Response) => {
       where: { id: session.id },
       include: {
         panelists: {
-          include: { user: { select: { name: true, email: true } } }
+          include: { user: { select: { firstName: true, lastName: true, email: true } } }
         }
       }
     });
@@ -1092,9 +1092,9 @@ export const getPanelSessions = async (req: Request, res: Response) => {
       },
       include: {
         panelists: {
-          include: { user: { select: { name: true, email: true } } }
+          include: { user: { select: { firstName: true, lastName: true, email: true } } }
         },
-        organizer: { select: { name: true, email: true } }
+        organizer: { select: { firstName: true, lastName: true, email: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -1222,7 +1222,7 @@ export const schedulePanelSession = async (req: Request, res: Response) => {
       },
       include: {
         panelists: {
-          include: { user: { select: { name: true, email: true } } }
+          include: { user: { select: { firstName: true, lastName: true, email: true } } }
         }
       }
     });

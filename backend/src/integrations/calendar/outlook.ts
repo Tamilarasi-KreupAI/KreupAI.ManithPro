@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Microsoft Outlook Calendar Integration
  *

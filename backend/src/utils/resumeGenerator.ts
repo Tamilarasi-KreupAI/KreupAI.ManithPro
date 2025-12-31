@@ -155,10 +155,10 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
 
     profile.workExperiences.forEach((exp, index) => {
       doc.fontSize(11).font('Helvetica-Bold')
-        .text(exp.position);
+        .text(exp.title);
 
       doc.fontSize(10).font('Helvetica')
-        .text(`${exp.company} | ${formatDate(exp.startDate)} - ${exp.current ? 'Present' : formatDate(exp.endDate!)}`);
+        .text(`${exp.companyName} | ${formatDate(exp.startDate)} - ${exp.isCurrent ? 'Present' : formatDate(exp.endDate!)}`);
 
       if (exp.location) {
         doc.text(exp.location);
@@ -187,19 +187,14 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         .text(edu.degree);
 
       doc.fontSize(10).font('Helvetica')
-        .text(`${edu.institution} | ${formatDate(edu.startDate)} - ${edu.current ? 'Present' : formatDate(edu.endDate!)}`);
+        .text(`${edu.institutionName} | ${formatDate(edu.startDate)} - ${(edu as any).isCurrent ? 'Present' : formatDate(edu.endDate!)}`);
 
-      if (edu.fieldOfStudy) {
-        doc.text(`Field of Study: ${edu.fieldOfStudy}`);
+      if ((edu as any).fieldOfStudy) {
+        doc.text(`Field of Study: ${(edu as any).fieldOfStudy}`);
       }
 
-      if (edu.grade) {
-        doc.text(`Grade: ${edu.grade}`);
-      }
-
-      if (edu.description) {
-        doc.moveDown(0.3);
-        doc.text(edu.description, { align: 'justify' });
+      if ((edu as any).grade) {
+        doc.text(`Grade: ${(edu as any).grade}`);
       }
 
       if (index < profile.educations.length - 1) {
@@ -246,15 +241,15 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
 
     profile.projects.forEach((proj, index) => {
       doc.fontSize(11).font('Helvetica-Bold')
-        .text(proj.name);
+        .text(proj.title);
 
       if (proj.startDate) {
         doc.fontSize(10).font('Helvetica')
-          .text(`${formatDate(proj.startDate)} - ${proj.current ? 'Present' : proj.endDate ? formatDate(proj.endDate) : 'Completed'}`);
+          .text(`${formatDate(proj.startDate)} - ${(proj as any).isCurrent ? 'Present' : proj.endDate ? formatDate(proj.endDate) : 'Completed'}`);
       }
 
-      if (proj.url) {
-        doc.text(`URL: ${proj.url}`);
+      if ((proj as any).projectUrl) {
+        doc.text(`URL: ${(proj as any).projectUrl}`);
       }
 
       if (proj.description) {
@@ -285,10 +280,10 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
         .text(cert.name, { continued: true });
 
       doc.font('Helvetica')
-        .text(` - ${cert.issuer}`);
+        .text(` - ${cert.issuingOrganization}`);
 
       if (cert.issueDate) {
-        doc.text(`Issued: ${formatDate(cert.issueDate)}${cert.expiryDate ? ` | Expires: ${formatDate(cert.expiryDate)}` : ' | No Expiration'}`);
+        doc.text(`Issued: ${formatDate(cert.issueDate)}${cert.expirationDate ? ` | Expires: ${formatDate(cert.expirationDate)}` : ' | No Expiration'}`);
       }
 
       if (cert.credentialId) {
@@ -308,10 +303,10 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
   }
 
   // ===== LANGUAGES =====
-  if (profile.languages && profile.languages.length > 0) {
+  if (profile.languages && Array.isArray(profile.languages) && profile.languages.length > 0) {
     addSectionHeader(doc, 'Languages');
     doc.fontSize(10).font('Helvetica')
-      .text(profile.languages.join(', '));
+      .text((profile.languages as string[]).join(', '));
     doc.moveDown(1);
   }
 
@@ -319,8 +314,8 @@ export const generateResumeFromProfile = async (userId: string): Promise<ResumeG
   doc.end();
 
   // Wait for the file to be written
-  await new Promise((resolve, reject) => {
-    stream.on('finish', resolve);
+  await new Promise<void>((resolve, reject) => {
+    stream.on('finish', () => resolve());
     stream.on('error', reject);
   });
 

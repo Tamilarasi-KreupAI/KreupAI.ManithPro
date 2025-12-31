@@ -190,6 +190,11 @@ export const startInterview = async (req: Request, res: Response) => {
     const { token } = req.params;
     const { recordingConsent, language, accessibilitySettings } = req.body;
 
+    // First get the interview to calculate timeRemaining
+    const existingInterview = await prisma.aIScreeningInterview.findUnique({
+      where: { inviteToken: token },
+    });
+
     const interview = await prisma.aIScreeningInterview.update({
       where: { inviteToken: token },
       data: {
@@ -198,7 +203,7 @@ export const startInterview = async (req: Request, res: Response) => {
         recordingConsent: recordingConsent || false,
         language: language || undefined,
         accessibilitySettings: accessibilitySettings || undefined,
-        timeRemaining: interview => interview.totalTimeLimit ? interview.totalTimeLimit * 60 : null,
+        timeRemaining: existingInterview?.totalTimeLimit ? existingInterview.totalTimeLimit * 60 : null,
       },
     });
 

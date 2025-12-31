@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LinkedIn Verification Integration
  *

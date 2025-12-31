@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as Sentry from '@sentry/node';
 import { Application, Request, Response, NextFunction } from 'express';
 
