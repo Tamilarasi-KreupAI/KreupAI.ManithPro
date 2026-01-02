@@ -25,7 +25,7 @@ const RealtimeNotifications: React.FC = () => {
       if (Notification.permission === 'granted') {
         new Notification(notification.title, {
           body: notification.message,
-          icon: '/logo.png',
+          icon: '/MANITHPRO.png',
         });
       }
 

@@ -61,11 +61,15 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-xl border border-slate-100 dark:border-gray-700">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-            ManithPro
-          </h2>
-          <p className="mt-2 text-center text-sm text-slate-500 dark:text-gray-400">
+        <div className="flex flex-col items-center">
+          <Link to="/">
+            <img
+              src="/MANITHPRO.png"
+              alt="ManithPro"
+              className="h-24 w-auto mb-4"
+            />
+          </Link>
+          <p className="text-center text-sm text-slate-500 dark:text-gray-400">
             Sign in to your account
           </p>
         </div>

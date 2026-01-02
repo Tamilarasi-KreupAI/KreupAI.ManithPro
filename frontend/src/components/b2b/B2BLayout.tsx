@@ -26,8 +26,8 @@ const B2BLayout: React.FC = () => {
                 <div className="flex flex-col flex-grow pt-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md overflow-y-auto border-r border-slate-200 dark:border-gray-700">
                     <div className="flex items-center flex-shrink-0 px-4 mb-6">
                         <Link to="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">M</div>
-                            <span className="text-xl font-bold text-slate-900 dark:text-white">ManithPro B2B</span>
+                            <img src="/MANITHPRO.png" alt="ManithPro" className="h-16 w-auto" />
+                            <span className="text-xl font-bold text-slate-900 dark:text-white">B2B</span>
                         </Link>
                     </div>
                     <div className="mt-5 flex-grow flex flex-col">
