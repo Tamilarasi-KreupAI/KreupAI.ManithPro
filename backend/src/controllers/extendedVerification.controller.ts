@@ -475,9 +475,9 @@ export const getExtendedVerificationStatus = async (req: Request, res: Response)
     const profile = await prisma.candidateProfile.findUnique({
       where: { userId },
       include: {
-        educationVerifications: true,
-        backgroundChecks: true,
-        verifiedBadges: true,
+        EducationVerification: true,
+        BackgroundCheck: true,
+        VerifiedBadge: true,
       },
     });
 
@@ -487,24 +487,24 @@ export const getExtendedVerificationStatus = async (req: Request, res: Response)
 
     const status = {
       educationVerifications: {
-        total: profile.educationVerifications.length,
-        verified: profile.educationVerifications.filter((v) => v.isVerified).length,
-        pending: profile.educationVerifications.filter(
+        total: profile.EducationVerification.length,
+        verified: profile.EducationVerification.filter((v) => v.isVerified).length,
+        pending: profile.EducationVerification.filter(
           (v) => v.requestStatus === 'PENDING' || v.requestStatus === 'SENT'
         ).length,
       },
       backgroundChecks: {
-        total: profile.backgroundChecks.length,
-        completed: profile.backgroundChecks.filter((c) => c.status === 'COMPLETED').length,
-        pending: profile.backgroundChecks.filter(
+        total: profile.BackgroundCheck.length,
+        completed: profile.BackgroundCheck.filter((c) => c.status === 'COMPLETED').length,
+        pending: profile.BackgroundCheck.filter(
           (c) => c.status === 'PENDING' || c.status === 'IN_PROGRESS'
         ).length,
-        latestResult: profile.backgroundChecks[0]?.overallResult,
+        latestResult: profile.BackgroundCheck[0]?.overallResult,
       },
       badges: {
-        total: profile.verifiedBadges.length,
-        active: profile.verifiedBadges.filter((b) => b.isActive).length,
-        displayed: profile.verifiedBadges.filter((b) => b.showOnProfile).length,
+        total: profile.VerifiedBadge.length,
+        active: profile.VerifiedBadge.filter((b) => b.isActive).length,
+        displayed: profile.VerifiedBadge.filter((b) => b.showOnProfile).length,
       },
     };
 

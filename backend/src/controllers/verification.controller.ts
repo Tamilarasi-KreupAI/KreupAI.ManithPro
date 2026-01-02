@@ -1047,12 +1047,12 @@ export const getVerificationStatus = async (req: Request, res: Response) => {
     const profile = await prisma.candidateProfile.findUnique({
       where: { userId },
       include: {
-        emailVerifications: true,
-        linkedInVerifications: true,
-        peerEndorsements: true,
-        managerReferences: true,
-        certificationVerifications: true,
-        trustScore: true,
+        EmailDomainVerification: true,
+        LinkedInEmploymentVerification: true,
+        PeerEndorsement: true,
+        ManagerReference: true,
+        CertificationVerification: true,
+        TrustScore: true,
       },
     });
 
@@ -1062,31 +1062,31 @@ export const getVerificationStatus = async (req: Request, res: Response) => {
 
     const status = {
       emailVerifications: {
-        total: profile.emailVerifications.length,
-        verified: profile.emailVerifications.filter((v) => v.isVerified).length,
-        pending: profile.emailVerifications.filter((v) => v.verificationStatus === 'PENDING' || v.verificationStatus === 'SENT').length,
+        total: profile.EmailDomainVerification.length,
+        verified: profile.EmailDomainVerification.filter((v) => v.isVerified).length,
+        pending: profile.EmailDomainVerification.filter((v) => v.verificationStatus === 'PENDING' || v.verificationStatus === 'SENT').length,
       },
       linkedInVerifications: {
-        total: profile.linkedInVerifications.length,
-        verified: profile.linkedInVerifications.filter((v) => v.isVerified).length,
-        pending: profile.linkedInVerifications.filter((v) => v.verificationStatus === 'PENDING').length,
+        total: profile.LinkedInEmploymentVerification.length,
+        verified: profile.LinkedInEmploymentVerification.filter((v) => v.isVerified).length,
+        pending: profile.LinkedInEmploymentVerification.filter((v) => v.verificationStatus === 'PENDING').length,
       },
       peerEndorsements: {
-        total: profile.peerEndorsements.length,
-        received: profile.peerEndorsements.filter((e) => e.requestStatus === 'ACCEPTED').length,
-        pending: profile.peerEndorsements.filter((e) => e.requestStatus === 'SENT').length,
+        total: profile.PeerEndorsement.length,
+        received: profile.PeerEndorsement.filter((e) => e.requestStatus === 'ACCEPTED').length,
+        pending: profile.PeerEndorsement.filter((e) => e.requestStatus === 'SENT').length,
       },
       managerReferences: {
-        total: profile.managerReferences.length,
-        completed: profile.managerReferences.filter((r) => r.requestStatus === 'COMPLETED').length,
-        pending: profile.managerReferences.filter((r) => r.requestStatus === 'SENT' || r.requestStatus === 'IN_PROGRESS').length,
+        total: profile.ManagerReference.length,
+        completed: profile.ManagerReference.filter((r) => r.requestStatus === 'COMPLETED').length,
+        pending: profile.ManagerReference.filter((r) => r.requestStatus === 'SENT' || r.requestStatus === 'IN_PROGRESS').length,
       },
       certificationVerifications: {
-        total: profile.certificationVerifications.length,
-        verified: profile.certificationVerifications.filter((v) => v.isVerified).length,
-        pending: profile.certificationVerifications.filter((v) => v.verificationStatus === 'PENDING').length,
+        total: profile.CertificationVerification.length,
+        verified: profile.CertificationVerification.filter((v) => v.isVerified).length,
+        pending: profile.CertificationVerification.filter((v) => v.verificationStatus === 'PENDING').length,
       },
-      trustScore: profile.trustScore,
+      trustScore: profile.TrustScore,
     };
 
     res.json({ status });
@@ -1105,11 +1105,11 @@ async function recalculateTrustScore(profileId: string) {
   const profile = await prisma.candidateProfile.findUnique({
     where: { id: profileId },
     include: {
-      emailVerifications: true,
-      linkedInVerifications: true,
-      peerEndorsements: true,
-      managerReferences: true,
-      certificationVerifications: true,
+      EmailDomainVerification: true,
+      LinkedInEmploymentVerification: true,
+      PeerEndorsement: true,
+      ManagerReference: true,
+      CertificationVerification: true,
     },
   });
 
@@ -1118,11 +1118,11 @@ async function recalculateTrustScore(profileId: string) {
   }
 
   // Calculate component scores
-  const verifiedEmails = profile.emailVerifications.filter((v) => v.isVerified).length;
-  const verifiedEmployments = profile.linkedInVerifications.filter((v) => v.isVerified).length;
-  const endorsementsReceived = profile.peerEndorsements.filter((e) => e.requestStatus === 'ACCEPTED').length;
-  const referencesReceived = profile.managerReferences.filter((r) => r.requestStatus === 'COMPLETED').length;
-  const verifiedCertifications = profile.certificationVerifications.filter((v) => v.isVerified).length;
+  const verifiedEmails = profile.EmailDomainVerification.filter((v) => v.isVerified).length;
+  const verifiedEmployments = profile.LinkedInEmploymentVerification.filter((v) => v.isVerified).length;
+  const endorsementsReceived = profile.PeerEndorsement.filter((e) => e.requestStatus === 'ACCEPTED').length;
+  const referencesReceived = profile.ManagerReference.filter((r) => r.requestStatus === 'COMPLETED').length;
+  const verifiedCertifications = profile.CertificationVerification.filter((v) => v.isVerified).length;
 
   // Score weights
   const emailVerificationScore = Math.min(verifiedEmails * 10, 20);
