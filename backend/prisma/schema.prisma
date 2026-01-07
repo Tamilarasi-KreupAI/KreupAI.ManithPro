@@ -7302,6 +7302,100 @@ model Contract {
   createdAt    DateTime @default(now())
 }
 
+// B2B Models for Client/Vendor Portal
+model B2BRequirement {
+  id              String   @id @default(uuid())
+  clientId        String   @map("client_id")
+  title           String
+  description     String?
+  status          String   @default("OPEN")
+  requiredCount   Int      @default(1) @map("required_count")
+  proposalsCount  Int      @default(0) @map("proposals_count")
+  skills          String[]
+  location        String?
+  workMode        String?  @map("work_mode")
+  employmentType  String?  @map("employment_type")
+  duration        String?
+  primarySkills   String[] @map("primary_skills")
+  secondarySkills String[] @map("secondary_skills")
+  minExperience   Int?     @map("min_experience")
+  maxExperience   Int?     @map("max_experience")
+  qualification   String?
+  budget          Float?
+  currency        String?  @default("USD")
+  frequency       String?
+  noticePeriod    String?  @map("notice_period")
+  deadline        DateTime?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("b2b_requirements")
+}
+
+model B2BContract {
+  id          String   @id @default(uuid())
+  clientId    String   @map("client_id")
+  vendorId    String   @map("vendor_id")
+  partnerName String   @map("partner_name")
+  role        String   @default("CLIENT")
+  status      String   @default("PENDING")
+  terms       String?
+  value       Float?
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("b2b_contracts")
+}
+
+model B2BPlacement {
+  id               String   @id @default(uuid())
+  vendorId         String   @map("vendor_id")
+  requirementId    String?  @map("requirement_id")
+  title            String
+  status           String   @default("ACTIVE")
+  placedCount      Int      @default(0) @map("placed_count")
+  submissionsCount Int      @default(0) @map("submissions_count")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("b2b_placements")
+}
+
+model B2BCandidate {
+  id          String   @id @default(uuid())
+  vendorId    String   @map("vendor_id")
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  email       String
+  phone       String?
+  skills      String[]
+  experience  Int?
+  resumeUrl   String?  @map("resume_url")
+  status      String   @default("AVAILABLE")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("b2b_candidates")
+}
+
+model B2BInvoice {
+  id          String    @id @default(uuid())
+  vendorId    String    @map("vendor_id")
+  clientId    String    @map("client_id")
+  contractId  String?   @map("contract_id")
+  invoiceNo   String    @unique @map("invoice_no")
+  amount      Float
+  status      String    @default("PENDING")
+  dueDate     DateTime? @map("due_date")
+  paidAt      DateTime? @map("paid_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("b2b_invoices")
+}
+
 model Department {
   id             String       @id @default(uuid())
   organizationId String

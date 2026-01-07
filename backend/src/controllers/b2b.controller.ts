@@ -8,29 +8,25 @@ export const getClientDashboardStats = async (req: AuthRequest, res: Response) =
   try {
     const userId = req.user!.userId;
 
-    const [requirements] = await prisma.$queryRaw<{ count: number }[]>`
-      SELECT COUNT(*)::int AS count
-      FROM b2b_requirements
-      WHERE client_id = ${userId}
-    `;
+    const requirementsCount = await prisma.b2BRequirement.count({
+      where: { clientId: userId }
+    });
 
-    const [contracts] = await prisma.$queryRaw<{ count: number }[]>`
-      SELECT COUNT(*)::int AS count
-      FROM b2b_contracts
-      WHERE client_id = ${userId}
-    `;
+    const contractsCount = await prisma.b2BContract.count({
+      where: { clientId: userId }
+    });
 
     res.json([
       {
         name: 'Active Requirements',
-        value: requirements.count,
+        value: requirementsCount,
         change: '+2 this week',
         changeType: 'increase',
         icon: 'M9 5H7a2 2 0 00-2 2v12',
       },
       {
         name: 'Active Contracts',
-        value: contracts.count,
+        value: contractsCount,
         change: 'No change',
         changeType: 'neutral',
         icon: 'M9 12h6',
@@ -46,29 +42,25 @@ export const getVendorDashboardStats = async (req: AuthRequest, res: Response) =
   try {
     const userId = req.user!.userId;
 
-    const [placements] = await prisma.$queryRaw<{ count: number }[]>`
-      SELECT COUNT(*)::int AS count
-      FROM b2b_placements
-      WHERE vendor_id = ${userId}
-    `;
+    const placementsCount = await prisma.b2BPlacement.count({
+      where: { vendorId: userId }
+    });
 
-    const [contracts] = await prisma.$queryRaw<{ count: number }[]>`
-      SELECT COUNT(*)::int AS count
-      FROM b2b_contracts
-      WHERE vendor_id = ${userId}
-    `;
+    const contractsCount = await prisma.b2BContract.count({
+      where: { vendorId: userId }
+    });
 
     res.json([
       {
         name: 'Active Placements',
-        value: placements.count,
+        value: placementsCount,
         change: '+1 this week',
         changeType: 'increase',
         icon: 'M12 6v6',
       },
       {
         name: 'Pending Contracts',
-        value: contracts.count,
+        value: contractsCount,
         change: 'Awaiting response',
         changeType: 'warning',
         icon: 'M9 12h6',
@@ -85,21 +77,26 @@ export const getRecentRequirements = async (req: AuthRequest, res: Response) => 
     const userId = req.user!.userId;
     const limit = Number(req.query.limit) || 3;
 
-    const data = await prisma.$queryRaw<any[]>`
-      SELECT id, title, status, required_count, proposals_count
-      FROM b2b_requirements
-      WHERE client_id = ${userId}
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
+    const data = await prisma.b2BRequirement.findMany({
+      where: { clientId: userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        requiredCount: true,
+        proposalsCount: true,
+      }
+    });
 
     res.json(
       data.map((r) => ({
         id: r.id,
         title: r.title,
         status: r.status,
-        count: r.required_count,
-        applicants: r.proposals_count,
+        count: r.requiredCount,
+        applicants: r.proposalsCount,
       }))
     );
   } catch (error) {
@@ -113,21 +110,26 @@ export const getRecentPlacements = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const limit = Number(req.query.limit) || 3;
 
-    const data = await prisma.$queryRaw<any[]>`
-      SELECT id, title, status, placed_count, submissions_count
-      FROM b2b_placements
-      WHERE vendor_id = ${userId}
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
+    const data = await prisma.b2BPlacement.findMany({
+      where: { vendorId: userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        placedCount: true,
+        submissionsCount: true,
+      }
+    });
 
     res.json(
       data.map((p) => ({
         id: p.id,
         title: p.title,
         status: p.status,
-        count: p.placed_count,
-        applicants: p.submissions_count,
+        count: p.placedCount,
+        applicants: p.submissionsCount,
       }))
     );
   } catch (err) {
@@ -140,22 +142,32 @@ export const getPendingContracts = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const limit = Number(req.query.limit) || 2;
 
-    const data = await prisma.$queryRaw<any[]>`
-      SELECT id, partner_name, role, status, created_at
-      FROM b2b_contracts
-      WHERE (client_id = ${userId} OR vendor_id = ${userId})
-        AND status IN ('PENDING', 'NEGOTIATION')
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
+    const data = await prisma.b2BContract.findMany({
+      where: {
+        OR: [
+          { clientId: userId },
+          { vendorId: userId }
+        ],
+        status: { in: ['PENDING', 'NEGOTIATION'] }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        partnerName: true,
+        role: true,
+        status: true,
+        createdAt: true,
+      }
+    });
 
     res.json(
       data.map((c) => ({
         id: c.id,
-        partner: c.partner_name,
+        partner: c.partnerName,
         role: c.role,
         status: c.status,
-        date: c.created_at,
+        date: c.createdAt,
       }))
     );
   } catch (error) {
@@ -196,51 +208,30 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
       ? (Array.isArray(secondarySkills) ? secondarySkills : [secondarySkills])
       : [];
 
-    const [result] = await prisma.$queryRaw<any[]>`
-      INSERT INTO b2b_requirements (
+    const result = await prisma.b2BRequirement.create({
+      data: {
+        clientId: userId,
         title,
         description,
-        work_mode,
-        location,
-        employment_type,
-        duration,
-        primary_skills,
-        secondary_skills,
-        min_experience,
-        max_experience,
-        qualification,
-        budget,
-        currency,
-        frequency,
-        notice_period,
-        status,
-        required_count,
-        proposals_count,
-        client_id
-      )
-      VALUES (
-        ${title},
-        ${description},
-        ${workMode || 'Remote'},
-        ${location || 'Flexible'},
-        ${employmentType || 'Contract'},
-        ${duration || '6 months'},
-        ${primarySkillsArray}::text[],
-        ${secondarySkillsArray}::text[],
-        ${parseInt(minExperience) || 0}::integer,
-        ${parseInt(maxExperience) || 10}::integer,
-        ${qualification || 'Bachelor'},
-        ${parseFloat(budget) || 0}::numeric,
-        ${currency || 'USD'},
-        ${frequency || 'Hourly'},
-        ${noticePeriod || '2 weeks'},
-        'OPEN',
-        ${parseInt(count) || 1}::integer,
-        0,
-        ${userId}
-      )
-      RETURNING id;
-    `;
+        workMode: workMode || 'Remote',
+        location: location || 'Flexible',
+        employmentType: employmentType || 'Contract',
+        duration: duration || '6 months',
+        primarySkills: primarySkillsArray,
+        secondarySkills: secondarySkillsArray,
+        minExperience: parseInt(minExperience) || 0,
+        maxExperience: parseInt(maxExperience) || 10,
+        qualification: qualification || 'Bachelor',
+        budget: parseFloat(budget) || 0,
+        currency: currency || 'USD',
+        frequency: frequency || 'Hourly',
+        noticePeriod: noticePeriod || '2 weeks',
+        status: 'OPEN',
+        requiredCount: parseInt(count) || 1,
+        proposalsCount: 0,
+        skills: primarySkillsArray,
+      }
+    });
 
     res.status(201).json({
       message: 'Requirement created successfully',
@@ -257,12 +248,12 @@ export const getRequirementById = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { id } = req.params;
 
-    const [requirement] = await prisma.$queryRaw<any[]>`
-      SELECT *
-      FROM b2b_requirements
-      WHERE id::text = ${id}
-        AND client_id = ${userId}
-    `;
+    const requirement = await prisma.b2BRequirement.findFirst({
+      where: {
+        id,
+        clientId: userId
+      }
+    });
 
     if (!requirement) {
       return res.status(404).json({ error: 'Requirement not found' });
@@ -272,23 +263,23 @@ export const getRequirementById = async (req: AuthRequest, res: Response) => {
       id: requirement.id,
       title: requirement.title,
       description: requirement.description,
-      workMode: requirement.work_mode,
+      workMode: requirement.workMode,
       location: requirement.location,
-      employmentType: requirement.employment_type,
+      employmentType: requirement.employmentType,
       duration: requirement.duration,
-      primarySkills: requirement.primary_skills || [],
-      secondarySkills: requirement.secondary_skills || [],
-      minExperience: requirement.min_experience,
-      maxExperience: requirement.max_experience,
+      primarySkills: requirement.primarySkills || [],
+      secondarySkills: requirement.secondarySkills || [],
+      minExperience: requirement.minExperience,
+      maxExperience: requirement.maxExperience,
       qualification: requirement.qualification,
       budget: requirement.budget,
       currency: requirement.currency,
       frequency: requirement.frequency,
-      noticePeriod: requirement.notice_period,
-      count: requirement.required_count,
-      filled: requirement.proposals_count,
+      noticePeriod: requirement.noticePeriod,
+      count: requirement.requiredCount,
+      filled: requirement.proposalsCount,
       status: requirement.status,
-      postedAt: requirement.created_at,
+      postedAt: requirement.createdAt,
     });
   } catch (error) {
     console.error('Get requirement error:', error);
@@ -322,10 +313,9 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Verify ownership
-    const [existing] = await prisma.$queryRaw<any[]>`
-      SELECT id FROM b2b_requirements
-      WHERE id::text = ${id} AND client_id = ${userId}
-    `;
+    const existing = await prisma.b2BRequirement.findFirst({
+      where: { id, clientId: userId }
+    });
 
     if (!existing) {
       return res.status(404).json({ error: 'Requirement not found or unauthorized' });
@@ -339,30 +329,29 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
       ? (Array.isArray(secondarySkills) ? secondarySkills : [secondarySkills])
       : [];
 
-    await prisma.$queryRaw`
-      UPDATE b2b_requirements
-      SET
-        title = ${title},
-        description = ${description},
-        work_mode = ${workMode},
-        location = ${location},
-        employment_type = ${employmentType},
-        duration = ${duration},
-        primary_skills = ${primarySkillsArray}::text[],
-        secondary_skills = ${secondarySkillsArray}::text[],
-        min_experience = ${parseInt(minExperience) || 0}::integer,
-        max_experience = ${parseInt(maxExperience) || 10}::integer,
-        qualification = ${qualification},
-        budget = ${parseFloat(budget) || 0}::numeric,
-        currency = ${currency},
-        frequency = ${frequency},
-        notice_period = ${noticePeriod},
-        required_count = ${parseInt(count) || 1}::integer,
-        status = ${status || 'OPEN'},
-        updated_at = NOW()
-      WHERE id::text = ${id}
-        AND client_id = ${userId}
-    `;
+    await prisma.b2BRequirement.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        workMode,
+        location,
+        employmentType,
+        duration,
+        primarySkills: primarySkillsArray,
+        secondarySkills: secondarySkillsArray,
+        minExperience: parseInt(minExperience) || 0,
+        maxExperience: parseInt(maxExperience) || 10,
+        qualification,
+        budget: parseFloat(budget) || 0,
+        currency,
+        frequency,
+        noticePeriod,
+        requiredCount: parseInt(count) || 1,
+        status: status || 'OPEN',
+        skills: primarySkillsArray,
+      }
+    });
 
     res.json({ message: 'Requirement updated successfully' });
   } catch (error) {
@@ -376,16 +365,17 @@ export const deleteRequirement = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { id } = req.params;
 
-    const result = await prisma.$queryRaw<any[]>`
-      DELETE FROM b2b_requirements
-      WHERE id::text = ${id}
-        AND client_id = ${userId}
-      RETURNING id
-    `;
+    const existing = await prisma.b2BRequirement.findFirst({
+      where: { id, clientId: userId }
+    });
 
-    if (result.length === 0) {
+    if (!existing) {
       return res.status(404).json({ error: 'Requirement not found or unauthorized' });
     }
+
+    await prisma.b2BRequirement.delete({
+      where: { id }
+    });
 
     res.json({ message: 'Requirement deleted successfully' });
   } catch (error) {
@@ -398,56 +388,33 @@ export const getAllRequirements = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    const data = await prisma.$queryRaw<any[]>`
-      SELECT
-        id,
-        title,
-        description,
-        work_mode,
-        location,
-        employment_type,
-        duration,
-        primary_skills,
-        secondary_skills,
-        min_experience,
-        max_experience,
-        qualification,
-        budget,
-        currency,
-        frequency,
-        notice_period,
-        status,
-        required_count,
-        proposals_count,
-        client_id,
-        created_at
-      FROM b2b_requirements
-      WHERE client_id = ${userId}
-      ORDER BY created_at DESC
-    `;
+    const data = await prisma.b2BRequirement.findMany({
+      where: { clientId: userId },
+      orderBy: { createdAt: 'desc' }
+    });
 
     res.json(
       data.map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description,
-        workMode: r.work_mode,
+        workMode: r.workMode,
         location: r.location,
-        employmentType: r.employment_type,
+        employmentType: r.employmentType,
         duration: r.duration,
-        skills: r.primary_skills || [],
-        secondarySkills: r.secondary_skills || [],
-        minExperience: r.min_experience,
-        maxExperience: r.max_experience,
+        skills: r.primarySkills || [],
+        secondarySkills: r.secondarySkills || [],
+        minExperience: r.minExperience,
+        maxExperience: r.maxExperience,
         qualification: r.qualification,
         budget: r.budget ? `${r.currency} ${Number(r.budget).toFixed(2)}` : '—',
         currency: r.currency,
         frequency: r.frequency,
-        noticePeriod: r.notice_period,
-        count: r.required_count,
-        filled: r.proposals_count,
+        noticePeriod: r.noticePeriod,
+        count: r.requiredCount,
+        filled: r.proposalsCount,
         status: r.status,
-        postedAt: r.created_at,
+        postedAt: r.createdAt,
       }))
     );
   } catch (error) {
@@ -459,30 +426,27 @@ export const getAllContracts = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    const contracts = await prisma.$queryRaw<any[]>`
-      SELECT
-        id,
-        partner_name,
-        role,
-        status,
-        created_at
-      FROM b2b_contracts
-      WHERE client_id = ${userId}
-         OR vendor_id = ${userId}
-      ORDER BY created_at DESC
-    `;
+    const contracts = await prisma.b2BContract.findMany({
+      where: {
+        OR: [
+          { clientId: userId },
+          { vendorId: userId }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
     res.json(
       contracts.map((c) => ({
         id: c.id,
-        partner: c.partner_name,
+        partner: c.partnerName,
         candidate: '—',
         role: c.role,
-        startDate: '—',
+        startDate: c.startDate || '—',
         duration: '—',
         rate: '—',
         status: c.status,
-        signedAt: c.created_at,
+        signedAt: c.createdAt,
       }))
     );
   } catch (error) {
