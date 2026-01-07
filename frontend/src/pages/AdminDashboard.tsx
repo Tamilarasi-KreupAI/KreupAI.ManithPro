@@ -250,7 +250,7 @@ const AdminDashboard = () => {
         {/* Quick Actions */}
         <div className="mt-8 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-8 text-white border border-slate-700 dark:border-gray-700">
           <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link to="/admin/users" className="p-6 bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/5 hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:-translate-y-1 group">
               <div className="text-3xl mb-3 bg-white/10 dark:bg-white/5 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">👥</div>
               <h3 className="font-bold mb-1">Manage Users</h3>
@@ -260,6 +260,11 @@ const AdminDashboard = () => {
               <div className="text-3xl mb-3 bg-white/10 dark:bg-white/5 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">💼</div>
               <h3 className="font-bold mb-1">Manage Jobs</h3>
               <p className="text-sm text-slate-300 dark:text-gray-400">Oversee all job postings</p>
+            </Link>
+            <Link to="/admin/recruiter-approvals" className="p-6 bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/5 hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:-translate-y-1 group">
+              <div className="text-3xl mb-3 bg-white/10 dark:bg-white/5 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">✅</div>
+              <h3 className="font-bold mb-1">Recruiter Approvals</h3>
+              <p className="text-sm text-slate-300 dark:text-gray-400">Approve or reject recruiter registrations</p>
             </Link>
             <Link to="/admin/analytics" className="p-6 bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/5 hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:-translate-y-1 group">
               <div className="text-3xl mb-3 bg-white/10 dark:bg-white/5 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">📊</div>

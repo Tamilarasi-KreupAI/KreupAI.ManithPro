@@ -901,3 +901,27 @@ export const getActiveSessions = async () => {
   const response = await api.get('/admin/monitoring/sessions');
   return response.data;
 };
+
+// ==================== Recruiter Approval Services ====================
+export const getPendingRecruiters = async (params?: {
+  page?: number;
+  limit?: number;
+}) => {
+  const response = await api.get('/admin/recruiters/pending', { params });
+  return response.data;
+};
+
+export const getRecruiterApprovalStats = async () => {
+  const response = await api.get('/admin/recruiters/stats');
+  return response.data;
+};
+
+export const approveRecruiter = async (id: string) => {
+  const response = await api.post(`/admin/recruiters/${id}/approve`);
+  return response.data;
+};
+
+export const rejectRecruiter = async (id: string, reason?: string) => {
+  const response = await api.post(`/admin/recruiters/${id}/reject`, { reason });
+  return response.data;
+};

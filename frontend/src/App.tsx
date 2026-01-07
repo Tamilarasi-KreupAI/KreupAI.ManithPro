@@ -12,6 +12,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RecruiterRegister from './pages/RecruiterRegister';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import ApplicationDetail from './pages/ApplicationDetail';
@@ -53,6 +54,7 @@ import AdminAuditLogs from './pages/AdminAuditLogs';
 import AdminBilling from './pages/AdminBilling';
 import AdminReports from './pages/AdminReports';
 import AdminMonitoring from './pages/AdminMonitoring';
+import AdminRecruiterApprovals from './pages/AdminRecruiterApprovals';
 
 // B2B Imports
 import B2BLayout from './components/b2b/B2BLayout';
@@ -82,6 +84,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/register/recruiter" element={<RecruiterRegister />} />
                     <Route
                       path="/jobs"
                       element={
@@ -415,6 +418,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <AdminMonitoring />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/recruiter-approvals"
+                      element={
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
+                          <AdminRecruiterApprovals />
                         </ProtectedRoute>
                       }
                     />

@@ -320,11 +320,17 @@ const Register: React.FC = () => {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <p className="text-sm text-slate-600 dark:text-gray-400">
               Already have an account?{' '}
               <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                 Sign in here
+              </Link>
+            </p>
+            <p className="text-sm text-slate-600 dark:text-gray-400">
+              Want to hire candidates?{' '}
+              <Link to="/register/recruiter" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
+                Register as Recruiter
               </Link>
             </p>
           </div>

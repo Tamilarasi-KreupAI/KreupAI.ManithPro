@@ -64,6 +64,9 @@ export const authAPI = {
     }
     return api.post<AuthResponse>('/auth/register', data).then((res) => res.data);
   },
+  registerRecruiter: (data: any) => {
+    return api.post('/auth/register/recruiter', data).then((res) => res.data);
+  },
   login: (data: { email: string; password: string }) => {
     if (USE_MOCK) {
       // Simulate login

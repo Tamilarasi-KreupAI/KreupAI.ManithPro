@@ -74,15 +74,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
-    console.log(email,password);
-
 
     // Validate input
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' });
       return;
     }
-    console.log("here1");
 
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
@@ -90,7 +87,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
-    console.log("here2");
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -98,7 +94,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
-    console.log("here3");
+
+    // Check approval status for recruiters
+    if (user.role === 'RECRUITER' && user.approvalStatus === 'PENDING') {
+      res.status(403).json({
+        error: 'Your recruiter account is pending approval. Please wait for admin approval.',
+        approvalStatus: 'PENDING'
+      });
+      return;
+    }
+
+    if (user.role === 'RECRUITER' && user.approvalStatus === 'REJECTED') {
+      res.status(403).json({
+        error: 'Your recruiter account has been rejected.',
+        approvalStatus: 'REJECTED',
+        rejectionReason: user.rejectionReason || 'No reason provided'
+      });
+      return;
+    }
 
     // Generate token
     const token = generateToken({
@@ -106,7 +119,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       email: user.email,
       role: user.role,
     });
-    console.log("here4");
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
@@ -119,6 +131,92 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to login' });
+  }
+};
+
+export const registerRecruiter = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      location,
+      companyName,
+      companyWebsite,
+      companyEmail
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName || !companyName || !companyEmail) {
+      res.status(400).json({
+        error: 'Missing required fields. Please provide email, password, firstName, lastName, companyName, and companyEmail.'
+      });
+      return;
+    }
+
+    // Validate company email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(companyEmail)) {
+      res.status(400).json({ error: 'Invalid company email format' });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user with RECRUITER role and PENDING approval status
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: 'RECRUITER',
+        phone,
+        location,
+        companyName,
+        companyWebsite,
+        companyEmail,
+        approvalStatus: 'PENDING',
+        approvalRequestedAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phone: true,
+        location: true,
+        companyName: true,
+        companyWebsite: true,
+        companyEmail: true,
+        approvalStatus: true,
+        approvalRequestedAt: true,
+        createdAt: true,
+      },
+    });
+
+    // Notify admins about new recruiter registration (optional - could send email)
+    // For now, just log it
+    console.log(`New recruiter registration pending approval: ${user.email} from ${user.companyName}`);
+
+    res.status(201).json({
+      message: 'Recruiter registration submitted successfully. Your account is pending admin approval.',
+      user,
+    });
+  } catch (error) {
+    console.error('Recruiter registration error:', error);
+    res.status(500).json({ error: 'Failed to register recruiter' });
   }
 };
 

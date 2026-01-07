@@ -423,3 +423,189 @@ export const bulkDeleteUsers = async (req: AuthRequest, res: Response): Promise<
     res.status(500).json({ error: 'Failed to delete users' });
   }
 };
+
+// Get pending recruiter approvals
+export const getPendingRecruiters = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { page = '1', limit = '10' } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {
+      role: 'RECRUITER' as const,
+      approvalStatus: 'PENDING' as const,
+    };
+
+    const [recruiters, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { approvalRequestedAt: 'asc' },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          location: true,
+          companyName: true,
+          companyWebsite: true,
+          companyEmail: true,
+          approvalStatus: true,
+          approvalRequestedAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      recruiters,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching pending recruiters:', error);
+    res.status(500).json({ error: 'Failed to fetch pending recruiters' });
+  }
+};
+
+// Approve recruiter
+export const approveRecruiter = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists and is a pending recruiter
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.role !== 'RECRUITER') {
+      res.status(400).json({ error: 'User is not a recruiter' });
+      return;
+    }
+
+    if (user.approvalStatus !== 'PENDING') {
+      res.status(400).json({ error: 'Recruiter is not pending approval' });
+      return;
+    }
+
+    // Approve the recruiter
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        approvalStatus: 'APPROVED',
+        approvedAt: new Date(),
+        approvedById: req.user?.userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        companyName: true,
+        companyEmail: true,
+        approvalStatus: true,
+        approvedAt: true,
+      },
+    });
+
+    // TODO: Send email notification to the recruiter about approval
+
+    res.json({
+      message: 'Recruiter approved successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error approving recruiter:', error);
+    res.status(500).json({ error: 'Failed to approve recruiter' });
+  }
+};
+
+// Reject recruiter
+export const rejectRecruiter = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    // Check if user exists and is a pending recruiter
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.role !== 'RECRUITER') {
+      res.status(400).json({ error: 'User is not a recruiter' });
+      return;
+    }
+
+    if (user.approvalStatus !== 'PENDING') {
+      res.status(400).json({ error: 'Recruiter is not pending approval' });
+      return;
+    }
+
+    // Reject the recruiter
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        approvalStatus: 'REJECTED',
+        rejectionReason: reason || 'No reason provided',
+        approvedById: req.user?.userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        companyName: true,
+        approvalStatus: true,
+        rejectionReason: true,
+      },
+    });
+
+    // TODO: Send email notification to the recruiter about rejection
+
+    res.json({
+      message: 'Recruiter rejected',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error rejecting recruiter:', error);
+    res.status(500).json({ error: 'Failed to reject recruiter' });
+  }
+};
+
+// Get recruiter approval statistics
+export const getRecruiterApprovalStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const [pending, approved, rejected] = await Promise.all([
+      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'PENDING' } }),
+      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'APPROVED' } }),
+      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'REJECTED' } }),
+    ]);
+
+    res.json({
+      pending,
+      approved,
+      rejected,
+      total: pending + approved + rejected,
+    });
+  } catch (error) {
+    console.error('Error fetching recruiter stats:', error);
+    res.status(500).json({ error: 'Failed to fetch recruiter approval statistics' });
+  }
+};

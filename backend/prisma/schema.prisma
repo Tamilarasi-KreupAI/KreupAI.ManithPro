@@ -25,6 +25,15 @@ model User {
   portfolio               String?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
+  // Recruiter approval fields
+  approvalStatus          ApprovalStatus            @default(NOT_APPLICABLE)
+  companyName             String?
+  companyWebsite          String?
+  companyEmail            String?
+  approvalRequestedAt     DateTime?
+  approvedAt              DateTime?
+  approvedById            String?
+  rejectionReason         String?
   screeningInterviews     AIScreeningInterview[]    @relation("ScreeningCandidate")
   conductedScreenings     AIScreeningInterview[]    @relation("ScreeningRecruiter")
   applicationInsights     ApplicationInsight[]
@@ -7521,6 +7530,13 @@ enum UserRole {
   ADMIN
   VENDOR
   CLIENT
+}
+
+enum ApprovalStatus {
+  NOT_APPLICABLE
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum JobType {

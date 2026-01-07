@@ -12,6 +12,10 @@ import {
   resetUserPassword,
   getUserStats,
   bulkDeleteUsers,
+  getPendingRecruiters,
+  approveRecruiter,
+  rejectRecruiter,
+  getRecruiterApprovalStats,
 } from '../controllers/admin.user.controller';
 
 // Analytics Controllers
@@ -210,6 +214,11 @@ router.get('/analytics/funnel', getConversionFunnel);
 // ==================== User Management Routes ====================
 router.get('/users', getAllUsers);
 router.get('/users/stats', getUserStats);
+// Recruiter Approval Routes
+router.get('/recruiters/pending', getPendingRecruiters);
+router.get('/recruiters/stats', getRecruiterApprovalStats);
+router.post('/recruiters/:id/approve', approveRecruiter);
+router.post('/recruiters/:id/reject', rejectRecruiter);
 router.get('/users/:id', getUserById);
 router.post('/users', createUser);
 router.put('/users/:id', updateUser);
