@@ -218,7 +218,7 @@ const B2BDashboard: React.FC = () => {
                 </Link>
               ) : (
                 <Link
-                  to="/b2b/supply/upload"
+                  to="/b2b/supply"
                   className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/30 text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-blue-500/40"
                 >
                   <svg
@@ -231,10 +231,10 @@ const B2BDashboard: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                     />
                   </svg>
-                  Upload Profiles
+                  Add Candidates
                 </Link>
               )}
             </div>
@@ -334,45 +334,47 @@ const B2BDashboard: React.FC = () => {
             <ul className="divide-y divide-slate-200 dark:divide-slate-700">
               {recentItems.length > 0 ? (
                 recentItems.map((item) => (
-                  <li
-                    key={item.id}
-                    className="px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 truncate group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors pr-4">
-                        {item.title}
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span
-                          className={`px-3 py-1 inline-flex text-xs font-bold rounded-full border ${getStatusColor(item.status)}`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                        <span className="flex items-center gap-2">
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                  <li key={item.id}>
+                    <Link
+                      to={isVendor ? `/b2b/submissions` : `/b2b/requirements/edit/${item.id}`}
+                      className="block px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 truncate group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors pr-4">
+                          {item.title}
+                        </div>
+                        <div className="flex-shrink-0">
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs font-bold rounded-full border ${getStatusColor(item.status)}`}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            />
-                          </svg>
-                          {isVendor ? `Placed: ${item.count}` : `Required: ${item.count}`}
-                        </span>
+                            {item.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {item.applicants} {isVendor ? 'Submitted' : 'Proposals'}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                              />
+                            </svg>
+                            {isVendor ? `Placed: ${item.count}` : `Required: ${item.count}`}
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {item.applicants} {isVendor ? 'Submitted' : 'Proposals'}
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </li>
                 ))
               ) : (
@@ -419,10 +421,10 @@ const B2BDashboard: React.FC = () => {
             </ul>
             <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 rounded-b-2xl border-t border-slate-200 dark:border-slate-700">
               <Link
-                to="/b2b/requirements"
+                to={isVendor ? '/b2b/submissions' : '/b2b/requirements'}
                 className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-2 group"
               >
-                View all {isVendor ? 'placements' : 'requirements'}
+                View all {isVendor ? 'submissions' : 'requirements'}
                 <svg
                   className="h-4 w-4 group-hover:translate-x-1 transition-transform"
                   fill="none"
@@ -465,28 +467,30 @@ const B2BDashboard: React.FC = () => {
             <ul className="divide-y divide-slate-200 dark:divide-slate-700">
               {pendingContracts.length > 0 ? (
                 pendingContracts.map((contract) => (
-                  <li
-                    key={contract.id}
-                    className="px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors pr-4">
-                        {contract.partner}
+                  <li key={contract.id}>
+                    <Link
+                      to={`/b2b/contracts`}
+                      className="block px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors pr-4">
+                          {contract.partner}
+                        </div>
+                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          {formatDate(contract.date)}
+                        </div>
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        {formatDate(contract.date)}
+                      <div className="flex justify-between items-center gap-4">
+                        <div className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                          {contract.role}
+                        </div>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-bold rounded-full border whitespace-nowrap ${getStatusColor(contract.status)}`}
+                        >
+                          {contract.status}
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex justify-between items-center gap-4">
-                      <div className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                        {contract.role}
-                      </div>
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs font-bold rounded-full border whitespace-nowrap ${getStatusColor(contract.status)}`}
-                      >
-                        {contract.status}
-                      </span>
-                    </div>
+                    </Link>
                   </li>
                 ))
               ) : (

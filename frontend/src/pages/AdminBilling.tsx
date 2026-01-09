@@ -102,7 +102,15 @@ const AdminBilling = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeTab, subscriptionPage, paymentPage, invoicePage, subscriptionStatus, paymentStatus, invoiceStatus]);
+  }, [
+    activeTab,
+    subscriptionPage,
+    paymentPage,
+    invoicePage,
+    subscriptionStatus,
+    paymentStatus,
+    invoiceStatus,
+  ]);
 
   useEffect(() => {
     if (activeTab === 'analytics') {
@@ -241,7 +249,9 @@ const AdminBilling = () => {
     };
 
     return (
-      <span className={`px-2.5 py-1 text-xs font-bold rounded-full border ${colors[status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+      <span
+        className={`px-2.5 py-1 text-xs font-bold rounded-full border ${colors[status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}
+      >
         {status}
       </span>
     );
@@ -281,9 +291,15 @@ const AdminBilling = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Subscriptions</p>
-                  <p className="text-3xl font-bold text-slate-900 mt-2">{subscriptionStats.total}</p>
-                  <p className="text-sm font-medium text-green-600 mt-1">{subscriptionStats.active} active</p>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Total Subscriptions
+                  </p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {subscriptionStats.total}
+                  </p>
+                  <p className="text-sm font-medium text-green-600 mt-1">
+                    {subscriptionStats.active} active
+                  </p>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-3">
                   <span className="text-2xl">📊</span>
@@ -294,7 +310,9 @@ const AdminBilling = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">This Month Revenue</p>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    This Month Revenue
+                  </p>
                   <p className="text-3xl font-bold text-slate-900 mt-2">
                     {formatCurrency(subscriptionStats.revenueThisMonth)}
                   </p>
@@ -311,8 +329,12 @@ const AdminBilling = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Trial Subscriptions</p>
-                  <p className="text-3xl font-bold text-slate-900 mt-2">{subscriptionStats.trial}</p>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Trial Subscriptions
+                  </p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {subscriptionStats.trial}
+                  </p>
                   <p className="text-sm font-medium text-slate-500 mt-1">Potential conversions</p>
                 </div>
                 <div className="bg-yellow-50 rounded-xl p-3">
@@ -325,8 +347,12 @@ const AdminBilling = () => {
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Success Rate</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-2">{paymentStats.successRate}%</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                      Success Rate
+                    </p>
+                    <p className="text-3xl font-bold text-slate-900 mt-2">
+                      {paymentStats.successRate}%
+                    </p>
                     <p className="text-sm font-medium text-slate-500 mt-1">
                       Avg: {formatCurrency(paymentStats.avgTransactionValue)}
                     </p>
@@ -354,10 +380,11 @@ const AdminBilling = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-8 py-5 font-bold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === tab.id
-                    ? 'text-blue-600 bg-blue-50/50 border-b-2 border-blue-600'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                    }`}
+                  className={`px-8 py-5 font-bold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? 'text-blue-600 bg-blue-50/50 border-b-2 border-blue-600'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
                 >
                   <span className="text-lg">{tab.icon}</span>
                   {tab.label}
@@ -377,13 +404,18 @@ const AdminBilling = () => {
                       <h4 className="font-bold text-slate-900 mb-4">Recent Subscriptions</h4>
                       <div className="space-y-4">
                         {subscriptions.slice(0, 5).map((sub) => (
-                          <div key={sub.id} className="flex justify-between items-center py-3 border-b border-slate-200 last:border-0">
+                          <div
+                            key={sub.id}
+                            className="flex justify-between items-center py-3 border-b border-slate-200 last:border-0"
+                          >
                             <div>
                               <p className="font-bold text-slate-900">{sub.plan}</p>
                               <p className="text-sm text-slate-500">{formatDate(sub.startDate)}</p>
                             </div>
                             <div className="flex items-center space-x-4">
-                              <span className="font-medium text-slate-700">{formatCurrency(sub.price)}/{sub.billingCycle}</span>
+                              <span className="font-medium text-slate-700">
+                                {formatCurrency(sub.price)}/{sub.billingCycle}
+                              </span>
                               {getStatusBadge(sub.status)}
                             </div>
                           </div>
@@ -395,13 +427,20 @@ const AdminBilling = () => {
                       <h4 className="font-bold text-slate-900 mb-4">Recent Payments</h4>
                       <div className="space-y-4">
                         {payments.slice(0, 5).map((payment) => (
-                          <div key={payment.id} className="flex justify-between items-center py-3 border-b border-slate-200 last:border-0">
+                          <div
+                            key={payment.id}
+                            className="flex justify-between items-center py-3 border-b border-slate-200 last:border-0"
+                          >
                             <div>
                               <p className="font-bold text-slate-900">{payment.method}</p>
-                              <p className="text-sm text-slate-500">{formatDate(payment.createdAt)}</p>
+                              <p className="text-sm text-slate-500">
+                                {formatDate(payment.createdAt)}
+                              </p>
                             </div>
                             <div className="flex items-center space-x-4">
-                              <span className="font-bold text-slate-900">{formatCurrency(payment.amount, payment.currency)}</span>
+                              <span className="font-bold text-slate-900">
+                                {formatCurrency(payment.amount, payment.currency)}
+                              </span>
                               {getStatusBadge(payment.status)}
                             </div>
                           </div>
@@ -431,7 +470,9 @@ const AdminBilling = () => {
                       <option value="EXPIRED">Expired</option>
                       <option value="SUSPENDED">Suspended</option>
                     </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
 
@@ -440,12 +481,24 @@ const AdminBilling = () => {
                     <table className="min-w-full divide-y divide-slate-100">
                       <thead className="bg-slate-50">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Plan</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Price</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Billing Cycle</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Start Date</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Plan
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Price
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Billing Cycle
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Start Date
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
@@ -454,10 +507,18 @@ const AdminBilling = () => {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="font-bold text-slate-900">{sub.plan}</div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{formatCurrency(sub.price)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{sub.billingCycle}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{formatDate(sub.startDate)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(sub.status)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {formatCurrency(sub.price)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {sub.billingCycle}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {formatDate(sub.startDate)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(sub.status)}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               {sub.status === 'ACTIVE' && (
                                 <button
@@ -483,7 +544,9 @@ const AdminBilling = () => {
                   >
                     Previous
                   </button>
-                  <span className="text-sm font-medium text-slate-600">Page {subscriptionPage}</span>
+                  <span className="text-sm font-medium text-slate-600">
+                    Page {subscriptionPage}
+                  </span>
                   <button
                     onClick={() => setSubscriptionPage(subscriptionPage + 1)}
                     className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 disabled:opacity-50 transition-colors"
@@ -511,7 +574,9 @@ const AdminBilling = () => {
                       <option value="FAILED">Failed</option>
                       <option value="REFUNDED">Refunded</option>
                     </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
 
@@ -520,11 +585,21 @@ const AdminBilling = () => {
                     <table className="min-w-full divide-y divide-slate-100">
                       <thead className="bg-slate-50">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Transaction ID</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Method</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Transaction ID
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Method
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Status
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
@@ -538,9 +613,15 @@ const AdminBilling = () => {
                             <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
                               {formatCurrency(payment.amount, payment.currency)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{payment.method}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{formatDate(payment.createdAt)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(payment.status)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {payment.method}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {formatDate(payment.createdAt)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(payment.status)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -583,7 +664,9 @@ const AdminBilling = () => {
                       <option value="COMPLETED">Paid</option>
                       <option value="CANCELLED">Cancelled</option>
                     </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
 
@@ -592,13 +675,27 @@ const AdminBilling = () => {
                     <table className="min-w-full divide-y divide-slate-100">
                       <thead className="bg-slate-50">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Invoice #</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tax</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Total</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Due Date</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Invoice #
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Tax
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Total
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Due Date
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
@@ -609,13 +706,21 @@ const AdminBilling = () => {
                                 {invoice.invoiceNumber}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{formatCurrency(invoice.amount)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">{formatCurrency(invoice.tax)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">{formatCurrency(invoice.total)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {formatCurrency(invoice.amount)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                              {formatCurrency(invoice.tax)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
+                              {formatCurrency(invoice.total)}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                               {invoice.dueDate ? formatDate(invoice.dueDate) : '-'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(invoice.status)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(invoice.status)}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               {invoice.status === 'PENDING' && (
                                 <button
@@ -668,7 +773,9 @@ const AdminBilling = () => {
                       <option value="90d">Last 90 Days</option>
                       <option value="1y">Last Year</option>
                     </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
 
@@ -678,19 +785,29 @@ const AdminBilling = () => {
                       <h4 className="font-bold text-slate-900 mb-6">Revenue by Plan</h4>
                       <div className="space-y-4">
                         {revenueAnalytics.byPlan?.map((item: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"
+                          >
                             <span className="font-medium text-slate-700">{item.plan}</span>
-                            <span className="text-lg font-bold text-slate-900">{formatCurrency(item.revenue)}</span>
+                            <span className="text-lg font-bold text-slate-900">
+                              {formatCurrency(item.revenue)}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
-                      <h4 className="font-bold text-slate-900 mb-6">Subscription Status Distribution</h4>
+                      <h4 className="font-bold text-slate-900 mb-6">
+                        Subscription Status Distribution
+                      </h4>
                       <div className="space-y-4">
                         {revenueAnalytics.byStatus?.map((item: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"
+                          >
                             <span className="font-medium text-slate-700">{item.status}</span>
                             <span className="font-bold text-slate-900">{item.count}</span>
                           </div>

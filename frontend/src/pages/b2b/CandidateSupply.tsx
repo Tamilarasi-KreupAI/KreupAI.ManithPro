@@ -8,13 +8,14 @@ import {
 
 interface Candidate {
   id: string;
-  name: string;
-  title?: string;
-  experience: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  experience: number | null;
   skills: string[];
   status: 'AVAILABLE' | 'INTERVIEWING' | 'PLACED';
-  rate?: string;
-  location?: string;
+  resumeUrl?: string;
 }
 
 const CandidateSupply: React.FC = () => {
@@ -29,12 +30,12 @@ const CandidateSupply: React.FC = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    name: '',
-    title: '',
-    experienceYears: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    experience: '',
     skills: '',
-    rate: '',
-    location: '',
   });
 
   useEffect(() => {
@@ -77,28 +78,28 @@ const CandidateSupply: React.FC = () => {
   };
 
   const handleAddCandidate = async () => {
-    if (!form.name.trim()) {
-      alert('Candidate name is required');
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
+      alert('First name, last name, and email are required');
       return;
     }
     try {
       setSubmitting(true);
       await addCandidate({
-        name: form.name,
-        title: form.title || undefined,
-        experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone || undefined,
+        experience: form.experience ? Number(form.experience) : undefined,
         skills: form.skills ? form.skills.split(',').map((s) => s.trim()) : [],
-        rate: form.rate || undefined,
-        location: form.location || undefined,
       });
       setShowAdd(false);
       setForm({
-        name: '',
-        title: '',
-        experienceYears: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        experience: '',
         skills: '',
-        rate: '',
-        location: '',
       });
       loadCandidates();
     } catch (err: any) {
@@ -139,28 +140,27 @@ const CandidateSupply: React.FC = () => {
             ) : (
               <div className="space-y-3 text-sm">
                 <div>
-                  <strong>Name:</strong> {selectedCandidate.name}
+                  <strong>Name:</strong> {selectedCandidate.firstName} {selectedCandidate.lastName}
                 </div>
                 <div>
-                  <strong>Title:</strong> {selectedCandidate.title}
+                  <strong>Email:</strong> {selectedCandidate.email}
                 </div>
+                {selectedCandidate.phone && (
+                  <div>
+                    <strong>Phone:</strong> {selectedCandidate.phone}
+                  </div>
+                )}
                 <div>
-                  <strong>Experience:</strong> {selectedCandidate.experience}
+                  <strong>Experience:</strong> {selectedCandidate.experience ?? 'N/A'} years
                 </div>
                 <div>
                   <strong>Status:</strong> {selectedCandidate.status}
-                </div>
-                <div>
-                  <strong>Rate:</strong> {selectedCandidate.rate}
-                </div>
-                <div>
-                  <strong>Location:</strong> {selectedCandidate.location}
                 </div>
 
                 <div>
                   <strong>Skills:</strong>
                   <div className="mt-1 flex flex-wrap gap-2">
-                    {selectedCandidate.skills.map((skill: string) => (
+                    {selectedCandidate.skills?.map((skill: string) => (
                       <span
                         key={skill}
                         className="px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700"
@@ -192,8 +192,8 @@ const CandidateSupply: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">{c.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{c.title}</p>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{c.firstName} {c.lastName}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{c.email}</p>
                 </div>
                 <span
                   className={`px-2 py-0.5 text-xs rounded-full ${
@@ -209,9 +209,8 @@ const CandidateSupply: React.FC = () => {
               </div>
 
               <div className="mt-4 text-sm space-y-1 text-gray-700 dark:text-gray-300">
-                <div>Experience: {c.experience}</div>
-                {c.rate && <div>Rate: {c.rate}</div>}
-                {c.location && <div>Location: {c.location}</div>}
+                <div>Experience: {c.experience ?? 'N/A'} years</div>
+                {c.phone && <div>Phone: {c.phone}</div>}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -227,7 +226,12 @@ const CandidateSupply: React.FC = () => {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex justify-between">
-              <button className="text-sm text-primary-600 hover:underline">View Profile</button>
+              <button
+                onClick={() => handleViewProfile(c.id)}
+                className="text-sm text-primary-600 hover:underline"
+              >
+                View Profile
+              </button>
               <button
                 onClick={() => handleDownload(c.id)}
                 className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
@@ -247,40 +251,41 @@ const CandidateSupply: React.FC = () => {
 
             <div className="space-y-3">
               <input
-                placeholder="Name *"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="First Name *"
+                value={form.firstName}
+                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                 className="w-full rounded border px-3 py-2"
               />
               <input
-                placeholder="Title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="Last Name *"
+                value={form.lastName}
+                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                className="w-full rounded border px-3 py-2"
+              />
+              <input
+                placeholder="Email *"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full rounded border px-3 py-2"
+              />
+              <input
+                placeholder="Phone"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full rounded border px-3 py-2"
               />
               <input
                 placeholder="Experience (years)"
                 type="number"
-                value={form.experienceYears}
-                onChange={(e) => setForm({ ...form, experienceYears: e.target.value })}
+                value={form.experience}
+                onChange={(e) => setForm({ ...form, experience: e.target.value })}
                 className="w-full rounded border px-3 py-2"
               />
               <input
                 placeholder="Skills (comma separated)"
                 value={form.skills}
                 onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                className="w-full rounded border px-3 py-2"
-              />
-              <input
-                placeholder="Rate"
-                value={form.rate}
-                onChange={(e) => setForm({ ...form, rate: e.target.value })}
-                className="w-full rounded border px-3 py-2"
-              />
-              <input
-                placeholder="Location"
-                value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
                 className="w-full rounded border px-3 py-2"
               />
             </div>

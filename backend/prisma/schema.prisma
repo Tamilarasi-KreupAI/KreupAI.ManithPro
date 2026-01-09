@@ -7352,11 +7352,14 @@ model B2BContract {
 model B2BPlacement {
   id               String   @id @default(uuid())
   vendorId         String   @map("vendor_id")
-  requirementId    String?  @map("requirement_id")
+  clientId         String   @map("client_id")
+  requirementId    String   @map("requirement_id")
+  candidateId      String   @map("candidate_id")
   title            String
-  status           String   @default("ACTIVE")
-  placedCount      Int      @default(0) @map("placed_count")
-  submissionsCount Int      @default(0) @map("submissions_count")
+  status           String   @default("SUBMITTED")  // SUBMITTED, SHORTLISTED, REJECTED, PLACED
+  notes            String?
+  submittedAt      DateTime @default(now()) @map("submitted_at")
+  reviewedAt       DateTime? @map("reviewed_at")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -7394,6 +7397,41 @@ model B2BInvoice {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("b2b_invoices")
+}
+
+model B2BSettings {
+  id                        String   @id @default(uuid())
+  userId                    String   @unique @map("user_id")
+  // Company Profile
+  companyName               String?  @map("company_name")
+  contactPerson             String?  @map("contact_person")
+  phone                     String?
+  address                   String?
+  website                   String?
+  description               String?
+  // Notification Preferences
+  emailNotifications        Boolean  @default(true) @map("email_notifications")
+  newSubmissionsNotify      Boolean  @default(true) @map("new_submissions_notify")
+  contractUpdatesNotify     Boolean  @default(true) @map("contract_updates_notify")
+  invoiceRemindersNotify    Boolean  @default(true) @map("invoice_reminders_notify")
+  weeklyDigestNotify        Boolean  @default(false) @map("weekly_digest_notify")
+  // Client-specific settings
+  defaultPaymentTerms       String?  @map("default_payment_terms")
+  preferredContractDuration String?  @map("preferred_contract_duration")
+  autoApproveSubmissions    Boolean  @default(false) @map("auto_approve_submissions")
+  requireNDA                Boolean  @default(true) @map("require_nda")
+  // Vendor-specific settings
+  bankName                  String?  @map("bank_name")
+  accountNumber             String?  @map("account_number")
+  routingNumber             String?  @map("routing_number")
+  minimumRate               String?  @map("minimum_rate")
+  serviceAreas              Json?    @map("service_areas")
+  specializations           Json?
+  availableForNewProjects   Boolean  @default(true) @map("available_for_new_projects")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  @@map("b2b_settings")
 }
 
 model Department {

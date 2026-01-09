@@ -46,6 +46,13 @@ const Navbar: React.FC = () => {
     setProfileDropdownOpen(false);
   }, [location.pathname]);
 
+  // Hide navbar on B2B routes (B2B has its own sidebar layout) and auth pages
+  // This check MUST be after all hooks to follow React's Rules of Hooks
+  const authPages = ['/login', '/register', '/register/recruiter'];
+  if (location.pathname.startsWith('/b2b') || authPages.includes(location.pathname)) {
+    return null;
+  }
+
   const isHome = location.pathname === '/';
 
   // Dynamic classes based on scroll and page

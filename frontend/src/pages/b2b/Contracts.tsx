@@ -4,6 +4,8 @@ import {
   viewContract,
   downloadContract,
   createDraftContract,
+  getVendors,
+  updateContractStatus,
 } from '../../services/b2b.service';
 
 interface Contract {
@@ -11,19 +13,30 @@ interface Contract {
   partner: string;
   candidate: string;
   role: string;
+  terms: string;
   startDate: string;
   duration: string;
   rate: string;
   status: string;
   signedAt: string | null;
+  isVendor: boolean;
+  isClient: boolean;
+}
+
+interface Vendor {
+  id: string;
+  name: string;
+  email: string;
 }
 
 const Contracts: React.FC = () => {
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [draftForm, setDraftForm] = useState({
     partnerName: '',
     role: '',
     vendorId: '',
+    terms: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,6 +48,7 @@ const Contracts: React.FC = () => {
 
   useEffect(() => {
     loadContracts();
+    loadVendors();
   }, []);
 
   const loadContracts = async () => {
@@ -49,12 +63,21 @@ const Contracts: React.FC = () => {
     }
   };
 
+  const loadVendors = async () => {
+    try {
+      const data = await getVendors();
+      setVendors(data);
+    } catch (err: any) {
+      console.error('Failed to load vendors:', err);
+    }
+  };
+
   const handleCreateDraft = async () => {
     try {
       setSubmitting(true);
       await createDraftContract(draftForm);
       setShowDraftModal(false);
-      setDraftForm({ partnerName: '', role: '', vendorId: '' });
+      setDraftForm({ partnerName: '', role: '', vendorId: '', terms: '' });
       loadContracts(); // refresh list
     } catch (err: any) {
       alert(err?.response?.data?.error || 'Failed to create draft');
@@ -77,6 +100,15 @@ const Contracts: React.FC = () => {
     document.body.appendChild(a);
     a.click();
     a.remove();
+  };
+
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      await updateContractStatus(id, status);
+      loadContracts(); // refresh list
+    } catch (err: any) {
+      alert(err?.response?.data?.error || `Failed to ${status.toLowerCase()} contract`);
+    }
   };
 
   if (loading) {
@@ -114,11 +146,32 @@ const Contracts: React.FC = () => {
             <h2 className="text-lg font-bold mb-4">Draft New Contract</h2>
 
             <div className="space-y-4">
+              <select
+                value={draftForm.vendorId}
+                onChange={(e) => {
+                  const selectedVendor = vendors.find(v => v.id === e.target.value);
+                  setDraftForm({
+                    ...draftForm,
+                    vendorId: e.target.value,
+                    partnerName: selectedVendor?.name || '',
+                  });
+                }}
+                className="w-full rounded border px-3 py-2 bg-white dark:bg-gray-700"
+              >
+                <option value="">Select Vendor *</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name} ({vendor.email})
+                  </option>
+                ))}
+              </select>
+
               <input
                 placeholder="Partner Company Name"
                 value={draftForm.partnerName}
                 onChange={(e) => setDraftForm({ ...draftForm, partnerName: e.target.value })}
                 className="w-full rounded border px-3 py-2"
+                readOnly
               />
 
               <input
@@ -129,9 +182,9 @@ const Contracts: React.FC = () => {
               />
 
               <input
-                placeholder="Vendor User ID"
-                value={draftForm.vendorId}
-                onChange={(e) => setDraftForm({ ...draftForm, vendorId: e.target.value })}
+                placeholder="Terms (e.g., 6 months, Net 30)"
+                value={draftForm.terms}
+                onChange={(e) => setDraftForm({ ...draftForm, terms: e.target.value })}
                 className="w-full rounded border px-3 py-2"
               />
             </div>
@@ -186,10 +239,7 @@ const Contracts: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 dark:text-white">{contract.rate}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {contract.duration}
-                    </div>
+                    <div className="text-sm text-gray-900 dark:text-white">{contract.terms}</div>
                   </td>
 
                   <td className="px-6 py-4">
@@ -204,10 +254,10 @@ const Contracts: React.FC = () => {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 text-right text-sm">
+                  <td className="px-6 py-4 text-right text-sm space-x-2">
                     <button
                       onClick={() => handleView(contract.id)}
-                      className="text-primary-600 hover:underline mr-4"
+                      className="text-primary-600 hover:underline"
                     >
                       View
                     </button>
@@ -218,6 +268,34 @@ const Contracts: React.FC = () => {
                     >
                       Download
                     </button>
+
+                    {/* Vendor can approve/reject pending contracts */}
+                    {contract.isVendor && contract.status === 'PENDING' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusUpdate(contract.id, 'ACTIVE')}
+                          className="text-green-600 hover:underline"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(contract.id, 'REJECTED')}
+                          className="text-red-600 hover:underline"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+
+                    {/* Client can cancel pending contracts */}
+                    {contract.isClient && contract.status === 'PENDING' && (
+                      <button
+                        onClick={() => handleStatusUpdate(contract.id, 'CANCELLED')}
+                        className="text-red-600 hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

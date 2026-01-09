@@ -66,6 +66,8 @@ import CandidateSupply from './pages/b2b/CandidateSupply';
 import UploadSupply from './pages/b2b/UploadSupply';
 import Contracts from './pages/b2b/Contracts';
 import Invoices from './pages/b2b/Invoices';
+import Submissions from './pages/b2b/Submissions';
+import B2BSettings from './pages/b2b/Settings';
 
 function App() {
   return (
@@ -447,10 +449,8 @@ function App() {
                       <Route path="supply/upload" element={<UploadSupply />} />
                       <Route path="contracts" element={<Contracts />} />
                       <Route path="invoices" element={<Invoices />} />
-                      <Route
-                        path="settings"
-                        element={<div className="p-6">Settings Page (Coming Soon)</div>}
-                      />
+                      <Route path="submissions" element={<Submissions />} />
+                      <Route path="settings" element={<B2BSettings />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/" replace />} />
