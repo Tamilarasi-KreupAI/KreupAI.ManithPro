@@ -84,6 +84,12 @@ export const createApplication = async (req: AuthRequest, res: Response): Promis
       res.status(400).json({ error: 'This job is no longer accepting applications' });
       return;
     }
+    if (job.deadline && new Date() > job.deadline) {
+      res.status(400).json({
+        error: 'The application deadline for this job has passed',
+      });
+      return;
+    }
 
     // Check if already applied
     const existingApplication = await prisma.application.findUnique({

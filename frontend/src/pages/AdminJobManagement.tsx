@@ -96,15 +96,15 @@ const AdminJobManagement = () => {
   };
 
   const handleDeleteJob = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this job?')) return;
+    if (!window.confirm('Are you sure you want to close this job?')) return;
 
     try {
       await deleteJob(id);
       loadJobs();
       loadStats();
     } catch (error) {
-      console.error('Error deleting job:', error);
-      alert('Failed to delete job');
+      console.error('Error closing job:', error);
+      alert('Failed to close job');
     }
   };
 
