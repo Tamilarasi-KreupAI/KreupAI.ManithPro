@@ -9,7 +9,7 @@ import {
   SalaryTrendPrediction,
   PipelineHealthPrediction,
   PredictiveAnalyticsStats,
-} from '../../types';
+} from '../../types/batch22PredictiveAnalytics.types';
 import {
   hiringSuccessAPI,
   timeToHireAPI,
@@ -443,11 +443,11 @@ const PredictiveAnalyticsHub: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {prediction.positiveSignals.length > 0 && (
+              {(prediction.positiveSignals?.length ?? 0) > 0 && (
                 <div className="mb-2">
                   <p className="text-xs text-gray-500 mb-1">Positive Signals:</p>
                   <div className="flex flex-wrap gap-1">
-                    {prediction.positiveSignals.map((signal, idx) => (
+                    {prediction.positiveSignals?.map((signal, idx) => (
                       <span key={idx} className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-xs">
                         {signal.signal}
                       </span>
@@ -455,11 +455,11 @@ const PredictiveAnalyticsHub: React.FC = () => {
                   </div>
                 </div>
               )}
-              {prediction.riskFactors.length > 0 && (
+              {(prediction.riskFactors?.length ?? 0) > 0 && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Risk Factors:</p>
                   <div className="flex flex-wrap gap-1">
-                    {prediction.riskFactors.map((risk, idx) => (
+                    {prediction.riskFactors?.map((risk, idx) => (
                       <span key={idx} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-xs">
                         {risk.factor}
                       </span>
@@ -506,7 +506,7 @@ const PredictiveAnalyticsHub: React.FC = () => {
                 <div className="text-right">
                   <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{forecast.predictedDays} days</p>
                   <p className="text-xs text-gray-500">
-                    Range: {forecast.confidenceInterval.low}-{forecast.confidenceInterval.high} days
+                    Range: {forecast.confidenceInterval?.low}-{forecast.confidenceInterval?.high} days
                   </p>
                 </div>
               </div>
@@ -543,11 +543,11 @@ const PredictiveAnalyticsHub: React.FC = () => {
                   {forecast.bottleneckRisk} Bottleneck Risk
                 </span>
               </div>
-              {forecast.predictedBottlenecks.length > 0 && (
+              {(forecast.predictedBottlenecks?.length ?? 0) > 0 && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Predicted Bottlenecks:</p>
                   <div className="flex flex-wrap gap-1">
-                    {forecast.predictedBottlenecks.map((bottleneck, idx) => (
+                    {forecast.predictedBottlenecks?.map((bottleneck, idx) => (
                       <span key={idx} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-xs">
                         {bottleneck.stage}: {bottleneck.reason}
                       </span>
@@ -640,11 +640,11 @@ const PredictiveAnalyticsHub: React.FC = () => {
                   </p>
                 </div>
               )}
-              {analysis.scarcestSkills.length > 0 && (
+              {(analysis.scarcestSkills?.length ?? 0) > 0 && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Scarcest Skills:</p>
                   <div className="flex flex-wrap gap-1">
-                    {analysis.scarcestSkills.map((skill, idx) => (
+                    {analysis.scarcestSkills?.map((skill, idx) => (
                       <span key={idx} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-xs">
                         {skill.skill} ({skill.scarcity})
                       </span>
@@ -687,7 +687,7 @@ const PredictiveAnalyticsHub: React.FC = () => {
                 </div>
               </div>
               <div className="grid grid-cols-5 gap-2 mb-4">
-                {Object.entries(health.byStage).map(([stage, count]) => (
+                {Object.entries(health.byStage ?? {}).map(([stage, count]) => (
                   <div key={stage} className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
                     <p className="text-xs text-gray-500 capitalize">{stage}</p>
                     <p className="font-bold dark:text-white">{count}</p>
@@ -714,11 +714,11 @@ const PredictiveAnalyticsHub: React.FC = () => {
                   <p className="text-xl font-bold text-red-600 dark:text-red-400">{health.stalledCandidates}</p>
                 </div>
               </div>
-              {health.urgentActions.length > 0 && (
+              {(health.urgentActions?.length ?? 0) > 0 && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Urgent Actions:</p>
                   <div className="space-y-1">
-                    {health.urgentActions.map((action, idx) => (
+                    {health.urgentActions?.map((action, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${
                           action.priority === 'high' ? 'bg-red-500' :
