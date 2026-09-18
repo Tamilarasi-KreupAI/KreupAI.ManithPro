@@ -232,10 +232,13 @@ export const deleteJob = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    // Delete job (cascade will handle related records)
-    await prisma.job.delete({ where: { id } });
-
-    res.json({ message: 'Job deleted successfully' });
+   // Close the job instead of permanently deleting it 
+   await prisma.job.update({
+    where: { id },
+    data: { status: 'CLOSED' },
+  });
+  
+  res.json({ message: 'Job closed successfully' });
   } catch (error) {
     console.error('Error deleting job:', error);
     res.status(500).json({ error: 'Failed to delete job' });

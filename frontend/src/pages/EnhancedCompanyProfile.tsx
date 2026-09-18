@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { api } from '../services/api';
 import CompanyCulture from '../components/CompanyCulture';
 import TeamGallery from '../components/TeamGallery';
 
@@ -7,18 +8,37 @@ const EnhancedCompanyProfile: React.FC = () => {
   const { name } = useParams<{ name: string }>();
 
   // Mock data - in production, fetch from API based on company name
-  const company = {
-    name: name || 'Tech Innovations Inc.',
-    tagline: 'Building the future of technology',
-    description: 'We are a leading technology company specializing in AI, cloud computing, and innovative software solutions. Our mission is to empower businesses through cutting-edge technology.',
-    industry: 'Technology',
-    size: '500-1000 employees',
-    founded: '2010',
-    location: 'San Francisco, CA',
-    website: 'https://techinnovations.com',
-    logo: 'https://via.placeholder.com/200x200?text=Logo',
-    coverImage: 'https://via.placeholder.com/1200x400?text=Company+Cover',
+  const [company, setCompany] = useState<any>(null);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState('');
+
+useEffect(() => {
+  const loadCompany = async () => {
+    if (!name) {
+      setError('Company name is missing');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const response = await api.get(
+        `/companies/${encodeURIComponent(name)}`
+      );
+
+      setCompany(response.data.company);
+    } catch (err) {
+      console.error('Failed to load company:', err);
+      setError('Failed to load company details.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  loadCompany();
+}, [name]);
 
   const cultureVideos = [
     {
@@ -243,6 +263,21 @@ const EnhancedCompanyProfile: React.FC = () => {
     },
   ];
 
+  if (loading) {
+    return (
+    <div className="min-h-screen flex items-center justify-center">
+      Loading company details...
+      </div>
+      );
+    }
+    
+  if (error || !company) {
+    return (
+    <div className="min-h-screen flex items-center justify-center text-red-600">
+      {error || 'Company not found'}
+      </div>
+      );
+    }
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Background Gradient Blob */}
