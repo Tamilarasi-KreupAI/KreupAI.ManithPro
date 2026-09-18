@@ -1,4 +1,39 @@
 import { Request, Response } from 'express';
+import {
+  getCultureFitScore as fetchCultureFitScore,
+  getGrowthPotentialScore as fetchGrowthPotentialScore,
+  getTechnicalDepthScore as fetchTechnicalDepthScore,
+  getCommunicationScore as fetchCommunicationScore,
+  getReliabilityScore as fetchReliabilityScore,
+  getAllProfileScores,
+  saveCultureFitScore,
+  saveGrowthPotentialScore,
+  saveTechnicalDepthScore,
+  saveCommunicationScore,
+  saveReliabilityScore,
+} from '../services/scoringStorage.service';
+
+const persistScoreSafely = async (label: string, persist: () => Promise<unknown>) => {
+  try {
+    await persist();
+  } catch (storageError) {
+    // Keep the existing API fallback working if the database is temporarily unavailable.
+    console.error(`[AI-11] Failed to persist ${label}:`, storageError);
+  }
+};
+
+const fetchScoreSafely = async <T>(
+  label: string,
+  fetch: () => Promise<T>,
+): Promise<T | null> => {
+  try {
+    return await fetch();
+  } catch (storageError) {
+    // Keep the existing API fallback working if the database is temporarily unavailable.
+    console.error(`[AI-11] Failed to fetch ${label}:`, storageError);
+    return null;
+  }
+};
 
 // ============================================
 // 2.1.3 - CULTURE FIT ANALYSIS
@@ -9,6 +44,24 @@ export const getCultureFitAnalysis = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
     const { companyId, jobId } = req.query;
+    const profileId = 'profile-001';
+    const normalizedCompanyId = typeof companyId === 'string' ? companyId : undefined;
+    const normalizedJobId = typeof jobId === 'string' ? jobId : undefined;
+
+    const storedCultureFit = await fetchScoreSafely(
+      'culture fit score',
+      () =>
+        fetchCultureFitScore(
+          profileId,
+          normalizedCompanyId,
+          normalizedJobId,
+        ),
+    );
+
+    if (storedCultureFit) {
+      res.json({ analysis: storedCultureFit });
+      return;
+    }
 
     // Mock culture fit analysis
     const cultureFitAnalysis = {
@@ -96,6 +149,16 @@ export const getCultureFitAnalysis = async (req: Request, res: Response) => {
       confidence: 0.82,
     };
 
+    await persistScoreSafely('culture fit score', () =>
+      saveCultureFitScore({
+        ...cultureFitAnalysis,
+        profileId,
+        companyId: normalizedCompanyId ?? null,
+        jobId: normalizedJobId ?? null,
+        lastAnalyzedAt: new Date(cultureFitAnalysis.lastAnalyzedAt),
+      } as any),
+    );
+
     res.json({ analysis: cultureFitAnalysis });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to get culture fit analysis' });
@@ -155,6 +218,17 @@ export const submitCultureQuestionnaire = async (req: Request, res: Response) =>
 export const getGrowthPotentialScore = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const profileId = 'profile-001';
+
+    const storedGrowthScore = await fetchScoreSafely(
+      'growth potential score',
+      () => fetchGrowthPotentialScore(profileId),
+    );
+
+    if (storedGrowthScore) {
+      res.json({ score: storedGrowthScore });
+      return;
+    }
 
     const growthScore = {
       id: 'gps-001',
@@ -250,6 +324,14 @@ export const getGrowthPotentialScore = async (req: Request, res: Response) => {
       confidence: 0.85,
     };
 
+    await persistScoreSafely('growth potential score', () =>
+      saveGrowthPotentialScore({
+        ...growthScore,
+        profileId,
+        lastScoredAt: new Date(growthScore.lastScoredAt),
+      } as any),
+    );
+
     res.json({ score: growthScore });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to get growth potential score' });
@@ -284,6 +366,17 @@ export const regenerateGrowthPotentialScore = async (req: Request, res: Response
 export const getTechnicalDepthScore = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const profileId = 'profile-001';
+
+    const storedTechnicalScore = await fetchScoreSafely(
+      'technical depth score',
+      () => fetchTechnicalDepthScore(profileId),
+    );
+
+    if (storedTechnicalScore) {
+      res.json({ score: storedTechnicalScore });
+      return;
+    }
 
     const technicalScore = {
       id: 'tds-001',
@@ -415,6 +508,14 @@ export const getTechnicalDepthScore = async (req: Request, res: Response) => {
       confidence: 0.88,
     };
 
+    await persistScoreSafely('technical depth score', () =>
+      saveTechnicalDepthScore({
+        ...technicalScore,
+        profileId,
+        lastScoredAt: new Date(technicalScore.lastScoredAt),
+      } as any),
+    );
+
     res.json({ score: technicalScore });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to get technical depth score' });
@@ -450,6 +551,17 @@ export const regenerateTechnicalDepthScore = async (req: Request, res: Response)
 export const getCommunicationScore = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const profileId = 'profile-001';
+
+    const storedCommunicationScore = await fetchScoreSafely(
+      'communication score',
+      () => fetchCommunicationScore(profileId),
+    );
+
+    if (storedCommunicationScore) {
+      res.json({ score: storedCommunicationScore });
+      return;
+    }
 
     const commScore = {
       id: 'cs-001',
@@ -554,6 +666,14 @@ export const getCommunicationScore = async (req: Request, res: Response) => {
       confidence: 0.82,
     };
 
+    await persistScoreSafely('communication score', () =>
+      saveCommunicationScore({
+        ...commScore,
+        profileId,
+        lastScoredAt: new Date(commScore.lastScoredAt),
+      } as any),
+    );
+
     res.json({ score: commScore });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to get communication score' });
@@ -589,6 +709,17 @@ export const regenerateCommunicationScore = async (req: Request, res: Response) 
 export const getReliabilityScore = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const profileId = 'profile-001';
+
+    const storedReliabilityScore = await fetchScoreSafely(
+      'reliability score',
+      () => fetchReliabilityScore(profileId),
+    );
+
+    if (storedReliabilityScore) {
+      res.json({ score: storedReliabilityScore });
+      return;
+    }
 
     const reliabilityScore = {
       id: 'rs-001',
@@ -702,6 +833,14 @@ export const getReliabilityScore = async (req: Request, res: Response) => {
       confidence: 0.92,
     };
 
+    await persistScoreSafely('reliability score', () =>
+      saveReliabilityScore({
+        ...reliabilityScore,
+        profileId,
+        lastScoredAt: new Date(reliabilityScore.lastScoredAt),
+      } as any),
+    );
+
     res.json({ score: reliabilityScore });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to get reliability score' });
@@ -739,6 +878,75 @@ export const getUserReliabilityScore = async (req: Request, res: Response) => {
 export const getAllAdvancedScores = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const profileId = 'profile-001';
+    const { companyId, jobId } = req.query;
+    const normalizedCompanyId = typeof companyId === 'string' ? companyId : undefined;
+    const normalizedJobId = typeof jobId === 'string' ? jobId : undefined;
+
+    const storedScores =
+      (await fetchScoreSafely(
+        'all advanced scores',
+        () =>
+          getAllProfileScores(
+            profileId,
+            normalizedCompanyId,
+            normalizedJobId,
+          ),
+      )) ?? {
+        cultureFit: null,
+        growthPotential: null,
+        technicalDepth: null,
+        communication: null,
+        reliability: null,
+      };
+
+    const hasStoredScores = Object.values(storedScores).some(Boolean);
+
+    if (hasStoredScores) {
+      res.json({
+        userId,
+        lastUpdated: new Date().toISOString(),
+        scores: {
+          cultureFit: storedScores.cultureFit
+            ? {
+                score: storedScores.cultureFit.overallCultureScore,
+                tier: storedScores.cultureFit.fitLevel,
+                confidence: storedScores.cultureFit.confidence,
+              }
+            : null,
+          growthPotential: storedScores.growthPotential
+            ? {
+                score: storedScores.growthPotential.overallGrowthScore,
+                tier: storedScores.growthPotential.growthTier,
+                confidence: storedScores.growthPotential.confidence,
+              }
+            : null,
+          technicalDepth: storedScores.technicalDepth
+            ? {
+                score: storedScores.technicalDepth.overallTechnicalScore,
+                tier: storedScores.technicalDepth.technicalTier,
+                confidence: storedScores.technicalDepth.confidence,
+              }
+            : null,
+          communication: storedScores.communication
+            ? {
+                score: storedScores.communication.overallCommScore,
+                tier: storedScores.communication.communicationTier,
+                confidence: storedScores.communication.confidence,
+              }
+            : null,
+          reliability: storedScores.reliability
+            ? {
+                score: storedScores.reliability.overallReliabilityScore,
+                tier: storedScores.reliability.reliabilityTier,
+                confidence: storedScores.reliability.confidence,
+              }
+            : null,
+        },
+        source: 'database',
+      });
+      return;
+    }
 
     const allScores = {
       userId,
