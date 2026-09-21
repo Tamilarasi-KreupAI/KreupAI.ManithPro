@@ -65,20 +65,23 @@ export async function extractResumeText(
     }
 
     const text = extractedText.trim();
+const meaningfulText = stripPdfPageMarkers(text).trim();
 
-    if (!text) {
-      return {
-        status: "no_text_found",
-        text: null,
-        error: "No selectable text found. OCR is not currently supported.",
-      };
-    }
+if (!meaningfulText) {
+  return {
+    status: "no_text_found",
+    text: null,
+    error: "No selectable text found. OCR is not currently supported.",
+  };
+}
 
-    return {
-      status: "success",
-      text,
-      error: null,
-    };
+return {
+  status: "success",
+  text,
+  error: null,
+};
+
+    
   } catch (error: unknown) {
     const message =
       error instanceof Error ? `${error.name}: ${error.message}` : String(error);
@@ -141,4 +144,8 @@ function matchesExpectedFormat(fileBuffer: Buffer, mimeType: string): boolean {
   }
 
   return false;
+}
+
+function stripPdfPageMarkers(text: string): string {
+  return text.replace(/--\s*\d+\s*of\s*\d+\s*--/gi, "");
 }
