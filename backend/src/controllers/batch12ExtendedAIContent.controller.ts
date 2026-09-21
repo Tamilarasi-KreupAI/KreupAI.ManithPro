@@ -112,7 +112,7 @@ export const generateScreeningCriteria = async (req: Request, res: Response) => 
           'No questions about protected characteristics',
         ],
         status: 'DRAFT',
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
@@ -235,7 +235,7 @@ export const generateCandidateSummary = async (req: Request, res: Response) => {
         confidenceScore: 0.85,
         dataCompleteness: 0.78,
         status: 'GENERATED',
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
@@ -339,7 +339,7 @@ export const generateRejectionEmail = async (req: Request, res: Response) => {
         professionalismScore: 90,
         clarityScore: 92,
         status: 'DRAFT',
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
@@ -496,7 +496,7 @@ The Hiring Team
         contingencies: ['Background check', 'Reference verification'],
         expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         status: 'DRAFT',
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
