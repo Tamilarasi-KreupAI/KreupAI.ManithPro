@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ApplicationStatus } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import { sendApplicationSubmittedEmail, sendApplicationStatusEmail } from '../utils/email';
 import { generateResumeFromProfile } from '../utils/resumeGenerator';
@@ -8,12 +8,28 @@ import fs from 'fs';
 
 const prisma = new PrismaClient();
 
+const allowedStatusTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
+  PENDING: ['REVIEWING', 'REJECTED', 'WITHDRAWN'],
+  REVIEWING: ['SHORTLISTED', 'REJECTED', 'WITHDRAWN'],
+  SHORTLISTED: ['INTERVIEW_SCHEDULED', 'REJECTED', 'WITHDRAWN'],
+  INTERVIEW_SCHEDULED: ['ACCEPTED', 'REJECTED', 'WITHDRAWN'],
+  ACCEPTED: [],
+  REJECTED: [],
+  WITHDRAWN: [],
+};
+
+
 export const checkIfApplied = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
     }
+
+    if (req.user.role === 'VENDOR' || req.user.role === 'CLIENT') {
+    res.status(403).json({ error: 'Insufficient permissions' });
+    return;
+}
 
     if (req.user.role !== 'CANDIDATE') {
       res.status(403).json({ error: 'Only candidates can check application status' });
@@ -113,32 +129,46 @@ export const createApplication = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Create application
-    const application = await prisma.application.create({
-      data: {
-        jobId,
-        candidateId: req.user.userId,
-        resume: resumePath,
-        coverLetter,
-      },
-      include: {
-        job: {
-          select: {
-            id: true,
-            title: true,
-            location: true,
-            type: true,
+    // Create application and initial status history entry
+    const application = await prisma.$transaction(async (tx) => {
+      const createdApplication = await tx.application.create({
+        data: {
+          jobId,
+          candidateId: req.user!.userId,
+          resume: resumePath,
+          coverLetter,
+        },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+              location: true,
+              type: true,
+            },
+          },
+          candidate: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-        candidate: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
+      });
+
+      await tx.applicationStatusHistory.create({
+        data: {
+          applicationId: createdApplication.id,
+          fromStatus: null,
+          toStatus: ApplicationStatus.PENDING,
+          notes: 'Application submitted',
+          changedById: req.user!.userId,
         },
-      },
+      });
+
+      return createdApplication;
     });
 
     // Send confirmation email
@@ -321,6 +351,21 @@ export const getApplicationById = async (req: AuthRequest, res: Response): Promi
             portfolio: true,
           },
         },
+        statusHistory: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+          include: {
+            changedBy: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -366,6 +411,18 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
       return;
     }
 
+    const validStatuses = Object.values(ApplicationStatus);
+
+    if (!validStatuses.includes(status as ApplicationStatus)) {
+      res.status(400).json({
+        error: 'Invalid application status',
+        validStatuses,
+      });
+      return;
+    }
+
+    const newStatus = status as ApplicationStatus;
+
     const application = await prisma.application.findUnique({
       where: { id },
       include: {
@@ -379,66 +436,104 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
       return;
     }
 
-    // Check if recruiter owns the job
-    if (application.job.postedById !== req.user.userId && req.user.role !== 'ADMIN') {
-      res.status(403).json({ error: 'Not authorized to update this application' });
+    if (
+      application.job.postedById !== req.user.userId &&
+      req.user.role !== 'ADMIN'
+    ) {
+      res.status(403).json({
+        error: 'Not authorized to update this application',
+      });
       return;
     }
 
-    const updatedApplication = await prisma.application.update({
-      where: { id },
-      data: { status, notes },
-      include: {
-        job: {
-          select: {
-            title: true,
-            postedBy: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
+    const currentStatus = application.status;
+
+    if (currentStatus === newStatus) {
+      res.status(400).json({
+        error: `Application is already ${newStatus}`,
+      });
+      return;
+    }
+
+    const allowedNextStatuses = allowedStatusTransitions[currentStatus];
+
+    if (!allowedNextStatuses.includes(newStatus)) {
+      res.status(400).json({
+        error: `Invalid status transition from ${currentStatus} to ${newStatus}`,
+        currentStatus,
+        allowedNextStatuses,
+      });
+      return;
+    }
+
+    const updatedApplication = await prisma.$transaction(async (tx) => {
+      const updated = await tx.application.update({
+        where: { id },
+        data: {
+          status: newStatus,
+          notes,
+        },
+        include: {
+          job: {
+            select: {
+              title: true,
+              postedBy: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
               },
             },
           },
-        },
-        candidate: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+          candidate: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
+      });
+
+      await tx.applicationStatusHistory.create({
+        data: {
+          applicationId: id,
+          fromStatus: currentStatus,
+          toStatus: newStatus,
+          notes: notes || null,
+          changedById: req.user!.userId,
+        },
+      });
+
+      return updated;
     });
 
-    // Send status update email
     await sendApplicationStatusEmail(
       updatedApplication.candidate.email,
       `${updatedApplication.candidate.firstName} ${updatedApplication.candidate.lastName}`,
       updatedApplication.job.title,
-      status
+      newStatus
     );
 
-    // Send automated message to candidate based on status
-    const statusMessages: Record<string, string> = {
-      UNDER_REVIEW: `Great news! Your application for the ${updatedApplication.job.title} position has been reviewed and is now under consideration. Our team is carefully evaluating your qualifications. We'll keep you updated on the next steps.`,
-      SHORTLISTED: `Congratulations! 🎉 You've been shortlisted for the ${updatedApplication.job.title} position. Your profile stood out among many applicants. We'll be reaching out soon to schedule the next steps in our interview process. Please keep an eye on your email and phone.`,
-      INTERVIEWED: `Thank you for taking the time to interview for the ${updatedApplication.job.title} position. We appreciate your interest in joining our team. We're currently reviewing all candidates and will get back to you with our decision soon.`,
-      OFFERED: `Congratulations! 🎊 We're thrilled to extend an offer for the ${updatedApplication.job.title} position. You'll receive a formal offer letter via email shortly with all the details including compensation, benefits, and start date. We're excited about the possibility of you joining our team!`,
-      REJECTED: `Thank you for your interest in the ${updatedApplication.job.title} position and for taking the time to apply. After careful consideration, we've decided to move forward with other candidates whose experience more closely matches our current needs. We appreciate your interest and encourage you to apply for future opportunities with us. We wish you all the best in your job search.`,
-      WITHDRAWN: `We've confirmed that your application for the ${updatedApplication.job.title} position has been withdrawn as per your request. Thank you for considering our opportunity, and we hope to see you apply for other positions in the future.`,
+    const statusMessages: Record<ApplicationStatus, string> = {
+      PENDING: `Your application for the ${updatedApplication.job.title} position has been received and is currently pending review. We will keep you updated on the next steps.`,
+      REVIEWING: `Your application for the ${updatedApplication.job.title} position is currently being reviewed by our hiring team. We will keep you updated as the process progresses.`,
+      SHORTLISTED: `Congratulations! 🎉 You've been shortlisted for the ${updatedApplication.job.title} position. Our team will contact you soon regarding the next steps in the interview process.`,
+      INTERVIEW_SCHEDULED: `Your application for the ${updatedApplication.job.title} position has progressed to the interview stage. Please check your interview details and be prepared for the scheduled interview.`,
+      REJECTED: `Thank you for your interest in the ${updatedApplication.job.title} position. After careful consideration, we have decided to move forward with other candidates. We appreciate your time and encourage you to apply for future opportunities.`,
+      ACCEPTED: `Congratulations! 🎉 Your application for the ${updatedApplication.job.title} position has been accepted. Our team will contact you with the next steps and further details.`,
+      WITHDRAWN: `Your application for the ${updatedApplication.job.title} position has been withdrawn. Thank you for considering this opportunity, and we wish you the best in your job search.`,
     };
 
-    const messageContent = statusMessages[status] || `Your application status for ${updatedApplication.job.title} has been updated to: ${status.replace('_', ' ')}.`;
+    const messageContent = statusMessages[newStatus];
 
-    // Add notes from recruiter if provided
     const fullMessage = notes
       ? `${messageContent}\n\nRecruiter's Note: ${notes}`
       : messageContent;
 
     try {
-      // Create automated message from recruiter to candidate
       await prisma.message.create({
         data: {
           content: fullMessage,
@@ -449,11 +544,10 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
         },
       });
 
-      // Create notification for candidate
       await prisma.notification.create({
         data: {
           type: 'APPLICATION_STATUS',
-          title: `Application Status Updated: ${status.replace('_', ' ')}`,
+          title: `Application Status Updated: ${newStatus.replace('_', ' ')}`,
           message: `Your application for ${updatedApplication.job.title} has been updated`,
           link: `/applications`,
           userId: updatedApplication.candidate.id,
@@ -461,12 +555,16 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response): 
       });
     } catch (messageError) {
       console.error('Failed to send automated message:', messageError);
-      // Don't fail the status update if message sending fails
     }
 
     res.json({
       message: 'Application status updated successfully',
       application: updatedApplication,
+      statusHistory: {
+        fromStatus: currentStatus,
+        toStatus: newStatus,
+        notes: notes || null,
+      },
     });
   } catch (error) {
     console.error('Update application status error:', error);
@@ -497,9 +595,33 @@ export const withdrawApplication = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const updatedApplication = await prisma.application.update({
-      where: { id },
-      data: { status: 'WITHDRAWN' },
+    const currentStatus = application.status;
+
+    if (!allowedStatusTransitions[currentStatus].includes(ApplicationStatus.WITHDRAWN)) {
+      res.status(400).json({
+        error: `Application cannot be withdrawn from ${currentStatus} status`,
+        currentStatus,
+      });
+      return;
+    }
+
+    const updatedApplication = await prisma.$transaction(async (tx) => {
+      const updated = await tx.application.update({
+        where: { id },
+        data: { status: ApplicationStatus.WITHDRAWN },
+      });
+
+      await tx.applicationStatusHistory.create({
+        data: {
+          applicationId: id,
+          fromStatus: currentStatus,
+          toStatus: ApplicationStatus.WITHDRAWN,
+          notes: 'Application withdrawn by candidate',
+          changedById: req.user!.userId,
+        },
+      });
+
+      return updated;
     });
 
     res.json({
@@ -585,5 +707,142 @@ export const downloadApplicationResume = async (req: AuthRequest, res: Response)
   } catch (error) {
     console.error('Download application resume error:', error);
     res.status(500).json({ error: 'Failed to download resume' });
+  }
+};
+
+
+export const bulkUpdateApplicationStatus = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    if (req.user.role !== 'RECRUITER' && req.user.role !== 'ADMIN') {
+      res.status(403).json({
+        error: 'Only recruiters and admins can update application status',
+      });
+      return;
+    }
+
+    const { applicationIds, status, notes } = req.body;
+
+    if (!Array.isArray(applicationIds) || applicationIds.length === 0) {
+      res.status(400).json({
+        error: 'applicationIds must be a non-empty array',
+      });
+      return;
+    }
+
+    if (!status) {
+      res.status(400).json({
+        error: 'Status is required',
+      });
+      return;
+    }
+
+    const validStatuses = Object.values(ApplicationStatus);
+
+    if (!validStatuses.includes(status as ApplicationStatus)) {
+      res.status(400).json({
+        error: 'Invalid application status',
+        validStatuses,
+      });
+      return;
+    }
+
+    const newStatus = status as ApplicationStatus;
+
+    const applications = await prisma.application.findMany({
+      where: {
+        id: { in: applicationIds },
+      },
+      include: {
+        job: {
+          select: {
+            id: true,
+            title: true,
+            postedById: true,
+          },
+        },
+        candidate: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (applications.length !== applicationIds.length) {
+      res.status(404).json({
+        error: 'One or more applications were not found',
+      });
+      return;
+    }
+
+    for (const application of applications) {
+      if (
+        req.user.role !== 'ADMIN' &&
+        application.job.postedById !== req.user.userId
+      ) {
+        res.status(403).json({
+          error: 'Not authorized to update one or more applications',
+        });
+        return;
+      }
+
+      const allowedNextStatuses =
+        allowedStatusTransitions[application.status];
+
+      if (!allowedNextStatuses.includes(newStatus)) {
+        res.status(400).json({
+          error: `Invalid status transition from ${application.status} to ${newStatus}`,
+          applicationId: application.id,
+          currentStatus: application.status,
+          allowedNextStatuses,
+        });
+        return;
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const application of applications) {
+        await tx.application.update({
+          where: { id: application.id },
+          data: {
+            status: newStatus,
+            notes,
+          },
+        });
+
+        await tx.applicationStatusHistory.create({
+          data: {
+            applicationId: application.id,
+            fromStatus: application.status,
+            toStatus: newStatus,
+            notes: notes || null,
+            changedById: req.user!.userId,
+          },
+        });
+      }
+    });
+
+    res.json({
+      message: 'Applications status updated successfully',
+      updatedCount: applications.length,
+      status: newStatus,
+      applicationIds,
+    });
+  } catch (error) {
+    console.error('Bulk update application status error:', error);
+    res.status(500).json({
+      error: 'Failed to update application statuses',
+    });
   }
 };

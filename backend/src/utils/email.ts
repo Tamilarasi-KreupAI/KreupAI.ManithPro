@@ -3,6 +3,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+console.log('SMTP CONFIG CHECK:', {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  userLoaded: !!process.env.SMTP_USER,
+  passLoaded: !!process.env.SMTP_PASS,
+});
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
@@ -195,70 +202,87 @@ export const sendApplicationStatusEmail = async (
   }
   // Status-specific configurations
   const statusConfig: Record<string, { color: string; bgColor: string; title: string; message: string; nextSteps: string[] }> = {
-    UNDER_REVIEW: {
+    PENDING: {
+      color: '#64748b',
+      bgColor: '#f1f5f9',
+      title: 'Application Received',
+      message: 'Your application has been received and is currently pending review by our recruitment team.',
+      nextSteps: [
+        'Our team will review your application',
+        'We will evaluate your qualifications and experience',
+        'You will receive an update when the review progresses'
+      ]
+    },
+
+    REVIEWING: {
       color: '#2563eb',
       bgColor: '#eff6ff',
       title: 'Application Under Review',
-      message: 'Great news! Your application is currently being reviewed by our recruitment team. We\'re carefully evaluating your qualifications and experience.',
+      message: 'Your application is currently being reviewed by our recruitment team. We are carefully evaluating your qualifications and experience.',
       nextSteps: [
         'Our team is reviewing your resume and cover letter',
-        'We\'ll assess your fit for the position',
-        'You\'ll hear from us within 3-5 business days'
+        'We will assess your fit for the position',
+        'You will hear from us when the review is complete'
       ]
     },
+
     SHORTLISTED: {
       color: '#059669',
       bgColor: '#d1fae5',
       title: 'Congratulations - You\'ve Been Shortlisted!',
-      message: 'Excellent news! After careful review, we\'re impressed with your profile and have shortlisted you for the next stage of our recruitment process.',
+      message: 'Excellent news! After reviewing your application, you have been shortlisted for the next stage of the recruitment process.',
       nextSteps: [
-        'Expect a call or email from our HR team soon',
+        'Expect a call or email from our HR team',
         'We may schedule an interview or assessment',
         'Keep an eye on your email and phone',
         'Prepare to discuss your experience and skills'
       ]
     },
-    INTERVIEWED: {
+
+    INTERVIEW_SCHEDULED: {
       color: '#7c3aed',
       bgColor: '#f3e8ff',
       title: 'Interview Scheduled',
-      message: 'Your interview has been scheduled! This is an exciting opportunity to showcase your skills and learn more about our team.',
+      message: 'Your application has progressed to the interview stage. Please check your interview details and prepare for the scheduled interview.',
       nextSteps: [
         'Check your email for interview details',
         'Prepare for common interview questions',
-        'Research our company and the role',
-        'Arrive on time (or join the call on time)'
+        'Research the company and the role',
+        'Join the interview on time'
       ]
     },
-    OFFERED: {
-      color: '#059669',
-      bgColor: '#d1fae5',
-      title: 'Congratulations - Job Offer!',
-      message: 'Fantastic news! We\'re thrilled to extend a job offer for the position. We believe you\'ll be a great addition to our team!',
-      nextSteps: [
-        'Check your email for the formal offer letter',
-        'Review the compensation and benefits package',
-        'Feel free to ask any questions',
-        'We look forward to welcoming you aboard!'
-      ]
-    },
+
     REJECTED: {
       color: '#dc2626',
       bgColor: '#fee2e2',
       title: 'Application Status Update',
-      message: 'Thank you for your interest and the time you invested in the application process. After careful consideration, we\'ve decided to move forward with other candidates whose experience more closely matches our current needs.',
+      message: 'Thank you for your interest and the time you invested in the application process. After careful consideration, we have decided to move forward with other candidates.',
       nextSteps: [
         'We appreciate your interest in our company',
-        'Your resume will be kept on file for future opportunities',
+        'Your resume may be kept on file for future opportunities',
         'We encourage you to apply for other suitable positions',
         'We wish you the very best in your job search'
       ]
     },
+
+    ACCEPTED: {
+      color: '#059669',
+      bgColor: '#d1fae5',
+      title: 'Congratulations - Application Accepted!',
+      message: 'Congratulations! Your application has been accepted. Our team will contact you with the next steps and further details.',
+      nextSteps: [
+        'Check your email for further details',
+        'Our team will contact you about the next steps',
+        'Review any documents or information provided',
+        'We look forward to working with you'
+      ]
+    },
+
     WITHDRAWN: {
       color: '#64748b',
       bgColor: '#f1f5f9',
       title: 'Application Withdrawn',
-      message: 'Your application has been withdrawn. If this was a mistake or if you\'d like to reapply, please feel free to submit a new application.',
+      message: 'Your application has been withdrawn. If this was a mistake or if you would like to reapply, please feel free to submit a new application.',
       nextSteps: [
         'You can reapply for this or other positions anytime',
         'Check our job board for new opportunities',
@@ -271,7 +295,7 @@ export const sendApplicationStatusEmail = async (
     color: '#2563eb',
     bgColor: '#eff6ff',
     title: 'Application Status Updated',
-    message: `Your application status has been updated to: ${status.replace('_', ' ')}`,
+    message: `Your application status has been updated to: ${status.replace(/_/g, ' ')}`,
     nextSteps: ['Please check your dashboard for more details']
   };
 
@@ -319,7 +343,7 @@ export const sendApplicationStatusEmail = async (
 
           <div style="text-align: center;">
             <span class="status-badge">
-              ${status === 'UNDER_REVIEW' ? 'UNDER REVIEW' : status.replace('_', ' ')}
+              ${status.replace(/_/g, ' ')}
             </span>
           </div>
 

@@ -177,14 +177,19 @@ export const getAllJobs = async (req: AuthRequest, res: Response): Promise<void>
       where.postedById = req.user.userId;
     }
 
-    if (status) {
-      where.status = status;
-    } else {
-      // By default, only show OPEN jobs to candidates (unless filtering by postedBy)
-      if (req.user?.role === 'CANDIDATE' && postedBy !== 'me') {
-        where.status = 'OPEN';
-      }
-    }
+   if (status) {
+  where.status = status;
+} else {
+  // Candidates can only see OPEN jobs
+  if (req.user?.role === 'CANDIDATE' && postedBy !== 'me') {
+    where.status = 'OPEN';
+  }
+
+  // Recruiters can only see their own jobs
+  if (req.user?.role === 'RECRUITER') {
+    where.postedById = req.user.userId;
+  }
+}
 
     if (type) {
       where.type = type;
@@ -258,38 +263,16 @@ export const getJobById = async (req: AuthRequest, res: Response): Promise<void>
             email: true,
           },
         },
-        applications: {
-          include: {
-            candidate: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true,
-                skills: true,
-                experience: true,
               },
-            },
-          },
-          orderBy: { appliedAt: 'desc' },
-        },
-      },
     });
 
-    if (!job) {
-      res.status(404).json({ error: 'Job not found' });
-      return;
-    }
+if (!job) {
+  res.status(404).json({ error: 'Job not found' });
+  return;
+}
 
-    // Hide applications from non-recruiters
-    if (req.user?.role === 'CANDIDATE') {
-      const { applications, ...jobWithoutApplications } = job;
-      res.json(jobWithoutApplications);
-      return;
-    }
-
-    res.json(job);
+res.json(job);
+    
   } catch (error) {
     console.error('Get job error:', error);
     res.status(500).json({ error: 'Failed to fetch job' });

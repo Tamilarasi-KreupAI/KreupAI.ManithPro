@@ -4,6 +4,7 @@ import {
   getApplications,
   getApplicationById,
   updateApplicationStatus,
+  bulkUpdateApplicationStatus,
   withdrawApplication,
   checkIfApplied,
   downloadApplicationResume,
@@ -16,8 +17,23 @@ router.get('/', authenticate, getApplications);
 router.get('/check/:jobId', authenticate, checkIfApplied);
 router.get('/:id', authenticate, getApplicationById);
 router.get('/:id/resume/download', authenticate, downloadApplicationResume);
+
 router.post('/', authenticate, createApplication);
-router.put('/:id/status', authenticate, authorize('RECRUITER', 'ADMIN'), updateApplicationStatus);
+
+router.put(
+  '/:id/status',
+  authenticate,
+  authorize('RECRUITER', 'ADMIN'),
+  updateApplicationStatus
+);
+
+router.patch(
+  '/bulk-status',
+  authenticate,
+  authorize('RECRUITER', 'ADMIN'),
+  bulkUpdateApplicationStatus
+);
+
 router.put('/:id/withdraw', authenticate, withdrawApplication);
 
 export default router;

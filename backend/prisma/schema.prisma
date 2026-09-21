@@ -38,6 +38,7 @@ model User {
   conductedScreenings     AIScreeningInterview[]    @relation("ScreeningRecruiter")
   applicationInsights     ApplicationInsight[]
   applications            Application[]
+  applicationStatusChanges ApplicationStatusHistory[]
   availabilitySlots       AvailabilitySlot[]
   bufferTimeSettings      BufferTimeSettings?
   calendarConflicts       CalendarConflict[]
@@ -68,7 +69,7 @@ model User {
   prepDeliveries          PrepMaterialDelivery[]    @relation("PrepDeliveryRecipient")
   prepMaterials           PrepMaterial[]
   profileEnhancements     ProfileEnhancement[]
-  pushSubscriptions       PushSubscription[]
+  pushSubscriptions      PushSubscription[]
   questionFlows           QuestionFlow[]
   recruiterProfile        RecruiterProfile?
   reminderNotifications   ReminderNotification[]
@@ -79,8 +80,8 @@ model User {
   schedulingLinks         SchedulingLink[]
   screeningResponses      ScreeningResponse[]
   semanticSearchIndices   SemanticSearchIndex[]
-  skillExtractions        SkillExtraction[]
-  skillsGapAnalyses       SkillsGapAnalysis[]
+  skillExtractions       SkillExtraction[]
+  skillsGapAnalyses      SkillsGapAnalysis[]
   timezonePreference      TimezonePreference?
   workingHours            WorkingHours[]
   // Batch 18 - Interview Analysis relations
@@ -90,9 +91,7 @@ model User {
   primaryInComparisons    CandidateComparison[]     @relation("PrimaryCandidate")
 
   @@map("users")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+}/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Job {
   id                      String                   @id @default(uuid())
   title                   String
@@ -151,12 +150,30 @@ model Application {
   job                 Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
   interviews          Interview[]
   messages            Message[]
+  statusHistory        ApplicationStatusHistory[]
 
   @@unique([jobId, candidateId])
   @@index([status])
   @@index([candidateId])
   @@index([status], map: "idx_applications_status")
   @@map("applications")
+}
+model ApplicationStatusHistory {
+  id            String            @id @default(uuid())
+  applicationId String
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  notes         String?
+  changedById   String
+  createdAt     DateTime          @default(now())
+
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy     User              @relation(fields: [changedById], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([changedById])
+  @@index([createdAt])
+  @@map("application_status_history")
 }
 
 model SavedJob {
