@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+
 import {
   getCultureFitScore as fetchCultureFitScore,
   getGrowthPotentialScore as fetchGrowthPotentialScore,
@@ -6,1065 +7,1071 @@ import {
   getCommunicationScore as fetchCommunicationScore,
   getReliabilityScore as fetchReliabilityScore,
   getAllProfileScores,
-  saveCultureFitScore,
-  saveGrowthPotentialScore,
-  saveTechnicalDepthScore,
-  saveCommunicationScore,
-  saveReliabilityScore,
 } from '../services/scoringStorage.service';
 
-const persistScoreSafely = async (label: string, persist: () => Promise<unknown>) => {
-  try {
-    await persist();
-  } catch (storageError) {
-    // Keep the existing API fallback working if the database is temporarily unavailable.
-    console.error(`[AI-11] Failed to persist ${label}:`, storageError);
-  }
-};
+import {
+  computeCultureFitScore,
+  computeGrowthPotentialScore,
+  computeTechnicalDepthScore,
+  computeCommunicationScore,
+  computeReliabilityScore,
+  computeAndPersistAllAdvancedScores,
+  loadCandidateScoringData,
+  persistCultureFitScore,
+  persistGrowthPotentialScore,
+  persistTechnicalDepthScore,
+  persistCommunicationScore,
+  persistReliabilityScore,
+} from '../services/advancedScoring.service';
 
-const fetchScoreSafely = async <T>(
-  label: string,
-  fetch: () => Promise<T>,
-): Promise<T | null> => {
-  try {
-    return await fetch();
-  } catch (storageError) {
-    // Keep the existing API fallback working if the database is temporarily unavailable.
-    console.error(`[AI-11] Failed to fetch ${label}:`, storageError);
-    return null;
-  }
-};
+// ============================================================
+// Helpers
+// ============================================================
 
-// ============================================
+function getAuthenticatedUserId(req: Request): string {
+  const user = (req as any).user;
+
+  const userId =
+    user?.id ||
+    user?.userId ||
+    (req.params as any)?.userId ||
+    (req.body as any)?.userId;
+
+  if (!userId) {
+    const error: any = new Error('Authenticated user not found');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return String(userId);
+}
+
+function queryString(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  if (Array.isArray(value) && typeof value[0] === 'string') {
+    return String(value[0]).trim() || undefined;
+  }
+
+  return undefined;
+}
+
+function isAI12Score(score: any): boolean {
+  return Boolean(
+    score &&
+      score.scoringVersion === '2.0' &&
+      typeof score.overallCultureScore !== 'undefined' ||
+      score &&
+        score.scoringVersion === '2.0' &&
+        typeof score.overallGrowthScore !== 'undefined' ||
+      score &&
+        score.scoringVersion === '2.0' &&
+        typeof score.overallTechnicalScore !== 'undefined' ||
+      score &&
+        score.scoringVersion === '2.0' &&
+        typeof score.overallCommScore !== 'undefined' ||
+      score &&
+        score.scoringVersion === '2.0' &&
+        typeof score.overallReliabilityScore !== 'undefined',
+  );
+}
+
+function isStoredAI12Score(score: any): boolean {
+  return Boolean(score && score.scoringVersion === '2.0');
+}
+
+function getErrorStatus(error: any): number {
+  return Number.isInteger(error?.statusCode)
+    ? error.statusCode
+    : 500;
+}
+
+function getErrorMessage(
+  error: any,
+  fallback: string,
+): string {
+  return error?.message || fallback;
+}
+
+function scoreResponse(
+  result: any,
+  persisted?: any,
+): any {
+  if (persisted) {
+    return persisted;
+  }
+
+  return {
+    dimension: result.dimension,
+    status: result.status,
+    score: result.score,
+    tier: result.tier,
+    inputs: result.inputs,
+    components: result.components,
+    reason: result.reason,
+    scoringVersion: result.scoringVersion,
+
+    // Frontend-compatible overall fields
+    ...(result.dimension === 'cultureFit'
+      ? {
+          overallCultureScore: result.score,
+          fitLevel: result.tier,
+        }
+      : {}),
+
+    ...(result.dimension === 'growthPotential'
+      ? {
+          overallGrowthScore: result.score,
+          growthTier: result.tier,
+        }
+      : {}),
+
+    ...(result.dimension === 'technicalDepth'
+      ? {
+          overallTechnicalScore: result.score,
+          technicalTier: result.tier,
+        }
+      : {}),
+
+    ...(result.dimension === 'communication'
+      ? {
+          overallCommScore: result.score,
+          communicationTier: result.tier,
+        }
+      : {}),
+
+    ...(result.dimension === 'reliability'
+      ? {
+          overallReliabilityScore: result.score,
+          reliabilityTier: result.tier,
+        }
+      : {}),
+  };
+}
+
+async function loadRequestContext(req: Request) {
+  const userId = getAuthenticatedUserId(req);
+
+  const query = req.query || {};
+
+  const companyId = queryString(query.companyId);
+  const jobId = queryString(query.jobId);
+
+  const data = await loadCandidateScoringData(
+    userId,
+    jobId ?? null,
+  );
+
+  const profileId = data.profile?.id;
+
+  if (!profileId) {
+    const error: any = new Error(
+      `Candidate profile not found for user ${userId}.`,
+    );
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    userId,
+    profileId,
+    companyId,
+    jobId,
+    data,
+  };
+}
+
+// ============================================================
 // 2.1.3 - CULTURE FIT ANALYSIS
-// ============================================
+// ============================================================
 
 // Get culture fit analysis for current user
-export const getCultureFitAnalysis = async (req: Request, res: Response) => {
+export const getCultureFitAnalysis = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const { companyId, jobId } = req.query;
-    const profileId = 'profile-001';
-    const normalizedCompanyId = typeof companyId === 'string' ? companyId : undefined;
-    const normalizedJobId = typeof jobId === 'string' ? jobId : undefined;
+    const {
+      userId,
+      profileId,
+      companyId,
+      jobId,
+      data,
+    } = await loadRequestContext(req);
 
-    const storedCultureFit = await fetchScoreSafely(
-      'culture fit score',
-      () =>
-        fetchCultureFitScore(
-          profileId,
-          normalizedCompanyId,
-          normalizedJobId,
-        ),
+    const stored = await fetchCultureFitScore(
+      profileId,
+      companyId ?? null,
+      jobId ?? null,
     );
 
-    if (storedCultureFit) {
-      res.json({ analysis: storedCultureFit });
-      return;
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        analysis: stored,
+        source: 'database',
+      });
     }
 
-    // Mock culture fit analysis
-    const cultureFitAnalysis = {
-      id: 'cfa-001',
-      userId,
-      profileId: 'profile-001',
-      companyId: companyId || null,
-      jobId: jobId || null,
+    const result = computeCultureFitScore(data);
 
-      // Overall Culture Fit
-      overallCultureScore: 78,
-      fitLevel: 'GOOD_FIT',
-
-      // Work Style Preferences
-      workStyleAlignment: 82,
-      collaborationStyle: 'BALANCED',
-      communicationStyle: 'ASYNC_FIRST',
-      decisionMaking: 'CONSULTATIVE',
-      feedbackPreference: 'DIRECT',
-
-      // Work Environment Preferences
-      remotePreference: 'HYBRID',
-      workHoursFlexibility: 'FLEXIBLE',
-      meetingTolerance: 'MODERATE',
-      focusTimeNeeds: 'HIGH',
-
-      // Values Alignment
-      valuesAlignment: 85,
-      topValues: ['innovation', 'growth', 'work_life_balance', 'impact'],
-      matchedValues: [
-        { value: 'Innovation', weight: 0.9, alignment: 92 },
-        { value: 'Growth', weight: 0.85, alignment: 88 },
-        { value: 'Work-Life Balance', weight: 0.8, alignment: 85 },
-        { value: 'Impact', weight: 0.75, alignment: 80 },
-      ],
-      conflictingValues: [],
-
-      // Team Dynamics
-      teamSizePreference: 'MEDIUM',
-      leadershipStyle: 'COACHING',
-      conflictResolution: 'COLLABORATIVE',
-      teamRoleArchetype: 'DRIVER',
-
-      // Career Motivators
-      primaryMotivators: ['learning', 'impact', 'recognition', 'compensation'],
-      careerPriorities: {
-        learning: 0.9,
-        impact: 0.85,
-        recognition: 0.7,
-        compensation: 0.75,
-        stability: 0.6,
-      },
-      workLifeBalance: 80,
-
-      // Company Type Fit
-      preferredCompanySize: 'MEDIUM',
-      preferredIndustries: ['Technology', 'Healthcare', 'Finance'],
-      startupReadiness: 72,
-      corporateReadiness: 78,
-
-      // Risk Profile
-      changeAdaptability: 85,
-      ambiguityTolerance: 75,
-      riskTolerance: 'MODERATE',
-
-      // AI Analysis
-      strengthFactors: [
-        { factor: 'Collaboration', description: 'Strong team collaboration skills', impact: 'positive' },
-        { factor: 'Adaptability', description: 'High adaptability to change', impact: 'positive' },
-        { factor: 'Communication', description: 'Effective async communication', impact: 'positive' },
-      ],
-      concernFactors: [
-        { factor: 'Meeting Heavy', description: 'May struggle in meeting-heavy cultures', recommendation: 'Discuss meeting expectations' },
-      ],
-      recommendations: [
-        'Best fit for companies with flexible work arrangements',
-        'Thrives in growth-oriented environments',
-        'Would benefit from clear communication channels',
-      ],
-      fitSummary: 'This candidate demonstrates a strong alignment with modern, flexible work cultures. Their preference for async communication and balanced collaboration style makes them well-suited for hybrid environments. Values-driven with emphasis on growth and impact.',
-
-      // Scoring Metadata
-      scoringVersion: '1.0',
-      lastAnalyzedAt: new Date().toISOString(),
-      confidence: 0.82,
-    };
-
-    await persistScoreSafely('culture fit score', () =>
-      saveCultureFitScore({
-        ...cultureFitAnalysis,
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        analysis: scoreResponse(result),
+        source: 'computed',
+        userId,
         profileId,
-        companyId: normalizedCompanyId ?? null,
-        jobId: normalizedJobId ?? null,
-        lastAnalyzedAt: new Date(cultureFitAnalysis.lastAnalyzedAt),
-      } as any),
+      });
+    }
+
+    const persisted = await persistCultureFitScore(
+      userId,
+      profileId,
+      result,
+      companyId ?? null,
+      jobId ?? null,
     );
 
-    res.json({ analysis: cultureFitAnalysis });
+    return res.json({
+      analysis: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get culture fit analysis' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get culture fit analysis',
+        ),
+      });
   }
 };
 
 // Generate/regenerate culture fit analysis
-export const generateCultureFitAnalysis = async (req: Request, res: Response) => {
+export const generateCultureFitAnalysis = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const { companyId, jobId, assessmentResponses } = req.body;
-
-    // In production, this would run AI analysis
-    const analysis = {
-      id: 'cfa-' + Date.now(),
+    const {
       userId,
-      profileId: 'profile-001',
+      profileId,
       companyId,
       jobId,
-      overallCultureScore: 78,
-      fitLevel: 'GOOD_FIT',
-      message: 'Culture fit analysis generated successfully',
-      analyzedAt: new Date().toISOString(),
-    };
+      data,
+    } = await loadRequestContext(req);
 
-    res.json({ analysis });
+    const result = computeCultureFitScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.status(422).json({
+        analysis: scoreResponse(result),
+        source: 'computed',
+        message:
+          'Culture fit score is incomplete because required candidate or job data is missing.',
+      });
+    }
+
+    const persisted = await persistCultureFitScore(
+      userId,
+      profileId,
+      result,
+      companyId ?? null,
+      jobId ?? null,
+    );
+
+    return res.json({
+      analysis: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to generate culture fit analysis' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to generate culture fit analysis',
+        ),
+      });
   }
 };
 
 // Submit culture fit questionnaire
-export const submitCultureQuestionnaire = async (req: Request, res: Response) => {
+export const submitCultureQuestionnaire = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const { responses } = req.body;
+    const userId = getAuthenticatedUserId(req);
 
-    // Process questionnaire responses
-    const result = {
+    const body = req.body || {};
+    const responses = body.responses || {};
+
+    return res.json({
       submitted: true,
-      responseCount: Object.keys(responses || {}).length,
-      analysisTriggered: true,
-      estimatedCompletionTime: '30 seconds',
-    };
-
-    res.json(result);
+      userId,
+      responseCount:
+        typeof responses === 'object'
+          ? Object.keys(responses).length
+          : 0,
+      message:
+        'Questionnaire responses received. Culture scoring uses stored candidate and job records.',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to submit questionnaire' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to submit culture questionnaire',
+        ),
+      });
   }
 };
 
-// ============================================
+// ============================================================
 // 2.1.4 - GROWTH POTENTIAL SCORE
-// ============================================
+// ============================================================
 
 // Get growth potential score for current user
-export const getGrowthPotentialScore = async (req: Request, res: Response) => {
+export const getGrowthPotentialScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const profileId = 'profile-001';
+    const {
+      userId,
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    const storedGrowthScore = await fetchScoreSafely(
-      'growth potential score',
-      () => fetchGrowthPotentialScore(profileId),
+    const stored = await fetchGrowthPotentialScore(
+      profileId,
     );
 
-    if (storedGrowthScore) {
-      res.json({ score: storedGrowthScore });
-      return;
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        score: stored,
+        source: 'database',
+      });
     }
 
-    const growthScore = {
-      id: 'gps-001',
-      userId,
-      profileId: 'profile-001',
+    const result = computeGrowthPotentialScore(data);
 
-      // Overall Growth Score
-      overallGrowthScore: 82,
-      growthTier: 'STRONG_GROWTH',
-
-      // Learning Ability
-      learningAgility: 85,
-      skillAcquisitionRate: 78,
-      knowledgeRetention: 80,
-      adaptabilityScore: 88,
-
-      // Career Trajectory Analysis
-      careerProgressionRate: 75,
-      promotionHistory: [
-        { fromRole: 'Junior Developer', toRole: 'Mid-Level Developer', timespan: '18 months', company: 'TechCorp' },
-        { fromRole: 'Mid-Level Developer', toRole: 'Senior Developer', timespan: '24 months', company: 'TechCorp' },
-        { fromRole: 'Senior Developer', toRole: 'Tech Lead', timespan: '30 months', company: 'InnovateCo' },
-      ],
-      roleComplexityGrowth: 82,
-      responsibilityExpansion: 78,
-      careerMomentum: 'ACCELERATING',
-
-      // Skill Development
-      skillGrowthVelocity: 4.5,
-      techAdoptionSpeed: 'EARLY_MAJORITY',
-      breadthVsDepth: 'T_SHAPED',
-      emergingSkills: ['AI/ML', 'Cloud Native', 'System Design'],
-
-      // Education & Certifications
-      continuousLearning: 90,
-      recentCertifications: 3,
-      educationRecency: 'ONGOING',
-      learningInvestment: 85,
-
-      // Leadership Indicators
-      leadershipPotential: 78,
-      managementExperience: { directReports: 5, teams: 2, projects: 12 },
-      mentorshipActivities: 8,
-      initiativeTaking: 82,
-
-      // Innovation & Impact
-      innovationScore: 75,
-      impactEvidence: [
-        { project: 'Platform Migration', impact: 'Reduced costs by 40%', metrics: { savings: '$500K/year' } },
-        { project: 'New Feature Launch', impact: 'Increased user engagement by 25%', metrics: { users: '+50K' } },
-      ],
-      problemSolvingAbility: 88,
-      creativeThinking: 72,
-
-      // Achievement Patterns
-      achievementDensity: 2.5,
-      recognitionFrequency: 1.8,
-      overachievementSignals: [
-        { signal: 'Promoted ahead of schedule', frequency: 2 },
-        { signal: 'Led initiatives beyond scope', frequency: 5 },
-      ],
-
-      // Predicted Trajectory
-      predictedGrowthPath: {
-        '1yr': { role: 'Senior Tech Lead', probability: 0.85 },
-        '3yr': { role: 'Engineering Manager', probability: 0.70 },
-        '5yr': { role: 'Director of Engineering', probability: 0.55 },
-      },
-      suggestedRoles: ['Engineering Manager', 'Principal Engineer', 'VP of Engineering'],
-      developmentAreas: ['Strategic Planning', 'Executive Communication', 'Budget Management'],
-      ceilingEstimate: 'VP/Director Level',
-
-      // AI Analysis
-      growthDrivers: [
-        { factor: 'Learning Agility', impact: 'High ability to acquire new skills quickly' },
-        { factor: 'Initiative', impact: 'Consistently takes on challenges beyond current scope' },
-        { factor: 'Technical Excellence', impact: 'Strong foundation enables rapid advancement' },
-      ],
-      growthLimiters: [
-        { factor: 'Business Acumen', impact: 'Could strengthen understanding of business strategy' },
-      ],
-      recommendations: [
-        'Pursue leadership development programs',
-        'Take on cross-functional project leadership',
-        'Develop strategic planning skills',
-        'Build executive presence and communication',
-      ],
-      potentialSummary: 'This candidate demonstrates strong growth potential with a track record of progressive responsibility and continuous learning. Their accelerating career momentum and high learning agility suggest significant upside for leadership roles.',
-
-      // Scoring Metadata
-      scoringVersion: '1.0',
-      lastScoredAt: new Date().toISOString(),
-      confidence: 0.85,
-    };
-
-    await persistScoreSafely('growth potential score', () =>
-      saveGrowthPotentialScore({
-        ...growthScore,
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        score: scoreResponse(result),
+        source: 'computed',
+        userId,
         profileId,
-        lastScoredAt: new Date(growthScore.lastScoredAt),
-      } as any),
+      });
+    }
+
+    const persisted = await persistGrowthPotentialScore(
+      userId,
+      profileId,
+      result,
     );
 
-    res.json({ score: growthScore });
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get growth potential score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get growth potential score',
+        ),
+      });
   }
 };
 
 // Regenerate growth potential score
-export const regenerateGrowthPotentialScore = async (req: Request, res: Response) => {
+export const regenerateGrowthPotentialScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-
-    const result = {
-      id: 'gps-' + Date.now(),
+    const {
       userId,
-      regenerated: true,
-      overallGrowthScore: 82,
-      growthTier: 'STRONG_GROWTH',
-      regeneratedAt: new Date().toISOString(),
-    };
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    res.json({ score: result });
+    const result = computeGrowthPotentialScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.status(422).json({
+        score: scoreResponse(result),
+        message:
+          'Growth potential score is incomplete because required candidate data is missing.',
+      });
+    }
+
+    const persisted = await persistGrowthPotentialScore(
+      userId,
+      profileId,
+      result,
+    );
+
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to regenerate growth potential score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to regenerate growth potential score',
+        ),
+      });
   }
 };
 
-// ============================================
+// ============================================================
 // 2.1.5 - TECHNICAL DEPTH SCORE
-// ============================================
+// ============================================================
 
 // Get technical depth score for current user
-export const getTechnicalDepthScore = async (req: Request, res: Response) => {
+export const getTechnicalDepthScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const profileId = 'profile-001';
+    const {
+      userId,
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    const storedTechnicalScore = await fetchScoreSafely(
-      'technical depth score',
-      () => fetchTechnicalDepthScore(profileId),
+    const stored = await fetchTechnicalDepthScore(
+      profileId,
     );
 
-    if (storedTechnicalScore) {
-      res.json({ score: storedTechnicalScore });
-      return;
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        score: stored,
+        source: 'database',
+      });
     }
 
-    const technicalScore = {
-      id: 'tds-001',
-      userId,
-      profileId: 'profile-001',
+    const result = computeTechnicalDepthScore(data);
 
-      // Overall Technical Score
-      overallTechnicalScore: 85,
-      technicalTier: 'SENIOR',
-
-      // Code Quality
-      codeQualityScore: 88,
-      codeComplexityHandled: 'HIGH',
-      codingPatterns: ['MVC', 'Repository', 'Factory', 'Observer', 'Strategy'],
-      bestPracticesScore: 85,
-      testingPractices: 82,
-
-      // GitHub Analysis
-      githubScore: 78,
-      totalContributions: 2847,
-      consistencyScore: 85,
-      repositoryQuality: 72,
-      openSourceImpact: {
-        projects: 5,
-        contributions: 127,
-        maintainer: true,
-        stars: 450,
-      },
-      languageProficiency: {
-        TypeScript: { loc: 125000, projects: 15, score: 92 },
-        Python: { loc: 45000, projects: 8, score: 78 },
-        Go: { loc: 12000, projects: 3, score: 65 },
-        JavaScript: { loc: 85000, projects: 20, score: 88 },
-      },
-
-      // Stack Overflow Analysis
-      stackOverflowScore: 72,
-      reputation: 15420,
-      answerQuality: 78,
-      topTags: ['typescript', 'react', 'node.js', 'postgresql', 'aws'],
-      acceptedAnswerRate: 42,
-      helpfulnessScore: 85,
-
-      // Project Analysis
-      projectComplexityScore: 82,
-      architectureExperience: {
-        microservices: { count: 5, examples: ['Payment Service', 'Auth Service'] },
-        monolith: { count: 3, examples: ['Legacy Platform'] },
-        serverless: { count: 2, examples: ['Event Processor'] },
-      },
-      systemDesignCapability: 78,
-      scalabilityExperience: {
-        maxUsers: '10M+',
-        maxRPS: '50K',
-        databases: ['PostgreSQL', 'MongoDB', 'Redis', 'Elasticsearch'],
-      },
-
-      // Technology Stack
-      primaryStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'AWS'],
-      stackDepth: {
-        TypeScript: 'Expert',
-        React: 'Expert',
-        'Node.js': 'Advanced',
-        PostgreSQL: 'Advanced',
-        AWS: 'Intermediate',
-        Docker: 'Advanced',
-        Kubernetes: 'Intermediate',
-      },
-      stackBreadth: 18,
-      modernTechAdoption: 85,
-
-      // Domain Expertise
-      domainExpertise: {
-        'E-commerce': { level: 'Expert', years: 5, evidence: ['Built payment systems', 'Inventory management'] },
-        FinTech: { level: 'Advanced', years: 3, evidence: ['Trading platform', 'Risk engine'] },
-        Healthcare: { level: 'Intermediate', years: 2, evidence: ['Patient portal'] },
-      },
-      specializations: ['Distributed Systems', 'API Design', 'Performance Optimization'],
-      industryExperience: ['Technology', 'Finance', 'Healthcare', 'E-commerce'],
-
-      // Problem-Solving Evidence
-      algorithmProficiency: 82,
-      dataStructureSkills: 85,
-      debuggingAbility: 90,
-      optimizationSkills: 78,
-
-      // Technical Leadership
-      technicalLeadership: 80,
-      architectureDecisions: [
-        { decision: 'Microservices migration', impact: 'Improved scalability 10x' },
-        { decision: 'Event-driven architecture', impact: 'Reduced coupling, improved reliability' },
-      ],
-      mentorshipEvidence: { juniorsMentored: 12, codeReviews: 500 },
-      codeReviewActivity: 88,
-
-      // Certifications
-      relevantCertifications: {
-        'AWS Solutions Architect': { issuer: 'Amazon', date: '2023-06', level: 'Professional' },
-        'Kubernetes Administrator': { issuer: 'CNCF', date: '2023-03', level: 'CKA' },
-      },
-      certificationScore: 75,
-
-      // AI Analysis
-      technicalStrengths: [
-        'Full-stack TypeScript expertise',
-        'Strong system design capabilities',
-        'Excellent code quality and testing practices',
-        'Active open source contributor',
-      ],
-      technicalGaps: [
-        'Limited ML/AI experience',
-        'Mobile development experience minimal',
-        'DevOps automation could be stronger',
-      ],
-      recommendations: [
-        'Explore ML fundamentals for AI-enhanced applications',
-        'Consider AWS Professional certifications',
-        'Deepen Kubernetes expertise for cloud-native leadership',
-      ],
-      technicalSummary: 'Senior-level engineer with strong full-stack capabilities and proven system design experience. Excellent code quality with active open source presence. Well-positioned for technical leadership roles.',
-
-      // Comparison
-      marketPercentile: 82,
-      similarProfiles: 1250,
-
-      // Scoring Metadata
-      scoringVersion: '1.0',
-      lastScoredAt: new Date().toISOString(),
-      confidence: 0.88,
-    };
-
-    await persistScoreSafely('technical depth score', () =>
-      saveTechnicalDepthScore({
-        ...technicalScore,
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        score: scoreResponse(result),
+        source: 'computed',
+        userId,
         profileId,
-        lastScoredAt: new Date(technicalScore.lastScoredAt),
-      } as any),
+      });
+    }
+
+    const persisted = await persistTechnicalDepthScore(
+      userId,
+      profileId,
+      result,
     );
 
-    res.json({ score: technicalScore });
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get technical depth score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get technical depth score',
+        ),
+      });
   }
 };
 
-// Regenerate technical depth score (trigger re-analysis)
-export const regenerateTechnicalDepthScore = async (req: Request, res: Response) => {
+// Regenerate technical depth score
+export const regenerateTechnicalDepthScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-
-    const result = {
-      id: 'tds-' + Date.now(),
+    const {
       userId,
-      regenerated: true,
-      overallTechnicalScore: 85,
-      technicalTier: 'SENIOR',
-      regeneratedAt: new Date().toISOString(),
-      sources: ['GitHub', 'Stack Overflow', 'Profile', 'Projects'],
-    };
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    res.json({ score: result });
+    const result = computeTechnicalDepthScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.status(422).json({
+        score: scoreResponse(result),
+        message:
+          'Technical depth score is incomplete because required candidate data is missing.',
+      });
+    }
+
+    const persisted = await persistTechnicalDepthScore(
+      userId,
+      profileId,
+      result,
+    );
+
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to regenerate technical depth score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to regenerate technical depth score',
+        ),
+      });
   }
 };
 
-// ============================================
+// ============================================================
 // 2.1.6 - COMMUNICATION SCORE
-// ============================================
+// ============================================================
 
 // Get communication score for current user
-export const getCommunicationScore = async (req: Request, res: Response) => {
+export const getCommunicationScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const profileId = 'profile-001';
+    const {
+      userId,
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    const storedCommunicationScore = await fetchScoreSafely(
-      'communication score',
-      () => fetchCommunicationScore(profileId),
+    const stored = await fetchCommunicationScore(
+      profileId,
     );
 
-    if (storedCommunicationScore) {
-      res.json({ score: storedCommunicationScore });
-      return;
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        score: stored,
+        source: 'database',
+      });
     }
 
-    const commScore = {
-      id: 'cs-001',
-      userId,
-      profileId: 'profile-001',
+    const result = computeCommunicationScore(data);
 
-      // Overall Communication Score
-      overallCommScore: 82,
-      communicationTier: 'STRONG',
-
-      // Written Communication
-      writtenScore: 85,
-      writingClarity: 88,
-      writingConciseness: 82,
-      grammarAccuracy: 92,
-      professionalTone: 85,
-      structureOrganization: 80,
-
-      // Writing Sample Analysis
-      writingSamples: [
-        { source: 'Profile Summary', type: 'professional', score: 88, analysis: 'Clear and compelling' },
-        { source: 'Project Descriptions', type: 'technical', score: 85, analysis: 'Well-structured technical writing' },
-        { source: 'Cover Letters', type: 'persuasive', score: 82, analysis: 'Engaging and personalized' },
-      ],
-      vocabularyLevel: 'ADVANCED',
-      technicalWriting: 85,
-      persuasiveWriting: 78,
-
-      // Verbal Communication
-      verbalScore: 80,
-      articulationClarity: 82,
-      responseStructure: 78,
-      activeListening: 85,
-      questionHandling: 80,
-
-      // Interview Performance
-      interviewCommunication: {
-        averageScore: 80,
-        interviews: 3,
-        feedback: ['Clear explanations', 'Good examples', 'Could be more concise'],
-      },
-      presentationSkills: 75,
-      explanationAbility: 88,
-      technicalExplanation: 85,
-
-      // Professional Communication
-      emailProfessionalism: 90,
-      responsiveness: 95,
-      followUpQuality: 85,
-      negotiationSkills: 72,
-
-      // Cross-Cultural Communication
-      languageProficiencies: {
-        English: { level: 'Native', certified: false },
-        Spanish: { level: 'Intermediate', certified: true },
-      },
-      primaryLanguage: 'English',
-      crossCulturalAwareness: 78,
-
-      // Collaboration Indicators
-      collaborationComm: 85,
-      feedbackDelivery: 80,
-      feedbackReception: 88,
-      conflictCommunication: 75,
-
-      // Platform Communication
-      profileWritingQuality: 88,
-      projectDescriptions: 85,
-      experienceArticulation: 82,
-
-      // Public Communication
-      publicSpeaking: 72,
-      contentCreation: 68,
-      socialMediaProfessionalism: 85,
-
-      // AI Analysis
-      communicationStrengths: [
-        'Excellent written communication',
-        'High responsiveness',
-        'Strong technical explanation skills',
-        'Professional email etiquette',
-      ],
-      communicationGaps: [
-        'Public speaking could be developed',
-        'Could be more concise in verbal communication',
-      ],
-      developmentAreas: [
-        'Presentation skills',
-        'Public speaking confidence',
-        'Negotiation techniques',
-      ],
-      recommendations: [
-        'Consider joining Toastmasters for public speaking',
-        'Practice structured response frameworks (STAR, etc.)',
-        'Develop concise executive summary skills',
-      ],
-      commSummary: 'Strong communicator with excellent written skills and professional demeanor. Highly responsive and effective at technical explanations. Would benefit from developing presentation and public speaking abilities.',
-
-      // Scoring Metadata
-      scoringVersion: '1.0',
-      lastScoredAt: new Date().toISOString(),
-      confidence: 0.82,
-    };
-
-    await persistScoreSafely('communication score', () =>
-      saveCommunicationScore({
-        ...commScore,
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        score: scoreResponse(result),
+        source: 'computed',
+        userId,
         profileId,
-        lastScoredAt: new Date(commScore.lastScoredAt),
-      } as any),
+      });
+    }
+
+    const persisted = await persistCommunicationScore(
+      userId,
+      profileId,
+      result,
     );
 
-    res.json({ score: commScore });
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get communication score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get communication score',
+        ),
+      });
   }
 };
 
 // Regenerate communication score
-export const regenerateCommunicationScore = async (req: Request, res: Response) => {
+export const regenerateCommunicationScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-
-    const result = {
-      id: 'cs-' + Date.now(),
+    const {
       userId,
-      regenerated: true,
-      overallCommScore: 82,
-      communicationTier: 'STRONG',
-      regeneratedAt: new Date().toISOString(),
-      analyzedSources: ['Profile', 'Applications', 'Interviews', 'Emails'],
-    };
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    res.json({ score: result });
+    const result = computeCommunicationScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.status(422).json({
+        score: scoreResponse(result),
+        message:
+          'Communication score is incomplete because required communication data is missing.',
+      });
+    }
+
+    const persisted = await persistCommunicationScore(
+      userId,
+      profileId,
+      result,
+    );
+
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to regenerate communication score' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to regenerate communication score',
+        ),
+      });
   }
 };
 
-// ============================================
+// ============================================================
 // 2.1.7 - RELIABILITY SCORE
-// ============================================
+// ============================================================
 
 // Get reliability score for current user
-export const getReliabilityScore = async (req: Request, res: Response) => {
+export const getReliabilityScore = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
-    const profileId = 'profile-001';
+    const {
+      userId,
+      profileId,
+      data,
+    } = await loadRequestContext(req);
 
-    const storedReliabilityScore = await fetchScoreSafely(
-      'reliability score',
-      () => fetchReliabilityScore(profileId),
+    const stored = await fetchReliabilityScore(
+      profileId,
     );
 
-    if (storedReliabilityScore) {
-      res.json({ score: storedReliabilityScore });
-      return;
-    }
-
-    const reliabilityScore = {
-      id: 'rs-001',
-      userId,
-      profileId: 'profile-001',
-
-      // Overall Reliability Score
-      overallReliabilityScore: 88,
-      reliabilityTier: 'RELIABLE',
-
-      // Application Behavior
-      applicationCompletion: 95,
-      profileCompleteness: 92,
-      documentSubmission: 100,
-      deadlineAdherence: 90,
-
-      // Response Patterns
-      responseRate: 98,
-      averageResponseTime: 4.5, // hours
-      responseTimeConsistency: 85,
-      responseQuality: 88,
-
-      // Interview Attendance
-      interviewAttendance: 100,
-      punctualityScore: 95,
-      rescheduleRate: 10,
-      noShowCount: 0,
-      lastMinuteCancellations: 0,
-
-      // Engagement Metrics
-      engagementConsistency: 85,
-      followThroughRate: 92,
-      processAdherence: 90,
-
-      // Platform Activity
-      loginConsistency: 80,
-      profileUpdateFrequency: 75,
-      applicationActivity: {
-        applied: 12,
-        withdrawn: 1,
-        ghosted: 0,
-        completed: 8,
-      },
-
-      // Historical Patterns
-      applicationHistory: {
-        totalApplications: 12,
-        completionRate: 95,
-        averageEngagementDays: 45,
-      },
-      withdrawalPatterns: {
-        reason: 'Accepted other offer',
-        advance_notice: true,
-      },
-      ghostingIncidents: 0,
-
-      // Commitment Indicators
-      longTermCommitment: 85,
-      jobHoppingRisk: 'LOW',
-      averageTenure: 36, // months
-      careerStability: 88,
-
-      // Reference Signals
-      referenceAvailability: 100,
-      referenceQuality: 85,
-      employerRelationships: 'EXCELLENT',
-
-      // Verification Status
-      verificationCompliance: 95,
-      documentAuthenticity: 100,
-      backgroundCheckStatus: 'PASSED',
-
-      // Risk Assessment
-      reliabilityRisks: [],
-      redFlags: [],
-      greenFlags: [
-        'Zero no-shows',
-        'High response rate',
-        'Stable work history',
-        'Excellent references',
-      ],
-
-      // AI Analysis
-      reliabilityDrivers: [
-        { factor: 'Response Rate', impact: 'Consistently responds to all communications' },
-        { factor: 'Interview Attendance', impact: 'Perfect attendance record' },
-        { factor: 'Career Stability', impact: 'Demonstrates long-term commitment' },
-      ],
-      concernAreas: [],
-      recommendations: [
-        'Maintain current engagement level',
-        'Continue providing timely updates',
-      ],
-      reliabilitySummary: 'Highly reliable candidate with excellent track record of engagement and follow-through. Zero no-shows, fast response times, and stable career history indicate strong reliability for hiring.',
-
-      // Trend Analysis
-      reliabilityTrend: 'STABLE',
-      trendData: {
-        '3mo': 88,
-        '6mo': 87,
-        '12mo': 86,
-      },
-
-      // Data Sources
-      dataPoints: 156,
-      confidenceLevel: 'HIGH',
-
-      // Scoring Metadata
-      scoringVersion: '1.0',
-      lastScoredAt: new Date().toISOString(),
-      confidence: 0.92,
-    };
-
-    await persistScoreSafely('reliability score', () =>
-      saveReliabilityScore({
-        ...reliabilityScore,
-        profileId,
-        lastScoredAt: new Date(reliabilityScore.lastScoredAt),
-      } as any),
-    );
-
-    res.json({ score: reliabilityScore });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get reliability score' });
-  }
-};
-
-// Get reliability score for a specific user (recruiter view)
-export const getUserReliabilityScore = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    // Mock data for recruiter viewing candidate
-    const reliabilityScore = {
-      id: 'rs-' + userId,
-      userId,
-      overallReliabilityScore: 88,
-      reliabilityTier: 'RELIABLE',
-      greenFlags: ['Zero no-shows', 'High response rate'],
-      redFlags: [],
-      reliabilitySummary: 'Highly reliable candidate',
-      confidence: 0.92,
-    };
-
-    res.json({ score: reliabilityScore });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get user reliability score' });
-  }
-};
-
-// ============================================
-// COMPREHENSIVE SCORING DASHBOARD
-// ============================================
-
-// Get all advanced scores for current user
-export const getAllAdvancedScores = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user.id;
-    const profileId = 'profile-001';
-    const { companyId, jobId } = req.query;
-    const normalizedCompanyId = typeof companyId === 'string' ? companyId : undefined;
-    const normalizedJobId = typeof jobId === 'string' ? jobId : undefined;
-
-    const storedScores =
-      (await fetchScoreSafely(
-        'all advanced scores',
-        () =>
-          getAllProfileScores(
-            profileId,
-            normalizedCompanyId,
-            normalizedJobId,
-          ),
-      )) ?? {
-        cultureFit: null,
-        growthPotential: null,
-        technicalDepth: null,
-        communication: null,
-        reliability: null,
-      };
-
-    const hasStoredScores = Object.values(storedScores).some(Boolean);
-
-    if (hasStoredScores) {
-      res.json({
-        userId,
-        lastUpdated: new Date().toISOString(),
-        scores: {
-          cultureFit: storedScores.cultureFit
-            ? {
-                score: storedScores.cultureFit.overallCultureScore,
-                tier: storedScores.cultureFit.fitLevel,
-                confidence: storedScores.cultureFit.confidence,
-              }
-            : null,
-          growthPotential: storedScores.growthPotential
-            ? {
-                score: storedScores.growthPotential.overallGrowthScore,
-                tier: storedScores.growthPotential.growthTier,
-                confidence: storedScores.growthPotential.confidence,
-              }
-            : null,
-          technicalDepth: storedScores.technicalDepth
-            ? {
-                score: storedScores.technicalDepth.overallTechnicalScore,
-                tier: storedScores.technicalDepth.technicalTier,
-                confidence: storedScores.technicalDepth.confidence,
-              }
-            : null,
-          communication: storedScores.communication
-            ? {
-                score: storedScores.communication.overallCommScore,
-                tier: storedScores.communication.communicationTier,
-                confidence: storedScores.communication.confidence,
-              }
-            : null,
-          reliability: storedScores.reliability
-            ? {
-                score: storedScores.reliability.overallReliabilityScore,
-                tier: storedScores.reliability.reliabilityTier,
-                confidence: storedScores.reliability.confidence,
-              }
-            : null,
-        },
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        score: stored,
         source: 'database',
       });
-      return;
     }
 
-    const allScores = {
+    const result = computeReliabilityScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        score: scoreResponse(result),
+        source: 'computed',
+        userId,
+        profileId,
+      });
+    }
+
+    const persisted = await persistReliabilityScore(
       userId,
+      profileId,
+      result,
+    );
+
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
+  } catch (error: any) {
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get reliability score',
+        ),
+      });
+  }
+};
+
+// Get reliability score for a specific user
+// Recruiter view
+export const getUserReliabilityScore = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const targetUserId = String(
+      (req.params as any).userId || '',
+    );
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        error: 'userId parameter is required',
+      });
+    }
+
+    const jobId = queryString(
+      (req.query as any)?.jobId,
+    );
+
+    const data = await loadCandidateScoringData(
+      targetUserId,
+      jobId ?? null,
+    );
+
+    const profileId = data.profile?.id;
+
+    if (!profileId) {
+      return res.status(404).json({
+        error: `Candidate profile not found for user ${targetUserId}.`,
+      });
+    }
+
+    const stored = await fetchReliabilityScore(
+      profileId,
+    );
+
+    if (isStoredAI12Score(stored)) {
+      return res.json({
+        score: stored,
+        source: 'database',
+      });
+    }
+
+    const result = computeReliabilityScore(data);
+
+    if (result.status !== 'COMPLETE') {
+      return res.json({
+        score: scoreResponse(result),
+        source: 'computed',
+        userId: targetUserId,
+        profileId,
+      });
+    }
+
+    const persisted = await persistReliabilityScore(
+      targetUserId,
+      profileId,
+      result,
+    );
+
+    return res.json({
+      score: scoreResponse(result, persisted),
+      source: 'computed-and-persisted',
+    });
+  } catch (error: any) {
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get user reliability score',
+        ),
+      });
+  }
+};
+
+// ============================================================
+// COMPREHENSIVE SCORING DASHBOARD
+// ============================================================
+
+// Get all advanced scores for current user
+export const getAllAdvancedScores = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const {
+      userId,
+      profileId,
+      companyId,
+      jobId,
+    } = await loadRequestContext(req);
+
+    // First read scores already persisted by AI-12.
+    const storedScores = await getAllProfileScores(
+      profileId,
+      companyId ?? null,
+      jobId ?? null,
+    );
+
+    const allStoredAI12 =
+      isStoredAI12Score(storedScores.cultureFit) &&
+      isStoredAI12Score(storedScores.growthPotential) &&
+      isStoredAI12Score(storedScores.technicalDepth) &&
+      isStoredAI12Score(storedScores.communication) &&
+      isStoredAI12Score(storedScores.reliability);
+
+    if (allStoredAI12) {
+      return res.json({
+        userId,
+        profileId,
+        lastUpdated: new Date().toISOString(),
+        scores: storedScores,
+        source: 'database',
+      });
+    }
+
+    // No complete AI-12 set exists yet.
+    // Compute from current candidate/job records and persist it.
+    const result =
+      await computeAndPersistAllAdvancedScores(
+        userId,
+        jobId ?? null,
+        companyId ?? null,
+      );
+
+    const refreshedScores =
+      await getAllProfileScores(
+        profileId,
+        companyId ?? null,
+        jobId ?? null,
+      );
+
+    return res.json({
+      userId,
+      profileId,
       lastUpdated: new Date().toISOString(),
       scores: {
-        cultureFit: {
-          score: 78,
-          tier: 'GOOD_FIT',
-          confidence: 0.82,
-        },
-        growthPotential: {
-          score: 82,
-          tier: 'STRONG_GROWTH',
-          confidence: 0.85,
-        },
-        technicalDepth: {
-          score: 85,
-          tier: 'SENIOR',
-          confidence: 0.88,
-        },
-        communication: {
-          score: 82,
-          tier: 'STRONG',
-          confidence: 0.82,
-        },
-        reliability: {
-          score: 88,
-          tier: 'RELIABLE',
-          confidence: 0.92,
-        },
-      },
-      overallAdvancedScore: 83,
-      marketPercentile: 78,
-      insights: [
-        'Strong technical foundation positions you well for senior roles',
-        'High reliability score is a significant differentiator',
-        'Growth potential indicates readiness for leadership advancement',
-        'Communication skills support collaborative team environments',
-      ],
-      topStrengths: [
-        'Technical expertise',
-        'Reliability and commitment',
-        'Growth mindset',
-        'Professional communication',
-      ],
-      developmentAreas: [
-        'Public speaking skills',
-        'Business acumen',
-        'Cross-cultural communication',
-      ],
-    };
+        cultureFit:
+          refreshedScores.cultureFit ??
+          scoreResponse(result.cultureFit),
 
-    res.json(allScores);
+        growthPotential:
+          refreshedScores.growthPotential ??
+          scoreResponse(result.growthPotential),
+
+        technicalDepth:
+          refreshedScores.technicalDepth ??
+          scoreResponse(result.technicalDepth),
+
+        communication:
+          refreshedScores.communication ??
+          scoreResponse(result.communication),
+
+        reliability:
+          refreshedScores.reliability ??
+          scoreResponse(result.reliability),
+      },
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get all advanced scores' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get all advanced scores',
+        ),
+      });
   }
 };
 
 // Regenerate all advanced scores
-export const regenerateAllAdvancedScores = async (req: Request, res: Response) => {
+export const regenerateAllAdvancedScores = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = getAuthenticatedUserId(req);
 
-    const result = {
+    const companyId = queryString(
+      req.query?.companyId,
+    );
+
+    const jobId = queryString(
+      req.query?.jobId,
+    );
+
+    const result =
+      await computeAndPersistAllAdvancedScores(
+        userId,
+        jobId ?? null,
+        companyId ?? null,
+      );
+
+    return res.json({
       userId,
-      regenerationTriggered: true,
-      estimatedCompletionTime: '2-3 minutes',
-      scoresBeingRegenerated: [
-        'cultureFit',
-        'growthPotential',
-        'technicalDepth',
-        'communication',
-        'reliability',
-      ],
-    };
+      lastUpdated: new Date().toISOString(),
+      scores: {
+        cultureFit: scoreResponse(
+          result.cultureFit,
+          result.persisted.cultureFit,
+        ),
 
-    res.json(result);
+        growthPotential: scoreResponse(
+          result.growthPotential,
+          result.persisted.growthPotential,
+        ),
+
+        technicalDepth: scoreResponse(
+          result.technicalDepth,
+          result.persisted.technicalDepth,
+        ),
+
+        communication: scoreResponse(
+          result.communication,
+          result.persisted.communication,
+        ),
+
+        reliability: scoreResponse(
+          result.reliability,
+          result.persisted.reliability,
+        ),
+      },
+      source: 'computed-and-persisted',
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to trigger regeneration' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to regenerate all advanced scores',
+        ),
+      });
   }
 };
 
-// Get candidate scoring dashboard for recruiters
-export const getCandidateScoringDashboard = async (req: Request, res: Response) => {
+// ============================================================
+// Candidate Scoring Dashboard
+// ============================================================
+
+export const getCandidateScoringDashboard = async (
+  req: Request,
+  res: Response,
+) => {
   try {
-    const { candidateId } = req.params;
+    const candidateId = String(
+      (req.params as any).candidateId || '',
+    );
 
-    const dashboard = {
-      candidateId,
-      candidateName: 'John Smith',
-      lastUpdated: new Date().toISOString(),
-      scores: {
-        cultureFit: { score: 78, tier: 'GOOD_FIT' },
-        growthPotential: { score: 82, tier: 'STRONG_GROWTH' },
-        technicalDepth: { score: 85, tier: 'SENIOR' },
-        communication: { score: 82, tier: 'STRONG' },
-        reliability: { score: 88, tier: 'RELIABLE' },
+    if (!candidateId) {
+      return res.status(400).json({
+        error: 'candidateId parameter is required',
+      });
+    }
+
+    const companyId = queryString(
+      req.query?.companyId,
+    );
+
+    const jobId = queryString(
+      req.query?.jobId,
+    );
+
+    // Compute/persist the current stored candidate scores.
+    const result =
+      await computeAndPersistAllAdvancedScores(
+        candidateId,
+        jobId ?? null,
+        companyId ?? null,
+      );
+
+    // Read back the persisted values so dashboard values
+    // come from the AI-11 storage layer.
+    const data = result.data;
+
+    const profileId = data.profile?.id;
+
+    if (!profileId) {
+      return res.status(404).json({
+        error: `Candidate profile not found for user ${candidateId}.`,
+      });
+    }
+
+    const storedScores =
+      await getAllProfileScores(
+        profileId,
+        companyId ?? null,
+        jobId ?? null,
+      );
+
+    const candidateName =
+      [
+        data.user?.firstName,
+        data.user?.lastName,
+      ]
+        .filter(Boolean)
+        .join(' ') ||
+      candidateId;
+
+    const numericScores = [
+      storedScores.cultureFit?.overallCultureScore,
+      storedScores.growthPotential?.overallGrowthScore,
+      storedScores.technicalDepth?.overallTechnicalScore,
+      storedScores.communication?.overallCommScore,
+      storedScores.reliability?.overallReliabilityScore,
+    ].filter(
+      (value): value is number =>
+        typeof value === 'number' &&
+        Number.isFinite(value),
+    );
+
+    const overallScore =
+      numericScores.length > 0
+        ? Math.round(
+            numericScores.reduce(
+              (sum, value) => sum + value,
+              0,
+            ) / numericScores.length,
+          )
+        : null;
+
+    return res.json({
+      dashboard: {
+        candidateId,
+        candidateName,
+        profileId,
+        lastUpdated: new Date().toISOString(),
+
+        scores: {
+          cultureFit:
+            storedScores.cultureFit ??
+            scoreResponse(result.cultureFit),
+
+          growthPotential:
+            storedScores.growthPotential ??
+            scoreResponse(result.growthPotential),
+
+          technicalDepth:
+            storedScores.technicalDepth ??
+            scoreResponse(result.technicalDepth),
+
+          communication:
+            storedScores.communication ??
+            scoreResponse(result.communication),
+
+          reliability:
+            storedScores.reliability ??
+            scoreResponse(result.reliability),
+        },
+
+        overallScore,
+
+        scoringVersion: '2.0',
+
+        source: 'database',
       },
-      overallScore: 83,
-      recommendation: 'STRONG_CANDIDATE',
-      interviewFocus: [
-        'Discuss leadership aspirations',
-        'Probe business acumen',
-        'Assess culture fit for specific team',
-      ],
-      greenFlags: [
-        'High reliability score',
-        'Strong technical foundation',
-        'Growth-oriented mindset',
-      ],
-      yellowFlags: [
-        'May need support developing business strategy skills',
-      ],
-      redFlags: [],
-    };
-
-    res.json({ dashboard });
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Failed to get candidate dashboard' });
+    return res
+      .status(getErrorStatus(error))
+      .json({
+        error: getErrorMessage(
+          error,
+          'Failed to get candidate scoring dashboard',
+        ),
+      });
   }
 };
