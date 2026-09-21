@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import {
+  aggregateScreeningOverallScore,
+  toPrismaEvaluationFields,
+} from '../services/ai/screeningAnswerScoring';
+import { evaluateScreeningAnswerWithProvider } from '../services/ai/evaluateScreeningAnswerWithProvider';
 
 const prisma = new PrismaClient();
 
@@ -225,8 +230,7 @@ export const completeInterview = async (req: Request, res: Response) => {
       select: { aiScore: true },
     });
 
-    const scores = responses.filter(r => r.aiScore !== null).map(r => r.aiScore as number);
-    const overallScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+    const overallScore = aggregateScreeningOverallScore(responses.map((r) => r.aiScore));
 
     const interview = await prisma.aIScreeningInterview.update({
       where: { id },
@@ -608,6 +612,22 @@ export const submitResponse = async (req: Request, res: Response) => {
       where: { interviewId, questionId, userId },
     });
 
+    const question = await prisma.screeningQuestion.findUnique({
+      where: { id: questionId },
+    });
+
+    const evaluation = await evaluateScreeningAnswerWithProvider(
+      { textResponse, codeResponse, selectedOptions },
+      {
+        questionText: question?.questionText || '',
+        questionType: question?.questionType,
+        maxPoints: question?.maxPoints,
+        correctAnswer: question?.correctAnswer,
+        sampleAnswer: question?.sampleAnswer,
+        evaluationGuidelines: question?.evaluationGuidelines,
+      }
+    );
+
     const response = await prisma.screeningResponse.create({
       data: {
         interviewId,
@@ -624,7 +644,7 @@ export const submitResponse = async (req: Request, res: Response) => {
         completedAt: new Date(),
         timeSpentSeconds,
         retakeNumber: existingResponses,
-        status: 'SUBMITTED',
+        ...toPrismaEvaluationFields(evaluation),
       },
     });
 
@@ -636,25 +656,6 @@ export const submitResponse = async (req: Request, res: Response) => {
         currentQuestionIndex: { increment: existingResponses === 0 ? 1 : 0 },
       },
     });
-
-    // Trigger AI analysis (in production, this would be async)
-    // For now, simulate AI scoring
-    setTimeout(async () => {
-      try {
-        await prisma.screeningResponse.update({
-          where: { id: response.id },
-          data: {
-            status: 'ANALYZING',
-            aiScore: Math.random() * 10, // Simulated score
-            aiSummary: 'AI analysis pending implementation',
-            aiSentiment: ['POSITIVE', 'NEUTRAL', 'NEGATIVE'][Math.floor(Math.random() * 3)],
-            aiConfidenceLevel: 0.7 + Math.random() * 0.3,
-          },
-        });
-      } catch (err) {
-        console.error('AI analysis error:', err);
-      }
-    }, 1000);
 
     res.status(201).json(response);
   } catch (error) {
@@ -1037,7 +1038,22 @@ export const submitChatResponse = async (req: Request, res: Response) => {
     const { interviewId } = req.params;
     const { questionId, message, responseType } = req.body;
 
-    // Create response
+    const question = await prisma.screeningQuestion.findUnique({
+      where: { id: questionId },
+    });
+
+    const evaluation = await evaluateScreeningAnswerWithProvider(
+      { textResponse: message },
+      {
+        questionText: question?.questionText || '',
+        questionType: question?.questionType,
+        maxPoints: question?.maxPoints,
+        correctAnswer: question?.correctAnswer,
+        sampleAnswer: question?.sampleAnswer,
+        evaluationGuidelines: question?.evaluationGuidelines,
+      }
+    );
+
     const response = await prisma.screeningResponse.create({
       data: {
         interviewId,
@@ -1046,7 +1062,7 @@ export const submitChatResponse = async (req: Request, res: Response) => {
         responseType: responseType || 'TEXT',
         textResponse: message,
         completedAt: new Date(),
-        status: 'SUBMITTED',
+        ...toPrismaEvaluationFields(evaluation),
       },
     });
 
@@ -1067,11 +1083,17 @@ export const submitChatResponse = async (req: Request, res: Response) => {
     const isComplete = interview && interview.completedQuestions >= interview.totalQuestions;
 
     if (isComplete) {
+      const scoredResponses = await prisma.screeningResponse.findMany({
+        where: { interviewId },
+        select: { aiScore: true },
+      });
+
       await prisma.aIScreeningInterview.update({
         where: { id: interviewId },
         data: {
           status: 'COMPLETED',
           completedAt: new Date(),
+          overallScore: aggregateScreeningOverallScore(scoredResponses.map((r) => r.aiScore)),
         },
       });
     }
