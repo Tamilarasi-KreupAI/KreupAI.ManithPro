@@ -6,6 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
+import { extractResumeText } from "../services/resumeTextExtractor";
 
 const prisma = new PrismaClient();
 const unlinkAsync = promisify(fs.unlink);
@@ -90,6 +91,17 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
     }
 
     const file = req.file;
+      const extraction = await extractResumeText(file.path, file.mimetype);
+
+    if (extraction.status === "failed") {
+      try {
+        await unlinkAsync(file.path);
+      } catch (unlinkError) {
+        console.error("Error deleting failed resume upload:", unlinkError);
+      }
+
+      return res.status(400).json({ error: extraction.error });
+    }
 
     // Check if this is the first resume for the user
     const existingResumes = await prisma.resume.findMany({
@@ -106,12 +118,19 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
         filePath: `/uploads/resumes/${file.filename}`,
         fileSize: file.size,
         fileType: file.mimetype,
+        extractedText: extraction.text,
+        textExtractionStatus: extraction.status,
+        textExtractionError: extraction.error,
+        textExtractedAt: new Date(),
         isDefault: isFirstResume, // Set as default if it's the first resume
       },
     });
 
     return res.status(201).json({
-      message: 'Resume uploaded successfully',
+      message:
+  extraction.status === "no_text_found"
+    ? "Resume uploaded, but no selectable text was found."
+    : "Resume uploaded successfully",
       resume,
     });
   } catch (error) {

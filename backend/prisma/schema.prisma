@@ -173,15 +173,19 @@ model SavedJob {
 }
 
 model Resume {
-  id         String   @id @default(uuid())
-  userId     String
-  fileName   String
-  filePath   String
-  fileSize   Int
-  fileType   String
-  isDefault  Boolean  @default(false)
-  uploadedAt DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(uuid())
+  userId               String
+  fileName             String
+  filePath             String
+  fileSize             Int
+  fileType             String
+  extractedText        String?
+  textExtractionStatus String    @default("pending")
+  textExtractionError  String?
+  textExtractedAt      DateTime?
+  isDefault            Boolean   @default(false)
+  uploadedAt           DateTime  @default(now())
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("resumes")
