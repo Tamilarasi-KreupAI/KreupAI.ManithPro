@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { queueTranscriptionJob } from '../services/transcriptionJob';
 
 const prisma = new PrismaClient();
 
@@ -7,44 +8,38 @@ const prisma = new PrismaClient();
 // 4.2.1 - SPEECH-TO-TEXT TRANSCRIPTION
 // ============================================
 
-// Create transcription job
 export const createTranscription = async (req: Request, res: Response) => {
   try {
-    const { interviewId, responseId, sourceType, sourceUrl, duration, language } = req.body;
+    const { interviewId, responseId, sourceType, sourceUrl, duration, language, recordingId } = req.body;
+
+    let resolvedSource = sourceUrl;
+    if (recordingId) {
+      const recording = await prisma.videoRecording.findUnique({
+        where: { id: recordingId },
+      });
+      resolvedSource = recording?.filePath || recording?.fileUrl || sourceUrl;
+    }
+
+    if (!resolvedSource) {
+      return res.status(400).json({
+        error: 'sourceUrl or recordingId with a stored file path is required',
+      });
+    }
 
     const transcription = await prisma.interviewTranscription.create({
       data: {
         interviewId,
         responseId,
-        sourceType,
-        sourceUrl,
+        sourceType: sourceType || 'RECORDING',
+        sourceUrl: resolvedSource,
         duration,
         language: language || 'en',
-        rawTranscript: '', // Will be populated after processing
+        rawTranscript: '',
         status: 'PENDING',
       },
     });
 
-    // In production, this would trigger async processing
-    // For now, simulate processing
-    setTimeout(async () => {
-      try {
-        await prisma.interviewTranscription.update({
-          where: { id: transcription.id },
-          data: {
-            status: 'COMPLETED',
-            rawTranscript: 'Sample transcription text from interview...',
-            formattedTranscript: '[00:00] Interviewer: Sample question\n[00:15] Candidate: Sample answer...',
-            confidence: 0.92,
-            wordCount: 250,
-            audioQuality: 'GOOD',
-            processingTime: 5000,
-          },
-        });
-      } catch (err) {
-        console.error('Transcription processing error:', err);
-      }
-    }, 2000);
+    queueTranscriptionJob(transcription.id);
 
     res.status(201).json(transcription);
   } catch (error) {
@@ -100,6 +95,14 @@ export const retryTranscription = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    const existing = await prisma.interviewTranscription.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Transcription not found' });
+    }
+
     const transcription = await prisma.interviewTranscription.update({
       where: { id },
       data: {
@@ -107,6 +110,8 @@ export const retryTranscription = async (req: Request, res: Response) => {
         errorMessage: null,
       },
     });
+
+    queueTranscriptionJob(transcription.id);
 
     res.json(transcription);
   } catch (error) {
