@@ -1,4 +1,8 @@
 import { Request, Response } from 'express';
+import { getOrCreateSkillEmbedding } from '../services/skillEmbedding.service';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // ============================================
 // BATCH 21: SEMANTIC MATCHING ENGINE (5.1.1-5.1.7)
@@ -20,29 +24,40 @@ export const createSkillEmbedding = async (req: Request, res: Response) => {
       alternateNames,
     } = req.body;
 
-    // In production, would call embedding API (OpenAI, etc.)
-    const mockEmbedding = Array.from({ length: 1536 }, () => Math.random() * 2 - 1);
+    // Reuse an existing persisted embedding for this skill + company scope
+    // when one exists; otherwise generate and persist a new one with the
+    // actual provider/model metadata of the generation implementation.
+    const { vector, created, record } = await getOrCreateSkillEmbedding({
+      skillText: skillName,
+      skillName,
+      companyId: companyId || null,
+      skillCategory: skillCategory || null,
+      skillType,
+      createdById: (req as any).user?.id || null,
+    });
 
     const embedding = {
-      id: `emb-${Date.now()}`,
-      companyId: companyId || null,
-      skillName,
-      normalizedName: skillName.toLowerCase().trim(),
-      skillCategory: skillCategory || null,
-      skillType: skillType || 'TECHNICAL',
-      embeddingModel: 'text-embedding-3-small',
-      embeddingVersion: '1.0',
-      embeddingVector: mockEmbedding,
-      vectorDimension: 1536,
+      id: record.id,
+      companyId: record.companyId,
+      skillName: record.skillName,
+      normalizedName: record.normalizedName,
+      skillCategory: record.skillCategory,
+      skillType: record.skillType,
+      embeddingProvider: record.embeddingProvider,
+      embeddingModel: record.embeddingModel,
+      embeddingVersion: record.embeddingVersion,
+      embeddingVector: vector,
+      vectorDimension: record.vectorDimension,
       synonyms: synonyms || [],
       alternateNames: alternateNames || [],
-      usageCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      usageCount: record.usageCount,
+      isActive: record.isActive,
+      reused: !created,
+      createdAt: record.createdAt.toISOString(),
+      updatedAt: record.updatedAt.toISOString(),
     };
 
-    res.status(201).json(embedding);
+    res.status(created ? 201 : 200).json(embedding);
   } catch (error) {
     console.error('Error creating skill embedding:', error);
     res.status(500).json({ error: 'Failed to create skill embedding' });
@@ -52,44 +67,40 @@ export const createSkillEmbedding = async (req: Request, res: Response) => {
 // Get all skill embeddings
 export const getSkillEmbeddings = async (req: Request, res: Response) => {
   try {
+    const { companyId } = req.params;
     const { category, type, search } = req.query;
 
-    // Mock data - would query database
-    const embeddings = [
-      {
-        id: 'emb-1',
-        skillName: 'JavaScript',
-        normalizedName: 'javascript',
-        skillCategory: 'Programming',
-        skillType: 'TECHNICAL',
-        synonyms: ['JS', 'ECMAScript'],
-        alternateNames: ['ES6', 'ES2015'],
-        usageCount: 1250,
+    const embeddings = await prisma.skillEmbedding.findMany({
+      where: {
+        ...(companyId ? { companyId } : {}),
+        ...(category ? { skillCategory: category as string } : {}),
+        ...(type ? { skillType: type as any } : {}),
+        ...(search
+          ? { normalizedName: { contains: String(search).toLowerCase().trim() } }
+          : {}),
         isActive: true,
       },
-      {
-        id: 'emb-2',
-        skillName: 'Python',
-        normalizedName: 'python',
-        skillCategory: 'Programming',
-        skillType: 'TECHNICAL',
-        synonyms: ['Py'],
-        alternateNames: ['Python3'],
-        usageCount: 980,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        companyId: true,
+        skillName: true,
+        normalizedName: true,
+        skillCategory: true,
+        skillType: true,
+        embeddingProvider: true,
+        embeddingModel: true,
+        embeddingVersion: true,
+        vectorDimension: true,
+        synonyms: true,
+        alternateNames: true,
+        usageCount: true,
         isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        // embeddingVector intentionally excluded from list responses
       },
-      {
-        id: 'emb-3',
-        skillName: 'React',
-        normalizedName: 'react',
-        skillCategory: 'Framework',
-        skillType: 'TECHNICAL',
-        synonyms: ['ReactJS', 'React.js'],
-        alternateNames: ['React 18'],
-        usageCount: 870,
-        isActive: true,
-      },
-    ];
+    });
 
     res.json(embeddings);
   } catch (error) {
@@ -101,11 +112,26 @@ export const getSkillEmbeddings = async (req: Request, res: Response) => {
 // Calculate skill similarity
 export const calculateSkillSimilarity = async (req: Request, res: Response) => {
   try {
-    const { skillAId, skillBId, skillAName, skillBName } = req.body;
+    const { skillAId, skillBId, skillAName, skillBName, companyId } = req.body;
 
-    // In production, would calculate cosine similarity of vectors
-    const cosineSimilarity = 0.75 + Math.random() * 0.25;
-    const contextualSimilarity = cosineSimilarity * (0.9 + Math.random() * 0.1);
+    // Real cosine similarity over persisted (or newly generated + persisted)
+    // company-scoped embeddings.
+    const scopeCompanyId = companyId || null;
+    const embA = await getOrCreateSkillEmbedding({ skillText: skillAName, companyId: scopeCompanyId });
+    const embB = await getOrCreateSkillEmbedding({ skillText: skillBName, companyId: scopeCompanyId });
+
+    const dot = embA.vector.reduce((sum, v, i) => sum + v * embB.vector[i], 0);
+    const normA = Math.sqrt(embA.vector.reduce((s, v) => s + v * v, 0));
+    const normB = Math.sqrt(embB.vector.reduce((s, v) => s + v * v, 0));
+    const cosineSimilarity = normA && normB ? dot / (normA * normB) : 0;
+
+    // Contextual similarity: Euclidean-distance-based measure over the same
+    // persisted vectors (1 - d/d_max, where d_max = 2 for unit-normalized
+    // vectors). Deterministic, computed from real stored vectors.
+    const euclidean = Math.sqrt(
+      embA.vector.reduce((s, v, i) => s + (v - embB.vector[i]) ** 2, 0)
+    );
+    const contextualSimilarity = 1 - euclidean / 2;
     const combinedScore = (cosineSimilarity + contextualSimilarity) / 2;
 
     const similarity = {
@@ -159,14 +185,26 @@ export const findSimilarSkills = async (req: Request, res: Response) => {
 // Batch embed skills
 export const batchEmbedSkills = async (req: Request, res: Response) => {
   try {
+    const { companyId } = req.params;
     const { skills } = req.body; // Array of skill names
 
-    const results = skills.map((skill: string, index: number) => ({
-      skillName: skill,
-      normalizedName: skill.toLowerCase().trim(),
-      status: 'EMBEDDED',
-      embeddingId: `emb-batch-${Date.now()}-${index}`,
-    }));
+    const results = [];
+    for (const [index, skill] of (skills as string[]).entries()) {
+      const { vector, created, record } = await getOrCreateSkillEmbedding({
+        skillText: skill,
+        companyId: companyId || null,
+        createdById: (req as any).user?.id || null,
+      });
+
+      results.push({
+        skillName: skill,
+        normalizedName: record.normalizedName,
+        status: 'EMBEDDED',
+        embeddingId: record.id,
+        reused: !created,
+        vectorDimension: record.vectorDimension,
+      });
+    }
 
     res.json({
       processed: results.length,

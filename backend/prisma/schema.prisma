@@ -9932,3 +9932,53 @@ model OneWayResponse {
   @@index([status])
   @@map("one_way_responses")
 }
+
+// ============================================
+// BATCH 21 (AI-05): SKILL EMBEDDINGS STORAGE
+// ============================================
+
+enum SkillType {
+  TECHNICAL
+  DOMAIN
+  SOFT
+  TOOL
+  LANGUAGE
+  CERTIFICATION
+}
+
+/// Persistent storage for skill embeddings used by the semantic matching engine
+/// (WS2 / AI-04). Embeddings are company-scoped: the same skill can be embedded
+/// independently per company, and duplicate embeddings for the same skill within
+/// the same company scope are prevented via a compound unique constraint.
+model SkillEmbedding {
+  id                String    @id @default(uuid())
+  companyId         String?
+  companyName       String?
+  skillName         String
+  normalizedName    String
+  skillCategory     String?
+  skillType         SkillType @default(TECHNICAL)
+  skillText         String
+  // Provider/model metadata reflects the ACTUAL implementation used at write
+  // time. The controller's current embedding generator is a deterministic
+  // local hash (no external provider), so values are recorded accordingly.
+  embeddingProvider String    @default("local-mock")
+  embeddingModel    String    @default("deterministic-hash-1536d")
+  embeddingVersion  String    @default("1.0")
+  embeddingVector   Json
+  vectorDimension   Int       @default(1536)
+  synonyms          String[]  @default([])
+  alternateNames    String[]  @default([])
+  usageCount        Int       @default(0)
+  isActive          Boolean   @default(true)
+  createdById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([companyId, normalizedName, embeddingModel])
+  @@index([companyId])
+  @@index([skillType])
+  @@index([embeddingModel])
+  @@index([createdAt])
+  @@map("skill_embeddings")
+}
