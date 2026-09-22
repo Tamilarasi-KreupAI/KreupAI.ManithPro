@@ -107,7 +107,7 @@ ${generatedContent.generatedBenefits.map(b => `- ${b}`).join('\n')}
         generatedBenefits: generatedContent.generatedBenefits,
         generatedQualifications: generatedContent.generatedQualifications,
         fullDescription,
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
         promptTokens: 850,
         completionTokens: 1200,
         generationTimeMs: 2500,
@@ -277,7 +277,7 @@ export const optimizeJobTitle = async (req: Request, res: Response) => {
         originalInclusivityScore: 82,
         improvedSeoScore: recommendation.seoScore,
         improvedInclusivityScore: recommendation.inclusivityScore,
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
@@ -372,7 +372,7 @@ export const analyzeRequirements = async (req: Request, res: Response) => {
         niceToHaveCount: niceToHaveRequirements.length,
         restrictiveScore: 35,
         marketAlignmentScore: 72,
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
@@ -478,7 +478,7 @@ export const checkInclusiveLanguage = async (req: Request, res: Response) => {
         },
         readabilityLevel: 'Grade 10',
         wordCount: content.split(/\s+/).length,
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
         processingTimeMs: 450,
       },
     });
@@ -811,7 +811,7 @@ export const generateInterviewQuestions = async (req: Request, res: Response) =>
           'Focus on job-related competencies only',
         ],
         avoidedTopics: ['salary history', 'family planning', 'age', 'religion', 'political affiliation'],
-        modelVersion: 'gpt-4-turbo-preview',
+        modelVersion: 'no-model-called',
       },
     });
 
