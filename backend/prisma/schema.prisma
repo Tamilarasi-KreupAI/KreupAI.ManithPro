@@ -190,15 +190,19 @@ model SavedJob {
 }
 
 model Resume {
-  id         String   @id @default(uuid())
-  userId     String
-  fileName   String
-  filePath   String
-  fileSize   Int
-  fileType   String
-  isDefault  Boolean  @default(false)
-  uploadedAt DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(uuid())
+  userId               String
+  fileName             String
+  filePath             String
+  fileSize             Int
+  fileType             String
+  extractedText        String?
+  textExtractionStatus String    @default("pending")
+  textExtractionError  String?
+  textExtractedAt      DateTime?
+  isDefault            Boolean   @default(false)
+  uploadedAt           DateTime  @default(now())
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("resumes")
@@ -7321,97 +7325,97 @@ model Contract {
 
 // B2B Models for Client/Vendor Portal
 model B2BRequirement {
-  id              String   @id @default(uuid())
-  clientId        String   @map("client_id")
+  id              String    @id @default(uuid())
+  clientId        String    @map("client_id")
   title           String
   description     String?
-  status          String   @default("OPEN")
-  requiredCount   Int      @default(1) @map("required_count")
-  proposalsCount  Int      @default(0) @map("proposals_count")
+  status          String    @default("OPEN")
+  requiredCount   Int       @default(1) @map("required_count")
+  proposalsCount  Int       @default(0) @map("proposals_count")
   skills          String[]
   location        String?
-  workMode        String?  @map("work_mode")
-  employmentType  String?  @map("employment_type")
+  workMode        String?   @map("work_mode")
+  employmentType  String?   @map("employment_type")
   duration        String?
-  primarySkills   String[] @map("primary_skills")
-  secondarySkills String[] @map("secondary_skills")
-  minExperience   Int?     @map("min_experience")
-  maxExperience   Int?     @map("max_experience")
+  primarySkills   String[]  @map("primary_skills")
+  secondarySkills String[]  @map("secondary_skills")
+  minExperience   Int?      @map("min_experience")
+  maxExperience   Int?      @map("max_experience")
   qualification   String?
   budget          Float?
-  currency        String?  @default("USD")
+  currency        String?   @default("USD")
   frequency       String?
-  noticePeriod    String?  @map("notice_period")
+  noticePeriod    String?   @map("notice_period")
   deadline        DateTime?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@map("b2b_requirements")
 }
 
 model B2BContract {
-  id          String   @id @default(uuid())
-  clientId    String   @map("client_id")
-  vendorId    String   @map("vendor_id")
-  partnerName String   @map("partner_name")
-  role        String   @default("CLIENT")
-  status      String   @default("PENDING")
+  id          String    @id @default(uuid())
+  clientId    String    @map("client_id")
+  vendorId    String    @map("vendor_id")
+  partnerName String    @map("partner_name")
+  role        String    @default("CLIENT")
+  status      String    @default("PENDING")
   terms       String?
   value       Float?
   startDate   DateTime? @map("start_date")
   endDate     DateTime? @map("end_date")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("b2b_contracts")
 }
 
 model B2BPlacement {
-  id               String   @id @default(uuid())
-  vendorId         String   @map("vendor_id")
-  clientId         String   @map("client_id")
-  requirementId    String   @map("requirement_id")
-  candidateId      String   @map("candidate_id")
-  title            String
-  status           String   @default("SUBMITTED")  // SUBMITTED, SHORTLISTED, REJECTED, PLACED
-  notes            String?
-  submittedAt      DateTime @default(now()) @map("submitted_at")
-  reviewedAt       DateTime? @map("reviewed_at")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(uuid())
+  vendorId      String    @map("vendor_id")
+  clientId      String    @map("client_id")
+  requirementId String    @map("requirement_id")
+  candidateId   String    @map("candidate_id")
+  title         String
+  status        String    @default("SUBMITTED") // SUBMITTED, SHORTLISTED, REJECTED, PLACED
+  notes         String?
+  submittedAt   DateTime  @default(now()) @map("submitted_at")
+  reviewedAt    DateTime? @map("reviewed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   @@map("b2b_placements")
 }
 
 model B2BCandidate {
-  id          String   @id @default(uuid())
-  vendorId    String   @map("vendor_id")
-  firstName   String   @map("first_name")
-  lastName    String   @map("last_name")
-  email       String
-  phone       String?
-  skills      String[]
-  experience  Int?
-  resumeUrl   String?  @map("resume_url")
-  status      String   @default("AVAILABLE")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  vendorId   String   @map("vendor_id")
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  email      String
+  phone      String?
+  skills     String[]
+  experience Int?
+  resumeUrl  String?  @map("resume_url")
+  status     String   @default("AVAILABLE")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("b2b_candidates")
 }
 
 model B2BInvoice {
-  id          String    @id @default(uuid())
-  vendorId    String    @map("vendor_id")
-  clientId    String    @map("client_id")
-  contractId  String?   @map("contract_id")
-  invoiceNo   String    @unique @map("invoice_no")
-  amount      Float
-  status      String    @default("PENDING")
-  dueDate     DateTime? @map("due_date")
-  paidAt      DateTime? @map("paid_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id         String    @id @default(uuid())
+  vendorId   String    @map("vendor_id")
+  clientId   String    @map("client_id")
+  contractId String?   @map("contract_id")
+  invoiceNo  String    @unique @map("invoice_no")
+  amount     Float
+  status     String    @default("PENDING")
+  dueDate    DateTime? @map("due_date")
+  paidAt     DateTime? @map("paid_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
   @@map("b2b_invoices")
 }
@@ -7972,7 +7976,7 @@ model EncryptionKey {
   organizationId       String?
   name                 String
   description          String?
-  keyType              String    // MASTER, DATA, FIELD, BACKUP
+  keyType              String // MASTER, DATA, FIELD, BACKUP
   algorithm            String    @default("AES-256-GCM")
   encryptedKeyMaterial String
   keyCheckValue        String?
@@ -7998,18 +8002,18 @@ model EncryptionKey {
 }
 
 model KeyRotationSchedule {
-  id                  String    @id @default(uuid())
-  keyId               String    @unique
-  rotationIntervalDays Int      @default(90)
-  nextRotationAt      DateTime?
-  lastRotatedAt       DateTime?
-  notifyBeforeDays    Int       @default(14)
-  notifyEmails        String[]  @default([])
-  autoRotate          Boolean   @default(false)
-  autoRevokeOldDays   Int?
-  isEnabled           Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                   String    @id @default(uuid())
+  keyId                String    @unique
+  rotationIntervalDays Int       @default(90)
+  nextRotationAt       DateTime?
+  lastRotatedAt        DateTime?
+  notifyBeforeDays     Int       @default(14)
+  notifyEmails         String[]  @default([])
+  autoRotate           Boolean   @default(false)
+  autoRevokeOldDays    Int?
+  isEnabled            Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   key EncryptionKey @relation(fields: [keyId], references: [id], onDelete: Cascade)
 
@@ -8037,12 +8041,12 @@ model PIIDetectionConfig {
 model PIIDetectionLog {
   id             String   @id @default(uuid())
   organizationId String?
-  sourceType     String   // api_request, database, file, etc.
+  sourceType     String // api_request, database, file, etc.
   sourceLocation String?
-  piiType        String   // email, phone, ssn, etc.
+  piiType        String // email, phone, ssn, etc.
   piiCount       Int      @default(1)
   confidence     Float    @default(0.95)
-  actionTaken    String   // logged, masked, blocked
+  actionTaken    String // logged, masked, blocked
   detectedAt     DateTime @default(now())
   createdAt      DateTime @default(now())
 
@@ -8056,7 +8060,7 @@ model AnonymizationRule {
   description    String?
   targetTable    String
   targetColumn   String
-  method         String   // hash, fake, mask, shuffle, null, generalize
+  method         String // hash, fake, mask, shuffle, null, generalize
   methodConfig   Json?
   conditions     Json?
   isEnabled      Boolean  @default(true)
@@ -8073,7 +8077,7 @@ model AnonymizationJob {
   organizationId    String?
   name              String
   description       String?
-  jobType           String    // FULL, INCREMENTAL, SELECTIVE
+  jobType           String // FULL, INCREMENTAL, SELECTIVE
   targetEnvironment String?
   includeTables     String[]  @default([])
   excludeTables     String[]  @default([])
@@ -8127,7 +8131,7 @@ model FileAccessLog {
   id         String   @id @default(uuid())
   fileId     String
   userId     String?
-  action     String   // UPLOAD, DOWNLOAD, VIEW, DELETE
+  action     String // UPLOAD, DOWNLOAD, VIEW, DELETE
   ipAddress  String?
   userAgent  String?
   accessedAt DateTime @default(now())
@@ -8138,50 +8142,50 @@ model FileAccessLog {
 }
 
 model DataResidencyConfig {
-  id                        String   @id @default(uuid())
-  organizationId            String   @unique
-  primaryRegion             String   @default("us-east-1")
-  primaryProvider           String   @default("aws")
-  secondaryRegions          String[] @default([])
-  enableReplication         Boolean  @default(false)
-  replicationMode           String?  // SYNC, ASYNC
-  gdprCompliant             Boolean  @default(false)
-  ccpaCompliant             Boolean  @default(false)
-  dataCategories            Json?
-  allowCrossBorderTransfer  Boolean  @default(true)
-  requiredCertifications    String[] @default([])
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  id                       String   @id @default(uuid())
+  organizationId           String   @unique
+  primaryRegion            String   @default("us-east-1")
+  primaryProvider          String   @default("aws")
+  secondaryRegions         String[] @default([])
+  enableReplication        Boolean  @default(false)
+  replicationMode          String? // SYNC, ASYNC
+  gdprCompliant            Boolean  @default(false)
+  ccpaCompliant            Boolean  @default(false)
+  dataCategories           Json?
+  allowCrossBorderTransfer Boolean  @default(true)
+  requiredCertifications   String[] @default([])
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   @@map("data_residency_configs")
 }
 
 model BackupConfig {
-  id               String    @id @default(uuid())
-  organizationId   String?
-  name             String
-  description      String?
-  backupType       String    @default("FULL") // FULL, INCREMENTAL, DIFFERENTIAL
-  includeTables    String[]  @default([])
-  excludeTables    String[]  @default([])
-  includeFiles     Boolean   @default(true)
-  schedule         String?   // Cron expression
-  retentionDays    Int       @default(30)
-  maxBackups       Int       @default(10)
-  storageProvider  String?
-  storagePath      String?
-  storageRegion    String?
-  encryptBackups   Boolean   @default(true)
-  encryptionKeyId  String?
-  isEnabled        Boolean   @default(true)
-  notifyOnSuccess  Boolean   @default(false)
-  notifyOnFailure  Boolean   @default(true)
-  notifyEmails     String[]  @default([])
-  lastRunAt        DateTime?
-  nextRunAt        DateTime?
-  createdBy        String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  organizationId  String?
+  name            String
+  description     String?
+  backupType      String    @default("FULL") // FULL, INCREMENTAL, DIFFERENTIAL
+  includeTables   String[]  @default([])
+  excludeTables   String[]  @default([])
+  includeFiles    Boolean   @default(true)
+  schedule        String? // Cron expression
+  retentionDays   Int       @default(30)
+  maxBackups      Int       @default(10)
+  storageProvider String?
+  storagePath     String?
+  storageRegion   String?
+  encryptBackups  Boolean   @default(true)
+  encryptionKeyId String?
+  isEnabled       Boolean   @default(true)
+  notifyOnSuccess Boolean   @default(false)
+  notifyOnFailure Boolean   @default(true)
+  notifyEmails    String[]  @default([])
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   backups Backup[]
 
@@ -8192,12 +8196,12 @@ model Backup {
   id                  String    @id @default(uuid())
   configId            String?
   organizationId      String?
-  backupType          String    // FULL, INCREMENTAL, DIFFERENTIAL
+  backupType          String // FULL, INCREMENTAL, DIFFERENTIAL
   status              String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
-  triggeredBy         String?   // MANUAL, SCHEDULED
+  triggeredBy         String? // MANUAL, SCHEDULED
   startedAt           DateTime?
   completedAt         DateTime?
-  duration            Int?      // seconds
+  duration            Int? // seconds
   sizeBytes           BigInt?
   compressedSizeBytes BigInt?
   recordCount         Int?
@@ -8270,8 +8274,8 @@ model TLSConfig {
 model DataProtectionAuditLog {
   id             String   @id @default(uuid())
   organizationId String?
-  eventType      String   // KEY_CREATED, KEY_ROTATED, BACKUP_CREATED, etc.
-  resourceType   String   // encryption_key, backup, secure_file, etc.
+  eventType      String // KEY_CREATED, KEY_ROTATED, BACKUP_CREATED, etc.
+  resourceType   String // encryption_key, backup, secure_file, etc.
   resourceId     String?
   userId         String?
   action         String
@@ -8296,17 +8300,17 @@ model HiringSuccessPrediction {
   jobId                String
   successProbability   Float
   confidenceLevel      Float
-  predictionGrade      String    // A, B, C, D, F
+  predictionGrade      String // A, B, C, D, F
   skillMatchScore      Float
   experienceMatchScore Float
   cultureFitScore      Float
   motivationScore      Float
   stabilityScore       Float
-  overallRiskLevel     String    // LOW, MEDIUM, HIGH, VERY_HIGH
-  riskFactors          Json?     // Array of risk factors
-  positiveSignals      Json?     // Array of positive signals
-  negativeSignals      Json?     // Array of negative signals
-  actualOutcome        String?   // HIRED, REJECTED, WITHDRAWN
+  overallRiskLevel     String // LOW, MEDIUM, HIGH, VERY_HIGH
+  riskFactors          Json? // Array of risk factors
+  positiveSignals      Json? // Array of positive signals
+  negativeSignals      Json? // Array of negative signals
+  actualOutcome        String? // HIRED, REJECTED, WITHDRAWN
   outcomeNotes         String?
   outcomeRecordedAt    DateTime?
   createdAt            DateTime  @default(now())
@@ -8319,60 +8323,60 @@ model HiringSuccessPrediction {
 }
 
 model TimeToHireForecast {
-  id                         String    @id @default(uuid())
-  companyId                  String
-  jobId                      String    @unique
-  predictedDays              Int
-  confidenceInterval         Json?     // { low: number, high: number }
-  confidenceLevel            Float
-  sourcingDays               Int
-  screeningDays              Int
-  interviewingDays           Int
-  offerDays                  Int
-  closingDays                Int
-  roleComplexity             String    // SIMPLE, MODERATE, COMPLEX, HIGHLY_COMPLEX
-  marketCompetition          String    // LOW, MEDIUM, HIGH, VERY_HIGH
-  compensationCompetitiveness String   // BELOW_MARKET, AT_MARKET, ABOVE_MARKET
-  locationDifficulty         String    // EASY, MODERATE, DIFFICULT, VERY_DIFFICULT
-  predictedBottlenecks       Json?     // Array of bottleneck objects
-  bottleneckRisk             String    // LOW, MEDIUM, HIGH
-  actualDays                 Int?
-  hiredAt                    DateTime?
-  variance                   Int?
-  forecastedAt               DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+  id                          String    @id @default(uuid())
+  companyId                   String
+  jobId                       String    @unique
+  predictedDays               Int
+  confidenceInterval          Json? // { low: number, high: number }
+  confidenceLevel             Float
+  sourcingDays                Int
+  screeningDays               Int
+  interviewingDays            Int
+  offerDays                   Int
+  closingDays                 Int
+  roleComplexity              String // SIMPLE, MODERATE, COMPLEX, HIGHLY_COMPLEX
+  marketCompetition           String // LOW, MEDIUM, HIGH, VERY_HIGH
+  compensationCompetitiveness String // BELOW_MARKET, AT_MARKET, ABOVE_MARKET
+  locationDifficulty          String // EASY, MODERATE, DIFFICULT, VERY_DIFFICULT
+  predictedBottlenecks        Json? // Array of bottleneck objects
+  bottleneckRisk              String // LOW, MEDIUM, HIGH
+  actualDays                  Int?
+  hiredAt                     DateTime?
+  variance                    Int?
+  forecastedAt                DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
 
   @@index([companyId])
   @@map("time_to_hire_forecasts")
 }
 
 model OfferAcceptancePrediction {
-  id                    String    @id @default(uuid())
-  companyId             String
-  candidateId           String
-  jobId                 String
-  offerId               String?
-  acceptanceProbability Float
-  confidenceLevel       Float
-  predictionGrade       String    // A, B, C, D, F
-  compensationFit       Float
-  roleFit               Float
-  locationFit           Float
-  cultureFit            Float
-  growthOpportunityFit  Float
-  workLifeBalanceFit    Float
-  competingOfferRisk    Float
-  counterofferRisk      Float
-  timingRisk            Float
-  engagementLevel       String    // LOW, MEDIUM, HIGH
-  responseTimeTrend     String    // FASTER, STABLE, SLOWER
-  marketRateComparison  String    // BELOW, AT, ABOVE
-  improvementSuggestions Json?    // Array of suggestions
-  actualDecision        String?   // ACCEPTED, REJECTED
-  rejectionReason       String?
-  decisionDate          DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                     String    @id @default(uuid())
+  companyId              String
+  candidateId            String
+  jobId                  String
+  offerId                String?
+  acceptanceProbability  Float
+  confidenceLevel        Float
+  predictionGrade        String // A, B, C, D, F
+  compensationFit        Float
+  roleFit                Float
+  locationFit            Float
+  cultureFit             Float
+  growthOpportunityFit   Float
+  workLifeBalanceFit     Float
+  competingOfferRisk     Float
+  counterofferRisk       Float
+  timingRisk             Float
+  engagementLevel        String // LOW, MEDIUM, HIGH
+  responseTimeTrend      String // FASTER, STABLE, SLOWER
+  marketRateComparison   String // BELOW, AT, ABOVE
+  improvementSuggestions Json? // Array of suggestions
+  actualDecision         String? // ACCEPTED, REJECTED
+  rejectionReason        String?
+  decisionDate           DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   @@unique([candidateId, jobId], name: "candidateId_jobId")
   @@index([companyId])
@@ -8381,27 +8385,27 @@ model OfferAcceptancePrediction {
 }
 
 model RetentionRiskScore {
-  id                      String   @id @default(uuid())
-  companyId               String
-  candidateId             String
-  jobId                   String
-  retentionProbability6Mo Float
-  retentionProbability1Yr Float
-  retentionProbability2Yr Float
-  predictedTenure         Int      // months
-  overallRiskLevel        String   // LOW, MODERATE, HIGH, VERY_HIGH
-  riskScore               Int      // 0-100
-  jobHoppingIndicator     Float
-  tenureConsistency       Float
-  careerProgressionFit    Float
+  id                       String   @id @default(uuid())
+  companyId                String
+  candidateId              String
+  jobId                    String
+  retentionProbability6Mo  Float
+  retentionProbability1Yr  Float
+  retentionProbability2Yr  Float
+  predictedTenure          Int // months
+  overallRiskLevel         String // LOW, MODERATE, HIGH, VERY_HIGH
+  riskScore                Int // 0-100
+  jobHoppingIndicator      Float
+  tenureConsistency        Float
+  careerProgressionFit     Float
   compensationSatisfaction Float
-  growthOpportunityMatch  Float
-  redFlags                Json?    // Array of red flags
-  yellowFlags             Json?    // Array of yellow flags
-  positiveIndicators      Json?    // Array of positive indicators
-  retentionStrategies     Json?    // Array of strategies
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  growthOpportunityMatch   Float
+  redFlags                 Json? // Array of red flags
+  yellowFlags              Json? // Array of yellow flags
+  positiveIndicators       Json? // Array of positive indicators
+  retentionStrategies      Json? // Array of strategies
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   @@unique([candidateId, jobId], name: "candidateId_jobId")
   @@index([companyId])
@@ -8410,28 +8414,28 @@ model RetentionRiskScore {
 }
 
 model PerformancePrediction {
-  id                    String   @id @default(uuid())
-  companyId             String
-  candidateId           String
-  jobId                 String
-  predictedPerformance  String   // EXCEPTIONAL, STRONG, AVERAGE, BELOW_AVERAGE
-  performanceScore      Int      // 0-100
-  confidenceLevel       Float
-  technicalPerformance  Float
-  collaborationScore    Float
-  leadershipPotential   Float
-  adaptabilityScore     Float
-  innovationScore       Float
-  executionScore        Float
-  expectedRampUpMonths  Int
-  rampUpConfidence      Float
-  growthPotentialLevel  String   // LOW, MEDIUM, HIGH, VERY_HIGH
-  performanceRisks      Json?    // Array of risk objects
-  developmentNeeds      Json?    // Array of development needs
-  supportRequirements   Json?    // Array of support requirements
-  predictionFactors     Json?    // Factors used in prediction
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  companyId            String
+  candidateId          String
+  jobId                String
+  predictedPerformance String // EXCEPTIONAL, STRONG, AVERAGE, BELOW_AVERAGE
+  performanceScore     Int // 0-100
+  confidenceLevel      Float
+  technicalPerformance Float
+  collaborationScore   Float
+  leadershipPotential  Float
+  adaptabilityScore    Float
+  innovationScore      Float
+  executionScore       Float
+  expectedRampUpMonths Int
+  rampUpConfidence     Float
+  growthPotentialLevel String // LOW, MEDIUM, HIGH, VERY_HIGH
+  performanceRisks     Json? // Array of risk objects
+  developmentNeeds     Json? // Array of development needs
+  supportRequirements  Json? // Array of support requirements
+  predictionFactors    Json? // Factors used in prediction
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@unique([candidateId, jobId], name: "candidateId_jobId")
   @@index([companyId])
@@ -8440,33 +8444,33 @@ model PerformancePrediction {
 }
 
 model MarketAvailabilityAnalysis {
-  id                       String   @id @default(uuid())
-  companyId                String
-  jobId                    String?
-  roleTitle                String
-  location                 String
-  experienceLevel          String
-  requiredSkills           String[] @default([])
-  industry                 String?
-  availabilityScore        Int      // 0-100
-  difficultyLevel          String   // EASY, MODERATE, DIFFICULT, VERY_DIFFICULT
-  estimatedCandidatePool   Int
-  talentSupply             String   // ABUNDANT, ADEQUATE, LIMITED, SCARCE
-  hiringDemand             String   // LOW, MEDIUM, HIGH, VERY_HIGH
-  supplyDemandRatio        Float
-  competitorActivity       String   // LOW, MEDIUM, HIGH, VERY_HIGH
-  competingOpenings        Int
-  salaryTrend              String   // DECREASING, STABLE, INCREASING
-  marketSalaryMin          Float?
-  marketSalaryMax          Float?
-  marketSalaryMedian       Float?
-  scarcestSkills           Json?    // Array of scarce skills
-  commonSkills             Json?    // Array of common skills
-  sourcingRecommendations  Json?    // Array of recommendations
-  compensationGuidance     Json?    // Compensation guidance object
-  timelineExpectation      Int      // days
-  dataFreshness            DateTime
-  analyzedAt               DateTime @default(now())
+  id                      String   @id @default(uuid())
+  companyId               String
+  jobId                   String?
+  roleTitle               String
+  location                String
+  experienceLevel         String
+  requiredSkills          String[] @default([])
+  industry                String?
+  availabilityScore       Int // 0-100
+  difficultyLevel         String // EASY, MODERATE, DIFFICULT, VERY_DIFFICULT
+  estimatedCandidatePool  Int
+  talentSupply            String // ABUNDANT, ADEQUATE, LIMITED, SCARCE
+  hiringDemand            String // LOW, MEDIUM, HIGH, VERY_HIGH
+  supplyDemandRatio       Float
+  competitorActivity      String // LOW, MEDIUM, HIGH, VERY_HIGH
+  competingOpenings       Int
+  salaryTrend             String // DECREASING, STABLE, INCREASING
+  marketSalaryMin         Float?
+  marketSalaryMax         Float?
+  marketSalaryMedian      Float?
+  scarcestSkills          Json? // Array of scarce skills
+  commonSkills            Json? // Array of common skills
+  sourcingRecommendations Json? // Array of recommendations
+  compensationGuidance    Json? // Compensation guidance object
+  timelineExpectation     Int // days
+  dataFreshness           DateTime
+  analyzedAt              DateTime @default(now())
 
   @@index([companyId])
   @@index([roleTitle])
@@ -8474,32 +8478,32 @@ model MarketAvailabilityAnalysis {
 }
 
 model SalaryTrendPrediction {
-  id                   String   @id @default(uuid())
-  companyId            String
-  roleTitle            String
-  location             String
-  experienceLevel      String
-  industry             String?
-  currentMedian        Float
-  currentMin           Float
-  currentMax           Float
-  currentPercentile25  Float
-  currentPercentile75  Float
-  prediction3Mo        Json?    // { median, min, max, changePercent }
-  prediction6Mo        Json?
-  prediction1Yr        Json?
-  trendDirection       String   // DECLINING, STABLE, GROWING, RAPIDLY_GROWING
-  annualGrowthRate     Float
-  volatility           String   // LOW, MODERATE, HIGH
-  demandImpact         Float
-  supplyImpact         Float
-  economicImpact       Float
-  technologyImpact     Float
-  industryComparison   Json?    // Comparison with other industries
-  locationComparison   Json?    // Comparison with other locations
-  experienceProgression Json?   // Salary by experience level
-  competitiveRange     Json?    // Competitive salary range
-  predictedAt          DateTime @default(now())
+  id                    String   @id @default(uuid())
+  companyId             String
+  roleTitle             String
+  location              String
+  experienceLevel       String
+  industry              String?
+  currentMedian         Float
+  currentMin            Float
+  currentMax            Float
+  currentPercentile25   Float
+  currentPercentile75   Float
+  prediction3Mo         Json? // { median, min, max, changePercent }
+  prediction6Mo         Json?
+  prediction1Yr         Json?
+  trendDirection        String // DECLINING, STABLE, GROWING, RAPIDLY_GROWING
+  annualGrowthRate      Float
+  volatility            String // LOW, MODERATE, HIGH
+  demandImpact          Float
+  supplyImpact          Float
+  economicImpact        Float
+  technologyImpact      Float
+  industryComparison    Json? // Comparison with other industries
+  locationComparison    Json? // Comparison with other locations
+  experienceProgression Json? // Salary by experience level
+  competitiveRange      Json? // Competitive salary range
+  predictedAt           DateTime @default(now())
 
   @@index([companyId])
   @@index([roleTitle])
@@ -8511,28 +8515,28 @@ model PipelineHealthPrediction {
   companyId             String
   jobId                 String
   currentCandidates     Int
-  byStage               Json?    // Candidates by stage
-  stageConversions      Json?    // Conversion rates between stages
-  overallHealthScore    Int      // 0-100
-  healthGrade           String   // A, B, C, D, F
-  healthTrend           String   // IMPROVING, STABLE, DECLINING
+  byStage               Json? // Candidates by stage
+  stageConversions      Json? // Conversion rates between stages
+  overallHealthScore    Int // 0-100
+  healthGrade           String // A, B, C, D, F
+  healthTrend           String // IMPROVING, STABLE, DECLINING
   predictedHires        Int
   predictedDropouts     Int
   fillProbability       Float
-  timeToFill            Int      // days
-  bottleneckStages      Json?    // Array of bottleneck info
-  stageRisks            Json?    // Risk by stage
-  conversionConcerns    Json?    // Array of conversion concerns
-  candidateGap          Int      // Additional candidates needed
-  qualityGap            Float    // Quality improvement needed
-  averageTimeInStage    Json?    // Average time by stage
-  velocityTrend         String   // FASTER, STABLE, SLOWER
+  timeToFill            Int // days
+  bottleneckStages      Json? // Array of bottleneck info
+  stageRisks            Json? // Risk by stage
+  conversionConcerns    Json? // Array of conversion concerns
+  candidateGap          Int // Additional candidates needed
+  qualityGap            Float // Quality improvement needed
+  averageTimeInStage    Json? // Average time by stage
+  velocityTrend         String // FASTER, STABLE, SLOWER
   stalledCandidates     Int
-  urgentActions         Json?    // Array of urgent actions
-  sourcingNeeds         Json?    // Array of sourcing needs
-  processImprovements   Json?    // Array of improvements
-  weeklyForecast        Json?    // Weekly forecast data
-  hireByDateProbability Json?    // Probability of hire by date
+  urgentActions         Json? // Array of urgent actions
+  sourcingNeeds         Json? // Array of sourcing needs
+  processImprovements   Json? // Array of improvements
+  weeklyForecast        Json? // Weekly forecast data
+  hireByDateProbability Json? // Probability of hire by date
   analyzedAt            DateTime @default(now())
 
   @@index([companyId])
@@ -8557,16 +8561,16 @@ model PredictionModelConfig {
 }
 
 model PredictionAuditLog {
-  id              String    @id @default(uuid())
-  companyId       String
-  predictionType  String
-  predictionId    String
-  predictedValue  Float?
-  actualValue     Float?
-  wasAccurate     Boolean?
-  accuracyScore   Float?
-  feedback        Json?
-  createdAt       DateTime  @default(now())
+  id             String   @id @default(uuid())
+  companyId      String
+  predictionType String
+  predictionId   String
+  predictedValue Float?
+  actualValue    Float?
+  wasAccurate    Boolean?
+  accuracyScore  Float?
+  feedback       Json?
+  createdAt      DateTime @default(now())
 
   @@index([companyId])
   @@index([predictionType])
@@ -8582,9 +8586,9 @@ model JobRecommendation {
   companyId           String
   candidateId         String
   jobId               String
-  recommendationScore Int       // 0-100
+  recommendationScore Int // 0-100
   recommendationRank  Int
-  recommendationType  String    // STRONG_MATCH, GOOD_MATCH, POTENTIAL_MATCH
+  recommendationType  String // STRONG_MATCH, GOOD_MATCH, POTENTIAL_MATCH
   skillMatch          Float
   experienceMatch     Float
   locationMatch       Float
@@ -8592,7 +8596,7 @@ model JobRecommendation {
   jobTitle            String
   jobCompany          String
   jobLocation         String
-  matchReasons        Json?     // Array of match reasons
+  matchReasons        Json? // Array of match reasons
   highlightedSkills   String[]  @default([])
   growthOpportunities String[]  @default([])
   viewedAt            DateTime?
@@ -8616,9 +8620,9 @@ model CandidateRecommendation {
   jobId               String
   candidateId         String
   recruiterId         String?
-  recommendationScore Int       // 0-100
+  recommendationScore Int // 0-100
   recommendationRank  Int
-  recommendationType  String    // TOP_PICK, STRONG_MATCH, GOOD_MATCH, POTENTIAL
+  recommendationType  String // TOP_PICK, STRONG_MATCH, GOOD_MATCH, POTENTIAL
   overallMatch        Float
   skillMatch          Float
   experienceMatch     Float
@@ -8627,7 +8631,7 @@ model CandidateRecommendation {
   candidateLocation   String
   candidateExperience Int
   candidateSkills     String[]  @default([])
-  matchReasons        Json?     // Array of match reasons
+  matchReasons        Json? // Array of match reasons
   standoutFactors     String[]  @default([])
   viewedAt            DateTime?
   shortlistedAt       DateTime?
@@ -8645,7 +8649,7 @@ model SimilarCandidateMatch {
   id                   String    @id @default(uuid())
   companyId            String
   sourceCandidateId    String
-  sourceType           String    // TOP_PERFORMER, RECENT_HIRE, IDEAL_PROFILE
+  sourceType           String // TOP_PERFORMER, RECENT_HIRE, IDEAL_PROFILE
   similarCandidateId   String
   overallSimilarity    Float
   skillSimilarity      Float
@@ -8669,10 +8673,10 @@ model PassiveCandidateProfile {
   companyId              String
   candidateId            String
   isPassive              Boolean   @default(true)
-  passiveScore           Int       // 0-100
-  jobSearchActivity      String    // NONE, LOW, MEDIUM, HIGH
-  profileUpdateFrequency String    // NEVER, RARELY, OCCASIONALLY, FREQUENTLY
-  responseToOutreach     String    // NO_RESPONSE, SLOW, MODERATE, QUICK
+  passiveScore           Int // 0-100
+  jobSearchActivity      String // NONE, LOW, MEDIUM, HIGH
+  profileUpdateFrequency String // NEVER, RARELY, OCCASIONALLY, FREQUENTLY
+  responseToOutreach     String // NO_RESPONSE, SLOW, MODERATE, QUICK
   openToOpportunities    Boolean   @default(false)
   matchingSkills         String[]  @default([])
   targetRoles            String[]  @default([])
@@ -8688,26 +8692,26 @@ model PassiveCandidateProfile {
 }
 
 model SkillUpRecommendation {
-  id                    String    @id @default(uuid())
-  candidateId           String
-  targetJobId           String?
-  targetRoleTitle       String
-  currentSkills         String[]  @default([])
-  currentLevel          String    // ENTRY, MID, SENIOR, LEAD
-  requiredSkills        String[]  @default([])
-  missingSkills         String[]  @default([])
-  skillRecommendations  Json?     // Array of skill recommendations
-  prioritySkills        String[]  @default([])
-  quickWins             String[]  @default([])
-  longTermGoals         String[]  @default([])
-  suggestedCourses      Json?     // Array of course suggestions
-  estimatedTimeToReady  Int       // months
-  salaryImpact          Json?     // Salary improvement estimate
-  jobOpportunityImpact  Int       // Additional opportunities
-  skillsAcquired        String[]  @default([])
-  progressPercentage    Int       @default(0)
-  lastProgressUpdate    DateTime?
-  generatedAt           DateTime  @default(now())
+  id                   String    @id @default(uuid())
+  candidateId          String
+  targetJobId          String?
+  targetRoleTitle      String
+  currentSkills        String[]  @default([])
+  currentLevel         String // ENTRY, MID, SENIOR, LEAD
+  requiredSkills       String[]  @default([])
+  missingSkills        String[]  @default([])
+  skillRecommendations Json? // Array of skill recommendations
+  prioritySkills       String[]  @default([])
+  quickWins            String[]  @default([])
+  longTermGoals        String[]  @default([])
+  suggestedCourses     Json? // Array of course suggestions
+  estimatedTimeToReady Int // months
+  salaryImpact         Json? // Salary improvement estimate
+  jobOpportunityImpact Int // Additional opportunities
+  skillsAcquired       String[]  @default([])
+  progressPercentage   Int       @default(0)
+  lastProgressUpdate   DateTime?
+  generatedAt          DateTime  @default(now())
 
   @@index([candidateId])
   @@map("skill_up_recommendations")
@@ -8722,9 +8726,9 @@ model ReEngagementSuggestion {
   candidateName           String
   previousJobId           String?
   previousApplicationDate DateTime?
-  previousOutcome         String    // REJECTED, WITHDRAWN, NO_RESPONSE
-  reEngagementScore       Int       // 0-100
-  reEngagementReasons     Json?     // Array of reasons
+  previousOutcome         String // REJECTED, WITHDRAWN, NO_RESPONSE
+  reEngagementScore       Int // 0-100
+  reEngagementReasons     Json? // Array of reasons
   currentFitScore         Float
   previousFitScore        Float
   fitImprovement          Float
@@ -8745,28 +8749,28 @@ model ReEngagementSuggestion {
 }
 
 model InterviewPanelRecommendation {
-  id                  String    @id @default(uuid())
-  companyId           String
-  jobId               String
-  candidateId         String
-  interviewRound      String    // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, FINAL
-  interviewerId       String
-  interviewerName     String
-  interviewerTitle    String
+  id                    String    @id @default(uuid())
+  companyId             String
+  jobId                 String
+  candidateId           String
+  interviewRound        String // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, FINAL
+  interviewerId         String
+  interviewerName       String
+  interviewerTitle      String
   interviewerDepartment String
-  recommendationScore Int       // 0-100
-  recommendationRank  Int
-  recommendationType  String    // BEST_FIT, GOOD_FIT, AVAILABLE
-  matchReasons        Json?     // Array of match reasons
-  relevantExpertise   String[]  @default([])
-  interviewerRating   Float?
-  feedbackQuality     Float?
-  availabilityScore   Float?
-  suggestedFocusAreas String[]  @default([])
-  suggestedDuration   Int       // minutes
-  selected            Boolean   @default(false)
-  selectedAt          DateTime?
-  generatedAt         DateTime  @default(now())
+  recommendationScore   Int // 0-100
+  recommendationRank    Int
+  recommendationType    String // BEST_FIT, GOOD_FIT, AVAILABLE
+  matchReasons          Json? // Array of match reasons
+  relevantExpertise     String[]  @default([])
+  interviewerRating     Float?
+  feedbackQuality       Float?
+  availabilityScore     Float?
+  suggestedFocusAreas   String[]  @default([])
+  suggestedDuration     Int // minutes
+  selected              Boolean   @default(false)
+  selectedAt            DateTime?
+  generatedAt           DateTime  @default(now())
 
   @@index([companyId])
   @@index([jobId])
@@ -8778,24 +8782,24 @@ model SourcingChannelRecommendation {
   companyId             String
   jobId                 String?
   roleTitle             String
-  roleLevel             String   // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
+  roleLevel             String // ENTRY, MID, SENIOR, LEAD, EXECUTIVE
   requiredSkills        String[] @default([])
   location              String
   industry              String?
   channelName           String
-  channelType           String   // JOB_BOARD, SOCIAL, REFERRAL, AGENCY, DIRECT
-  recommendationScore   Int      // 0-100
+  channelType           String // JOB_BOARD, SOCIAL, REFERRAL, AGENCY, DIRECT
+  recommendationScore   Int // 0-100
   recommendationRank    Int
   confidenceLevel       Float
   expectedCandidates    Int
   expectedQuality       Float
   expectedCost          Float
-  expectedTimeToHire    Int      // days
+  expectedTimeToHire    Int // days
   historicalSuccessRate Float?
   channelStrengths      String[] @default([])
   bestFor               String[] @default([])
   pastHiresFromChannel  Int      @default(0)
-  suggestedActions      Json?    // Array of suggested actions
+  suggestedActions      Json? // Array of suggested actions
   budgetRecommendation  Float?
   dataFreshness         DateTime
   generatedAt           DateTime @default(now())
@@ -8811,8 +8815,8 @@ model RecommendationFeedback {
   recommendationType String
   recommendationId   String
   userId             String
-  userRole           String   // RECRUITER, HIRING_MANAGER, CANDIDATE
-  rating             Int?     // 1-5
+  userRole           String // RECRUITER, HIRING_MANAGER, CANDIDATE
+  rating             Int? // 1-5
   wasHelpful         Boolean?
   wasAccurate        Boolean?
   feedbackText       String?
@@ -8829,9 +8833,9 @@ model RecommendationConfig {
   id                 String   @id @default(uuid())
   companyId          String
   recommendationType String
-  weights            Json?    // Feature weights
-  thresholds         Json?    // Score thresholds
-  filters            Json?    // Default filters
+  weights            Json? // Feature weights
+  thresholds         Json? // Score thresholds
+  filters            Json? // Default filters
   isEnabled          Boolean  @default(true)
   createdById        String
   createdAt          DateTime @default(now())
@@ -8877,7 +8881,7 @@ model HiringTeamMember {
   teamId                String
   userId                String
   companyId             String
-  role                  String   // LEAD_RECRUITER, HIRING_MANAGER, RECRUITER, INTERVIEWER, COORDINATOR, STAKEHOLDER
+  role                  String // LEAD_RECRUITER, HIRING_MANAGER, RECRUITER, INTERVIEWER, COORDINATOR, STAKEHOLDER
   title                 String?
   permissionLevel       String   @default("VIEWER") // ADMIN, EDITOR, VIEWER
   canViewCandidates     Boolean  @default(true)
@@ -8903,32 +8907,32 @@ model HiringTeamMember {
 }
 
 model InterviewPanel {
-  id                   String   @id @default(uuid())
-  companyId            String
-  teamId               String?
-  jobId                String
-  name                 String
-  roundNumber          Int
-  roundType            String   // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, CULTURAL, FINAL, CUSTOM
-  panelMembers         Json?    // Array of panel member info
-  minPanelSize         Int      @default(1)
-  maxPanelSize         Int      @default(5)
-  duration             Int      @default(60) // minutes
-  format               String   @default("VIDEO") // IN_PERSON, VIDEO, PHONE, MIXED
-  location             String?
-  videoLink            String?
-  scorecardTemplateId  String?
-  passingScore         Float?
-  requireUnanimous     Boolean  @default(false)
-  schedulingMode       String   @default("MANUAL") // MANUAL, SEMI_AUTO, AUTO
-  bufferTime           Int      @default(15) // minutes
-  allowWeekends        Boolean  @default(false)
-  timeSlotPreferences  Json?
-  order                Int?
-  isActive             Boolean  @default(true)
-  createdById          String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  companyId           String
+  teamId              String?
+  jobId               String
+  name                String
+  roundNumber         Int
+  roundType           String // PHONE_SCREEN, TECHNICAL, BEHAVIORAL, CULTURAL, FINAL, CUSTOM
+  panelMembers        Json? // Array of panel member info
+  minPanelSize        Int      @default(1)
+  maxPanelSize        Int      @default(5)
+  duration            Int      @default(60) // minutes
+  format              String   @default("VIDEO") // IN_PERSON, VIDEO, PHONE, MIXED
+  location            String?
+  videoLink           String?
+  scorecardTemplateId String?
+  passingScore        Float?
+  requireUnanimous    Boolean  @default(false)
+  schedulingMode      String   @default("MANUAL") // MANUAL, SEMI_AUTO, AUTO
+  bufferTime          Int      @default(15) // minutes
+  allowWeekends       Boolean  @default(false)
+  timeSlotPreferences Json?
+  order               Int?
+  isActive            Boolean  @default(true)
+  createdById         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([companyId])
   @@index([teamId])
@@ -8937,24 +8941,24 @@ model InterviewPanel {
 }
 
 model TeamWorkload {
-  id                     String   @id @default(uuid())
-  companyId              String
-  teamId                 String
-  userId                 String
-  periodStart            DateTime
-  periodEnd              DateTime
-  scheduledInterviews    Int      @default(0)
-  completedInterviews    Int      @default(0)
-  pendingFeedback        Int      @default(0)
-  candidatesAssigned     Int      @default(0)
-  avgInterviewsPerDay    Float?
-  peakDay                DateTime?
-  peakInterviews         Int?
-  maxCapacity            Int?
-  currentLoad            Int?
-  availableCapacity      Int?
-  utilizationPercentage  Float?
-  calculatedAt           DateTime @default(now())
+  id                    String    @id @default(uuid())
+  companyId             String
+  teamId                String
+  userId                String
+  periodStart           DateTime
+  periodEnd             DateTime
+  scheduledInterviews   Int       @default(0)
+  completedInterviews   Int       @default(0)
+  pendingFeedback       Int       @default(0)
+  candidatesAssigned    Int       @default(0)
+  avgInterviewsPerDay   Float?
+  peakDay               DateTime?
+  peakInterviews        Int?
+  maxCapacity           Int?
+  currentLoad           Int?
+  availableCapacity     Int?
+  utilizationPercentage Float?
+  calculatedAt          DateTime  @default(now())
 
   @@unique([teamId, userId, periodStart, periodEnd], name: "teamId_userId_periodStart_periodEnd")
   @@index([companyId])
@@ -8963,29 +8967,29 @@ model TeamWorkload {
 }
 
 model CoverageSchedule {
-  id                     String    @id @default(uuid())
-  companyId              String
-  teamId                 String
-  primaryUserId          String
-  coveringUserId         String
-  startDate              DateTime
-  endDate                DateTime
-  reason                 String?
-  notes                  String?
-  coverageType           String    @default("FULL") // FULL, PARTIAL, EMERGENCY
-  status                 String    @default("SCHEDULED") // SCHEDULED, ACTIVE, COMPLETED, CANCELLED
-  coveredResponsibilities Json?
+  id                       String    @id @default(uuid())
+  companyId                String
+  teamId                   String
+  primaryUserId            String
+  coveringUserId           String
+  startDate                DateTime
+  endDate                  DateTime
+  reason                   String?
+  notes                    String?
+  coverageType             String    @default("FULL") // FULL, PARTIAL, EMERGENCY
+  status                   String    @default("SCHEDULED") // SCHEDULED, ACTIVE, COMPLETED, CANCELLED
+  coveredResponsibilities  Json?
   excludedResponsibilities Json?
-  handoffNotes           String?
-  handoffDocuments       Json?
-  handoffCompletedAt     DateTime?
-  notifyStakeholders     Boolean   @default(true)
-  approvalStatus         String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  approvedById           String?
-  approvedAt             DateTime?
-  createdById            String
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  handoffNotes             String?
+  handoffDocuments         Json?
+  handoffCompletedAt       DateTime?
+  notifyStakeholders       Boolean   @default(true)
+  approvalStatus           String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedById             String?
+  approvedAt               DateTime?
+  createdById              String
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   @@index([companyId])
   @@index([teamId])
@@ -8994,29 +8998,29 @@ model CoverageSchedule {
 }
 
 model TeamPerformance {
-  id                    String   @id @default(uuid())
-  companyId             String
-  teamId                String
-  periodType            String   // DAILY, WEEKLY, MONTHLY, QUARTERLY
-  periodStart           DateTime
-  periodEnd             DateTime
-  candidatesSourced     Int      @default(0)
-  candidatesScreened    Int      @default(0)
-  interviewsScheduled   Int      @default(0)
-  interviewsCompleted   Int      @default(0)
-  offersExtended        Int      @default(0)
-  offersAccepted        Int      @default(0)
-  hiresMade             Int      @default(0)
-  avgTimeToHire         Float?
-  avgTimeToOffer        Float?
-  pipelineVelocity      Float?
-  sourcingEfficiency    Float?
-  interviewToOfferRate  Float?
-  offerAcceptanceRate   Float?
-  qualityOfHire         Float?
-  diversityMetrics      Json?
-  benchmarkComparison   Json?
-  calculatedAt          DateTime @default(now())
+  id                   String   @id @default(uuid())
+  companyId            String
+  teamId               String
+  periodType           String // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  periodStart          DateTime
+  periodEnd            DateTime
+  candidatesSourced    Int      @default(0)
+  candidatesScreened   Int      @default(0)
+  interviewsScheduled  Int      @default(0)
+  interviewsCompleted  Int      @default(0)
+  offersExtended       Int      @default(0)
+  offersAccepted       Int      @default(0)
+  hiresMade            Int      @default(0)
+  avgTimeToHire        Float?
+  avgTimeToOffer       Float?
+  pipelineVelocity     Float?
+  sourcingEfficiency   Float?
+  interviewToOfferRate Float?
+  offerAcceptanceRate  Float?
+  qualityOfHire        Float?
+  diversityMetrics     Json?
+  benchmarkComparison  Json?
+  calculatedAt         DateTime @default(now())
 
   @@unique([teamId, periodType, periodStart], name: "teamId_periodType_periodStart")
   @@index([companyId])
@@ -9028,10 +9032,10 @@ model HiringManagerDashboard {
   id             String    @id @default(uuid())
   companyId      String
   userId         String
-  widgets        Json?     // Array of widget configurations
-  layout         Json?     // Dashboard layout
+  widgets        Json? // Array of widget configurations
+  layout         Json? // Dashboard layout
   defaultFilters Json?
-  savedFilters   Json?     // Array of saved filter presets
+  savedFilters   Json? // Array of saved filter presets
   refreshRate    Int       @default(300) // seconds
   theme          String    @default("LIGHT")
   lastViewedAt   DateTime?
@@ -9047,8 +9051,8 @@ model TeamActivityLog {
   companyId     String
   teamId        String
   userId        String
-  activityType  String   // MEMBER_ADDED, MEMBER_REMOVED, PERMISSIONS_CHANGED, CANDIDATE_REVIEWED, etc.
-  entityType    String   // TEAM, MEMBER, CANDIDATE, INTERVIEW, etc.
+  activityType  String // MEMBER_ADDED, MEMBER_REMOVED, PERMISSIONS_CHANGED, CANDIDATE_REVIEWED, etc.
+  entityType    String // TEAM, MEMBER, CANDIDATE, INTERVIEW, etc.
   entityId      String?
   description   String
   previousState Json?
@@ -9944,4 +9948,54 @@ model OneWayResponse {
   @@index([questionIndex])
   @@index([status])
   @@map("one_way_responses")
+}
+
+// ============================================
+// BATCH 21 (AI-05): SKILL EMBEDDINGS STORAGE
+// ============================================
+
+enum SkillType {
+  TECHNICAL
+  DOMAIN
+  SOFT
+  TOOL
+  LANGUAGE
+  CERTIFICATION
+}
+
+/// Persistent storage for skill embeddings used by the semantic matching engine
+/// (WS2 / AI-04). Embeddings are company-scoped: the same skill can be embedded
+/// independently per company, and duplicate embeddings for the same skill within
+/// the same company scope are prevented via a compound unique constraint.
+model SkillEmbedding {
+  id                String    @id @default(uuid())
+  companyId         String?
+  companyName       String?
+  skillName         String
+  normalizedName    String
+  skillCategory     String?
+  skillType         SkillType @default(TECHNICAL)
+  skillText         String
+  // Provider/model metadata reflects the ACTUAL implementation used at write
+  // time. The controller's current embedding generator is a deterministic
+  // local hash (no external provider), so values are recorded accordingly.
+  embeddingProvider String    @default("local-mock")
+  embeddingModel    String    @default("deterministic-hash-1536d")
+  embeddingVersion  String    @default("1.0")
+  embeddingVector   Json
+  vectorDimension   Int       @default(1536)
+  synonyms          String[]  @default([])
+  alternateNames    String[]  @default([])
+  usageCount        Int       @default(0)
+  isActive          Boolean   @default(true)
+  createdById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([companyId, normalizedName, embeddingModel])
+  @@index([companyId])
+  @@index([skillType])
+  @@index([embeddingModel])
+  @@index([createdAt])
+  @@map("skill_embeddings")
 }

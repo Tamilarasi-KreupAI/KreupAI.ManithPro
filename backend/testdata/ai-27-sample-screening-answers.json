@@ -1,0 +1,40 @@
+{
+  "task": "AI-27",
+  "question": {
+    "questionText": "Describe your experience with React and TypeScript, including a production example.",
+    "maxPoints": 10,
+    "sampleAnswer": "I used React and TypeScript in production to ship a dashboard, implemented hooks, and measured load time impact."
+  },
+  "answers": {
+    "strong": {
+      "textResponse": "In production I implemented a React and TypeScript dashboard with custom hooks, measured load time, and delivered a 30% faster experience. For example we shipped it to 12 teams. I am proud of the strong collaboration and the growth we achieved."
+    },
+    "weak": {
+      "textResponse": "I used some tools."
+    },
+    "unanswered": {
+      "textResponse": ""
+    }
+  },
+  "expected": {
+    "strong": {
+      "status": "ANALYZED",
+      "aiScore": 7.7,
+      "aiSentiment": "POSITIVE",
+      "aiConfidenceLevel": 0.85
+    },
+    "weak": {
+      "status": "ANALYZED",
+      "aiScore": 0.8,
+      "aiSentiment": "NEUTRAL",
+      "aiConfidenceLevel": 0.49
+    },
+    "unanswered": {
+      "status": "UNANSWERED",
+      "aiScore": null,
+      "aiSentiment": null,
+      "aiConfidenceLevel": null
+    },
+    "overallScore": 4.25
+  }
+}

@@ -225,8 +225,8 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server
-if (process.env.NODE_ENV !== 'test') {
+// Start server only when this file is run directly
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);

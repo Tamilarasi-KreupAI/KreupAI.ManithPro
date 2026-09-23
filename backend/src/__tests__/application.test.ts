@@ -1,3 +1,5 @@
+import { describe, test, expect } from 'vitest';
+
 describe('Applications & Recruitment Pipeline - T6', () => {
   describe('Application status validation', () => {
     test('should reject an invalid application status', () => {

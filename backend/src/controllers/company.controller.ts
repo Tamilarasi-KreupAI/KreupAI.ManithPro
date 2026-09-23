@@ -1,25 +1,48 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../database/prisma';
 import { AuthRequest } from '../middleware/auth';
 
-const prisma = new PrismaClient();
-
-export const getCompanies = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getCompanies = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { search, page = '1', limit = '20' } = req.query;
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
+    const pageNum = Math.max(
+      1,
+      Number.parseInt(page as string, 10) || 1
+    );
+
+    const limitNum = Math.min(
+      100,
+      Math.max(
+        1,
+        Number.parseInt(limit as string, 10) || 20
+      )
+    );
+
     const skip = (pageNum - 1) * limitNum;
 
-    // Get unique companies with their job count
     const where: any = {};
-    if (search) {
-      where.companyName = { contains: search as string, mode: 'insensitive' };
+
+    if (search && String(search).trim()) {
+      where.companyName = {
+        contains: String(search).trim(),
+        mode: 'insensitive',
+      };
     }
 
+    // Get paginated companies directly from the database
     const companies = await prisma.job.groupBy({
-      by: ['companyName', 'companyDescription', 'companyWebsite', 'companyLogo', 'companySize', 'companyIndustry'],
+      by: [
+        'companyName',
+        'companyDescription',
+        'companyWebsite',
+        'companyLogo',
+        'companySize',
+        'companyIndustry',
+      ],
       where,
       _count: {
         id: true,
@@ -27,14 +50,35 @@ export const getCompanies = async (req: AuthRequest, res: Response): Promise<voi
       orderBy: {
         companyName: 'asc',
       },
+      skip,
+      take: limitNum,
     });
 
-    // For pagination, we'll slice the array
-    const total = companies.length;
-    const paginatedCompanies = companies.slice(skip, skip + limitNum);
+    // Get total number of unique company groups
+    const allCompanies = await prisma.job.groupBy({
+      by: [
+        'companyName',
+        'companyDescription',
+        'companyWebsite',
+        'companyLogo',
+        'companySize',
+        'companyIndustry',
+      ],
+      where,
+    });
+
+    const total = allCompanies.length;
 
     res.json({
-      companies: paginatedCompanies,
+      companies: companies.map((company) => ({
+        companyName: company.companyName,
+        companyDescription: company.companyDescription,
+        companyWebsite: company.companyWebsite,
+        companyLogo: company.companyLogo,
+        companySize: company.companySize,
+        companyIndustry: company.companyIndustry,
+        jobCount: company._count.id,
+      })),
       pagination: {
         total,
         page: pageNum,
@@ -43,18 +87,37 @@ export const getCompanies = async (req: AuthRequest, res: Response): Promise<voi
       },
     });
   } catch (error) {
-    console.error('Get companies error:', error);
-    res.status(500).json({ error: 'Failed to fetch companies' });
+    console.error('Error fetching companies:', error);
+    res.status(500).json({
+      error: 'Failed to fetch companies',
+    });
   }
 };
 
-export const getCompanyByName = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getCompanyByName = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { name } = req.params;
 
-    // Get company info from the first job with this company name
+    if (!name || !name.trim()) {
+      res.status(400).json({
+        error: 'Company name is required',
+      });
+      return;
+    }
+
+    const companyName = name.trim();
+
+    // Case-insensitive company lookup
     const companyJob = await prisma.job.findFirst({
-      where: { companyName: name },
+      where: {
+        companyName: {
+          equals: companyName,
+          mode: 'insensitive',
+        },
+      },
       select: {
         companyName: true,
         companyDescription: true,
@@ -66,38 +129,33 @@ export const getCompanyByName = async (req: AuthRequest, res: Response): Promise
     });
 
     if (!companyJob) {
-      res.status(404).json({ error: 'Company not found' });
+      res.status(404).json({
+        error: 'Company not found',
+      });
       return;
     }
 
-    // Get all jobs for this company
-    const [jobs, totalJobs] = await Promise.all([
-      prisma.job.findMany({
-        where: {
-          companyName: name,
-          status: req.user?.role === 'CANDIDATE' ? 'OPEN' : undefined,
-        },
-        include: {
-          postedBy: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          _count: {
-            select: { applications: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.job.count({
-        where: {
-          companyName: name,
-          status: 'OPEN',
-        },
-      }),
-    ]);
+    const jobWhere = {
+      companyName: {
+        equals: companyJob.companyName,
+        mode: 'insensitive' as const,
+      },
+    };
+
+    const jobs = await prisma.job.findMany({
+      where: jobWhere,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const totalJobs = await prisma.job.count({
+      where: jobWhere,
+    });
+
+    const openJobs = jobs.filter(
+      (job) => job.status === 'OPEN'
+    ).length;
 
     res.json({
       company: {
@@ -108,12 +166,14 @@ export const getCompanyByName = async (req: AuthRequest, res: Response): Promise
         size: companyJob.companySize,
         industry: companyJob.companyIndustry,
         totalJobs,
-        openJobs: jobs.filter(j => j.status === 'OPEN').length,
+        openJobs,
       },
       jobs,
     });
   } catch (error) {
-    console.error('Get company error:', error);
-    res.status(500).json({ error: 'Failed to fetch company' });
+    console.error('Error fetching company:', error);
+    res.status(500).json({
+      error: 'Failed to fetch company details',
+    });
   }
 };
