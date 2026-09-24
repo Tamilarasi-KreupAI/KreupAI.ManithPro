@@ -43,7 +43,9 @@ export async function processTranscriptionJob(transcriptionId: string): Promise<
         transcriptionEngine: result.engine,
         confidence: result.confidence,
         wordCount: result.wordCount,
-        timestamps: result.timestamps ?? undefined,
+        timestamps: result.timestamps
+  ? JSON.parse(JSON.stringify(result.timestamps))
+  : undefined,
         speakerLabels: result.speakerLabels ?? undefined,
         processingTime: Date.now() - started,
         errorMessage: null,
