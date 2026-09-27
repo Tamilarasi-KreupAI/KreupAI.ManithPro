@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllRequirements, deleteRequirement } from '../../services/b2b.service';
-
+import { getOpenRequirements, getAllRequirements, deleteRequirement } from '../../services/b2b.service';
+import { useAuth } from '../../context/AuthContext';
 interface Requirement {
   id: string;
   title: string;
@@ -26,6 +26,7 @@ interface Requirement {
 }
 
 const BulkRequirements: React.FC = () => {
+  const { user } = useAuth();  
   const navigate = useNavigate();
 
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -44,7 +45,10 @@ const BulkRequirements: React.FC = () => {
   const loadRequirements = async () => {
     try {
       setLoading(true);
-      const data = await getAllRequirements();
+      const res = user?.role === 'VENDOR'
+        ? await getOpenRequirements()
+        : await getAllRequirements();
+      const data = Array.isArray(res) ? res : res?.data || [];
       setRequirements(data);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to load requirements');

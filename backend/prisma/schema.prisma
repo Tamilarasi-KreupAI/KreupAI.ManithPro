@@ -7381,6 +7381,7 @@ model B2BPlacement {
   notes         String?
   submittedAt   DateTime  @default(now()) @map("submitted_at")
   reviewedAt    DateTime? @map("reviewed_at")
+  reviewedById  String?   @map("reviewed_by_id")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 

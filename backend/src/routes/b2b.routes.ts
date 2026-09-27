@@ -21,7 +21,15 @@ import { createDraftContract, updateContractStatus } from '../controllers/b2b.co
 import {
   getVendorCandidates,
   addCandidate,
+  uploadCandidateResume,
   downloadCandidateResume,
+  updateCandidate,
+  deleteCandidate,
+  bulkUploadCandidates,
+  candidateResumeUpload,
+  validateCandidateResumeSignature,
+  handleCandidateUploadError,
+  csvUpload,
 } from '../controllers/b2b.controller';
 
 const router = express.Router();
@@ -54,9 +62,34 @@ router.get('/contracts/:id/download', authorize('CLIENT', 'VENDOR'), downloadCon
 router.get('/contracts/:id/view', authorize('CLIENT', 'VENDOR'), viewContract);
 router.patch('/contracts/:id/status', authorize('CLIENT', 'VENDOR'), updateContractStatus);
 
+/* ================= CANDIDATES ================= */
+
+// WS14-T07: Bulk upload MUST come before /:id routes to avoid matching /bulk as an ID
+router.post(
+  '/candidates/bulk',
+  authorize('VENDOR'),
+  csvUpload.single('file'),
+  bulkUploadCandidates,
+);
+
 router.get('/candidates', authorize('VENDOR'), getVendorCandidates);
 router.post('/candidates', authorize('VENDOR'), addCandidate);
+
+// WS14-T07: Resume upload for a specific candidate
+router.post(
+  '/candidates/:id/resume',
+  authorize('VENDOR'),
+  candidateResumeUpload.single('resume'),
+  validateCandidateResumeSignature(['pdf', 'doc', 'docx']),
+  uploadCandidateResume,
+  handleCandidateUploadError,
+);
+
+// WS14-T07: Resume download (now fully implemented)
 router.get('/candidates/:id/resume', authorize('VENDOR'), downloadCandidateResume);
+
+router.put('/candidates/:id', authorize('VENDOR'), updateCandidate);
+router.delete('/candidates/:id', authorize('VENDOR'), deleteCandidate);
 router.post('/contracts', authorize('CLIENT'), createDraftContract);
 
 router.get('/candidates/:id', authorize('VENDOR'), getCandidateProfile);
@@ -71,6 +104,7 @@ import {
   getVendorSubmissions,
   getClientSubmissions,
   updateSubmissionStatus,
+  withdrawSubmission,
   getB2BSettings,
   updateB2BSettings,
 } from '../controllers/b2b.controller';
@@ -81,13 +115,16 @@ router.post('/invoices/:id/pay', authorize('VENDOR'), payInvoice);
 router.get('/invoices/:id/download', authorize('CLIENT', 'VENDOR'), downloadInvoice);
 
 /* ================= VENDORS ================= */
+
 router.get('/vendors', authorize('CLIENT'), getVendors);
 
 /* ================= PLACEMENTS / SUBMISSIONS ================= */
-router.post('/submissions', authorize('VENDOR'), submitCandidateToRequirement);    // Vendor submits candidate
-router.get('/submissions/vendor', authorize('VENDOR'), getVendorSubmissions);      // Vendor sees their submissions
-router.get('/submissions/client', authorize('CLIENT'), getClientSubmissions);      // Client sees submissions to their requirements
-router.patch('/submissions/:id/status', authorize('CLIENT'), updateSubmissionStatus); // Client approves/rejects
+router.post('/submissions', authorize('VENDOR'), submitCandidateToRequirement);
+router.get('/submissions/vendor', authorize('VENDOR'), getVendorSubmissions);
+router.get('/submissions/client', authorize('CLIENT'), getClientSubmissions);
+router.patch('/submissions/:id/status', authorize('CLIENT'), updateSubmissionStatus);
+router.patch('/submissions/:id/withdraw',
+  authorize('VENDOR'), withdrawSubmission);
 
 /* ================= SETTINGS ================= */
 router.get('/settings', authorize('CLIENT', 'VENDOR'), getB2BSettings);

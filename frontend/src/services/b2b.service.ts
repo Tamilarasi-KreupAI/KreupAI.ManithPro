@@ -7,6 +7,28 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export interface B2BPagination {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface B2BPaginatedResponse<T> {
+  data: T[];
+  pagination: B2BPagination;
+}
+
+export interface B2BListParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+  skill?: string;
+}
+
 // Attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -99,17 +121,53 @@ export const updateContractStatus = async (id: string, status: string) => {
   const res = await api.patch(`/contracts/${id}/status`, { status });
   return res.data;
 };
-export const getVendorCandidates = async () => {
-  const res = await api.get('/candidates');
+export const getVendorCandidates = async (params?: B2BListParams) => {
+  const res = await api.get('/candidates', { params });
   return res.data;
 };
 
-export const downloadCandidateResume = async (id: string) => {
+export const downloadCandidateResume = async (id: string): Promise<Blob> => {
   const res = await api.get(`/candidates/${id}/resume`, {
     responseType: 'blob',
   });
   return res.data;
 };
+
+// WS14-T07: Upload a resume file for a specific vendor candidate
+export const uploadCandidateResume = async (candidateId: string, file: File): Promise<{ message: string; resumeUrl: string }> => {
+  const formData = new FormData();
+  formData.append('resume', file);
+  const res = await api.post(`/candidates/${candidateId}/resume`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+};
+
+// WS14-T07: Bulk upload candidates via CSV
+export interface BulkUploadError {
+  row: number;
+  reason: string;
+}
+
+export interface BulkUploadResult {
+  message: string;
+  summary: {
+    total: number;
+    created: number;
+    failed: number;
+  };
+  errors: BulkUploadError[];
+}
+
+export const bulkUploadCandidates = async (file: File): Promise<BulkUploadResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post('/candidates/bulk', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+};
+
 
 export const addCandidate = async (payload: {
   firstName: string;
@@ -121,6 +179,29 @@ export const addCandidate = async (payload: {
   resumeUrl?: string;
 }) => {
   const res = await api.post('/candidates', payload);
+  return res.data;
+};
+
+// WS14-T06: Update a vendor's own candidate
+export const updateCandidate = async (
+  id: string,
+  payload: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    skills?: string[];
+    experience?: number | null;
+    resumeUrl?: string | null;
+  }
+) => {
+  const res = await api.put(`/candidates/${id}`, payload);
+  return res.data;
+};
+
+// WS14-T06: Delete a vendor's own candidate
+export const deleteCandidate = async (id: string) => {
+  const res = await api.delete(`/candidates/${id}`);
   return res.data;
 };
 export const getCandidateProfile = async (id: string) => {
@@ -160,8 +241,8 @@ export const getVendors = async () => {
 /* ================= SUBMISSIONS / PLACEMENTS ================= */
 
 // Vendors can view open requirements from clients
-export const getOpenRequirements = async () => {
-  const res = await api.get('/requirements/open');
+export const getOpenRequirements = async (params?: B2BListParams) => {
+  const res = await api.get('/requirements/open', { params });
   return res.data;
 };
 
@@ -176,8 +257,8 @@ export const submitCandidateToRequirement = async (payload: {
 };
 
 // Vendor sees their submissions
-export const getVendorSubmissions = async () => {
-  const res = await api.get('/submissions/vendor');
+export const getVendorSubmissions = async (params?: B2BListParams) => {
+  const res = await api.get('/submissions/vendor', { params });
   return res.data;
 };
 
@@ -190,6 +271,12 @@ export const getClientSubmissions = async () => {
 // Client updates submission status (SHORTLISTED, REJECTED, PLACED)
 export const updateSubmissionStatus = async (id: string, status: string, notes?: string) => {
   const res = await api.patch(`/submissions/${id}/status`, { status, notes });
+  return res.data;
+};
+
+// Vendor withdraws a submitted candidate
+export const withdrawSubmission = async (id: string) => {
+  const res = await api.patch(`/submissions/${id}/withdraw`);
   return res.data;
 };
 
@@ -230,3 +317,6 @@ export const updateB2BSettings = async (data: B2BSettingsData) => {
   const res = await api.put('/settings', data);
   return res.data;
 };
+
+
+

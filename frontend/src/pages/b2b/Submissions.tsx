@@ -6,6 +6,7 @@ import {
   getVendorSubmissions,
   getClientSubmissions,
   updateSubmissionStatus,
+  withdrawSubmission,
 } from '../../services/b2b.service';
 import { useAuth } from '../../context/AuthContext';
 
@@ -59,6 +60,18 @@ const Submissions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [requirementPage, setRequirementPage] = useState(1);
+  const [requirementPagination, setRequirementPagination] = useState({ page: 1, pageSize: 20, totalItems: 0, totalPages: 0, hasNext: false, hasPrevious: false });
+  const [requirementSearch, setRequirementSearch] = useState('');
+  const [requirementSkill, setRequirementSkill] = useState('');
+
+  const [candidatePagination, setCandidatePagination] = useState({ page: 1, pageSize: 50, totalItems: 0, totalPages: 0, hasNext: false, hasPrevious: false });
+
+  const [submissionPage, setSubmissionPage] = useState(1);
+  const [submissionPagination, setSubmissionPagination] = useState({ page: 1, pageSize: 20, totalItems: 0, totalPages: 0, hasNext: false, hasPrevious: false });
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionStatus, setSubmissionStatus] = useState('');
+
   // Submit modal
   const [showSubmit, setShowSubmit] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
@@ -72,7 +85,7 @@ const Submissions: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [activeTab, requirementPage, requirementSearch, requirementSkill, submissionPage, submissionSearch, submissionStatus]);
 
   const loadData = async () => {
     try {
@@ -80,12 +93,38 @@ const Submissions: React.FC = () => {
       setError(null);
 
       if (activeTab === 'browse' && isVendor) {
-        const [reqs, cands] = await Promise.all([getOpenRequirements(), getVendorCandidates()]);
-        setRequirements(reqs);
-        setCandidates(cands.filter((c: Candidate) => c.status === 'AVAILABLE'));
+        const [reqs, cands] = await Promise.all([
+          getOpenRequirements({
+            page: requirementPage,
+            pageSize: 20,
+            search: requirementSearch || undefined,
+            skill: requirementSkill || undefined,
+          }),
+          getVendorCandidates({
+            page: 1,
+            pageSize: candidatePagination.pageSize,
+            status: 'AVAILABLE',
+          }),
+        ]);
+
+        setRequirements(reqs.data);
+        setRequirementPagination(reqs.pagination);
+        setCandidates(cands.data.filter((c: Candidate) => c.status === 'AVAILABLE'));
+        setCandidatePagination(cands.pagination);
       } else if (activeTab === 'submissions') {
-        const subs = isClient ? await getClientSubmissions() : await getVendorSubmissions();
-        setSubmissions(subs);
+        if (isClient) {
+          const subs = await getClientSubmissions();
+          setSubmissions(subs);
+        } else {
+          const subs = await getVendorSubmissions({
+            page: submissionPage,
+            pageSize: 20,
+            search: submissionSearch || undefined,
+            status: submissionStatus || undefined,
+          });
+          setSubmissions(subs.data);
+          setSubmissionPagination(subs.pagination);
+        }
       }
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to load data');
@@ -204,6 +243,21 @@ const Submissions: React.FC = () => {
       {/* Browse Requirements Tab (Vendor) */}
       {activeTab === 'browse' && isVendor && (
         <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow flex flex-col sm:flex-row gap-3">
+            <input
+              value={requirementSearch}
+              onChange={(e) => { setRequirementSearch(e.target.value); setRequirementPage(1); }}
+              placeholder="Search requirements..."
+              className="flex-1 rounded border px-3 py-2 bg-white dark:bg-gray-700"
+            />
+            <input
+              value={requirementSkill}
+              onChange={(e) => { setRequirementSkill(e.target.value); setRequirementPage(1); }}
+              placeholder="Filter by skill..."
+              className="sm:w-56 rounded border px-3 py-2 bg-white dark:bg-gray-700"
+            />
+          </div>
+
           {requirements.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center text-gray-500">
               No open requirements available at the moment.
@@ -255,12 +309,60 @@ const Submissions: React.FC = () => {
               ))}
             </div>
           )}
+
+          {requirementPagination.totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+              <span className="text-sm text-gray-500">
+                Page {requirementPagination.page} of {requirementPagination.totalPages} ({requirementPagination.totalItems} requirements)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={!requirementPagination.hasPrevious}
+                  onClick={() => setRequirementPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={!requirementPagination.hasNext}
+                  onClick={() => setRequirementPage((p) => p + 1)}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Submissions Tab */}
       {activeTab === 'submissions' && (
-        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <div className="space-y-4">
+          {isVendor && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow flex flex-col sm:flex-row gap-3">
+              <input
+                value={submissionSearch}
+                onChange={(e) => { setSubmissionSearch(e.target.value); setSubmissionPage(1); }}
+                placeholder="Search submissions..."
+                className="flex-1 rounded border px-3 py-2 bg-white dark:bg-gray-700"
+              />
+              <select
+                value={submissionStatus}
+                onChange={(e) => { setSubmissionStatus(e.target.value); setSubmissionPage(1); }}
+                className="sm:w-48 rounded border px-3 py-2 bg-white dark:bg-gray-700"
+              >
+                <option value="">All statuses</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="PLACED">Placed</option>
+                <option value="WITHDRAWN">Withdrawn</option>
+              </select>
+            </div>
+          )}
+
+          <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -316,31 +418,75 @@ const Submissions: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {new Date(sub.submittedAt).toLocaleDateString()}
                     </td>
-                    {isClient && (
-                      <td className="px-6 py-4 text-right">
-                        {sub.status === 'SUBMITTED' && (
-                          <button
-                            onClick={() => handleOpenReview(sub)}
-                            className="text-primary-600 hover:underline text-sm"
-                          >
-                            Review
-                          </button>
-                        )}
-                        {sub.status === 'SHORTLISTED' && (
-                          <button
-                            onClick={() => handleOpenReview(sub)}
-                            className="text-green-600 hover:underline text-sm"
-                          >
-                            Confirm Placement
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
+<td className="px-6 py-4 text-right">
+  {isClient && sub.status === 'SUBMITTED' && (
+    <button
+      onClick={() => handleOpenReview(sub)}
+      className="text-primary-600 hover:underline text-sm"
+    >
+      Review
+    </button>
+  )}
+
+  {isClient && sub.status === 'SHORTLISTED' && (
+    <button
+      onClick={() => handleOpenReview(sub)}
+      className="text-green-600 hover:underline text-sm"
+    >
+      Confirm Placement
+    </button>
+  )}
+
+  {isVendor && sub.status === 'SUBMITTED' && (
+    <button
+      onClick={async () => {
+        try {
+          setError('');
+          await withdrawSubmission(sub.id);
+          await loadData();
+        } catch (err: any) {
+          setError(
+            err?.response?.data?.error ||
+            'Failed to withdraw submission'
+          );
+        }
+      }}
+      className="text-red-600 hover:underline text-sm"
+    >
+      Withdraw
+    </button>
+  )}
+</td>
+                                     </tr>
                 ))
               )}
             </tbody>
           </table>
+
+          {isVendor && submissionPagination.totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t bg-white dark:bg-gray-800">
+              <span className="text-sm text-gray-500">
+                Page {submissionPagination.page} of {submissionPagination.totalPages} ({submissionPagination.totalItems} submissions)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={!submissionPagination.hasPrevious}
+                  onClick={() => setSubmissionPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={!submissionPagination.hasNext}
+                  onClick={() => setSubmissionPage((p) => p + 1)}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </div>
         </div>
       )}
 
@@ -503,3 +649,10 @@ const Submissions: React.FC = () => {
 };
 
 export default Submissions;
+
+
+
+
+
+
+
