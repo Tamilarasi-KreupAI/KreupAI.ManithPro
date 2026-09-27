@@ -6,7 +6,6 @@ import {
   sendAccountApprovalEmail,
   sendAccountRejectionEmail,
 } from '../utils/email';
-
 const prisma = new PrismaClient();
 
 // Get all users with filtering and pagination
@@ -25,7 +24,6 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    // Build where clause
     const where: any = {};
 
     if (role) {
@@ -40,10 +38,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
       ];
     }
 
-    // Get total count
     const total = await prisma.user.count({ where });
 
-    // Get users
     const users = await prisma.user.findMany({
       where,
       skip,
@@ -138,7 +134,6 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Remove password from response
     const { password, ...userWithoutPassword } = user;
 
     res.json(userWithoutPassword);
@@ -153,23 +148,20 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const { email, password, firstName, lastName, role, phone, location } = req.body;
 
-    // Validation
     if (!email || !password || !firstName || !lastName || !role) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
+
     if (existingUser) {
       res.status(400).json({ error: 'User with this email already exists' });
       return;
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -203,25 +195,35 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { email, firstName, lastName, role, phone, location, bio, skills, experience, education } = req.body;
+    const {
+      email,
+      firstName,
+      lastName,
+      role,
+      phone,
+      location,
+      bio,
+      skills,
+      experience,
+      education,
+    } = req.body;
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { id } });
+
     if (!existingUser) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    // If email is being changed, check if it's already taken
     if (email && email !== existingUser.email) {
       const emailTaken = await prisma.user.findUnique({ where: { email } });
+
       if (emailTaken) {
         res.status(400).json({ error: 'Email already in use' });
         return;
       }
     }
 
-    // Update user
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -265,20 +267,18 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const { id } = req.params;
 
-    // Prevent admin from deleting themselves
     if (id === req.user?.userId) {
       res.status(400).json({ error: 'Cannot delete your own account' });
       return;
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { id } });
+
     if (!existingUser) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    // Delete user (cascade will handle related records)
     await prisma.user.delete({ where: { id } });
 
     res.json({ message: 'User deleted successfully' });
@@ -299,20 +299,18 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    // Prevent admin from changing their own role
     if (id === req.user?.userId) {
       res.status(400).json({ error: 'Cannot change your own role' });
       return;
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { id } });
+
     if (!existingUser) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    // Update role
     const user = await prisma.user.update({
       where: { id },
       data: { role },
@@ -343,17 +341,15 @@ export const resetUserPassword = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { id } });
+
     if (!existingUser) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
     await prisma.user.update({
       where: { id },
       data: { password: hashedPassword },
@@ -369,19 +365,20 @@ export const resetUserPassword = async (req: AuthRequest, res: Response): Promis
 // Get user statistics
 export const getUserStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const [totalUsers, candidateCount, recruiterCount, adminCount, recentUsers] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { role: 'CANDIDATE' } }),
-      prisma.user.count({ where: { role: 'RECRUITER' } }),
-      prisma.user.count({ where: { role: 'ADMIN' } }),
-      prisma.user.count({
-        where: {
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+    const [totalUsers, candidateCount, recruiterCount, adminCount, recentUsers] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { role: 'CANDIDATE' } }),
+        prisma.user.count({ where: { role: 'RECRUITER' } }),
+        prisma.user.count({ where: { role: 'ADMIN' } }),
+        prisma.user.count({
+          where: {
+            createdAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            },
           },
-        },
-      }),
-    ]);
+        }),
+      ]);
 
     res.json({
       total: totalUsers,
@@ -390,7 +387,7 @@ export const getUserStats = async (req: AuthRequest, res: Response): Promise<voi
         recruiter: recruiterCount,
         admin: adminCount,
       },
-      recentUsers, // Users created in last 30 days
+      recentUsers,
     });
   } catch (error) {
     console.error('Error fetching user stats:', error);
@@ -408,13 +405,11 @@ export const bulkDeleteUsers = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Prevent admin from deleting themselves
     if (userIds.includes(req.user?.userId)) {
       res.status(400).json({ error: 'Cannot delete your own account' });
       return;
     }
 
-    // Delete users
     const result = await prisma.user.deleteMany({
       where: {
         id: { in: userIds },
@@ -428,8 +423,13 @@ export const bulkDeleteUsers = async (req: AuthRequest, res: Response): Promise<
   }
 };
 
+// ==================== RECRUITER APPROVAL ====================
+
 // Get pending recruiter approvals
-export const getPendingRecruiters = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getPendingRecruiters = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { page = '1', limit = '10' } = req.query;
 
@@ -703,13 +703,16 @@ await sendAccountRejectionEmail(
   }
 };
 
+// ==================== RECRUITER APPROVAL ====================
 
 // Approve recruiter
-export const approveRecruiter = async (req: AuthRequest, res: Response): Promise<void> => {
+export const approveRecruiter = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
 
-    // Check if user exists and is a pending recruiter
     const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -727,7 +730,6 @@ export const approveRecruiter = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    // Approve the recruiter
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
@@ -747,8 +749,12 @@ export const approveRecruiter = async (req: AuthRequest, res: Response): Promise
         approvedAt: true,
       },
     });
-
-    // TODO: Send email notification to the recruiter about approval
+// Send approval email
+await sendAccountApprovalEmail(
+  updatedUser.email,
+  `${updatedUser.firstName} ${updatedUser.lastName}`,
+  'RECRUITER'
+);
 
     res.json({
       message: 'Recruiter approved successfully',
@@ -761,12 +767,14 @@ export const approveRecruiter = async (req: AuthRequest, res: Response): Promise
 };
 
 // Reject recruiter
-export const rejectRecruiter = async (req: AuthRequest, res: Response): Promise<void> => {
+export const rejectRecruiter = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
 
-    // Check if user exists and is a pending recruiter
     const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -784,7 +792,6 @@ export const rejectRecruiter = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Reject the recruiter
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
@@ -803,8 +810,13 @@ export const rejectRecruiter = async (req: AuthRequest, res: Response): Promise<
         rejectionReason: true,
       },
     });
-
-    // TODO: Send email notification to the recruiter about rejection
+// Send rejection email
+await sendAccountRejectionEmail(
+  updatedUser.email,
+  `${updatedUser.firstName} ${updatedUser.lastName}`,
+  'RECRUITER',
+  updatedUser.rejectionReason || 'No reason provided'
+);
 
     res.json({
       message: 'Recruiter rejected',
@@ -817,12 +829,30 @@ export const rejectRecruiter = async (req: AuthRequest, res: Response): Promise<
 };
 
 // Get recruiter approval statistics
-export const getRecruiterApprovalStats = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getRecruiterApprovalStats = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const [pending, approved, rejected] = await Promise.all([
-      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'PENDING' } }),
-      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'APPROVED' } }),
-      prisma.user.count({ where: { role: 'RECRUITER', approvalStatus: 'REJECTED' } }),
+      prisma.user.count({
+        where: {
+          role: 'RECRUITER',
+          approvalStatus: 'PENDING',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: 'RECRUITER',
+          approvalStatus: 'APPROVED',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: 'RECRUITER',
+          approvalStatus: 'REJECTED',
+        },
+      }),
     ]);
 
     res.json({
@@ -833,6 +863,8 @@ export const getRecruiterApprovalStats = async (req: AuthRequest, res: Response)
     });
   } catch (error) {
     console.error('Error fetching recruiter stats:', error);
-    res.status(500).json({ error: 'Failed to fetch recruiter approval statistics' });
+    res.status(500).json({
+      error: 'Failed to fetch recruiter approval statistics',
+    });
   }
 };

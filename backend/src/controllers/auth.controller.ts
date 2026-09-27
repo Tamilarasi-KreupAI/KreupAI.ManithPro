@@ -15,13 +15,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
-    // CLIENT and VENDOR must use the B2B registration flow
-    if (role === 'CLIENT' || role === 'VENDOR') {
-      res.status(400).json({
-        error: 'CLIENT and VENDOR users must register through /api/auth/register/b2b',
-      });
-      return;
-    }
+// CLIENT and VENDOR must use the B2B registration flow
+if (role === 'CLIENT' || role === 'VENDOR') {
+  res.status(400).json({
+    error: 'CLIENT and VENDOR users must register through /api/auth/register/b2b',
+  });
+  return;
+}
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -344,6 +344,8 @@ export const registerB2B = async (
   }
 };
 
+// ==================== LOGIN ====================
+
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -356,6 +358,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
@@ -363,6 +366,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
+
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
@@ -413,6 +417,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// ==================== RECRUITER REGISTRATION ====================
+
 export const registerRecruiter = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
@@ -424,19 +430,21 @@ export const registerRecruiter = async (req: Request, res: Response): Promise<vo
       location,
       companyName,
       companyWebsite,
-      companyEmail
+      companyEmail,
     } = req.body;
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName || !companyName || !companyEmail) {
       res.status(400).json({
-        error: 'Missing required fields. Please provide email, password, firstName, lastName, companyName, and companyEmail.'
+        error:
+          'Missing required fields. Please provide email, password, firstName, lastName, companyName, and companyEmail.',
       });
       return;
     }
 
     // Validate company email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!emailRegex.test(companyEmail)) {
       res.status(400).json({ error: 'Invalid company email format' });
       return;
@@ -444,6 +452,7 @@ export const registerRecruiter = async (req: Request, res: Response): Promise<vo
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
+
     if (existingUser) {
       res.status(409).json({ error: 'Email already registered' });
       return;
@@ -485,12 +494,14 @@ export const registerRecruiter = async (req: Request, res: Response): Promise<vo
       },
     });
 
-    // Notify admins about new recruiter registration (optional - could send email)
-    // For now, just log it
-    console.log(`New recruiter registration pending approval: ${user.email} from ${user.companyName}`);
+    // Notify admins about new recruiter registration
+    console.log(
+      `New recruiter registration pending approval: ${user.email} from ${user.companyName}`
+    );
 
     res.status(201).json({
-      message: 'Recruiter registration submitted successfully. Your account is pending admin approval.',
+      message:
+        'Recruiter registration submitted successfully. Your account is pending admin approval.',
       user,
     });
   } catch (error) {
@@ -499,7 +510,12 @@ export const registerRecruiter = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
+// ==================== GET CURRENT USER ====================
+
+export const getCurrentUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });
