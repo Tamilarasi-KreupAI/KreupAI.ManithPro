@@ -1,0 +1,3 @@
+firstName,lastName,email,phone,experience,skills
+T07,ValidCandidate,t07valid@example.com,9876543210,2,"JavaScript,React"
+T07,DuplicateCandidate,notificationtest@example.com,9876543211,3,"Java,Python"
