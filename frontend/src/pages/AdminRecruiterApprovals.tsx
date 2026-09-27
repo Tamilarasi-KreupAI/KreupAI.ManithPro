@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getPendingRecruiters, getRecruiterApprovalStats, approveRecruiter, rejectRecruiter } from '../services/admin.service';
+import {
+  getPendingRecruiters,
+  getRecruiterApprovalStats,
+  approveRecruiter,
+  rejectRecruiter,
+  getPendingClientVendor,
+  approveClientVendor,
+  rejectClientVendor,
+} from '../services/admin.service';
 import toast from 'react-hot-toast';
 
 interface PendingRecruiter {
@@ -16,6 +24,21 @@ interface PendingRecruiter {
   approvalRequestedAt: string;
   createdAt: string;
 }
+interface PendingClientVendor {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  location: string | null;
+  companyName: string;
+  companyWebsite: string | null;
+  companyEmail: string;
+  role: 'CLIENT' | 'VENDOR';
+  approvalStatus: string;
+  approvalRequestedAt: string;
+  createdAt: string;
+}
 
 interface ApprovalStats {
   pending: number;
@@ -26,6 +49,8 @@ interface ApprovalStats {
 
 const AdminRecruiterApprovals: React.FC = () => {
   const [recruiters, setRecruiters] = useState<PendingRecruiter[]>([]);
+const [clientVendors, setClientVendors] = useState<PendingClientVendor[]>([]);
+const [activeTab, setActiveTab] = useState<'RECRUITER' | 'CLIENT' | 'VENDOR'>('RECRUITER');
   const [stats, setStats] = useState<ApprovalStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -42,13 +67,15 @@ const AdminRecruiterApprovals: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [recruitersData, statsData] = await Promise.all([
+      const [recruitersData, statsData, clientVendorData] = await Promise.all([
         getPendingRecruiters({ page, limit: 10 }),
         getRecruiterApprovalStats(),
+getPendingClientVendor({ page, limit: 10 }),
       ]);
       setRecruiters(recruitersData.recruiters);
       setTotalPages(recruitersData.pagination.totalPages);
       setStats(statsData);
+      setClientVendors(clientVendorData.users);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load data');
@@ -96,7 +123,65 @@ const AdminRecruiterApprovals: React.FC = () => {
       setProcessingId(null);
     }
   };
+    const handleApproveClientVendor = async (user: PendingClientVendor) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to approve ${user.firstName} ${user.lastName} from ${user.companyName} as a ${user.role.toLowerCase()}?`
+      )
+    ) {
+      return;
+    }
 
+    setProcessingId(user.id);
+
+    try {
+      await approveClientVendor(user.id);
+
+      toast.success(
+        `${user.firstName} ${user.lastName} has been approved as a ${user.role.toLowerCase()}`
+      );
+
+      loadData();
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.error ||
+          `Failed to approve ${user.role.toLowerCase()}`
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleRejectClientVendor = async (
+    user: PendingClientVendor
+  ) => {
+    const reason = window.prompt(
+      `Enter rejection reason for ${user.firstName} ${user.lastName}:`
+    );
+
+    if (reason === null) {
+      return;
+    }
+
+    setProcessingId(user.id);
+
+    try {
+      await rejectClientVendor(user.id, reason);
+
+      toast.success(
+        `${user.firstName} ${user.lastName}'s application has been rejected`
+      );
+
+      loadData();
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.error ||
+          `Failed to reject ${user.role.toLowerCase()}`
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -120,6 +205,29 @@ const AdminRecruiterApprovals: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+<div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-gray-700">
+  {(['RECRUITER', 'CLIENT', 'VENDOR'] as const).map((tab) => (
+    <button
+      key={tab}
+      type="button"
+      onClick={() => {
+        setActiveTab(tab);
+        setPage(1);
+      }}
+      className={`px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
+        activeTab === tab
+          ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200'
+      }`}
+    >
+      {tab === 'RECRUITER'
+        ? 'Recruiter'
+        : tab === 'CLIENT'
+        ? 'Client'
+        : 'Vendor'}
+    </button>
+  ))}
+</div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Recruiter Approvals</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">
             Review and approve pending recruiter registration requests
@@ -187,165 +295,264 @@ const AdminRecruiterApprovals: React.FC = () => {
           </div>
         )}
 
-        {/* Pending Recruiters List */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
-          <div className="p-6 border-b border-slate-100 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Pending Approvals</h2>
-          </div>
+        {/* Pending Approvals List */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
+  <div className="p-6 border-b border-slate-100 dark:border-gray-700">
+    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+      Pending Approvals
+    </h2>
+  </div>
 
-          {recruiters.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">All caught up!</h3>
-              <p className="text-slate-500 dark:text-gray-400">No pending recruiter approvals at this time.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100 dark:divide-gray-700">
-              {recruiters.map((recruiter) => (
-                <div key={recruiter.id} className="p-6 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    {/* Recruiter Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                          <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                            {recruiter.firstName[0]}{recruiter.lastName[0]}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-900 dark:text-white">
-                            {recruiter.firstName} {recruiter.lastName}
-                          </h3>
-                          <p className="text-sm text-slate-500 dark:text-gray-400">{recruiter.email}</p>
-                        </div>
-                      </div>
+  {activeTab === 'RECRUITER' ? (
+    recruiters.length === 0 ? (
+      <div className="p-12 text-center">
+        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
+          All caught up!
+        </h3>
+        <p className="text-slate-500 dark:text-gray-400">
+          No pending recruiter approvals at this time.
+        </p>
+      </div>
+    ) : (
+      <div className="divide-y divide-slate-100 dark:divide-gray-700">
+        {recruiters.map((recruiter) => (
+          <div
+            key={recruiter.id}
+            className="p-6 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors"
+          >
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                          <span className="text-slate-700 dark:text-gray-300 font-medium">{recruiter.companyName}</span>
-                        </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                      {recruiter.firstName[0]}
+                      {recruiter.lastName[0]}
+                    </span>
+                  </div>
 
-                        <div className="flex items-center gap-2 text-sm">
-                          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-slate-600 dark:text-gray-400">{recruiter.companyEmail}</span>
-                        </div>
-
-                        {recruiter.companyWebsite && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                            </svg>
-                            <a
-                              href={recruiter.companyWebsite}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 dark:text-blue-400 hover:underline"
-                            >
-                              {recruiter.companyWebsite}
-                            </a>
-                          </div>
-                        )}
-
-                        {recruiter.phone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span className="text-slate-600 dark:text-gray-400">{recruiter.phone}</span>
-                          </div>
-                        )}
-
-                        {recruiter.location && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="text-slate-600 dark:text-gray-400">{recruiter.location}</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2 text-sm">
-                          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-slate-600 dark:text-gray-400">
-                            Applied: {formatDate(recruiter.approvalRequestedAt || recruiter.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleApprove(recruiter)}
-                        disabled={processingId === recruiter.id}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {processingId === recruiter.id ? (
-                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => openRejectModal(recruiter)}
-                        disabled={processingId === recruiter.id}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Reject
-                      </button>
-                    </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                      {recruiter.firstName} {recruiter.lastName}
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-gray-400">
+                      {recruiter.email}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="p-4 border-t border-slate-100 dark:border-gray-700 flex justify-center gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-3 py-1 text-slate-600 dark:text-gray-400">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-50"
-              >
-                Next
-              </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                  <div className="text-sm">
+                    <span className="text-slate-700 dark:text-gray-300 font-medium">
+                      Company: {recruiter.companyName}
+                    </span>
+                  </div>
+
+                  <div className="text-sm">
+                    <span className="text-slate-600 dark:text-gray-400">
+                      {recruiter.companyEmail}
+                    </span>
+                  </div>
+
+                  {recruiter.companyWebsite && (
+                    <div className="text-sm">
+                      <a
+                        href={recruiter.companyWebsite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {recruiter.companyWebsite}
+                      </a>
+                    </div>
+                  )}
+
+                  {recruiter.phone && (
+                    <div className="text-sm text-slate-600 dark:text-gray-400">
+                      Phone: {recruiter.phone}
+                    </div>
+                  )}
+
+                  {recruiter.location && (
+                    <div className="text-sm text-slate-600 dark:text-gray-400">
+                      Location: {recruiter.location}
+                    </div>
+                  )}
+
+                  <div className="text-sm text-slate-600 dark:text-gray-400">
+                    Applied: {formatDate(recruiter.approvalRequestedAt || recruiter.createdAt)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleApprove(recruiter)}
+                  disabled={processingId === recruiter.id}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl disabled:opacity-50"
+                >
+                  Approve
+                </button>
+
+                <button
+                  onClick={() => openRejectModal(recruiter)}
+                  disabled={processingId === recruiter.id}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              </div>
+
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
+    )
+  ) : (
+    (() => {
+      const filteredUsers = clientVendors.filter(
+        (user) => user.role === activeTab
+      );
 
+      return filteredUsers.length === 0 ? (
+        <div className="p-12 text-center">
+          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
+            All caught up!
+          </h3>
+
+          <p className="text-slate-500 dark:text-gray-400">
+            No pending {activeTab.toLowerCase()} approvals at this time.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100 dark:divide-gray-700">
+          {filteredUsers.map((user) => (
+            <div
+              key={user.id}
+              className="p-6 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {user.firstName[0]}
+                        {user.lastName[0]}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">
+                        {user.firstName} {user.lastName}
+                      </h3>
+
+                      <p className="text-sm text-slate-500 dark:text-gray-400">
+                        {user.email}
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+
+                    <div className="text-sm">
+                      <span className="text-slate-700 dark:text-gray-300 font-medium">
+                        Company: {user.companyName}
+                      </span>
+                    </div>
+
+                    <div className="text-sm text-slate-600 dark:text-gray-400">
+                      Company Email: {user.companyEmail}
+                    </div>
+
+                    {user.companyWebsite && (
+                      <div className="text-sm">
+                        <a
+                          href={user.companyWebsite}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {user.companyWebsite}
+                        </a>
+                      </div>
+                    )}
+
+                    {user.phone && (
+                      <div className="text-sm text-slate-600 dark:text-gray-400">
+                        Phone: {user.phone}
+                      </div>
+                    )}
+
+                    {user.location && (
+                      <div className="text-sm text-slate-600 dark:text-gray-400">
+                        Location: {user.location}
+                      </div>
+                    )}
+
+                    <div className="text-sm text-slate-600 dark:text-gray-400">
+                      Applied: {formatDate(user.approvalRequestedAt || user.createdAt)}
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+
+                  <button
+                    onClick={() => handleApproveClientVendor(user)}
+                    disabled={processingId === user.id}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl disabled:opacity-50"
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    onClick={() => handleRejectClientVendor(user)}
+                    disabled={processingId === user.id}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl disabled:opacity-50"
+                  >
+                    Reject
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    })()
+  )}
+
+  {/* Pagination */}
+  {totalPages > 1 && activeTab === 'RECRUITER' && (
+    <div className="p-4 border-t border-slate-100 dark:border-gray-700 flex justify-center gap-2">
+      <button
+        onClick={() => setPage(p => Math.max(1, p - 1))}
+        disabled={page === 1}
+        className="px-3 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-50"
+      >
+        Previous
+      </button>
+
+      <span className="px-3 py-1 text-slate-600 dark:text-gray-400">
+        Page {page} of {totalPages}
+      </span>
+
+      <button
+        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+        disabled={page === totalPages}
+        className="px-3 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  )}
+</div>
+</div>
       {/* Rejection Modal */}
       {rejectModalOpen && selectedRecruiter && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

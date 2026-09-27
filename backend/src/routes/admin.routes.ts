@@ -16,6 +16,9 @@ import {
   approveRecruiter,
   rejectRecruiter,
   getRecruiterApprovalStats,
+  getPendingClientVendor,
+  approveClientVendor,
+  rejectClientVendor,
 } from '../controllers/admin.user.controller';
 
 // Analytics Controllers
@@ -200,8 +203,7 @@ import {
 const router = Router();
 
 // All admin routes require authentication and ADMIN/CLIENT role
-router.use(authenticate, authorize('ADMIN', 'CLIENT', 'VENDOR'));
-
+router.use(authenticate, authorize('ADMIN'));
 // ==================== Analytics Routes ====================
 router.get('/analytics/dashboard', getDashboardStats);
 router.get('/analytics/users', getUserAnalytics);
@@ -219,6 +221,10 @@ router.get('/recruiters/pending', getPendingRecruiters);
 router.get('/recruiters/stats', getRecruiterApprovalStats);
 router.post('/recruiters/:id/approve', approveRecruiter);
 router.post('/recruiters/:id/reject', rejectRecruiter);
+// CLIENT / VENDOR Approval Routes
+router.get('/client-vendor/pending', getPendingClientVendor);
+router.post('/client-vendor/:id/approve', approveClientVendor);
+router.post('/client-vendor/:id/reject', rejectClientVendor);
 router.get('/users/:id', getUserById);
 router.post('/users', createUser);
 router.put('/users/:id', updateUser);

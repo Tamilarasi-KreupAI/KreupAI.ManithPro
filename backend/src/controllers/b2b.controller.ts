@@ -1002,7 +1002,10 @@ export const downloadInvoice = async (req: AuthRequest, res: Response) => {
 export const getVendors = async (req: AuthRequest, res: Response) => {
   try {
     const vendors = await prisma.user.findMany({
-      where: { role: 'VENDOR' },
+      where: {
+        role: 'VENDOR',
+        approvalStatus: 'APPROVED',
+      },
       select: {
         id: true,
         firstName: true,

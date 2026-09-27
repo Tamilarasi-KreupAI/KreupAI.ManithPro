@@ -353,6 +353,31 @@ const Register: React.FC = () => {
               Register as Recruiter
             </Link>
           </div>
+          {/* Client / Vendor Registration Section */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200 dark:border-gray-600"></div>
+            </div>
+
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-slate-500 dark:text-gray-400">
+                or
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+            <p className="text-sm text-slate-700 dark:text-gray-300 text-center mb-3">
+              Are you a client or vendor?
+            </p>
+
+            <Link
+              to="/register/b2b"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-blue-300 dark:border-blue-600 text-sm font-bold rounded-xl text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all hover:-translate-y-0.5"
+            >
+              Register as Client / Vendor
+            </Link>
+          </div>
         </form>
       </div>
     </div>

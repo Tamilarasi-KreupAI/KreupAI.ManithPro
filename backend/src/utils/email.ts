@@ -647,3 +647,90 @@ export const sendMessageNotificationEmail = async (
 
   await sendEmail({ to: candidateEmail, subject, html });
 };
+export const sendAccountApprovalEmail = async (
+  userEmail: string,
+  userName: string,
+role: 'CLIENT' | 'VENDOR' | 'RECRUITER',  
+): Promise<void> => {
+  const subject = `${role} Account Approved - KreupAI ManithPro`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #334155;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 30px;">
+        <h2>Your ${role.toLowerCase()} account has been approved</h2>
+
+        <p>Dear ${userName},</p>
+
+        <p>
+          Your ${role.toLowerCase()} account on KreupAI ManithPro
+          has been approved by an administrator.
+        </p>
+
+        <p>
+          You can now log in and access your account.
+        </p>
+
+        <p>
+          Regards,<br>
+          KreupAI ManithPro Team
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: userEmail,
+    subject,
+    html,
+  });
+};
+
+export const sendAccountRejectionEmail = async (
+  userEmail: string,
+  userName: string,
+  role: 'CLIENT' | 'VENDOR' | 'RECRUITER',
+  reason: string
+): Promise<void> => {
+  const subject = `${role} Account Application Update - KreupAI ManithPro`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #334155;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 30px;">
+        <h2>Your ${role.toLowerCase()} application was not approved</h2>
+
+        <p>Dear ${userName},</p>
+
+        <p>
+          Your ${role.toLowerCase()} account application
+          has not been approved by an administrator.
+        </p>
+
+        <p>
+          <strong>Reason:</strong> ${reason}
+        </p>
+
+        <p>
+          If you believe this was a mistake, please contact the
+          KreupAI ManithPro support team.
+        </p>
+
+        <p>
+          Regards,<br>
+          KreupAI ManithPro Team
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: userEmail,
+    subject,
+    html,
+  });
+};

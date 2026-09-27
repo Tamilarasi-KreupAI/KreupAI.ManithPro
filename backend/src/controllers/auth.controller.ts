@@ -15,6 +15,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
+    // CLIENT and VENDOR must use the B2B registration flow
+    if (role === 'CLIENT' || role === 'VENDOR') {
+      res.status(400).json({
+        error: 'CLIENT and VENDOR users must register through /api/auth/register/b2b',
+      });
+      return;
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -71,6 +78,272 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// ==================== CLIENT REGISTRATION ====================
+
+export const registerClient = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      bio,
+      skills,
+      location,
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create CLIENT with pending approval
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: 'CLIENT',
+        phone,
+        bio,
+        skills: skills || [],
+        location,
+        approvalStatus: 'PENDING',
+        approvalRequestedAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phone: true,
+        bio: true,
+        skills: true,
+        location: true,
+        approvalStatus: true,
+        approvalRequestedAt: true,
+        createdAt: true,
+      },
+    });
+
+    // No JWT is generated until admin approval
+    res.status(201).json({
+      message: 'Client registration submitted successfully. Please wait for admin approval.',
+      user,
+    });
+  } catch (error) {
+    console.error('Client registration error:', error);
+    res.status(500).json({ error: 'Failed to register client' });
+  }
+};
+
+// ==================== VENDOR REGISTRATION ====================
+
+export const registerVendor = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      bio,
+      skills,
+      location,
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create VENDOR with pending approval
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: 'VENDOR',
+        phone,
+        bio,
+        skills: skills || [],
+        location,
+        approvalStatus: 'PENDING',
+        approvalRequestedAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phone: true,
+        bio: true,
+        skills: true,
+        location: true,
+        approvalStatus: true,
+        approvalRequestedAt: true,
+        createdAt: true,
+      },
+    });
+
+    // No JWT is generated until admin approval
+    res.status(201).json({
+      message: 'Vendor registration submitted successfully. Please wait for admin approval.',
+      user,
+    });
+  } catch (error) {
+    console.error('Vendor registration error:', error);
+    res.status(500).json({ error: 'Failed to register vendor' });
+  }
+};
+// ==================== B2B CLIENT / VENDOR REGISTRATION ====================
+
+export const registerB2B = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      location,
+      role,
+      companyName,
+      companyWebsite,
+      companyEmail,
+      bio,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !email ||
+      !password ||
+      !firstName ||
+      !lastName ||
+      !role ||
+      !companyName ||
+      !companyEmail
+    ) {
+      res.status(400).json({
+        error:
+          'Missing required fields. Please provide email, password, firstName, lastName, role, companyName, and companyEmail.',
+      });
+      return;
+    }
+
+    // Only CLIENT and VENDOR are allowed
+    if (role !== 'CLIENT' && role !== 'VENDOR') {
+      res.status(400).json({
+        error: 'Role must be CLIENT or VENDOR',
+      });
+      return;
+    }
+
+    // Validate company email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(companyEmail)) {
+      res.status(400).json({
+        error: 'Invalid company email format',
+      });
+      return;
+    }
+
+    // Check duplicate user email
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      res.status(409).json({
+        error: 'Email already registered',
+      });
+      return;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create CLIENT/VENDOR with PENDING approval
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role,
+        phone,
+        location,
+        bio,
+        companyName,
+        companyWebsite,
+        companyEmail,
+        approvalStatus: 'PENDING',
+        approvalRequestedAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        phone: true,
+        location: true,
+        companyName: true,
+        companyWebsite: true,
+        companyEmail: true,
+        approvalStatus: true,
+        approvalRequestedAt: true,
+        createdAt: true,
+      },
+    });
+
+    // Do not generate JWT before approval
+    res.status(201).json({
+      message: `${role} registration submitted successfully. Please wait for admin approval.`,
+      user,
+    });
+  } catch (error) {
+    console.error('B2B registration error:', error);
+
+    res.status(500).json({
+      error: 'Failed to register B2B user',
+    });
+  }
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -95,20 +368,26 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Check approval status for recruiters
-    if (user.role === 'RECRUITER' && user.approvalStatus === 'PENDING') {
+    // Check approval status for users requiring admin approval
+    if (
+      ['RECRUITER', 'CLIENT', 'VENDOR'].includes(user.role) &&
+      user.approvalStatus === 'PENDING'
+    ) {
       res.status(403).json({
-        error: 'Your recruiter account is pending approval. Please wait for admin approval.',
-        approvalStatus: 'PENDING'
+        error: 'Your account is pending admin approval. Please wait for admin approval.',
+        approvalStatus: 'PENDING',
       });
       return;
     }
 
-    if (user.role === 'RECRUITER' && user.approvalStatus === 'REJECTED') {
+    if (
+      ['RECRUITER', 'CLIENT', 'VENDOR'].includes(user.role) &&
+      user.approvalStatus === 'REJECTED'
+    ) {
       res.status(403).json({
-        error: 'Your recruiter account has been rejected.',
+        error: 'Your account has been rejected.',
         approvalStatus: 'REJECTED',
-        rejectionReason: user.rejectionReason || 'No reason provided'
+        rejectionReason: user.rejectionReason || 'No reason provided',
       });
       return;
     }

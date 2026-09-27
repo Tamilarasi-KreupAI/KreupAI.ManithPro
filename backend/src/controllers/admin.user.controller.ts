@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
+import {
+  sendAccountApprovalEmail,
+  sendAccountRejectionEmail,
+} from '../utils/email';
 
 const prisma = new PrismaClient();
 
@@ -476,6 +480,229 @@ export const getPendingRecruiters = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ error: 'Failed to fetch pending recruiters' });
   }
 };
+
+// ==================== CLIENT / VENDOR APPROVAL ====================
+
+// Get pending CLIENT and VENDOR approvals
+export const getPendingClientVendor = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { page = '1', limit = '10', role } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    if (
+      isNaN(pageNum) ||
+      pageNum < 1 ||
+      isNaN(limitNum) ||
+      limitNum < 1
+    ) {
+      res.status(400).json({ error: 'Invalid page or limit' });
+      return;
+    }
+
+    if (role && role !== 'CLIENT' && role !== 'VENDOR') {
+      res.status(400).json({
+        error: 'Role must be CLIENT or VENDOR',
+      });
+      return;
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = role
+      ? {
+          role: role as 'CLIENT' | 'VENDOR',
+          approvalStatus: 'PENDING' as const,
+        }
+      : {
+          role: {
+            in: ['CLIENT', 'VENDOR'] as ('CLIENT' | 'VENDOR')[],
+          },
+          approvalStatus: 'PENDING' as const,
+        };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { approvalRequestedAt: 'asc' },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          bio: true,
+          skills: true,
+          location: true,
+          role: true,
+          approvalStatus: true,
+          approvalRequestedAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching pending CLIENT/VENDOR users:', error);
+    res.status(500).json({
+      error: 'Failed to fetch pending CLIENT/VENDOR users',
+    });
+  }
+};
+
+// Approve CLIENT or VENDOR
+export const approveClientVendor = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.role !== 'CLIENT' && user.role !== 'VENDOR') {
+      res.status(400).json({
+        error: 'User is not a CLIENT or VENDOR',
+      });
+      return;
+    }
+
+    if (user.approvalStatus !== 'PENDING') {
+      res.status(400).json({
+        error: 'User is not pending approval',
+      });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+  where: { id },
+  data: {
+    approvalStatus: 'APPROVED',
+    approvedAt: new Date(),
+    approvedById: req.user?.userId,
+  },
+  select: {
+    id: true,
+    email: true,
+    firstName: true,
+    lastName: true,
+    role: true,
+    approvalStatus: true,
+    approvedAt: true,
+  },
+});
+
+// Send approval email
+await sendAccountApprovalEmail(
+  updatedUser.email,
+  `${updatedUser.firstName} ${updatedUser.lastName}`,
+  updatedUser.role as 'CLIENT' | 'VENDOR'
+);
+
+    res.json({
+      message: `${updatedUser.role} approved successfully`,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error approving CLIENT/VENDOR:', error);
+    res.status(500).json({
+      error: 'Failed to approve user',
+    });
+  }
+};
+
+// Reject CLIENT or VENDOR
+export const rejectClientVendor = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.role !== 'CLIENT' && user.role !== 'VENDOR') {
+      res.status(400).json({
+        error: 'User is not a CLIENT or VENDOR',
+      });
+      return;
+    }
+
+    if (user.approvalStatus !== 'PENDING') {
+      res.status(400).json({
+        error: 'User is not pending approval',
+      });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        approvalStatus: 'REJECTED',
+        rejectionReason: reason || 'No reason provided',
+        approvedById: req.user?.userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        approvalStatus: true,
+        rejectionReason: true,
+      },
+    });
+// Send rejection email
+await sendAccountRejectionEmail(
+  updatedUser.email,
+  `${updatedUser.firstName} ${updatedUser.lastName}`,
+  updatedUser.role as 'CLIENT' | 'VENDOR',
+  updatedUser.rejectionReason || 'No reason provided'
+);
+
+    res.json({
+      message: `${updatedUser.role} rejected`,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error rejecting CLIENT/VENDOR:', error);
+    res.status(500).json({
+      error: 'Failed to reject user',
+    });
+  }
+};
+
 
 // Approve recruiter
 export const approveRecruiter = async (req: AuthRequest, res: Response): Promise<void> => {

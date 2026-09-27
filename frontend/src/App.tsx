@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RecruiterRegister from './pages/RecruiterRegister';
+import B2BRegister from './pages/b2b/B2BRegister';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import ApplicationDetail from './pages/ApplicationDetail';
@@ -87,6 +88,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/register/recruiter" element={<RecruiterRegister />} />
+                    <Route path="/register/b2b" element={<B2BRegister />} />
                     <Route
                       path="/jobs"
                       element={

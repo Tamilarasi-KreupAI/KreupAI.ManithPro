@@ -925,3 +925,23 @@ export const rejectRecruiter = async (id: string, reason?: string) => {
   const response = await api.post(`/admin/recruiters/${id}/reject`, { reason });
   return response.data;
 };
+export const getPendingClientVendor = async (params?: {
+  page?: number;
+  limit?: number;
+  role?: 'CLIENT' | 'VENDOR';
+}) => {
+  const response = await api.get('/admin/client-vendor/pending', { params });
+  return response.data;
+};
+
+export const approveClientVendor = async (id: string) => {
+  const response = await api.post(`/admin/client-vendor/${id}/approve`);
+  return response.data;
+};
+
+export const rejectClientVendor = async (id: string, reason?: string) => {
+  const response = await api.post(`/admin/client-vendor/${id}/reject`, {
+    reason,
+  });
+  return response.data;
+};
