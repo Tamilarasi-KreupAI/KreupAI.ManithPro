@@ -7,6 +7,8 @@ import {
   deleteResume,
   downloadResume,
   upload,
+  validateFileSignature,
+  handleUploadError,
 } from '../controllers/resume.controller';
 
 const router = express.Router();
@@ -25,8 +27,20 @@ router.get('/', getResumes);
  * @route   POST /api/resumes/upload
  * @desc    Upload a new resume
  * @access  Private
+ *
+ * Middleware chain:
+ *   1. upload.single('resume')   — multer: size-limit + MIME-type filter
+ *   2. validateFileSignature     — magic-byte check (400 on bad content)
+ *   3. uploadResume              — controller: DB record + text extraction
+ *   4. handleUploadError         — error handler: 413/400/500 mapping
  */
-router.post('/upload', upload.single('resume'), uploadResume);
+router.post(
+  '/upload',
+  upload.single('resume'),
+  validateFileSignature(['pdf', 'doc', 'docx']),
+  uploadResume,
+  handleUploadError,
+);
 
 /**
  * @route   PUT /api/resumes/:id/set-default

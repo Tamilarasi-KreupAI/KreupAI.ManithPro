@@ -2,54 +2,28 @@
 import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
-import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import { extractResumeText } from "../services/resumeTextExtractor";
 
+// WS06-T03: use the shared upload module instead of inline multer config
+import { resumeUpload, validateFileSignature, handleUploadError } from '../utils/upload';
+
 const prisma = new PrismaClient();
 const unlinkAsync = promisify(fs.unlink);
 
-// Configure multer for file upload
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads/resumes');
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    const nameWithoutExt = path.basename(file.originalname, ext);
-    cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
-  }
-});
+/**
+ * Re-export the shared multer instance so resume.routes.ts can continue
+ * to import `upload` from this controller without any route changes.
+ * This keeps the route file unchanged and the interface stable.
+ */
+export const upload = resumeUpload;
 
-const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimeTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only PDF, DOC, and DOCX files are allowed.'));
-  }
-};
-
-export const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  }
-});
+/**
+ * Re-export validation middleware so the route can apply it after upload.
+ */
+export { validateFileSignature, handleUploadError };
 
 /**
  * Get all resumes for the authenticated user
@@ -91,7 +65,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
     }
 
     const file = req.file;
-      const extraction = await extractResumeText(file.path, file.mimetype);
+    const extraction = await extractResumeText(file.path, file.mimetype);
 
     if (extraction.status === "failed") {
       try {
@@ -122,15 +96,15 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
         textExtractionStatus: extraction.status,
         textExtractionError: extraction.error,
         textExtractedAt: new Date(),
-        isDefault: isFirstResume, // Set as default if it's the first resume
+        isDefault: isFirstResume,
       },
     });
 
     return res.status(201).json({
       message:
-  extraction.status === "no_text_found"
-    ? "Resume uploaded, but no selectable text was found."
-    : "Resume uploaded successfully",
+        extraction.status === "no_text_found"
+          ? "Resume uploaded, but no selectable text was found."
+          : "Resume uploaded successfully",
       resume,
     });
   } catch (error) {
@@ -138,7 +112,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
 
     // Clean up uploaded file if database operation fails
     if (req.file) {
-      const filePath = path.join(__dirname, '../../uploads/resumes', req.file.filename);
+      const filePath = req.file.path;
       try {
         await unlinkAsync(filePath);
       } catch (unlinkError) {
