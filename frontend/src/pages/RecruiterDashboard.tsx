@@ -15,6 +15,8 @@ interface Analytics {
   topPerformingJobs: Job[];
   recentApplications: Application[];
   applicationsByStatus: Record<string, number>;
+  avgTimeToHire: number;
+  responseRate: number;
 }
 
 const RecruiterDashboard: React.FC = () => {
@@ -31,9 +33,13 @@ const RecruiterDashboard: React.FC = () => {
     try {
       setError(null);
       // Fetch only recruiter's own jobs and their applications
-      const [jobsData, applicationsData] = await Promise.all([
+      const [jobsData, applicationsData, dashboardStats] = await Promise.all([
         jobAPI.getAll({ postedBy: 'me' }),
         applicationAPI.getAll(),
+        userAPI.getDashboardStats().catch((err) => {
+          console.error('Failed to fetch dashboard stats:', err);
+          return null;
+        }),
       ]);
 
       const jobs = jobsData.jobs;
@@ -68,11 +74,40 @@ const RecruiterDashboard: React.FC = () => {
         .slice(0, 5)
         .map((item) => item.job);
 
+      // Time-to-Hire from backend stats or calculated from application dates
+      let avgTimeToHire = dashboardStats?.avgTimeToHire ?? dashboardStats?.timeToHire;
+      if (avgTimeToHire === undefined) {
+        const hiredApps = applications.filter((app) => app.status === 'ACCEPTED');
+        let totalDays = 0;
+        let validHires = 0;
+        for (const app of hiredApps) {
+          if (app.appliedAt && app.updatedAt) {
+            const start = new Date(app.appliedAt).getTime();
+            const end = new Date(app.updatedAt).getTime();
+            if (!isNaN(start) && !isNaN(end) && end >= start) {
+              totalDays += Math.floor((end - start) / (1000 * 60 * 60 * 24));
+              validHires++;
+            }
+          }
+        }
+        avgTimeToHire = validHires > 0 ? Math.round(totalDays / validHires) : 0;
+      }
+
+      // Response Rate from backend stats or calculated from application progression
+      let responseRate = dashboardStats?.responseRate;
+      if (responseRate === undefined) {
+        const total = applications.length;
+        const responded = applications.filter((app) =>
+          ['REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'ACCEPTED', 'REJECTED'].includes(app.status)
+        ).length;
+        responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
+      }
+
       setAnalytics({
-        totalJobs: jobs.length,
-        activeJobs,
-        totalApplications: applications.length,
-        pendingReview: applicationsByStatus['PENDING'] || 0,
+        totalJobs: dashboardStats?.totalJobs ?? jobs.length,
+        activeJobs: dashboardStats?.openJobs ?? activeJobs,
+        totalApplications: dashboardStats?.totalApplications ?? applications.length,
+        pendingReview: dashboardStats?.pendingApplications ?? (applicationsByStatus['PENDING'] || 0),
         shortlisted: applicationsByStatus['SHORTLISTED'] || 0,
         interviewed: applicationsByStatus['INTERVIEW_SCHEDULED'] || 0,
         hired: applicationsByStatus['ACCEPTED'] || 0,
@@ -80,6 +115,8 @@ const RecruiterDashboard: React.FC = () => {
         topPerformingJobs,
         recentApplications: applications.slice(0, 10),
         applicationsByStatus,
+        avgTimeToHire,
+        responseRate,
       });
     } catch (error: any) {
       console.error('Failed to load analytics:', error);
@@ -162,7 +199,7 @@ const RecruiterDashboard: React.FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-slate-500 dark:text-gray-400 text-sm font-medium">Total Jobs</h3>
@@ -210,6 +247,28 @@ const RecruiterDashboard: React.FC = () => {
             </div>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{analytics.hired}</p>
             <p className="text-sm text-green-600 dark:text-green-400 mt-2">Successful placements</p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 dark:text-gray-400 text-sm font-medium">Time-to-Hire (days)</h3>
+              <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                <span className="text-2xl">⏱️</span>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">{analytics.avgTimeToHire > 0 ? `${analytics.avgTimeToHire} days` : '0 days'}</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">Avg. days to hire</p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 dark:text-gray-400 text-sm font-medium">Response Rate (%)</h3>
+              <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                <span className="text-2xl">📊</span>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">{analytics.responseRate}%</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">Applications actioned</p>
           </div>
         </div>
 

@@ -3,11 +3,97 @@ import { Link, useNavigate } from 'react-router-dom';
 import { applicationAPI, jobAPI } from '../services/api';
 import type { Application, Job } from '../types';
 
+export const escapeCSVValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  const stringValue = String(value);
+  if (
+    stringValue.includes(',') ||
+    stringValue.includes('"') ||
+    stringValue.includes('\n') ||
+    stringValue.includes('\r')
+  ) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+};
+
+export const convertApplicationsToCSV = (apps: Application[]): string => {
+  if (!apps || apps.length === 0) {
+    return '';
+  }
+
+  const headers = ['Candidate Name', 'Email', 'Job Title', 'Application Status', 'Applied Date'];
+
+  const rows = apps.map((app) => {
+    const candidateName = (
+      app.candidate?.firstName || app.candidate?.lastName
+        ? `${app.candidate?.firstName || ''} ${app.candidate?.lastName || ''}`.trim()
+        : ((app.candidate as any)?.name || '')
+    );
+    const email = app.candidate?.email || (app as any)?.candidateEmail || '';
+    const jobTitle = app.job?.title || (app as any)?.jobTitle || '';
+    const status = app.status || '';
+    const rawDate = app.appliedAt || (app as any)?.appliedDate || '';
+    let appliedDate = '';
+    if (rawDate) {
+      const d = new Date(rawDate);
+      appliedDate = isNaN(d.getTime()) ? String(rawDate) : d.toLocaleDateString();
+    }
+
+    return [
+      escapeCSVValue(candidateName),
+      escapeCSVValue(email),
+      escapeCSVValue(jobTitle),
+      escapeCSVValue(status),
+      escapeCSVValue(appliedDate),
+    ].join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+};
+
+export const downloadCSV = (csv: string, filename = 'applications.csv'): void => {
+  if (!csv) return;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = (window.URL || URL).createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  (window.URL || URL).revokeObjectURL(url);
+};
+
 const RecruiterApplications: React.FC = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+  total: 0,
+  page: 1,
+  limit: 10,
+  totalPages: 0,
+});
+
+useEffect(() => {
+  const loadJobs = async () => {
+    try {
+      const jobsData = await jobAPI.getAll();
+      setJobs(jobsData.jobs);
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+    }
+  };
+
+  loadJobs();
+}, []);
+
   const [selectedApplications, setSelectedApplications] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState({
     status: '',
@@ -20,32 +106,80 @@ const RecruiterApplications: React.FC = () => {
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+  const timer = setTimeout(() => {
+    loadApplications();
+  }, 600);
 
-  const loadData = async () => {
-    try {
-      const [appsData, jobsData] = await Promise.all([
-        applicationAPI.getAll(),
-        jobAPI.getAll(),
-      ]);
-      setApplications(appsData.applications);
-      setJobs(jobsData.jobs);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setLoading(false);
+  return () => clearTimeout(timer);
+}, [currentPage, filter.status, filter.jobId, filter.search]);
+
+const loadApplications = async () => {
+  setLoading(true);
+  setLoadError(null);
+
+  try {
+    const appsData = await applicationAPI.getAll({
+      page: currentPage,
+      limit: 10,
+      status: filter.status || undefined,
+      jobId: filter.jobId || undefined,
+      search: filter.search.trim() || undefined,
+    });
+
+    setApplications(appsData.applications);
+
+    setPagination(
+      appsData.pagination ?? {
+        total: appsData.applications.length,
+        page: currentPage,
+        limit: 10,
+        totalPages: 1,
+      }
+    );
+  } catch (error: any) {
+    console.error('Failed to load applications:', error);
+    let message = 'Unable to load applications. Please try again.';
+    const backendError = error?.response?.data?.error || error?.response?.data?.message;
+    if (typeof backendError === 'string') {
+      const lower = backendError.toLowerCase();
+      const isInternal =
+        lower.includes('prisma') ||
+        lower.includes('database') ||
+        lower.includes('sql') ||
+        lower.includes('connection') ||
+        lower.includes('pool') ||
+        lower.includes('econnrefused') ||
+        lower.includes('timeout') ||
+        lower.includes('jwt') ||
+        lower.includes('secret') ||
+        lower.includes('syntaxerror');
+      if (!isInternal && backendError.length < 200) {
+        message = backendError;
+      }
     }
-  };
+    setLoadError(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const filteredApplications = applications.filter((app) => {
-    if (filter.status && app.status !== filter.status) return false;
-    if (filter.jobId && app.jobId !== filter.jobId) return false;
-    if (filter.search) {
-      const searchLower = filter.search.toLowerCase();
-      const candidateName = `${app.candidate?.firstName} ${app.candidate?.lastName}`.toLowerCase();
-      const jobTitle = app.job?.title?.toLowerCase() || '';
-      if (!candidateName.includes(searchLower) && !jobTitle.includes(searchLower)) {
+    if (filter.status && app.status !== filter.status) {
+      return false;
+    }
+    if (filter.jobId && app.jobId !== filter.jobId) {
+      return false;
+    }
+    if (filter.search.trim()) {
+      const q = filter.search.trim().toLowerCase();
+      const candidateName = (
+        app.candidate?.firstName || app.candidate?.lastName
+          ? `${app.candidate?.firstName || ''} ${app.candidate?.lastName || ''}`.trim()
+          : ((app.candidate as any)?.name || '')
+      ).toLowerCase();
+      const email = (app.candidate?.email || (app as any)?.candidateEmail || '').toLowerCase();
+      const jobTitle = (app.job?.title || (app as any)?.jobTitle || '').toLowerCase();
+      if (!candidateName.includes(q) && !email.includes(q) && !jobTitle.includes(q)) {
         return false;
       }
     }
@@ -95,16 +229,21 @@ const RecruiterApplications: React.FC = () => {
 
     setBulkProcessing(true);
     try {
-      const promises = Array.from(selectedApplications).map((appId) =>
-        applicationAPI.updateStatus(appId, { status: bulkStatus })
-      );
-      await Promise.all(promises);
-      alert('Applications updated successfully!');
+      const applicationIds = Array.from(selectedApplications);
+      const res = await applicationAPI.bulkUpdateStatus({
+        applicationIds,
+        status: bulkStatus,
+      });
+      alert(res?.message || 'Applications updated successfully!');
       setSelectedApplications(new Set());
       setShowBulkActions(false);
-      await loadData();
+      await loadApplications();
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to update applications');
+      alert(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to update applications'
+      );
     } finally {
       setBulkProcessing(false);
     }
@@ -116,6 +255,26 @@ const RecruiterApplications: React.FC = () => {
       window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '')}/${app.resume}`, '_blank');
     });
     alert(`Opening ${selected.length} resumes in new tabs`);
+  };
+
+  const handleExportCSV = () => {
+    if (sortedApplications.length === 0) {
+      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        try {
+          window.alert('No applications to export');
+        } catch {
+          // Ignore alert error in non-browser/test environments
+        }
+      }
+      return;
+    }
+
+    const csv = convertApplicationsToCSV(sortedApplications);
+    if (!csv) {
+      return;
+    }
+
+    downloadCSV(csv, 'applications.csv');
   };
 
   const getStatusColor = (status: string) => {
@@ -149,10 +308,19 @@ const RecruiterApplications: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Application Manager</h1>
             <p className="text-slate-500 dark:text-gray-400 mt-1">
-              {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''}
+{pagination.total} application{pagination.total !== 1 ? 's' : ''}
               {selectedApplications.size > 0 && ` (${selectedApplications.size} selected)`}
             </p>
           </div>
+          <button
+            onClick={handleExportCSV}
+            disabled={sortedApplications.length === 0}
+            className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-200 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 dark:hover:border-gray-600 font-medium transition-all shadow-sm text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title={sortedApplications.length === 0 ? 'No applications to export' : 'Export applications to CSV'}
+          >
+            <span>📥</span>
+            <span>Export CSV</span>
+          </button>
         </div>
 
         {/* Filters */}
@@ -164,14 +332,20 @@ const RecruiterApplications: React.FC = () => {
                 type="text"
                 placeholder="Search candidates or jobs..."
                 value={filter.search}
-                onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+                onChange={(e) => {
+  setFilter({ ...filter, search: e.target.value });
+  setCurrentPage(1);
+}}
                 className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
               />
             </div>
 
             <select
               value={filter.status}
-              onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+              onChange={(e) => {
+  setFilter({ ...filter, status: e.target.value });
+  setCurrentPage(1);
+}}
               className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
             >
               <option value="">All Statuses</option>
@@ -185,8 +359,11 @@ const RecruiterApplications: React.FC = () => {
 
             <select
               value={filter.jobId}
-              onChange={(e) => setFilter({ ...filter, jobId: e.target.value })}
-              className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
+              onChange={(e) => {
+  setFilter({ ...filter, jobId: e.target.value });
+  setCurrentPage(1);
+}}
+className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 text-slate-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all"
             >
               <option value="">All Jobs</option>
               {jobs.map((job) => (
@@ -262,8 +439,30 @@ const RecruiterApplications: React.FC = () => {
           </div>
         </div>
 
+        {/* Error Banner */}
+        {loadError && (
+          <div
+            role="alert"
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 mb-6 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-300">Failed to load applications</h3>
+                <p className="text-sm text-red-600 dark:text-red-400 mt-0.5">{loadError}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => loadApplications()}
+              className="flex-shrink-0 bg-red-600 dark:bg-red-500 text-white px-5 py-2 rounded-xl hover:bg-red-700 dark:hover:bg-red-600 font-medium shadow-sm transition-all text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Applications Table */}
-        {sortedApplications.length > 0 ? (
+        {!loadError && sortedApplications.length > 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden">
             <table className="w-full">
               <thead className="bg-slate-50 dark:bg-gray-700/50 border-b border-slate-100 dark:border-gray-700">
@@ -387,7 +586,7 @@ const RecruiterApplications: React.FC = () => {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : !loadError ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">No Applications Found</h2>
@@ -397,7 +596,39 @@ const RecruiterApplications: React.FC = () => {
                 : 'Post jobs to start receiving applications'}
             </p>
           </div>
-        )}
+        ) : null}
+
+      {!loadError && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-sm text-gray-600">
+            Page {pagination.page} of {pagination.totalPages}
+            {' '}({pagination.total} applications)
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage <= 1}
+              className="rounded-lg border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <button
+              onClick={() =>
+                setCurrentPage((page) =>
+                  Math.min(pagination.totalPages, page + 1)
+                )
+              }
+              disabled={currentPage >= pagination.totalPages}
+              className="rounded-lg border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );

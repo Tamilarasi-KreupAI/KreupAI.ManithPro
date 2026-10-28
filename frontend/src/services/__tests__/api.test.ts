@@ -334,6 +334,8 @@ describe('API Service', () => {
         expect(result).toHaveProperty('pendingApplications');
         expect(result).toHaveProperty('acceptedApplications');
         expect(result).toHaveProperty('recentApplications');
+        expect(result).toHaveProperty('avgTimeToHire');
+        expect(result).toHaveProperty('responseRate');
       });
     });
   });

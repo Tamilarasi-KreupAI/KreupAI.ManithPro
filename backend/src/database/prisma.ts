@@ -1,5 +1,8 @@
 // @ts-nocheck
+import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+
+dotenv.config();
 
 // ============================================================
 // PRISMA CLIENT SINGLETON
@@ -19,17 +22,26 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
+// Helper to ensure Neon/PgBouncer pooler connection string has pgbouncer=true
+const getDatabaseUrl = () => {
+  let url = process.env.DATABASE_URL || '';
+  if (url && url.includes('-pooler.') && !url.includes('pgbouncer=true')) {
+    url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
+  }
+  return url;
+};
+
 // Connection pool configuration based on environment
 const getConnectionPoolConfig = () => {
   const env = process.env.NODE_ENV || 'development';
+  const url = getDatabaseUrl();
 
   switch (env) {
     case 'production':
       return {
-        // Production: Higher pool size for handling concurrent requests
         datasources: {
           db: {
-            url: process.env.DATABASE_URL,
+            url,
           },
         },
         log: ['error', 'warn'] as const,
@@ -38,20 +50,19 @@ const getConnectionPoolConfig = () => {
       return {
         datasources: {
           db: {
-            url: process.env.DATABASE_URL,
+            url,
           },
         },
         log: ['query', 'error', 'warn'] as const,
       };
     default:
       return {
-        // Development: Enable query logging for debugging
         datasources: {
           db: {
-            url: process.env.DATABASE_URL,
+            url,
           },
         },
-        log: ['query', 'info', 'warn', 'error'] as const,
+        log: ['error', 'warn'] as const,
       };
   }
 };
@@ -69,7 +80,7 @@ const createPrismaClient = (): PrismaClient => {
       const result = await next(params);
       const after = Date.now();
 
-      if (after - before > 100) {
+      if (after - before > 200) {
         console.warn(
           `⚠️ Slow query detected: ${params.model}.${params.action} took ${after - before}ms`
         );
@@ -79,49 +90,13 @@ const createPrismaClient = (): PrismaClient => {
     });
   }
 
-  // Add middleware for soft delete support
-  client.$use(async (params, next) => {
-    // Handle soft deletes for models with deletedAt field
-    if (params.action === 'delete') {
-      const modelsWithSoftDelete = [
-        'User', 'Job', 'Application', 'CandidateProfile',
-        'Interview', 'Message', 'Notification'
-      ];
-
-      if (params.model && modelsWithSoftDelete.includes(params.model)) {
-        params.action = 'update';
-        params.args['data'] = { deletedAt: new Date() };
-      }
-    }
-
-    if (params.action === 'deleteMany') {
-      const modelsWithSoftDelete = [
-        'User', 'Job', 'Application', 'CandidateProfile',
-        'Interview', 'Message', 'Notification'
-      ];
-
-      if (params.model && modelsWithSoftDelete.includes(params.model)) {
-        params.action = 'updateMany';
-        if (params.args.data !== undefined) {
-          params.args.data['deletedAt'] = new Date();
-        } else {
-          params.args['data'] = { deletedAt: new Date() };
-        }
-      }
-    }
-
-    return next(params);
-  });
-
   return client;
 };
 
-// Singleton pattern - reuse client in development to prevent connection exhaustion
+// Singleton pattern - reuse client to prevent connection exhaustion
 export const prisma: PrismaClient = global.__prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  global.__prisma = prisma;
-}
+global.__prisma = prisma;
 
 // ============================================================
 // CONNECTION MANAGEMENT

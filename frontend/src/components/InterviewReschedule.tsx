@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { interviewAPI } from '../services/api';
+import { interviewAPI } from '../services/interviewAPI';
 
 interface Interview {
   id: string;

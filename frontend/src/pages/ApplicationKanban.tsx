@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { applicationAPI } from '../services/api';
-
+import { applicationAPI, jobAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import { Application, ApplicationStatus } from '../types';
 
 const ApplicationKanban: React.FC = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [searchParams] = useSearchParams();
+  const jobId = searchParams.get('jobId');
   const columns = [
     { id: 'PENDING', title: 'New Applications', color: 'bg-blue-500' },
     { id: 'REVIEWING', title: 'Under Review', color: 'bg-purple-500' },
@@ -19,21 +20,110 @@ const ApplicationKanban: React.FC = () => {
     { id: 'REJECTED', title: 'Rejected', color: 'bg-red-500' },
   ];
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
 
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      const { applications: data } = await applicationAPI.getAll();
-      setApplications(data);
-    } catch (error) {
-      console.error('Failed to fetch applications:', error);
-    } finally {
-      setLoading(false);
+useEffect(() => {
+  fetchApplications();
+}, [jobId]);
+
+const fetchApplications = async () => {
+  try {
+    setLoading(true);
+
+    // If a jobId is provided, fetch applications only for that job
+    if (jobId) {
+      const allApplications: Application[] = [];
+
+      const firstPage = await applicationAPI.getAll({
+        page: 1,
+        limit: 100,
+        jobId,
+      });
+
+      allApplications.push(...(firstPage.applications ?? []));
+
+      const totalPages =
+        firstPage.pagination?.totalPages ??
+        firstPage.pagination?.pages ??
+        1;
+
+      for (let page = 2; page <= totalPages; page++) {
+        const pageData = await applicationAPI.getAll({
+          page,
+          limit: 100,
+          jobId,
+        });
+
+        allApplications.push(...(pageData.applications ?? []));
+      }
+
+      setApplications(allApplications);
+      return;
     }
-  };
+
+    // Otherwise, fetch all jobs using pagination
+    const firstJobsPage = await jobAPI.getAll({
+      page: 1,
+      limit: 100,
+    });
+
+    const jobs = [...(firstJobsPage.jobs ?? [])];
+
+    const totalJobPages =
+      firstJobsPage.pagination?.totalPages ??
+      firstJobsPage.pagination?.pages ??
+      1;
+
+    for (let page = 2; page <= totalJobPages; page++) {
+      const jobsPage = await jobAPI.getAll({
+        page,
+        limit: 100,
+      });
+
+      jobs.push(...(jobsPage.jobs ?? []));
+    }
+
+    // Fetch all applications for each job
+    const allApplications: Application[] = [];
+
+    for (const job of jobs) {
+      const firstPage = await applicationAPI.getAll({
+        page: 1,
+        limit: 100,
+        jobId: job.id,
+      });
+
+      allApplications.push(...(firstPage.applications ?? []));
+
+      const totalPages =
+        firstPage.pagination?.totalPages ??
+        firstPage.pagination?.pages ??
+        1;
+
+      for (let page = 2; page <= totalPages; page++) {
+        const pageData = await applicationAPI.getAll({
+          page,
+          limit: 100,
+          jobId: job.id,
+        });
+
+        allApplications.push(...(pageData.applications ?? []));
+      }
+    }
+
+    setApplications(allApplications);
+  } catch (error) {
+    console.error('Failed to fetch applications:', error);
+    toast.error('Failed to load applications. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
+
+
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -64,12 +154,15 @@ const ApplicationKanban: React.FC = () => {
         )
       );
     } catch (error) {
-      console.error('Failed to update application status:', error);
-      // Revert the change
-      fetchApplications();
-    }
-  };
+  console.error('Failed to update application status:', error);
 
+  // Revert the board to the backend's actual state
+  await fetchApplications();
+
+  // Show an error message to the recruiter
+  toast.error('Failed to update application status. Please try again.');
+}
+};
   const getApplicationsByStatus = (status: string) => {
     return applications.filter(app => app.status === status);
   };

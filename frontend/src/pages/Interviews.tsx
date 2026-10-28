@@ -5,10 +5,12 @@ import { interviewAPI, Interview } from '../services/interviewAPI';
 
 const Interviews: React.FC = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('upcoming');
+
+  const isRecruiter = user && (user.role === 'RECRUITER' || user.role === 'ADMIN');
 
   useEffect(() => {
     fetchInterviews();
@@ -47,6 +49,16 @@ const Interviews: React.FC = () => {
     return type.split('_').map((word) => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
   };
 
+  const getCandidateName = (interview: Interview): string => {
+    if (interview.candidate?.firstName && interview.candidate?.lastName) {
+      return `${interview.candidate.firstName} ${interview.candidate.lastName}`;
+    }
+    if (interview.application?.candidate?.firstName && interview.application?.candidate?.lastName) {
+      return `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`;
+    }
+    return 'Unknown Candidate';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -63,8 +75,14 @@ const Interviews: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">My Interviews</h1>
-            <p className="text-slate-500 mt-2">Manage your upcoming and past interviews</p>
+            <h1 className="text-3xl font-bold text-slate-900">
+              {isRecruiter ? 'Scheduled Interviews' : 'My Interviews'}
+            </h1>
+            <p className="text-slate-500 mt-2">
+              {isRecruiter
+                ? 'Manage interviews you have scheduled with candidates'
+                : 'Manage your upcoming and past interviews'}
+            </p>
           </div>
 
           {/* Filters */}
@@ -79,6 +97,8 @@ const Interviews: React.FC = () => {
               <option value="SCHEDULED">Scheduled</option>
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
+              <option value="NO_SHOW">No Show</option>
+              <option value="RESCHEDULED">Rescheduled</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
           </div>
@@ -93,7 +113,9 @@ const Interviews: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">No interviews found</h3>
               <p className="text-slate-500 max-w-md mx-auto">
-                You don't have any interviews matching the selected filter. Apply to more jobs to increase your chances!
+                {isRecruiter
+                  ? 'You have not scheduled any interviews matching the selected filter. Schedule interviews from the application detail page.'
+                  : 'You don\'t have any interviews matching the selected filter. Apply to more jobs to increase your chances!'}
               </p>
             </div>
           ) : (
@@ -109,17 +131,28 @@ const Interviews: React.FC = () => {
                       <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
                         {formatTypeLabel(interview.type)}
                       </span>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border uppercase tracking-wide ${interview.status === 'SCHEDULED' ? 'bg-green-50 text-green-700 border-green-100' :
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border uppercase tracking-wide ${
+                        interview.status === 'SCHEDULED' ? 'bg-green-50 text-green-700 border-green-100' :
                         interview.status === 'COMPLETED' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                        interview.status === 'RESCHEDULED' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                        interview.status === 'NO_SHOW' ? 'bg-orange-50 text-orange-700 border-orange-100' :
                           'bg-red-50 text-red-700 border-red-100'
                         }`}>
-                        {interview.status}
+                        {interview.status.replace('_', ' ')}
                       </span>
                     </div>
 
                     <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
                       {interview.application?.job?.title}
                     </h3>
+
+                    {/* Show candidate name for recruiters */}
+                    {isRecruiter && (
+                      <p className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                        <span className="text-lg">👤</span>
+                        <span className="font-medium">{getCandidateName(interview)}</span>
+                      </p>
+                    )}
 
                     <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                       <div className="flex items-center gap-2">

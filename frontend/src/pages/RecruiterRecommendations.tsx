@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { recommendationService } from '../services/recommendationService';
 import { jobAPI, applicationAPI } from '../services/api';
-import axios from 'axios';
+import { candidateRecommendationsAPI } from '../services/batch23SmartRecommendationsAPI';
 
 const RecruiterRecommendations: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<string>('');
   const [candidates, setCandidates] = useState<any[]>([]);
@@ -17,62 +22,159 @@ const RecruiterRecommendations: React.FC = () => {
     fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (selectedJob && candidates.length > 0) {
-      fetchRecommendations();
-    }
-  }, [selectedJob, candidates]);
-
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [{ jobs: jobsData }, candidatesData, { applications: applicationsData }] = await Promise.all([
-        jobAPI.getAll(),
-        fetchCandidates(),
-        applicationAPI.getAll(),
-      ]);
+      setError(null);
 
-      setJobs(jobsData);
-      setCandidates(candidatesData);
-      setApplications(applicationsData);
-
-      // Set first job as default
-      if (jobsData.length > 0) {
-        setSelectedJob(jobsData[0].id);
+      let jobsData: any[] = [];
+      try {
+        const res = await jobAPI.getAll({ postedBy: 'me' });
+        jobsData = res?.jobs || [];
+      } catch {
+        const res = await jobAPI.getAll();
+        jobsData = res?.jobs || [];
       }
 
-      // Calculate diversity insights
-      const diversity = recommendationService.getDiversityInsights(candidatesData);
-      setDiversityInsights(diversity);
-    } catch (error) {
-      console.error('Failed to fetch initial data:', error);
+      let appsData: any[] = [];
+      try {
+        const appsRes = await applicationAPI.getAll();
+        appsData = appsRes?.applications || [];
+      } catch (appErr) {
+        console.warn('Failed to fetch applications:', appErr);
+      }
+
+      setJobs(jobsData);
+      setApplications(appsData);
+
+      // Extract candidate profiles from existing applications
+      const appCandidates = appsData
+        .map((a: any) => a.candidate)
+        .filter(Boolean);
+      setCandidates(appCandidates);
+
+      if (appCandidates.length > 0) {
+        const diversity = recommendationService.getDiversityInsights(appCandidates);
+        setDiversityInsights(diversity);
+      }
+
+      const initialJobId = jobsData.length > 0 ? jobsData[0].id : '';
+      setSelectedJob(initialJobId);
+
+      if (initialJobId) {
+        await loadRecommendations(initialJobId, appCandidates);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch initial data:', err);
+      setError(
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to load recruiter recommendations data'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCandidates = async () => {
-    try {
-      const response = await axios.get('http://localhost:5001/api/users', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      return response.data.filter((user: any) => user.role === 'CANDIDATE');
-    } catch (error) {
-      console.error('Failed to fetch candidates:', error);
-      return [];
+  const applyRecommendations = (recs: any[], baseCandidates: any[] = candidates) => {
+    const mappedRecs = (recs || []).map((recommendation) => {
+      const cand = recommendation.candidate || {
+        id: recommendation.candidateId || recommendation.id,
+        firstName: recommendation.candidateName?.split(' ')[0] || 'Candidate',
+        lastName: recommendation.candidateName?.split(' ').slice(1).join(' ') || '',
+        location: recommendation.candidateLocation,
+        experience: recommendation.candidateExperience,
+        skills: recommendation.candidateSkills || [],
+      };
+      return {
+        id: recommendation.id,
+        candidateId: recommendation.candidateId || cand.id,
+        candidate: cand,
+        matchScore: recommendation.recommendationScore ?? Math.round((recommendation.overallMatch || 0) * 100),
+        matchedSkills: recommendation.standoutFactors ?? recommendation.candidateSkills ?? [],
+        experienceMatch: (recommendation.experienceMatch ?? 0) > 0,
+        salaryMatch: true,
+        reasons: (recommendation.matchReasons ?? []).map((reason: any) =>
+          typeof reason === 'string' ? reason : reason.reason
+        ),
+      };
+    });
+
+    setRecommendations(mappedRecs);
+
+    // Merge recommendations candidates into candidate pool for scoring & diversity insights
+    const candidateMap = new Map<string, any>();
+    baseCandidates.forEach((c) => {
+      if (c?.id) candidateMap.set(c.id, c);
+    });
+    mappedRecs.forEach((r) => {
+      if (r.candidate?.id) candidateMap.set(r.candidate.id, r.candidate);
+    });
+    const merged = Array.from(candidateMap.values());
+    setCandidates(merged);
+    if (merged.length > 0) {
+      setDiversityInsights(recommendationService.getDiversityInsights(merged));
     }
   };
 
-  const fetchRecommendations = async () => {
+  const loadRecommendations = async (jobId: string, baseCandidates: any[] = candidates) => {
+    if (!jobId) {
+      setRecommendations([]);
+      return;
+    }
+
+    try {
+      setRecsLoading(true);
+      setError(null);
+      const recs = await candidateRecommendationsAPI.getForJob(jobId);
+      applyRecommendations(recs, baseCandidates);
+    } catch (err: any) {
+      console.error('Failed to fetch recommendations:', err);
+      setError(
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to load recommendations'
+      );
+    } finally {
+      setRecsLoading(false);
+    }
+  };
+
+  const handleJobChange = (newJobId: string) => {
+    setSelectedJob(newJobId);
+    loadRecommendations(newJobId, candidates);
+  };
+
+  const handleGenerateRecommendations = async () => {
     if (!selectedJob) return;
 
     try {
-      const recs = await recommendationService.getCandidateRecommendations(selectedJob, candidates);
-      setRecommendations(recs);
-    } catch (error) {
-      console.error('Failed to fetch recommendations:', error);
+      setGenerating(true);
+      setError(null);
+      setActionMessage(null);
+      const recs = await candidateRecommendationsAPI.generate({
+        jobId: selectedJob,
+      });
+
+      applyRecommendations(recs, candidates);
+      setActionMessage({
+        type: 'success',
+        text: recs?.length
+          ? `Successfully generated ${recs.length} recommendation${recs.length === 1 ? '' : 's'}`
+          : 'No matching candidates found for this job criteria.',
+      });
+    } catch (err: any) {
+      console.error('Failed to generate recommendations:', err);
+      setError(
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to generate recommendations'
+      );
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -94,6 +196,38 @@ const RecruiterRecommendations: React.FC = () => {
 
   const selectedJobData = jobs.find(job => job.id === selectedJob);
 
+  const handleViewProfile = async (rec: any) => {
+    try {
+      await candidateRecommendationsAPI.recordAction(rec.id, {
+        action: 'view',
+      });
+      setActionMessage({
+        type: 'success',
+        text: `Viewed profile for ${rec.candidate.firstName} ${rec.candidate.lastName}`,
+      });
+    } catch (error) {
+      console.error('Failed to record view:', error);
+    }
+  };
+
+  const handleInviteToApply = async (rec: any) => {
+    try {
+      await candidateRecommendationsAPI.recordAction(rec.id, {
+        action: 'contact',
+      });
+      setActionMessage({
+        type: 'success',
+        text: `Invitation recorded for ${rec.candidate.firstName} ${rec.candidate.lastName}`,
+      });
+    } catch (error) {
+      console.error('Failed to record contact:', error);
+      setActionMessage({
+        type: 'error',
+        text: 'Failed to record contact action',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -109,12 +243,81 @@ const RecruiterRecommendations: React.FC = () => {
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Smart Candidate Recommendations</h1>
-          <p className="mt-2 text-slate-500">
-            AI-powered candidate matching, scoring, and diversity insights
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Smart Candidate Recommendations</h1>
+            <p className="mt-2 text-slate-500">
+              AI-powered candidate matching, scoring, and diversity insights
+            </p>
+          </div>
+          {jobs.length > 0 && (
+            <button
+              type="button"
+              onClick={handleGenerateRecommendations}
+              disabled={generating || recsLoading || !selectedJob}
+              className="self-start md:self-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
+              data-testid="generate-recommendations-btn"
+            >
+              {generating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">✨</span>
+                  <span>Generate Recommendations</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
+
+        {/* Error Alert Banner */}
+        {error && (
+          <div
+            role="alert"
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-red-700"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <span className="text-sm font-medium">{error}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedJob) {
+                  loadRecommendations(selectedJob);
+                } else {
+                  fetchInitialData();
+                }
+              }}
+              className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg text-sm font-medium transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Action Message Banner */}
+        {actionMessage && (
+          <div
+            className={`mb-6 p-4 rounded-xl flex items-center justify-between text-sm font-medium ${
+              actionMessage.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}
+          >
+            <span>{actionMessage.text}</span>
+            <button
+              type="button"
+              onClick={() => setActionMessage(null)}
+              className="text-slate-400 hover:text-slate-600 ml-4 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 mb-8 overflow-hidden">
@@ -172,80 +375,120 @@ const RecruiterRecommendations: React.FC = () => {
             {/* Candidate Matching Tab */}
             {activeTab === 'recommendations' && (
               <div className="animate-fadeIn">
-                {/* Job Selector */}
-                <div className="mb-8 max-w-xl">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Select Job to Find Matching Candidates
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedJob}
-                      onChange={(e) => setSelectedJob(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white transition-all shadow-sm"
+                {jobs.length === 0 ? (
+                  <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <div className="text-6xl mb-4 opacity-50">💼</div>
+                    <h3 className="text-lg font-bold text-slate-900">No jobs posted yet</h3>
+                    <p className="text-slate-500 mt-1 max-w-md mx-auto mb-6">
+                      You need at least one posted job to view or generate candidate recommendations.
+                    </p>
+                    <Link
+                      to="/jobs/new"
+                      className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-sm transition-colors"
                     >
-                      {jobs.map(job => (
-                        <option key={job.id} value={job.id}>
-                          {job.title} - {job.companyName}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                      ▼
-                    </div>
+                      Post a New Job
+                    </Link>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Job Selector */}
+                    <div className="mb-8 max-w-xl">
+                      <label htmlFor="job-selector" className="block text-sm font-bold text-slate-700 mb-2">
+                        Select Job to Find Matching Candidates
+                      </label>
+                      <div className="relative">
+                        <select
+                          id="job-selector"
+                          value={selectedJob}
+                          onChange={(e) => handleJobChange(e.target.value)}
+                          className="w-full pl-4 pr-10 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white transition-all shadow-sm"
+                        >
+                          {jobs.map(job => (
+                            <option key={job.id} value={job.id}>
+                              {job.title} - {job.companyName || job.company?.name || 'Company'}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Selected Job Info */}
-                {selectedJobData && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 mb-8">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">
-                          {selectedJobData.title}
-                        </h3>
-                        <p className="text-slate-600 font-medium mb-4">{selectedJobData.companyName}</p>
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                          <span className="flex items-center gap-1">📍 {selectedJobData.location}</span>
-                          <span className="flex items-center gap-1">💼 {selectedJobData.type.replace('_', ' ')}</span>
-                          {selectedJobData.salaryMin && selectedJobData.salaryMax && (
-                            <span className="flex items-center gap-1">
-                              💰 ${selectedJobData.salaryMin.toLocaleString()} - ${selectedJobData.salaryMax.toLocaleString()}
-                            </span>
+                    {/* Selected Job Info */}
+                    {selectedJobData && (
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 mb-8">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-1">
+                              {selectedJobData.title}
+                            </h3>
+                            <p className="text-slate-600 font-medium mb-4">{selectedJobData.companyName || selectedJobData.company?.name}</p>
+                            <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                              {selectedJobData.location && (
+                                <span className="flex items-center gap-1">📍 {selectedJobData.location}</span>
+                              )}
+                              {selectedJobData.type && (
+                                <span className="flex items-center gap-1">💼 {selectedJobData.type.replace('_', ' ')}</span>
+                              )}
+                              {selectedJobData.salaryMin && selectedJobData.salaryMax && (
+                                <span className="flex items-center gap-1">
+                                  💰 ${selectedJobData.salaryMin.toLocaleString()} - ${selectedJobData.salaryMax.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {selectedJobData.skills && selectedJobData.skills.length > 0 && (
+                            <div className="hidden md:block text-right max-w-xs">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Required Skills</p>
+                              <div className="flex flex-wrap justify-end gap-2">
+                                {selectedJobData.skills.map((skill: string, idx: number) => (
+                                  <span key={idx} className="px-2.5 py-1 bg-white text-blue-700 rounded-lg text-xs font-bold shadow-sm border border-blue-100">
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
-                      {selectedJobData.skills && selectedJobData.skills.length > 0 && (
-                        <div className="hidden md:block text-right max-w-xs">
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Required Skills</p>
-                          <div className="flex flex-wrap justify-end gap-2">
-                            {selectedJobData.skills.map((skill: string, idx: number) => (
-                              <span key={idx} className="px-2.5 py-1 bg-white text-blue-700 rounded-lg text-xs font-bold shadow-sm border border-blue-100">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* Recommended Candidates */}
-                {recommendations.length === 0 ? (
-                  <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    <div className="text-6xl mb-4 opacity-50">🔍</div>
-                    <h3 className="text-lg font-bold text-slate-900">No matching candidates found</h3>
-                    <p className="text-slate-500">
-                      Try selecting a different job or wait for more candidates to apply
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-6">
-                    {recommendations.map((rec, index) => (
-                      <div
-                        key={rec.candidate.id}
-                        className="bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg transition-all hover:-translate-y-0.5 group"
-                      >
+                    {/* Recommended Candidates */}
+                    {recsLoading ? (
+                      <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4" />
+                        <p className="text-slate-600 font-medium">Loading recommendations...</p>
+                      </div>
+                    ) : generating ? (
+                      <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4" />
+                        <p className="text-slate-600 font-medium">Generating smart AI recommendations for this job...</p>
+                      </div>
+                    ) : recommendations.length === 0 ? (
+                      <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <div className="text-6xl mb-4 opacity-50">🔍</div>
+                        <h3 className="text-lg font-bold text-slate-900">No matching candidates found</h3>
+                        <p className="text-slate-500 mt-1 max-w-md mx-auto">
+                          Try generating AI recommendations for this job, or select a different job.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleGenerateRecommendations}
+                          disabled={generating || !selectedJob}
+                          className="mt-5 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-medium shadow-md shadow-blue-500/20 transition-all inline-flex items-center gap-2"
+                        >
+                          <span className="text-lg">✨</span>
+                          <span>Generate Recommendations</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-6">
+                        {recommendations.map((rec, index) => (
+                          <div
+                            key={rec.candidate?.id || rec.id || index}
+                            className="bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg transition-all hover:-translate-y-0.5 group"
+                          >
                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -284,13 +527,22 @@ const RecruiterRecommendations: React.FC = () => {
                           </div>
 
                           <div className="flex flex-col gap-3 min-w-[200px]">
-                            <button className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5">
-                              Invite to Apply
-                            </button>
-                            <button className="w-full px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 font-medium transition-colors">
-                              View Profile
-                            </button>
-                          </div>
+  <button
+    type="button"
+    onClick={() => handleInviteToApply(rec)}
+    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5"
+  >
+    Invite to Apply
+  </button>
+
+  <button
+    type="button"
+    onClick={() => handleViewProfile(rec)}
+    className="w-full px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 font-medium transition-colors"
+  >
+    View Profile
+  </button>
+</div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
@@ -324,6 +576,8 @@ const RecruiterRecommendations: React.FC = () => {
                     ))}
                   </div>
                 )}
+              </>
+            )}
               </div>
             )}
 

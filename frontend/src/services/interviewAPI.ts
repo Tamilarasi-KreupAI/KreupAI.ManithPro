@@ -67,9 +67,46 @@ export interface UpdateInterviewData {
   rating?: number;
 }
 
+export interface ScorecardCriterionRating {
+  criteriaId: string;
+  criteriaName: string;
+  rating: number;
+  notes?: string;
+}
+
+export interface InterviewScorecardFeedback {
+  id: string;
+  evaluatorId: string;
+  evaluatorName: string;
+  evaluatorEmail?: string;
+  evaluatorRole?: string;
+  overallScore: number;
+  rating: number;
+  recommendation: string;
+  ratings: ScorecardCriterionRating[];
+  strengths: string[];
+  weaknesses: string[];
+  notes: string;
+  submittedAt: string;
+  updatedAt?: string;
+}
+
+export interface SubmitFeedbackPayload {
+  feedbackId?: string;
+  ratings?: ScorecardCriterionRating[];
+  overallScore?: number;
+  rating?: number;
+  recommendation?: string;
+  strengths?: string[] | string;
+  weaknesses?: string[] | string;
+  notes?: string;
+  feedback?: string;
+  isEdit?: boolean;
+}
+
 import { mockInterviews } from './mockData';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 const mockDelay = <T>(data: T, ms = 500): Promise<T> => {
   return new Promise((resolve) => setTimeout(() => resolve(data), ms));
@@ -91,6 +128,7 @@ export const interviewAPI = {
         scheduledBy: null,
         candidate: null
       };
+      mockInterviews.push(newInterview as any);
       return mockDelay(newInterview as unknown as Interview);
     }
     const response = await api.post('/', data);
@@ -158,8 +196,8 @@ export const interviewAPI = {
     return response.data;
   },
 
-  // Submit feedback
-  submitFeedback: async (id: string, data: { feedback: string; rating: number }): Promise<Interview> => {
+  // Submit feedback (supports batch25 scorecard & multiple reviewers)
+  submitFeedback: async (id: string, data: SubmitFeedbackPayload | { feedback: string; rating: number }): Promise<Interview> => {
     if (USE_MOCK) {
       const interview = mockInterviews.find(i => i.id === id);
       if (!interview) throw new Error('Interview not found');
@@ -167,6 +205,18 @@ export const interviewAPI = {
       return mockDelay(updated as unknown as Interview);
     }
     const response = await api.post(`/${id}/feedback`, data);
+    return response.data;
+  },
+
+  // Update existing interview feedback
+  updateFeedback: async (id: string, data: SubmitFeedbackPayload): Promise<Interview> => {
+    if (USE_MOCK) {
+      const interview = mockInterviews.find(i => i.id === id);
+      if (!interview) throw new Error('Interview not found');
+      const updated = { ...interview, ...data };
+      return mockDelay(updated as unknown as Interview);
+    }
+    const response = await api.put(`/${id}/feedback`, { ...data, isEdit: true });
     return response.data;
   },
 };

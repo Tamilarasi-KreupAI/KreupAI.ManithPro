@@ -1,12 +1,12 @@
 import { Response } from 'express';
-import { PrismaClient, ApplicationStatus } from '@prisma/client';
+import { ApplicationStatus } from '@prisma/client';
+import { prisma } from '../database/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { sendApplicationSubmittedEmail, sendApplicationStatusEmail } from '../utils/email';
 import { generateResumeFromProfile } from '../utils/resumeGenerator';
 import path from 'path';
 import fs from 'fs';
 
-const prisma = new PrismaClient();
 
 const allowedStatusTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
   PENDING: ['REVIEWING', 'REJECTED', 'WITHDRAWN'],
@@ -201,11 +201,20 @@ export const getApplications = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const { jobId, status, page = '1', limit = '10' } = req.query;
+    const { jobId, status, search } = req.query;
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
+const parsedPage = Number.parseInt(String(req.query.page ?? '1'), 10);
+const parsedLimit = Number.parseInt(String(req.query.limit ?? '10'), 10);
+
+const pageNum = Number.isFinite(parsedPage) && parsedPage > 0
+  ? parsedPage
+  : 1;
+
+const limitNum = Number.isFinite(parsedLimit) && parsedLimit > 0
+  ? Math.min(parsedLimit, 100)
+  : 10;
+
+const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
 
@@ -260,9 +269,56 @@ export const getApplications = async (req: AuthRequest, res: Response): Promise<
       }
     }
 
-    if (status) {
-      where.status = status;
-    }
+   if (status) {
+  where.status = status;
+}
+
+const searchTerm = String(search ?? '').trim();
+
+if (searchTerm) {
+  where.OR = [
+    {
+      candidate: {
+        is: {
+          firstName: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      },
+    },
+    {
+      candidate: {
+        is: {
+          lastName: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      },
+    },
+    {
+      candidate: {
+        is: {
+          email: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      },
+    },
+    {
+      job: {
+        is: {
+          title: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      },
+    },
+  ];
+}
 
     const [applications, total] = await Promise.all([
       prisma.application.findMany({

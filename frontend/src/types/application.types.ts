@@ -86,6 +86,9 @@ export interface DashboardStats {
   pendingApplications: number;
   acceptedApplications?: number;
   recentApplications: Application[];
+  avgTimeToHire?: number;
+  timeToHire?: number;
+  responseRate?: number;
 }
 
 // Application Bulk Action

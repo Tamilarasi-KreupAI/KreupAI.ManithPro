@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { jobAPI, applicationAPI } from '../services/api';
+import { jobAPI, applicationAPI, userAPI } from '../services/api';
 import { interviewAPI } from '../services/interviewAPI';
 
 const EnhancedRecruiterDashboard: React.FC = () => {
@@ -31,15 +31,24 @@ const EnhancedRecruiterDashboard: React.FC = () => {
     try {
       setLoading(true);
 
-      // Fetch jobs
-      const { jobs } = await jobAPI.getAll();
+      // Fetch jobs, applications, interviews, and recruiter dashboard stats in parallel
+      const [jobsData, applicationsData, interviewsData, dashboardStats] = await Promise.all([
+        jobAPI.getAll(),
+        applicationAPI.getAll(),
+        interviewAPI.getUpcoming().catch((err) => {
+          console.error('Failed to fetch upcoming interviews:', err);
+          return [];
+        }),
+        userAPI.getDashboardStats().catch((err) => {
+          console.error('Failed to fetch recruiter dashboard stats:', err);
+          return null;
+        }),
+      ]);
+
+      const jobs = jobsData?.jobs || [];
+      const applications = applicationsData?.applications || [];
+      const interviews = Array.isArray(interviewsData) ? interviewsData : [];
       const activeJobs = jobs.filter((j: any) => j.status === 'OPEN');
-
-      // Fetch applications
-      const { applications } = await applicationAPI.getAll();
-
-      // Fetch interviews
-      const interviews = await interviewAPI.getUpcoming();
 
       // Calculate stats
       const pendingReview = applications.filter((a: any) => a.status === 'PENDING' || a.status === 'REVIEWING').length;
@@ -47,16 +56,45 @@ const EnhancedRecruiterDashboard: React.FC = () => {
       const shortlisted = applications.filter((a: any) => a.status === 'SHORTLISTED').length;
       const hired = applications.filter((a: any) => a.status === 'ACCEPTED').length;
 
+      // Time-to-Hire: use backend stats KPI or calculate from valid application dates
+      let avgTimeToHire = dashboardStats?.avgTimeToHire ?? dashboardStats?.timeToHire;
+      if (avgTimeToHire === undefined) {
+        const hiredApps = applications.filter((a: any) => a.status === 'ACCEPTED');
+        let totalDays = 0;
+        let validHires = 0;
+        for (const app of hiredApps) {
+          if (app.appliedAt && app.updatedAt) {
+            const start = new Date(app.appliedAt).getTime();
+            const end = new Date(app.updatedAt).getTime();
+            if (!isNaN(start) && !isNaN(end) && end >= start) {
+              totalDays += Math.floor((end - start) / (1000 * 60 * 60 * 24));
+              validHires++;
+            }
+          }
+        }
+        avgTimeToHire = validHires > 0 ? Math.round(totalDays / validHires) : 0;
+      }
+
+      // Response Rate: use backend stats KPI or calculate from application progression
+      let responseRate = dashboardStats?.responseRate;
+      if (responseRate === undefined) {
+        const total = applications.length;
+        const responded = applications.filter((a: any) =>
+          ['REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'ACCEPTED', 'REJECTED'].includes(a.status)
+        ).length;
+        responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
+      }
+
       setStats({
-        totalJobs: jobs.length,
-        activeJobs: activeJobs.length,
-        totalApplications: applications.length,
-        pendingReview,
+        totalJobs: dashboardStats?.totalJobs ?? jobs.length,
+        activeJobs: dashboardStats?.openJobs ?? activeJobs.length,
+        totalApplications: dashboardStats?.totalApplications ?? applications.length,
+        pendingReview: dashboardStats?.pendingApplications ?? pendingReview,
         interviewScheduled,
         shortlisted,
         hired,
-        avgTimeToHire: 12, // Calculate actual average
-        responseRate: 95, // Calculate actual rate
+        avgTimeToHire,
+        responseRate,
       });
 
       // Calculate application trend (last 7 days)
@@ -151,15 +189,25 @@ const EnhancedRecruiterDashboard: React.FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+          <StatCard
+            title="Total Jobs"
+            value={stats.totalJobs}
+            subtitle={`${stats.activeJobs} active`}
+            color="text-blue-600"
+            icon={
+              <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
+          />
           <StatCard
             title="Total Applications"
             value={stats.totalApplications}
             subtitle="All time"
-            trend="+12% this week"
-            color="text-blue-600"
+            color="text-indigo-600"
             icon={
-              <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             }
@@ -176,17 +224,6 @@ const EnhancedRecruiterDashboard: React.FC = () => {
             }
           />
           <StatCard
-            title="Interviews Scheduled"
-            value={stats.interviewScheduled}
-            subtitle="This week"
-            color="text-purple-600"
-            icon={
-              <svg className="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            }
-          />
-          <StatCard
             title="Hired"
             value={stats.hired}
             subtitle="Successful placements"
@@ -195,6 +232,28 @@ const EnhancedRecruiterDashboard: React.FC = () => {
             icon={
               <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <StatCard
+            title="Time-to-Hire (days)"
+            value={stats.avgTimeToHire > 0 ? `${stats.avgTimeToHire} days` : '0 days'}
+            subtitle="Avg. days to hire"
+            color="text-purple-600"
+            icon={
+              <svg className="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <StatCard
+            title="Response Rate (%)"
+            value={`${stats.responseRate}%`}
+            subtitle="Applications actioned"
+            color="text-teal-600"
+            icon={
+              <svg className="h-8 w-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             }
           />

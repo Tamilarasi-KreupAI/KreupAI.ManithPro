@@ -17,7 +17,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
 
-    req.user = decoded;
+    req.user = {
+      ...decoded,
+      id: decoded.id || decoded.userId,
+      userId: decoded.userId || decoded.id || '',
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token' });
@@ -32,7 +36,11 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const decoded = verifyToken(token);
-      req.user = decoded;
+      req.user = {
+        ...decoded,
+        id: decoded.id || decoded.userId,
+        userId: decoded.userId || decoded.id || '',
+      };
     }
 
     next();
@@ -48,11 +56,18 @@ export const authorize = (...roles: string[]) => {
       res.status(401).json({ error: 'Not authenticated' });
       return;
     }
+const normalizedRoles = roles
+  .flat()
+  .filter((role): role is string => typeof role === 'string')
+  .map((role) => role.toUpperCase());
 
-    if (!roles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
+const userRole = (req.user.role || '').toUpperCase();
+
+if (!normalizedRoles.includes(userRole)) {
+  res.status(403).json({ error: 'Insufficient permissions' });
+  return;
+}
+
 
     next();
   };

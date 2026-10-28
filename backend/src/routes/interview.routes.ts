@@ -25,5 +25,6 @@ router.get('/:id', getInterviewById);
 router.put('/:id', updateInterview);
 router.delete('/:id', deleteInterview);
 router.post('/:id/feedback', submitFeedback);
+router.put('/:id/feedback', submitFeedback);
 
 export default router;

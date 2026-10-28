@@ -71,10 +71,10 @@ router.put('/jobs/:id/interaction', authorize(['CANDIDATE', 'RECRUITER', 'ADMIN'
 // ============================================================================
 
 // POST /api/recommendations/candidates - Generate candidate recommendations
-router.post('/candidates', authorize(['RECRUITER', 'ADMIN']), generateCandidateRecommendations);
+router.post('/candidates', authorize('RECRUITER', 'ADMIN'), generateCandidateRecommendations);
 
 // GET /api/recommendations/candidates/:jobId - Get candidate recommendations for job
-router.get('/candidates/:jobId', authorize(['RECRUITER', 'ADMIN']), getCandidateRecommendations);
+router.get('/candidates/:jobId', authorize('RECRUITER', 'ADMIN'), getCandidateRecommendations);
 
 // PUT /api/recommendations/candidates/:id/action - Record action
 router.put('/candidates/:id/action', authorize(['RECRUITER', 'ADMIN']), recordCandidateRecommendationAction);

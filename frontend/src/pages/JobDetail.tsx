@@ -107,7 +107,47 @@ const JobDetail: React.FC = () => {
       alert(error.response?.data?.error || 'Failed to delete job');
     }
   };
+ const handleToggleJobStatus = async () => {
+  const newStatus = job?.status === 'OPEN' ? 'CLOSED' : 'OPEN';
+  const action = newStatus === 'CLOSED' ? 'close' : 'reopen';
 
+  if (!window.confirm(`Are you sure you want to ${action} this job?`)) {
+    return;
+  }
+
+  try {
+    await jobAPI.update(id!, { status: newStatus });
+    alert(`Job ${action}d successfully`);
+    window.location.reload();
+  } catch (error: any) {
+    alert(error.response?.data?.error || `Failed to ${action} job`);
+  }
+};
+
+const handleDuplicateJob = async () => {
+  if (!job) return;
+
+  try {
+    const {
+      id: originalId,
+      createdAt,
+      updatedAt,
+      status,
+      ...jobData
+    } = job;
+
+    const result = await jobAPI.create({
+      ...jobData,
+      title: `${job.title} (Copy)`,
+      status: 'OPEN',
+    });
+
+    alert('Job duplicated successfully');
+    navigate(`/jobs/${result.job.id}`);
+  } catch (error: any) {
+    alert(error.response?.data?.error || 'Failed to duplicate job');
+  }
+};
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
@@ -181,12 +221,20 @@ const JobDetail: React.FC = () => {
                     <span className="font-medium">{job.salary}</span>
                   </div>
                 )}
-                {job._count && (
-                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                    <span className="text-lg">👥</span>
-                    <span className="font-medium">{job._count.applications} applicants</span>
-                  </div>
-                )}
+
+{job._count && (
+  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+    <span className="text-lg">👥</span>
+    <Link
+      to={`/recruiter/kanban?jobId=${job.id}`}
+      className="font-medium hover:underline cursor-pointer"
+    >
+      {job._count.applications} applicants
+    </Link>
+  </div>
+)}
+
+
               </div>
             </div>
 
@@ -227,6 +275,19 @@ const JobDetail: React.FC = () => {
                   >
                     Edit Job
                   </Link>
+                  <button
+  onClick={handleToggleJobStatus}
+  className="px-6 py-3 rounded-xl border font-medium transition-colors"
+>
+  {job.status === 'OPEN' ? 'Close Job' : 'Reopen Job'}
+</button>
+
+<button
+  onClick={handleDuplicateJob}
+  className="px-6 py-3 rounded-xl border font-medium transition-colors"
+>
+  Duplicate Job
+</button>
                   <button
                     onClick={handleDelete}
                     className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 px-6 py-3 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 font-medium transition-colors"

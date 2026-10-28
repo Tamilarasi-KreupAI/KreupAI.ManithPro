@@ -162,6 +162,34 @@ export const applicationAPI = {
       .put<{ message: string; application: Application }>(`/applications/${id}/status`, data)
       .then((res) => res.data);
   },
+  bulkUpdateStatus: (
+    dataOrIds: { applicationIds: string[]; status: string; notes?: string } | string[],
+    status?: string,
+    notes?: string
+  ) => {
+    const payload = Array.isArray(dataOrIds)
+      ? { applicationIds: dataOrIds, status: status!, notes }
+      : dataOrIds;
+
+    if (USE_MOCK) {
+      payload.applicationIds.forEach((id) => {
+        const app = mockApplications.find((a) => a.id === id);
+        if (app) app.status = payload.status as any;
+      });
+      return mockDelay({
+        message: 'Applications status updated successfully',
+        updatedCount: payload.applicationIds.length,
+        status: payload.status,
+        applicationIds: payload.applicationIds,
+      });
+    }
+    return api
+      .patch<{ message: string; updatedCount: number; status: string; applicationIds: string[] }>(
+        '/applications/bulk-status',
+        payload
+      )
+      .then((res) => res.data);
+  },
   withdraw: (id: string) => {
     if (USE_MOCK) {
       const app = mockApplications.find(a => a.id === id);
@@ -181,6 +209,26 @@ export const applicationAPI = {
       .get<{ hasApplied: boolean; application?: Application }>(`/applications/check/${jobId}`)
       .then((res) => res.data);
   },
+};
+// Interview APIs
+export const interviewAPI = {
+  getByApplication: (applicationId: string) =>
+    api
+      .get(`/interviews/application/${applicationId}`)
+      .then((res) => res.data),
+
+  create: (data: {
+    applicationId: string;
+    type: string;
+    scheduledAt: string;
+    endTime: string;
+    timeZone: string;
+    meetingLink?: string;
+    location?: string;
+    instructions?: string;
+    notes?: string;
+  }) =>
+    api.post('/interviews', data).then((res) => res.data),
 };
 
 // User APIs
@@ -218,7 +266,10 @@ export const userAPI = {
         totalApplications: 20,
         pendingApplications: 5,
         acceptedApplications: 2,
-        recentApplications: mockApplications
+        recentApplications: mockApplications,
+        avgTimeToHire: 0,
+        timeToHire: 0,
+        responseRate: 0,
       });
     }
     return api.get<DashboardStats>('/users/dashboard-stats').then((res) => res.data);

@@ -26,7 +26,7 @@ import ResumeManager from './pages/ResumeManager';
 import AdvancedJobSearch from './pages/AdvancedJobSearch';
 import JobRecommendations from './pages/JobRecommendations';
 import JobForm from './pages/JobForm';
-import RecruiterDashboard from './pages/RecruiterDashboard';
+import EnhancedRecruiterDashboard from './pages/EnhancedRecruiterDashboard';
 import RecruiterApplications from './pages/RecruiterApplications';
 import CandidateSearch from './pages/CandidateSearch';
 import InterviewCalendar from './pages/InterviewCalendar';
@@ -221,7 +221,15 @@ function App() {
                       path="/recruiter/dashboard"
                       element={
                         <ProtectedRoute>
-                          <RecruiterDashboard />
+                          <EnhancedRecruiterDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <EnhancedRecruiterDashboard />
                         </ProtectedRoute>
                       }
                     />

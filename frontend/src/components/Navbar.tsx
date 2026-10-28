@@ -72,7 +72,7 @@ const Navbar: React.FC = () => {
             <img
               src="/MANITHPRO.png"
               alt="ManithPro"
-              className="h-20 w-auto group-hover:scale-105 transition-transform"
+              className="h-10 w-auto group-hover:scale-105 transition-transform"
             />
           </Link>
 
@@ -105,6 +105,15 @@ const Navbar: React.FC = () => {
 
                     <Link to="/candidates" className={linkClasses}>
                       Candidates
+                    </Link>
+                    <Link to="/recruiter/recommendations" className={linkClasses}>
+                      Recommendations
+                    </Link>
+                    <Link to="/recruiter/ai-screening" className={linkClasses}>
+                      AI Screening
+                    </Link>
+                    <Link to="/recruiter/interview-analysis" className={linkClasses}>
+                      Interview Analysis
                     </Link>
                   </>
                 )}
@@ -169,6 +178,20 @@ const Navbar: React.FC = () => {
                             </div>
                           </Link>
                         </>
+                      )}
+                      {user.role !== 'CANDIDATE' && (
+                        <Link
+                          to="/recruiter/recommendations"
+                          onClick={closeProfileDropdown}
+                          className="block px-4 py-2 text-slate-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Recommendations
+                          </div>
+                        </Link>
                       )}
                       <div className="border-t border-slate-100 dark:border-gray-700 mt-2 pt-2">
                         <Link
@@ -247,7 +270,7 @@ const Navbar: React.FC = () => {
                 >
                   Profile
                 </Link>
-                {user.role === 'CANDIDATE' && (
+                {user.role === 'CANDIDATE' ? (
                   <>
                     <Link
                       to="/profile/builder"
@@ -262,6 +285,37 @@ const Navbar: React.FC = () => {
                       className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
                     >
                       Enhanced Profile
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/candidates"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
+                    >
+                      Candidates
+                    </Link>
+                    <Link
+                      to="/recruiter/recommendations"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
+                    >
+                      Recommendations
+                    </Link>
+                    <Link
+                      to="/recruiter/ai-screening"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
+                    >
+                      AI Screening
+                    </Link>
+                    <Link
+                      to="/recruiter/interview-analysis"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 font-medium"
+                    >
+                      Interview Analysis
                     </Link>
                   </>
                 )}

@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../database/prisma';
 import { AuthRequest } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -210,39 +209,56 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
       });
     } else {
       // Recruiter/Admin stats
-      const [totalJobs, openJobs, totalApplications, pendingApplications] = await Promise.all([
+      const applicationWhere = req.user.role === 'ADMIN' ? {} : { job: { postedById: req.user.userId } };
+      const jobWhere = req.user.role === 'ADMIN' ? {} : { postedById: req.user.userId };
+
+      const [totalJobs, openJobs, totalApplications, pendingApplications, recruiterApplications] = await Promise.all([
         prisma.job.count({
-          where: req.user.role === 'ADMIN' ? {} : { postedById: req.user.userId },
+          where: jobWhere,
         }),
         prisma.job.count({
           where: {
             status: 'OPEN',
-            ...(req.user.role === 'ADMIN' ? {} : { postedById: req.user.userId }),
+            ...jobWhere,
           },
         }),
         prisma.application.count({
-          where: req.user.role === 'ADMIN'
-            ? {}
-            : {
-                job: { postedById: req.user.userId },
-              },
+          where: applicationWhere,
         }),
         prisma.application.count({
           where: {
             status: { in: ['PENDING', 'REVIEWING'] },
-            ...(req.user.role === 'ADMIN'
-              ? {}
-              : { job: { postedById: req.user.userId } }),
+            ...applicationWhere,
+          },
+        }),
+        prisma.application.findMany({
+          where: applicationWhere,
+          select: {
+            id: true,
+            status: true,
+            appliedAt: true,
+            updatedAt: true,
+            statusHistory: {
+              select: {
+                toStatus: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+            interviews: {
+              select: { id: true },
+              take: 1,
+            },
+            messages: {
+              select: { id: true },
+              take: 1,
+            },
           },
         }),
       ]);
 
       const recentApplications = await prisma.application.findMany({
-        where: req.user.role === 'ADMIN'
-          ? {}
-          : {
-              job: { postedById: req.user.userId },
-            },
+        where: applicationWhere,
         include: {
           job: {
             select: {
@@ -263,12 +279,73 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
         take: 10,
       });
 
+      // =========================================================================
+      // Time-to-Hire Calculation (R-14)
+      // Unit: days
+      // Numerator: Sum of days from application to hire across all completed hires (status === 'ACCEPTED')
+      // Denominator: Count of completed hires with valid applied and hired dates
+      // Hired date is determined by statusHistory when transitioned to 'ACCEPTED', falling back to updatedAt.
+      // If no completed hires or insufficient date data, returns 0 without inventing data.
+      // =========================================================================
+      const hiredApplications = recruiterApplications.filter((app) => app.status === 'ACCEPTED');
+      let totalHireDays = 0;
+      let validHiresCount = 0;
+
+      for (const app of hiredApplications) {
+        if (!app.appliedAt) continue;
+        const appliedDate = new Date(app.appliedAt);
+        const acceptedHistory = app.statusHistory?.find((h) => h.toStatus === 'ACCEPTED');
+        const hiredDate = acceptedHistory ? new Date(acceptedHistory.createdAt) : (app.updatedAt ? new Date(app.updatedAt) : null);
+
+        if (hiredDate && !isNaN(appliedDate.getTime()) && !isNaN(hiredDate.getTime())) {
+          const diffMs = hiredDate.getTime() - appliedDate.getTime();
+          if (diffMs >= 0) {
+            const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            totalHireDays += days;
+            validHiresCount++;
+          }
+        }
+      }
+
+      const avgTimeToHire = validHiresCount > 0 ? Math.round(totalHireDays / validHiresCount) : 0;
+
+      // =========================================================================
+      // Response Rate Calculation (R-14)
+      // Unit: percentage (0 - 100%)
+      // Denominator: Total valid applications received for recruiter's jobs (recruiterApplications.length)
+      // Numerator: Applications that have actual recruiter response/action records:
+      //   - Status transitioned beyond PENDING (REVIEWING, SHORTLISTED, INTERVIEW_SCHEDULED, ACCEPTED, REJECTED)
+      //   - An interview has been scheduled
+      //   - A recruiter message has been sent
+      //   - A status history progression record exists
+      // Missing or unresponded records (e.g. pending with no actions) are not counted as responses.
+      // If denominator is 0, returns 0 without inventing data.
+      // =========================================================================
+      const totalAppsCount = recruiterApplications.length;
+      let respondedAppsCount = 0;
+
+      for (const app of recruiterApplications) {
+        const hasRespondedStatus = ['REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'ACCEPTED', 'REJECTED'].includes(app.status);
+        const hasInterview = (app.interviews?.length ?? 0) > 0;
+        const hasMessage = (app.messages?.length ?? 0) > 0;
+        const hasStatusHistoryProgression = (app.statusHistory?.length ?? 0) > 0 && app.statusHistory.some((h) => h.toStatus !== 'PENDING');
+
+        if (hasRespondedStatus || hasInterview || hasMessage || hasStatusHistoryProgression) {
+          respondedAppsCount++;
+        }
+      }
+
+      const responseRate = totalAppsCount > 0 ? Math.round((respondedAppsCount / totalAppsCount) * 100) : 0;
+
       res.json({
         totalJobs,
         openJobs,
         totalApplications,
         pendingApplications,
         recentApplications,
+        avgTimeToHire,
+        timeToHire: avgTimeToHire,
+        responseRate,
       });
     }
   } catch (error) {
